@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <mobiquest>
+ <question id="10819" type="radio">
+            <label>
+                <text>In welcher Situation befinden Sie sich gerade?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21430">
+                <text>Zu Hause</text>
+            </option>
+            <option id="21431">
+                <text>Unterwegs</text>
+            </option>
+            <option id="21432">
+                <text>Gesellschaft und Erledigungen</text>
+            </option>
+            <option id="21433">
+                <text>Beruf</text>
+            </option>
+            <option id="21434">
+                <text>Keine Situation trifft zu</text>
+            </option>
+</question>
+    <question id="10820" type="checkbox" filter="10819_21430">
+        <label>
+            <text>Zu Hause - und zwar:</text>
+        </label>
+        <option id="66666">
+            <text></text>
+        </option>
+        <option id="21436">
+            <text>Ausruhen</text>
+        </option>
+        <option id="21437">
+            <text>Essen</text>
+        </option>
+        <option id="21438">
+            <text>Küchenarbeit</text>
+        </option>
+        <option id="21439">
+            <text>Lesen/Computer</text>
+        </option>
+        <option id="21440">
+            <text>Musik hören</text>
+        </option>
+        <option id="21441">
+            <text>Hausarbeit sonst</text>
+        </option>
+        <option id="21442">
+            <text>Draußen: Garten/Balkon</text>
+        </option>
+        <option id="21443">
+            <text>Sonstiges</text>
+        </option>
+    </question>
+    <question id="10821" type="checkbox" filter="10819_21431">
+        <label>
+            <text>Unterwegs - und zwar:</text>
+        </label>
+        <option id="66666">
+            <text></text>
+        </option>
+        <option id="21445">
+            <text>Auto selbst fahren</text>
+        </option>
+        <option id="21446">
+            <text>Auto mitfahren</text>
+        </option>
+        <option id="21447">
+            <text>Bus</text>
+        </option>
+        <option id="21448">
+            <text>Bahn</text>
+        </option>
+        <option id="21449">
+            <text>Zu Fuß</text>
+        </option>
+        <option id="21450">
+            <text>Fahrrad</text>
+        </option>
+        <option id="21451">
+            <text>Sonstiges</text>
+        </option>
+    </question>
+</mobiquest>
+       
