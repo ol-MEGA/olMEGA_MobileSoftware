@@ -1,5 +1,7 @@
 package com.fragtest.android.pa;
 
+import android.util.Log;
+
 import static android.R.attr.handle;
 
 /**
@@ -12,14 +14,18 @@ public class QuestionInfo {
     private int mFilterId;
     private boolean mCondition;
     private boolean mActive;
-    private int mPosition;
+    private int mPositionInPager;
+    private Question mQuestion;
 
-    public QuestionInfo(int id, int filterId, boolean condition, int position) {
+    public QuestionInfo(Question question, int id, int filterId, boolean condition, int position) {
+        mQuestion = question;
         mId = id;
         mFilterId = filterId;
         mCondition = condition;
-        mPosition = position;
         mActive = true;
+        mPositionInPager = position;
+
+        Log.i("new QInfo","ID: "+mId+", Position: "+mPositionInPager);
     }
 
     public boolean isActive() { return mActive; }
@@ -30,9 +36,14 @@ public class QuestionInfo {
 
     public boolean getCondition() { return mCondition; }
 
-    public int getPosition() { return mPosition; }
-
     public void setInactive() { mActive = false; }
 
     public void setActive() { mActive = true; }
+
+    public void setPositionInPager(int position) { mPositionInPager = position; }
+
+    public int getPositionInPager() { return mPositionInPager; }
+
+    public Question getQuestion() { return mQuestion; }
+
 }

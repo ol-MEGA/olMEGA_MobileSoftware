@@ -1,27 +1,15 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.List;
-
-import static android.view.View.GONE;
-import static android.view.View.VISIBLE;
-import static java.util.Objects.isNull;
+import java.util.Collections;
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -29,7 +17,8 @@ import static java.util.Objects.isNull;
 
 public class QuestionnairePagerAdapter extends PagerAdapter {
 
-    private ArrayList<View> mListOfViews;
+    // Stores all active Views
+    public ArrayList<QuestionViewActive> mListOfActiveViews;
     private Context mContext;
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
@@ -41,11 +30,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mContext = context;
         mViewPager = viewPager;
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(mContext,this);
+        mQuestionnaire = new Questionnaire(mContext, this);
         mNUM_PAGES = mQuestionnaire.getNumPages();
-        mViewPager.setOffscreenPageLimit(mNUM_PAGES-1);
+        mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);
 
-        mListOfViews = new ArrayList<>();
+        mListOfActiveViews = new ArrayList<>();
         createLayout();
     }
 
@@ -58,16 +47,17 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Sets Layout ID to Question ID
             mLayout.setId(mQuestionnaire.getId(question));
 
-            mListOfViews.add(mLayout);
+            mListOfActiveViews.add(new QuestionViewActive(mLayout,mLayout.getId()));
+
         }
 
-        Log.e("size of list",""+mListOfViews.size());
+        Log.e("size of list", "" + mListOfActiveViews.size());
     }
 
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
-        View view = mListOfViews.get (position);
-        collection.addView (view);
+        View view = mListOfActiveViews.get(position).getView();
+        collection.addView(view);
         return view;
     }
 
@@ -78,7 +68,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     @Override
     public int getCount() {
-        return mListOfViews.size();
+        mNUM_PAGES = mListOfActiveViews.size();
+        return mNUM_PAGES;
     }
 
     @Override
@@ -86,51 +77,80 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return view == object;
     }
 
-    public void setNumPages(int numPages) { mNUM_PAGES = numPages; }
+    public void setCount(int numPages) {
+        mNUM_PAGES = numPages;
+    }
+
+    public void setCount() {
+        mNUM_PAGES = getCount();
+    }
 
     @Override
     public void notifyDataSetChanged() {
-        Log.e("count",""+getCount());
         super.notifyDataSetChanged();
+        Log.e("count", "" + getCount());
     }
 
     public int addView(View v) {
-        return addView(v, mListOfViews.size());
+        return addView(v, mListOfActiveViews.size());
     }
 
-    public int addView(View v, int position) {
-        mListOfViews.add(position, v);
+    public int addView(View view, int position) {
+        mListOfActiveViews.add(new QuestionViewActive(view,view.getId()));
+
+        // Sort the Views by their ID (implicitly their determined order)
+        Collections.sort(mListOfActiveViews);
+
+        /** SHOW ALL IDS IN THEIR ORDER **/
+        for (int iItem = 0; iItem<mListOfActiveViews.size(); iItem++) {
+            Log.i("pos "+iItem,""+mListOfActiveViews.get(iItem).getId());
+        }
+
+
         return position;
     }
 
     public int removeView(ViewPager pager, View v) {
-        return removeView(pager, mListOfViews.indexOf (v));
+        Log.i("index",""+mListOfActiveViews.indexOf(v));
+        return removeView(mListOfActiveViews.indexOf(v));
     }
 
-    public int removeView(ViewPager pager, int position) {
+    public int removeView(int position) {
         // ViewPager doesn't have a delete method; the closest is to set the adapter
         // again.  When doing so, it deletes all its views.  Then we can delete the view
         // from from the adapter and finally set the adapter to the pager again.  Note
         // that we set the adapter to null before removing the view from "views" - that's
         // because while ViewPager deletes all its views, it will call destroyItem which
         // will in turn cause a null pointer ref.
+        Log.i("position req",""+position);
         mViewPager.setAdapter(null);
-        mListOfViews.remove(position);
+        Log.i("length before",""+mListOfActiveViews.size());
+        mListOfActiveViews.remove(position);
+        Log.i("length afterwards",""+mListOfActiveViews.size());
         mViewPager.setAdapter(this);
-
+        Log.i("adapter","set");
         return position;
     }
 
     public View getView(int position) {
-        return mListOfViews.get (position);
+        return mListOfActiveViews.get(position).getView();
     }
 
     @Override
     public int getItemPosition(Object object) {
-        int index = mListOfViews.indexOf(object);
+        int index = mListOfActiveViews.indexOf(object);
         if (index == -1)
             return POSITION_NONE;
         else
             return index;
+    }
+
+    public int getPositionFromId(int iId){
+        for (int iItem = 0; iItem < mListOfActiveViews.size(); iItem++) {
+            if (mListOfActiveViews.get(iItem).getId() == iId) {
+                return iItem;
+            }
+        }
+        return -1;
     }
 }
