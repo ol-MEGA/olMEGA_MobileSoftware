@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -19,6 +20,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Stores all active Views
     public ArrayList<QuestionViewActive> mListOfActiveViews;
+    // Stores all Views
+    public ArrayList<QuestionViewActive> mListOfViewsStorage;
     private Context mContext;
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
@@ -35,6 +38,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);
 
         mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
         createLayout();
     }
 
@@ -46,10 +50,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mLayout = mQuestionnaire.generateView(question);
             // Sets Layout ID to Question ID
             mLayout.setId(mQuestionnaire.getId(question));
-
+            // Adds the Layout to List carrying all ACTIVE Views
             mListOfActiveViews.add(new QuestionViewActive(mLayout,mLayout.getId()));
-
+            // Adds the Layout to List storing ALL Views
+            mListOfViewsStorage.add(new QuestionViewActive(mLayout,mLayout.getId()));
         }
+        // Creates and Destroys Views based on Filter ID Settings
+        mQuestionnaire.checkVisibility();
 
         Log.e("size of list", "" + mListOfActiveViews.size());
     }
