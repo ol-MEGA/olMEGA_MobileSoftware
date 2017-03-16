@@ -24,8 +24,6 @@ public class QuestionInfo {
         mCondition = condition;
         mActive = true;
         mPositionInPager = position;
-
-        Log.i("new QInfo","ID: "+mId+", Position: "+mPositionInPager);
     }
 
     public boolean isActive() { return mActive; }

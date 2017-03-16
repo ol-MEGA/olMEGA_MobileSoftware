@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     public ViewPager mViewPager = null;
     private QuestionnairePagerAdapter pagerAdapter = null;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,11 +33,35 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
 
-        //pagerAdapter.addView (viewPager, 0);
 
     }
 
+    private ViewPager.OnPageChangeListener myOnPageChangeListener =
+            new ViewPager.OnPageChangeListener() {
 
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                    //Called when the scroll state changes.
+                }
+
+                @Override
+                public void onPageScrolled(int position,
+                                           float positionOffset, int positionOffsetPixels) {
+                    //This method will be invoked when the current page is scrolled,
+                    //either as part of a programmatically initiated smooth scroll
+                    //or a user initiated touch scroll.
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    //This method will be invoked when a new page becomes selected.
+                    //Log.i("onPageSelected","" + position);
+                    //mViewPager.setCurrentItem(position);
+
+                }
+            };
+
+/*
     public void addView (View newPage)
     {
         int pageIndex = pagerAdapter.addView (newPage);
@@ -69,30 +94,7 @@ public class MainActivity extends AppCompatActivity {
     {
         mViewPager.setCurrentItem (pagerAdapter.getItemPosition (pageToShow), true);
     }
+    */
 
-
-    private ViewPager.OnPageChangeListener myOnPageChangeListener =
-            new ViewPager.OnPageChangeListener() {
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                    //Called when the scroll state changes.
-                }
-
-                @Override
-                public void onPageScrolled(int position,
-                                           float positionOffset, int positionOffsetPixels) {
-                    //This method will be invoked when the current page is scrolled,
-                    //either as part of a programmatically initiated smooth scroll
-                    //or a user initiated touch scroll.
-                }
-
-                @Override
-                public void onPageSelected(int position) {
-                    //This method will be invoked when a new page becomes selected.
-                    Log.i("onPageSelected","" + position);
-
-                }
-            };
 
 }

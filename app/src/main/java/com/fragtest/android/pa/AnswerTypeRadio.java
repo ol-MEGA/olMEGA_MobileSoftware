@@ -22,7 +22,6 @@ public class AnswerTypeRadio extends AppCompatActivity {
     private boolean bChecked = false;
     private int nAnswerID;
 
-
     public AnswerTypeRadio(Context context, int ID, String sAnswer, RadioGroup qParent) {
 
         mContext = context;
@@ -48,6 +47,10 @@ public class AnswerTypeRadio extends AppCompatActivity {
     public boolean addAnswer() {
         mParent.addView(answerButton, answerParams);
         return true;
+    }
+
+    public void setChecked() {
+        answerButton.setChecked(true);
     }
 
 }

@@ -17,11 +17,18 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Calendar;
+import java.util.Date;
+
+
 
 import static android.R.attr.id;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 import static android.view.View.GONE;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
+
+
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -30,6 +37,7 @@ import static android.view.View.VISIBLE;
 public class Questionnaire {
 
 
+    private MetaData mMetaData;
     private String mRawInput;
     private String[] mQuestionnaire;
     private int mNumPages;
@@ -47,10 +55,13 @@ public class Questionnaire {
 
     Context mContext;
 
+    private boolean acceptBlankSpaces = false;
+
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
         mContextQPA = contextQPA;
+        mMetaData = new MetaData();
         mQuestionInfo = new ArrayList<>();
         mRawInput = readRawTextFile(mContext, R.raw.question_single);
         mQuestionnaire = mRawInput.split("<question|</question>");
@@ -71,10 +82,24 @@ public class Questionnaire {
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), question.getFilterCondition(), position));
 
+        if (question.isHidden()) {
+            mQuestionInfo.get(position).setInactive();
+        }
+
         return question;
     }
 
-    // Builds the Layout of each Question
+    // Builds Behind-The-Scenes Objects
+    public void generateBTCObject(Question question) {
+        
+        mMetaData.setDeviceID(mContextQPA.getDeviceID());
+        mMetaData.setStartDate(Calendar.getInstance().get(Calendar.SECOND));
+        mMetaData.setStartDateUTC(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+        TimeZone.getAvailableIDs();
+    }
+
+
+    // Builds the Layout of each Stage Question
     public LinearLayout generateView(Question question) {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
@@ -110,7 +135,6 @@ public class Questionnaire {
         // List carrying all Answers and Answer IDs
         List<Answer> answerList = question.getAnswers();
 
-
         // Iteration over all possible Answers
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
@@ -119,28 +143,45 @@ public class Questionnaire {
             Answer currentAnswer = answerList.get(iAnswer);
             String sAnswer = currentAnswer.Text;
             int nAnswerID = currentAnswer.Id;
+            boolean isDefault = currentAnswer.isDefault();
 
-            switch (sType) {
-                case "radio": {
-                    bRadio = true;
-                    AnswerTypeRadio answer = new AnswerTypeRadio(mContext,
-                            nAnswerID, sAnswer, answerRadioGroup);
-                    answer.addAnswer();
-                    listOfRadioIds.add(nAnswerID);
-                    break;
-                }
-                case "checkbox": {
-                    bRadio = false;
-                    AnswerTypeCheckBox answer = new AnswerTypeCheckBox(mContext,
-                            nAnswerID, sAnswer, answerLayout);
-                    answer.addAnswer();
-                    mAnswerIDs = answer.addClickListener(mAnswerIDs);
-                    break;
-                }
-                default: {
-                    bRadio = false;
-                    Log.e("strange","Wat nu?");
-                    break;
+            if (((nAnswerID == 66666) && (acceptBlankSpaces)) || (nAnswerID != 66666)) {
+
+                switch (sType) {
+                    case "radio": {
+                        bRadio = true;
+                        AnswerTypeRadio answer = new AnswerTypeRadio(mContext,
+                                nAnswerID, sAnswer, answerRadioGroup);
+                        if (isDefault) {
+                            answer.setChecked(); mAnswerIDs.add(nAnswerID);
+                        }
+                        answer.addAnswer();
+                        listOfRadioIds.add(nAnswerID);
+                        break;
+                    }
+                    case "checkbox": {
+                        bRadio = false;
+                        AnswerTypeCheckBox answer = new AnswerTypeCheckBox(mContext,
+                                nAnswerID, sAnswer, answerLayout);
+                        if (isDefault) {
+                            answer.setChecked(); mAnswerIDs.add(nAnswerID);
+                        }
+                        answer.addAnswer();
+                        mAnswerIDs = answer.addClickListener(mAnswerIDs);
+                        break;
+                    }
+                    case "text": {
+                        bRadio = false;
+                        AnswerTypeText answer = new AnswerTypeText(mContext,
+                                nAnswerID, answerLayout);
+                        answer.addAnswer();
+                        break;
+                    }
+                    default: {
+                        bRadio = false;
+                        Log.e("strange", "Wat nu?");
+                        break;
+                    }
                 }
             }
         }
@@ -150,16 +191,12 @@ public class Questionnaire {
             answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedID) {
-
                     // In Case of Radio Buttons checking one means unchecking all other Elements
                     // Therefore onClickListening must be handled on Group Level
                     // listOfRadioIds contains all IDs of current Radio Group
                     mAnswerIDs.removeAll(listOfRadioIds);
                     mAnswerIDs.add(checkedID);
                     answerRadioGroup.check(checkedID);
-
-                    Log.i("number of filter ids",""+mAnswerIDs.size());
-
                     // Toggle Visibility of suited/unsuited frames
                     checkVisibility();
                 }
@@ -184,131 +221,60 @@ public class Questionnaire {
 
         for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
-            // Destruction
-
             QuestionInfo qI = mQuestionInfo.get(iPos);
 
-            // Filter ID MUST exist
-            if ((qI.getFilterId() != -1) && (qI.getCondition())) {
-                // Filter ID does NOT exist
-                if (!mAnswerIDs.contains(qI.getFilterId())) {
-                    // If Page is active -> destroy
-                    if (qI.isActive()) {
-                        Log.i("page active", "active -> destroy");
-                        mQuestionInfo.get(iPos).setInactive();
-                        Log.i("page active","setInactive()");
-                        Log.i("positionInPager",""+qI.getPositionInPager());
-
-                        // Remove View from ActiveList
-                        mContextQPA.removeView(qI.getPositionInPager());
-                        Log.i("page active","View removed");
-
-                        renewPositionsInPager();
-                        Log.i("info","positions renewed");
-                        displayInfo();
-
-                        mContextQPA.notifyDataSetChanged();
-                        Log.i("page active","notified");
-                        Log.i("end","-------------------------");
-                    }
-                }
+            if (qI.getFilterId() != -1                              // Specific Filter ID
+                    && qI.getCondition()                            // which MUST exist
+                    && mAnswerIDs.contains(qI.getFilterId())        // DOES exist
+                    && !qI.isActive())                              // on an INACTIVE Layout
+            {
+                //Log.i("action", "1: ID which MUST exist, DOES exist on INActive Layout -> create:\n" +
+                //        qI.getQuestion().getQuestionText());
+                addQuestion(iPos);
             }
 
-            // Filter ID MUST NOT exist
-            if ((qI.getFilterId() != -1) && (!qI.getCondition())) {
-                // Filter ID EXISTS
-                if (mAnswerIDs.contains(qI.getFilterId())) {
-                    // If Page is active -> destroy
-                    if (qI.isActive()) {
-                        Log.i("page active", "active -> destroy");
-                        mQuestionInfo.get(iPos).setInactive();
-                        Log.i("page active","setInactive()");
-                        Log.i("positionInPager",""+qI.getPositionInPager());
-
-                        // Remove View from ActiveList
-                        mContextQPA.removeView(qI.getPositionInPager());
-                        Log.i("page active","View removed");
-
-                        renewPositionsInPager();
-                        Log.i("info","positions renewed");
-                        displayInfo();
-
-                        mContextQPA.notifyDataSetChanged();
-                        Log.i("page active","notified");
-                        Log.i("end","-------------------------");
-                    }
-                }
+            if (qI.getFilterId() != -1                              // Specific Filter ID
+                    && qI.getCondition()                            // which MUST exist
+                    && !mAnswerIDs.contains(qI.getFilterId())       // does NOT exist
+                    && qI.isActive())                               // on an ACTIVE Layout
+            {
+                //Log.i("action", "2: ID which MUST exist, does NOT exist on Active Layout - destroy:\n" +
+                //        qI.getQuestion().getQuestionText());
+                removeQuestion(iPos);
             }
 
-
-        }
-
-
-        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
-
-            QuestionInfo qI = mQuestionInfo.get(iPos);
-
-            // Filter ID MUST exist
-            if ((qI.getFilterId() != -1) && (qI.getCondition())) {
-                // Filter ID EXISTS
-                if (mAnswerIDs.contains(qI.getFilterId())) {
-                    // If Page is not active -> create
-                    if (!qI.isActive()) {
-
-                        Log.i("current count",""+mContextQPA.getCount());
-                        Log.i("page not active", "inactive -> create");
-                        mQuestionInfo.get(iPos).setActive();
-                        Log.i("page not active","setActive");
-
-                        // View is fetched from Storage List and added to Active List
-                        int nAddPos = mContextQPA.addView(
-                                mContextQPA.mListOfViewsStorage.get(iPos).getView());
-
-                        renewPositionsInPager();
-                        Log.i("info","positions renewed");
-                        displayInfo();
-
-                        Log.i("page not active","View added at position "+nAddPos);
-
-                        mContextQPA.notifyDataSetChanged();
-
-                        Log.e("page not active","notified");
-                        Log.i("end","-------------------------");
-                    }
-                }
+            if (qI.getFilterId() != -1                                  // Specific Filter ID
+                    && !qI.getCondition()                               // which MUST NOT exist
+                    && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
+                    && !qI.isActive())                                  // on an INACTIVE Layout
+            {
+                //Log.i("action", "3: ID which MUST NOT exist, DOES exist on INActive Layout -> create:\n" +
+                //        qI.getQuestion().getQuestionText());
+                addQuestion(iPos);
             }
 
-            // Filter ID MUST NOT exist
-            if ((qI.getFilterId() != -1) && (!qI.getCondition())) {
-                // Filter ID does NOT exist
-                if (mAnswerIDs.contains(qI.getFilterId())) {
-                    // If Page is not active -> create
-                    if (!qI.isActive()) {
+            if ((qI.getFilterId() != -1)                                // Specific Filter ID
+                    && (!qI.getCondition())                             // which MUST NOT exist
+                    && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
+                    && qI.isActive())                                   // on an ACTIVE Layout
+            {
+                //Log.i("action", "4: ID which MUST NOT exist, DOES exist on Active Layout -> destroy:\n" +
+                //        qI.getQuestion().getQuestionText());
+                removeQuestion(iPos);
+            }
 
-                        Log.i("current count",""+mContextQPA.getCount());
-                        Log.i("page not active", "inactive -> create");
-                        mQuestionInfo.get(iPos).setActive();
-                        Log.i("page not active","setActive");
-
-                        // View is fetched from Storage List and added to Active List
-                        int nAddPos = mContextQPA.addView(
-                                mContextQPA.mListOfViewsStorage.get(iPos).getView());
-
-                        renewPositionsInPager();
-                        Log.i("info","positions renewed");
-                        displayInfo();
-
-                        Log.i("page not active","View added at position "+nAddPos);
-
-                        mContextQPA.notifyDataSetChanged();
-
-                        Log.e("page not active","notified");
-                        Log.i("end","-------------------------");
-                    }
-                }
+            if (qI.getFilterId() != -1                                  // Specific Filter ID
+                    && !qI.getCondition()                               // which MUST NOT exist
+                    && !mAnswerIDs.contains(qI.getFilterId())           // DOES NOT exist
+                    && !qI.isActive())                                  // on an INACTIVE Layout
+            {
+                //Log.i("action", "5: ID which MUST NOT exist, DOES NOT exist on INActive Layout -> create:\n" +
+                //        qI.getQuestion().getQuestionText());
+                addQuestion(iPos);
             }
         }
-        Log.i("new input","====================================");
+
+        //Log.i("new input", "====================================");
     }
 
 
@@ -317,31 +283,31 @@ public class Questionnaire {
      **/
 
 
+    private boolean addQuestion(int iPos) {
+        mQuestionInfo.get(iPos).setActive();
+        // View is fetched from Storage List and added to Active List
+        mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
+                mContextQPA.mListOfActiveViews.size(),
+                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw());
+        renewPositionsInPager();
+        mContextQPA.notifyDataSetChanged();
+        return true;
+    }
+
+    private boolean removeQuestion(int iPos) {
+        mQuestionInfo.get(iPos).setInactive();
+        // Remove View from ActiveList
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
+        renewPositionsInPager();
+        mContextQPA.notifyDataSetChanged();
+        return true;
+    }
+
     private void renewPositionsInPager() {
         for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
             int iId = mQuestionInfo.get(iItem).getId();
             mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
         }
-    }
-
-    private void displayInfo() {
-        for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
-            Log.i("View at Position: "+mQuestionInfo.get(iItem).getPositionInPager(),
-                    "Id: "+mQuestionInfo.get(iItem).getId());
-        }
-    }
-
-    private int getNextPositionInPager(View view){
-        int positionInList = mQuestionInfo.indexOf(view);
-        Log.i("found index in List",""+positionInList);
-        int positionInPager = -1;
-        // Meander backwards through the List until the next occurrence of non-negative
-        // positionInPager, meaning that the View exists in current Layout
-        while (positionInPager == -1) {
-            positionInList--;
-            positionInPager = mQuestionInfo.get(positionInList).getPositionInPager();
-        }
-        return positionInPager+1;
     }
 
     private List<String> thinOutList(List<String> mQuestionList) {
@@ -376,4 +342,17 @@ public class Questionnaire {
         }
         return text.toString();
     }
+
+    /*
+    private int getNextPositionInPager(View view) {
+        int positionInList = mQuestionInfo.indexOf(view);
+        int positionInPager = -1;
+        // Meander backwards through the List until the next occurrence of non-negative
+        // positionInPager, meaning that the View exists in current Layout
+        while (positionInPager == -1) {
+            positionInList--;
+            positionInPager = mQuestionInfo.get(positionInList).getPositionInPager();
+        }
+        return positionInPager + 1;
+    }*/
 }

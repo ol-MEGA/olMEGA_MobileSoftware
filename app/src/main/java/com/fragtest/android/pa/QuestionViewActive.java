@@ -12,17 +12,20 @@ public class QuestionViewActive implements Comparable<QuestionViewActive> {
 
     View mView;
     Integer mId;
+    Integer mPositionInRaw;
 
     @Override
     public int compareTo(QuestionViewActive questionViewActive) {
-        return this.mId.compareTo(questionViewActive.getId());
+        return this.mPositionInRaw.compareTo(questionViewActive.getPositionInRaw());
     }
 
-    public QuestionViewActive (View view, int id) {
+    public QuestionViewActive (View view, int id, int positionInRaw) {
         mView = view;
         mId = id;
+        mPositionInRaw = positionInRaw;
     }
 
     public View getView() { return mView; }
     public int getId() { return mId; }
+    public int getPositionInRaw() { return mPositionInRaw; }
 }

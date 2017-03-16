@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -17,41 +18,40 @@ import java.util.Collection;
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeCheckBox extends AppCompatActivity {
+public class AnswerTypeText extends AppCompatActivity {
 
-    public CheckBox mAnswerButton;
+    public EditText mAnswerText;
     public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
     private int nAnswerID;
     private Context mContext;
 
-    public AnswerTypeCheckBox(Context context, int ID, String sAnswer, AnswerLayout qParent) {
+    public AnswerTypeText(Context context, int ID, AnswerLayout qParent) {
 
         mContext = context;
         nAnswerID = ID;
         parent = qParent;
-        mAnswerButton = new CheckBox(context);
-        mAnswerButton.setId(nAnswerID);
-        mAnswerButton.setText(sAnswer);
-        mAnswerButton.setTextSize(20);                           //<<<<< TO DO: DP
-        mAnswerButton.setChecked(false);
-        mAnswerButton.setGravity(Gravity.START);
-        mAnswerButton.setTextColor(Color.BLACK);
-        mAnswerButton.setBackgroundColor(Color.WHITE);
+        mAnswerText = new EditText(mContext);
+        mAnswerText.setId(nAnswerID);
+        mAnswerText.setTextSize(20);                           //<<<<< TO DO: DP
+        mAnswerText.setGravity(Gravity.START);
+        mAnswerText.setTextColor(Color.BLACK);
+        mAnswerText.setBackgroundColor(Color.WHITE);
+        mAnswerText.setHint("kurze Beschreibung");
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT);
         answerParams.setMargins(48,32,24,32);                           //<<<<< TO DO: DP
     }
 
     public boolean addAnswer() {
-        parent.layoutAnswer.addView(mAnswerButton,answerParams);
+        parent.layoutAnswer.addView(mAnswerText,answerParams);
         return true;
     }
 
-
+/*
     public AnswerIDs addClickListener(final AnswerIDs vAnswerIDs) {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,9 +70,5 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         });
         return vAnswerIDs;
     }
-
-    public void setChecked() {
-        mAnswerButton.setChecked(true);
-    }
-
+*/
 }
