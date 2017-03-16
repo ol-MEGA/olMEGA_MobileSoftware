@@ -13,6 +13,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.astuetz.PagerSlidingTabStrip;
+
 import static android.view.View.GONE;
 import static java.util.logging.Logger.global;
 
@@ -32,6 +34,12 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(0);
 
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+
+        // Bind the tabs to the ViewPager
+        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+        tabs.setOnPageChangeListener(myOnPageChangeListener);
+        tabs.setViewPager(mViewPager);
+
 
 
     }

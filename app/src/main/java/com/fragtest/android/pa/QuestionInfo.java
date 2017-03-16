@@ -14,16 +14,19 @@ public class QuestionInfo {
     private int mFilterId;
     private boolean mCondition;
     private boolean mActive;
+    private boolean mHidden;
     private int mPositionInPager;
     private Question mQuestion;
 
-    public QuestionInfo(Question question, int id, int filterId, boolean condition, int position) {
+    public QuestionInfo(Question question, int id, int filterId,
+                        boolean condition, int position, boolean hidden) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
         mCondition = condition;
         mActive = true;
         mPositionInPager = position;
+        mHidden = hidden;
     }
 
     public boolean isActive() { return mActive; }
@@ -43,5 +46,7 @@ public class QuestionInfo {
     public int getPositionInPager() { return mPositionInPager; }
 
     public Question getQuestion() { return mQuestion; }
+
+    public boolean isHidden() { return mHidden; }
 
 }

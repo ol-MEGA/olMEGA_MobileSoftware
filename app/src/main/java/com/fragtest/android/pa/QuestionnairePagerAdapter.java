@@ -3,6 +3,7 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -28,18 +29,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
-    public ViewGroup mCollection;
     public ViewPager mViewPager;
-
-    private String _DEVICEID;
+    private MetaData mMetaData;
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
-        _DEVICEID = Secure.getString(context.getContentResolver(),
-                Secure.ANDROID_ID);
-
         mContext = context;
         mViewPager = viewPager;
+        mMetaData = new MetaData(mContext);
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(mContext, this);
         mNUM_PAGES = mQuestionnaire.getNumPages();
@@ -63,8 +60,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Adds the Layout to List storing ALL Views
             mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion));
         }
+
         // Creates and Destroys Views based on Filter ID Settings
         mQuestionnaire.checkVisibility();
+        mMetaData.initialise();
     }
 
     @Override
@@ -115,10 +114,17 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public int getItemPosition(Object object) {
         int index = mListOfActiveViews.indexOf(object);
+
         if (index == -1)
             return POSITION_NONE;
         else
             return index;
+    }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        //return super.getPageTitle(position);
+        return "aaa";
     }
 
     public int getPositionFromId(int iId) {
@@ -130,7 +136,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return -1;
     }
 
-    public String getDeviceID() { return _DEVICEID; }
+
 
     /*
     public View getView(int position) {

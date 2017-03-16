@@ -2,9 +2,11 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -14,12 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Calendar;
-import java.util.Date;
-
 
 
 import static android.R.attr.id;
@@ -36,42 +37,46 @@ import static android.view.View.VISIBLE;
 
 public class Questionnaire {
 
-
-    private MetaData mMetaData;
-    private String mRawInput;
-    private String[] mQuestionnaire;
+    // Number of Pages in Questionnaire (visible and hidden)
     private int mNumPages;
+    // Current Element Position in Questionnaire
+    private int mPosition;
+    // Object containing System Information e.g. Time and Date
+    private MetaData mMetaData;
+    // String containing the whole raw basis XML Input
+    private String mRawInput;
+    // String Array that contains all Question Basis Data
+    private String[] mQuestionnaire;
     private List<String> mQuestionList;
-    private LinearLayout mLinearContainer;
     // Context of QuestionnairePageAdapter for Visibility
     private QuestionnairePagerAdapter mContextQPA;
-    private int mPosition;
-
+    // Context of MainActivity()
+    private Context mContext;
+    // Accumulator for IDs checked in by given Answers
     private AnswerIDs mAnswerIDs;
-    // Performs Calculations
-    public Calculations mCalculations;
 
-    public ArrayList<QuestionInfo> mQuestionInfo;
+    // Performs general Calculations
+    private Calculations mCalculations;
+    // Basic Information about all available Questions
+    private ArrayList<QuestionInfo> mQuestionInfo;
 
-    Context mContext;
 
+    // Flag: Display forced empty vertical Spaces
     private boolean acceptBlankSpaces = false;
 
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
         mContextQPA = contextQPA;
-        mMetaData = new MetaData();
         mQuestionInfo = new ArrayList<>();
         mRawInput = readRawTextFile(mContext, R.raw.question_single);
-        mQuestionnaire = mRawInput.split("<question|</question>");
+        mQuestionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
         mQuestionList = stringArrayToListString(mQuestionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
         mCalculations = new Calculations(mContext);
         // Contains all IDs of checked Elements and Methods of Logic
         mAnswerIDs = new AnswerIDs(mContextQPA);
-        mLinearContainer = new LinearLayout(mContext);
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -80,24 +85,16 @@ public class Questionnaire {
         String sQuestionBlueprint = mQuestionList.get(mPosition);
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), question.getFilterCondition(), position));
+                question.getFilterId(), question.getFilterCondition(), position, question.isHidden()));
 
+        /*
         if (question.isHidden()) {
             mQuestionInfo.get(position).setInactive();
         }
+        */
 
         return question;
     }
-
-    // Builds Behind-The-Scenes Objects
-    public void generateBTCObject(Question question) {
-        
-        mMetaData.setDeviceID(mContextQPA.getDeviceID());
-        mMetaData.setStartDate(Calendar.getInstance().get(Calendar.SECOND));
-        mMetaData.setStartDateUTC(Calendar.getInstance(TimeZone.getTimeZone("UTC")));
-        TimeZone.getAvailableIDs();
-    }
-
 
     // Builds the Layout of each Stage Question
     public LinearLayout generateView(Question question) {
@@ -105,21 +102,21 @@ public class Questionnaire {
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean bRadio = false;
 
-        mLinearContainer = new LinearLayout(mContext);
+        LinearLayout linearContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
-        mLinearContainer.setOrientation(LinearLayout.VERTICAL);
-        mLinearContainer.setLayoutParams(linearContainerParams);
+        linearContainer.setOrientation(LinearLayout.VERTICAL);
+        linearContainer.setLayoutParams(linearContainerParams);
 
         // TextView carrying the Question
         QuestionText questionText = new QuestionText(mContext, question.getQuestionId(),
-                question.getQuestionText(), mLinearContainer);
+                question.getQuestionText(), linearContainer);
         questionText.addQuestion();
 
         // Creates a Canvas for the Question Layout
         AnswerLayout answerLayout = new AnswerLayout(mContext);
-        mLinearContainer.addView(answerLayout.scrollContent);
+        linearContainer.addView(answerLayout.scrollContent);
 
         // Format of Answer e.g. "radio", "checkbox", ...
         String sType = question.getTypeAnswer();
@@ -203,7 +200,7 @@ public class Questionnaire {
             });
             answerLayout.layoutAnswer.addView(answerRadioGroup);
         }
-        return mLinearContainer;
+        return linearContainer;
     }
 
     public int getNumPages() {
@@ -228,8 +225,6 @@ public class Questionnaire {
                     && mAnswerIDs.contains(qI.getFilterId())        // DOES exist
                     && !qI.isActive())                              // on an INACTIVE Layout
             {
-                //Log.i("action", "1: ID which MUST exist, DOES exist on INActive Layout -> create:\n" +
-                //        qI.getQuestion().getQuestionText());
                 addQuestion(iPos);
             }
 
@@ -238,8 +233,6 @@ public class Questionnaire {
                     && !mAnswerIDs.contains(qI.getFilterId())       // does NOT exist
                     && qI.isActive())                               // on an ACTIVE Layout
             {
-                //Log.i("action", "2: ID which MUST exist, does NOT exist on Active Layout - destroy:\n" +
-                //        qI.getQuestion().getQuestionText());
                 removeQuestion(iPos);
             }
 
@@ -248,8 +241,6 @@ public class Questionnaire {
                     && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
-                //Log.i("action", "3: ID which MUST NOT exist, DOES exist on INActive Layout -> create:\n" +
-                //        qI.getQuestion().getQuestionText());
                 addQuestion(iPos);
             }
 
@@ -258,8 +249,6 @@ public class Questionnaire {
                     && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
-                //Log.i("action", "4: ID which MUST NOT exist, DOES exist on Active Layout -> destroy:\n" +
-                //        qI.getQuestion().getQuestionText());
                 removeQuestion(iPos);
             }
 
@@ -268,13 +257,14 @@ public class Questionnaire {
                     && !mAnswerIDs.contains(qI.getFilterId())           // DOES NOT exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
-                //Log.i("action", "5: ID which MUST NOT exist, DOES NOT exist on INActive Layout -> create:\n" +
-                //        qI.getQuestion().getQuestionText());
                 addQuestion(iPos);
             }
-        }
 
-        //Log.i("new input", "====================================");
+            if (qI.isHidden() && qI.isActive()) {
+                qI.setInactive();
+                removeQuestion(iPos);
+            }
+        }
     }
 
 
@@ -342,6 +332,43 @@ public class Questionnaire {
         }
         return text.toString();
     }
+
+/*
+    static final String DATEFORMAT = "yyyy-MM-dd HH:mm:ss";
+
+    public static Date GetUTCdatetimeAsDate()
+    {
+        //note: doesn't check for null
+        return StringDateToDate(GetUTCdatetimeAsString());
+    }
+
+    public static String GetUTCdatetimeAsString()
+    {
+
+        final SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        final String utcTime = sdf.format(new Date());
+
+        return utcTime;
+    }
+
+    public static Date StringDateToDate(String StrDate)
+    {
+        Date dateToReturn = null;
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATEFORMAT);
+
+        try
+        {
+            dateToReturn = (Date)dateFormat.parse(StrDate);
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+
+        return dateToReturn;
+    }
+    */
 
     /*
     private int getNextPositionInPager(View view) {

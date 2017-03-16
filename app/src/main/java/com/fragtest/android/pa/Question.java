@@ -24,77 +24,80 @@ public class Question extends AppCompatActivity {
     private int mNumAnswers;
     private int mQuestionId;
     private int mFilterId;
+    private boolean mHidden;
     private boolean mFilterCondition;
-    //private boolean mIsActive;
     private List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
 
     // Public Constructor
     public Question(String sQuestionBlueprint) {
 
         mQuestionBlueprint = sQuestionBlueprint;
-        // Set Question active
-        //mIsActive = true;
-        // Obtain Question Text
-        mQuestionText = extractQuestionText();
-        // Obtain Question ID
-        mQuestionId = extractQuestionId();
-        // Obtain Filter ID
-        mFilterId = extractFilterId();
-        //Log.i("Filter ID",""+mFilterId);
-        // Obtain Filter ID Condition ("if true" or "if false")
-        mFilterCondition = extractFilterCondition();
-        //Log.i("Filter Condition",""+mFilterCondition);
-        // Obtain Answer Type (e.g. Radio, Button, Slider,...)
-        mTypeAnswer = extractTypeAnswers();
-        //Log.i("Type of Answer",mTypeAnswer);
-        // Obtain Number of Answers
-        mNumAnswers = extractNumAnswers();
-        //Log.i("Number of Answers",""+mNumAnswers);
-        // Create List of Answers
-        mAnswers = extractAnswerList();
-        //Log.i("end","----------------------");
+
+        if (isFinish()) {
+            mQuestionId = 99999;
+            mQuestionText = extractQuestionTextFinish();
+            mFilterId = -1;
+            mFilterCondition = true;
+            mTypeAnswer = "none";
+            mNumAnswers = 0;
+            mHidden = extractHidden();
+        } else {
+            // Obtain Question ID
+            mQuestionId = extractQuestionId();
+            // Obtain Question Text
+            mQuestionText = extractQuestionText();
+            // Obtain Filter ID
+            mFilterId = extractFilterId();
+            // Obtain Filter ID Condition ("if true" or "if false")
+            mFilterCondition = extractFilterCondition();
+            // Obtain Answer Type (e.g. Radio, Button, Slider,...)
+            mTypeAnswer = extractTypeAnswers();
+            // Obtain Number of Answers
+            mNumAnswers = extractNumAnswers();
+            // Create List of Answers
+            mAnswers = extractAnswerList();
+            // Determine whether Element is hidden
+            mHidden = extractHidden();
+        }
     }
 
-
     private int extractQuestionId() {
-        // String Array carrying introductory Line with ID, Type, Filter
-        String[] introductoryLine = mQuestionBlueprint.split("\"");
-        // Obtain Question ID
-        return Integer.parseInt(introductoryLine[1]);
+        // Obtain Question ID from Questionnaire
+        return Integer.parseInt(mQuestionBlueprint.split("\"")[1]);
     }
 
     private String extractQuestionText() {
-        // String Array carrying  the whole Question with Answers etc
-        String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
-        // Obtain Question Text
-        return (itemQuestionLines[2].split("<text>|</text>")[1]);
+            // Obtain Question Text from Questionnaire
+            return (mQuestionBlueprint.split("\\r?\\n")[2].split("<text>|</text>")[1]);
+    }
+
+    private String extractQuestionTextFinish() {
+        // Obtain Question Text from Questionnaire
+        return (mQuestionBlueprint.split("\\r?\\n")[1].split("<text>|</text>")[1]);
     }
 
     private int extractFilterId() {
 
-        // String Array carrying introductory Line with ID, Type, Filter
-        String[] introductoryLine = mQuestionBlueprint.split("\"");
-
-        if (introductoryLine[4].contains("filter")) {
+        if (mQuestionBlueprint.split("\"")[4].contains("filter")) {
             // String carrying the Filter ID terms
-            String sFilterIDLine = introductoryLine[5];
+            String sFilterIDLine = mQuestionBlueprint.split("\"")[5];
             // Filter ID is extracted
             String[] sFilterID = sFilterIDLine.split("_");
 
             if (sFilterID.length > 1) {
                 return Integer.parseInt(sFilterID[1]);
+            } else {
+                return -1;
             }
         }
         return -1;
     }
 
     private boolean extractFilterCondition() {
-        // String Array carrying introductory Line with ID, Type, Filter
-        String[] introductoryLine = mQuestionBlueprint.split("\"");
 
-        if (introductoryLine[4].contains("filter")) {
+        if (mQuestionBlueprint.split("\"")[4].contains("filter")) {
             // String carrying the Filter ID terms
-            String sFilterIDLine = introductoryLine[5];
+            String sFilterIDLine = mQuestionBlueprint.split("\"")[5];
             // '!' before Filter ID means the Question is shown ONLY if ID was not checked
             if (sFilterIDLine.charAt(0) == '!') {
                 return false;
@@ -116,8 +119,26 @@ public class Question extends AppCompatActivity {
         }
     }
 
+    private boolean extractHidden() {
+        if (mQuestionBlueprint.contains("hidden=\"true\"")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isFinish() {
+        // String Array carrying introductory Line with ID, Type, Filter
+        String[] introductoryLine = mQuestionBlueprint.split("\"");
+        if (introductoryLine.length == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public boolean isHidden() {
-        return mQuestionBlueprint.contains("hidden=\"true\""); }
+        return mHidden; }
 
     private boolean nonTypicalAnswer(String sTypeAnswer) {
         return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);}
