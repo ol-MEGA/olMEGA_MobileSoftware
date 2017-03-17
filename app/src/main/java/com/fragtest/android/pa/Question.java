@@ -38,9 +38,12 @@ public class Question extends AppCompatActivity {
             mQuestionText = extractQuestionTextFinish();
             mFilterId = -1;
             mFilterCondition = true;
-            mTypeAnswer = "none";
-            mNumAnswers = 0;
+            mTypeAnswer = "finish";
+            mNumAnswers = 1;
             mHidden = extractHidden();
+            mAnswers = new ArrayList<Answer>();
+            mAnswers.add(new Answer("Abschließen", 99999));
+
         } else {
             // Obtain Question ID
             mQuestionId = extractQuestionId();

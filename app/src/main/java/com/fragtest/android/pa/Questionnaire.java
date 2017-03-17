@@ -87,12 +87,6 @@ public class Questionnaire {
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), question.getFilterCondition(), position, question.isHidden()));
 
-        /*
-        if (question.isHidden()) {
-            mQuestionInfo.get(position).setInactive();
-        }
-        */
-
         return question;
     }
 
@@ -171,6 +165,14 @@ public class Questionnaire {
                         bRadio = false;
                         AnswerTypeText answer = new AnswerTypeText(mContext,
                                 nAnswerID, answerLayout);
+                        answer.addAnswer();
+                        break;
+                    }
+                    case "finish": {
+                        bRadio = false;
+                        AnswerTypeFinish answer = new AnswerTypeFinish(mContext,
+                                nAnswerID, answerLayout);
+                        answer.addClickListener();
                         answer.addAnswer();
                         break;
                     }
