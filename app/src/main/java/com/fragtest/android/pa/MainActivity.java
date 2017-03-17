@@ -1,22 +1,20 @@
 package com.fragtest.android.pa;
 
+import android.database.sqlite.SQLiteBindOrColumnIndexOutOfRangeException;
+import android.graphics.Color;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.animation.LinearOutSlowInInterpolator;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.FrameLayout;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.astuetz.PagerSlidingTabStrip;
 
-import static android.view.View.GONE;
-import static java.util.logging.Logger.global;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
+import static com.fragtest.android.pa.R.id.regress;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,10 +33,17 @@ public class MainActivity extends AppCompatActivity {
 
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
 
+        /*
         // Bind the tabs to the ViewPager
         PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
         tabs.setOnPageChangeListener(myOnPageChangeListener);
         tabs.setViewPager(mViewPager);
+        tabs.setTextColor(Color.WHITE);
+        tabs.setDividerPadding(0);
+        tabs.setTabPaddingLeftRight(0);
+        tabs.setShouldExpand(true);
+*/
+        setQuestionnaireProgBar(0);
 
 
 
@@ -50,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onPageScrollStateChanged(int state) {
                     //Called when the scroll state changes.
+
                 }
 
                 @Override
@@ -66,8 +72,35 @@ public class MainActivity extends AppCompatActivity {
                     //Log.i("onPageSelected","" + position);
                     //mViewPager.setCurrentItem(position);
 
+                    setQuestionnaireProgBar(position);
                 }
             };
+
+            // Set the horizontal Indicator at the Top to follow Page Position
+            public void setQuestionnaireProgBar(int position) {
+
+                int nAccuracy = 100;
+
+                View progress = findViewById(R.id.progress);
+                View regress = findViewById(R.id.regress);
+
+                float nProgress = (float) (position+1)/mViewPager.getAdapter().getCount()*nAccuracy;
+                float nRegress = (nAccuracy-nProgress);
+
+                LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        nRegress
+                );
+                LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        nProgress
+                );
+
+                progress.setLayoutParams(progParams);
+                regress.setLayoutParams(regParams);
+            }
 
 /*
     public void addView (View newPage)

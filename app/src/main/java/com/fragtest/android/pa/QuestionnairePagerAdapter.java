@@ -124,7 +124,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         //return super.getPageTitle(position);
-        return "aaa";
+        return "";
     }
 
     public int getPositionFromId(int iId) {
