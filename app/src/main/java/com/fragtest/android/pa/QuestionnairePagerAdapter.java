@@ -135,35 +135,4 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
         return -1;
     }
-
-
-
-    /*
-    public View getView(int position) {
-        return mListOfActiveViews.get(position).getView();
-    }*/
-
-    /*
-    public int addView(View v) {
-        return addView(v, mListOfActiveViews.size());
-        return addView(v, )
-    }
-    */
-    /*
-    public int removeView(ViewPager pager, View v) {
-        Log.i("index", "" + mListOfActiveViews.indexOf(v));
-        return removeView(mListOfActiveViews.indexOf(v));
-    }
-*/
-
-    /*
-    public void setCount(int numPages) {
-        mNUM_PAGES = numPages;
-    }
-
-    public void setCount() {
-        mNUM_PAGES = getCount();
-    }
-    */
-
 }

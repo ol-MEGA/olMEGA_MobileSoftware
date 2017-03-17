@@ -3,4 +3,9 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="lighterGray">#EEEEEE</color>
+    <color name="ProgressBarBlue">#55CCFF</color>
+    <color name="RadioButtonBlue">#55CCFF</color>
+    <color name="CheckBoxBlue">#55CCFF</color>
 </resources>
