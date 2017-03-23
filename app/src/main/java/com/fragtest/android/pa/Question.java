@@ -226,17 +226,4 @@ public class Question extends AppCompatActivity {
         return mAnswers;
     }
 
-    /*
-    public boolean isActive() {
-        return mIsActive;
-    }
-
-    public void setActive() {
-        mIsActive = true;
-    }
-
-    public void setInactive() {
-        mIsActive = false;
-    }
-*/
 }

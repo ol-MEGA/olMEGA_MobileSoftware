@@ -2,33 +2,23 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.text.format.DateFormat;
+import android.os.Environment;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
-import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
-import static android.R.attr.id;
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
-import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
-import static android.view.View.VISIBLE;
-
+import static android.os.Environment.getExternalStorageDirectory;
+import static android.util.Log.e;
 
 
 /**
@@ -60,6 +50,7 @@ public class Questionnaire {
     // Basic Information about all available Questions
     private ArrayList<QuestionInfo> mQuestionInfo;
 
+    private FileIO mFileIO;
 
     // Flag: Display forced empty vertical Spaces
     private boolean acceptBlankSpaces = false;
@@ -68,8 +59,10 @@ public class Questionnaire {
 
         mContext = context;
         mContextQPA = contextQPA;
+        mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
-        mRawInput = readRawTextFile(mContext, R.raw.question_single);
+        //mRawInput = readRawTextFile(mContext, R.raw.question_single);
+        mRawInput = mFileIO.readRawTextFile();
         mQuestionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
         mQuestionList = stringArrayToListString(mQuestionnaire);
         mQuestionList = thinOutList(mQuestionList);
@@ -102,13 +95,14 @@ public class Questionnaire {
                         LinearLayout.LayoutParams.MATCH_PARENT);
         linearContainer.setOrientation(LinearLayout.VERTICAL);
         linearContainer.setLayoutParams(linearContainerParams);
+        linearContainer.setBackgroundColor(Color.WHITE);
 
         // TextView carrying the Question
         QuestionText questionText = new QuestionText(mContext, question.getQuestionId(),
                 question.getQuestionText(), linearContainer);
         questionText.addQuestion();
 
-        // Creates a Canvas for the Question Layout
+        // Creates a Canvas for the Answer Layout
         AnswerLayout answerLayout = new AnswerLayout(mContext);
         linearContainer.addView(answerLayout.scrollContent);
 
@@ -178,7 +172,7 @@ public class Questionnaire {
                     }
                     default: {
                         bRadio = false;
-                        Log.e("strange", "Wat nu?");
+                        e("strange", "Wat nu?");
                         break;
                     }
                 }
@@ -309,79 +303,10 @@ public class Questionnaire {
         return mQuestionList;
     }
 
-
     private List<String> stringArrayToListString(String[] stringArray) {
         List<String> listString = new ArrayList<>();
         Collections.addAll(listString, stringArray);
         return listString;
     }
 
-    private static String readRawTextFile(Context ctx, int resId) {
-        InputStream inputStream = ctx.getResources().openRawResource(resId);
-
-        InputStreamReader inputReader = new InputStreamReader(inputStream);
-        BufferedReader buffReader = new BufferedReader(inputReader);
-        String line;
-        StringBuilder text = new StringBuilder();
-
-        try {
-            while ((line = buffReader.readLine()) != null) {
-                text.append(line);
-                text.append('\n');
-            }
-        } catch (IOException e) {
-            return null;
-        }
-        return text.toString();
-    }
-
-/*
-    static final String DATEFORMAT = "yyyy-MM-dd HH:mm:ss";
-
-    public static Date GetUTCdatetimeAsDate()
-    {
-        //note: doesn't check for null
-        return StringDateToDate(GetUTCdatetimeAsString());
-    }
-
-    public static String GetUTCdatetimeAsString()
-    {
-
-        final SimpleDateFormat sdf = new SimpleDateFormat(DATEFORMAT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final String utcTime = sdf.format(new Date());
-
-        return utcTime;
-    }
-
-    public static Date StringDateToDate(String StrDate)
-    {
-        Date dateToReturn = null;
-        SimpleDateFormat dateFormat = new SimpleDateFormat(DATEFORMAT);
-
-        try
-        {
-            dateToReturn = (Date)dateFormat.parse(StrDate);
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        return dateToReturn;
-    }
-    */
-
-    /*
-    private int getNextPositionInPager(View view) {
-        int positionInList = mQuestionInfo.indexOf(view);
-        int positionInPager = -1;
-        // Meander backwards through the List until the next occurrence of non-negative
-        // positionInPager, meaning that the View exists in current Layout
-        while (positionInPager == -1) {
-            positionInList--;
-            positionInPager = mQuestionInfo.get(positionInList).getPositionInPager();
-        }
-        return positionInPager + 1;
-    }*/
 }

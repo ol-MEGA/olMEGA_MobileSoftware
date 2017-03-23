@@ -1,9 +1,10 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.AppCompatRadioButton;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -16,7 +17,7 @@ import android.widget.RadioGroup;
 
 public class AnswerTypeRadio extends AppCompatActivity {
 
-    RadioButton answerButton;
+    RadioButton mAnswerButton;
     private Context mContext;
     LinearLayout.LayoutParams answerParams;
     RadioGroup mParent;
@@ -28,30 +29,35 @@ public class AnswerTypeRadio extends AppCompatActivity {
         mContext = context;
         nAnswerID = ID;
         mParent = qParent;
-        answerButton = new RadioButton(context);
-        answerButton.setId(nAnswerID);
-        answerButton.setText(sAnswer);
-        answerButton.setTextSize(20);                           //<<<<< TO DO: DP
-        answerButton.setChecked(false);
-        answerButton.setGravity(Gravity.START);
-        answerButton.setTextColor(Color.BLACK);
-        answerButton.setBackgroundColor(Color.WHITE);
+        mAnswerButton = new RadioButton(context);
+        mAnswerButton.setId(nAnswerID);
+        mAnswerButton.setText(sAnswer);
+        mAnswerButton.setTextSize(20);                           //<<<<< TO DO: SP
+        mAnswerButton.setChecked(false);
+        mAnswerButton.setGravity(Gravity.START);
+        mAnswerButton.setTextColor(Color.BLACK);
+        mAnswerButton.setBackgroundColor(Color.WHITE);
+        int states[][] = {{android.R.attr.state_checked}, {}};
+        int colors[] = {R.color.JadeRed, R.color.JadeRed};
+        CompoundButtonCompat.setButtonTintList(mAnswerButton, new ColorStateList(states, colors));
+        mAnswerButton.setMinHeight(96);
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        answerParams.setMargins(48,32,24,32);                           //<<<<< TO DO: DP
+        //answerParams.setMargins(48,32,24,32);                           //<<<<< TO DO: DP
+
 
     }
 
     public boolean addAnswer() {
-        mParent.addView(answerButton, answerParams);
+        mParent.addView(mAnswerButton, answerParams);
         return true;
     }
 
     public void setChecked() {
-        answerButton.setChecked(true);
+        mAnswerButton.setChecked(true);
     }
 
 }

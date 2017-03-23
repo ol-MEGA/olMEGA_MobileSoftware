@@ -2,6 +2,8 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,7 +26,7 @@ public class QuestionText extends AppCompatActivity {
         questionTextView = new TextView(context);
         questionTextView.setId(nQuestionID);
         questionTextView.setTextColor(Color.BLACK);
-        questionTextView.setBackgroundColor(Color.WHITE);
+        questionTextView.setBackgroundColor(0xFFEEEEEE);
         questionTextView.setTextSize(mCalculations.convertSpToPixels(9));        //<<<<< TO DO: SP
         questionTextView.setText(sQuestion);
         questionTextView.setPadding(mCalculations.convertDpToPixels(16),
@@ -34,6 +36,8 @@ public class QuestionText extends AppCompatActivity {
         questionLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
+        questionTextView.setHeight(160);
+
 
     }
 

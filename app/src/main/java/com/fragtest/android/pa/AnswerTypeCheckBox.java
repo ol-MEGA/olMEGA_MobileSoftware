@@ -1,7 +1,9 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
@@ -38,12 +40,16 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         mAnswerButton.setGravity(Gravity.START);
         mAnswerButton.setTextColor(Color.BLACK);
         mAnswerButton.setBackgroundColor(Color.WHITE);
+        int states[][] = {{android.R.attr.state_checked}, {}};
+        int colors[] = {R.color.JadeRed, R.color.JadeRed};
+        CompoundButtonCompat.setButtonTintList(mAnswerButton, new ColorStateList(states, colors));
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        answerParams.setMargins(48,32,24,32);                           //<<<<< TO DO: DP
+        //answerParams.setMargins(0,8,0,8);                           //<<<<< TO DO: DP
+        mAnswerButton.setMinHeight(96);
     }
 
     public boolean addAnswer() {

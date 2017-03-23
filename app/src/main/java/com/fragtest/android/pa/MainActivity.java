@@ -27,16 +27,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         // Intro Video -> might be better Option to include additional Activity
-        setContentView(R.layout.intro);
-        VideoView videoView = (VideoView)findViewById(R.id.introVideo);
+        //setContentView(R.layout.intro);
+        //VideoView videoView = (VideoView)findViewById(R.id.introVideo);
         //videoView.setMediaController(mc);
-        Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.logo);
-        videoView.setVideoURI(uri);
-        videoView.start();
+        //Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.logo);
+        //videoView.setVideoURI(uri);
+        //videoView.start();
 
-        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
+        //videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        //   @Override
+        //   public void onCompletion(MediaPlayer mp) {
 
 
         setContentView(R.layout.activity_main);
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (mPosition != 0) {
-                    mViewPager.setCurrentItem(mPosition-1);
+                    mViewPager.setCurrentItem(mPosition - 1);
                 }
             }
         });
@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
         mArrowForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mPosition < mViewPager.getAdapter().getCount()-1) {
-                    mViewPager.setCurrentItem(mPosition+1);
+                if (mPosition < mViewPager.getAdapter().getCount() - 1) {
+                    mViewPager.setCurrentItem(mPosition + 1);
                 }
             }
         });
@@ -71,30 +71,16 @@ public class MainActivity extends AppCompatActivity {
         mRevert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Data was reverted.",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Data was reverted.", Toast.LENGTH_SHORT).show();
                 mViewPager.setCurrentItem(0);
             }
         });
 
-        /*
-        // Bind the tabs to the ViewPager
-        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
-        tabs.setOnPageChangeListener(myOnPageChangeListener);
-        tabs.setViewPager(mViewPager);
-        tabs.setTextColor(Color.WHITE);
-        tabs.setDividerPadding(0);
-        tabs.setTabPaddingLeftRight(0);
-        tabs.setShouldExpand(true);
-*/
-
-
         setQuestionnaireProgBar(0);
         setArrows(0);
 
-            }
-        });
-
-
+        //}
+        //});
 
 
     }
@@ -104,69 +90,60 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onPageScrollStateChanged(int state) {
-                    //Called when the scroll state changes.
-
                 }
 
                 @Override
                 public void onPageScrolled(int position,
                                            float positionOffset, int positionOffsetPixels) {
-                    //This method will be invoked when the current page is scrolled,
-                    //either as part of a programmatically initiated smooth scroll
-                    //or a user initiated touch scroll.
                 }
 
                 @Override
                 public void onPageSelected(int position) {
-                    //This method will be invoked when a new page becomes selected.
-                    //Log.i("onPageSelected","" + position);
-                    //mViewPager.setCurrentItem(position);
-
                     setQuestionnaireProgBar(position);
                     setArrows(position);
                 }
             };
 
-            // Set the horizontal Indicator at the Top to follow Page Position
-            public void setQuestionnaireProgBar(int position) {
+    // Set the horizontal Indicator at the Top to follow Page Position
+    public void setQuestionnaireProgBar(int position) {
 
-                mPosition = position;
-                int nAccuracy = 100;
+        mPosition = position;
+        int nAccuracy = 100;
 
-                View progress = findViewById(R.id.progress);
-                View regress = findViewById(R.id.regress);
+        View progress = findViewById(R.id.progress);
+        View regress = findViewById(R.id.regress);
 
-                float nProgress = (float) (position+1)/mViewPager.getAdapter().getCount()*nAccuracy;
-                float nRegress = (nAccuracy-nProgress);
+        float nProgress = (float) (position + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
+        float nRegress = (nAccuracy - nProgress);
 
-                LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        nRegress
-                );
-                LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        nProgress
-                );
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
 
-                progress.setLayoutParams(progParams);
-                regress.setLayoutParams(regParams);
-            }
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
+    }
 
-            public void setArrows(int position) {
-                View arrowBack = findViewById(R.id.Action_Back);
-                if (position == 0) {
-                    arrowBack.setVisibility(View.INVISIBLE);
-                } else if (arrowBack.getVisibility() == View.INVISIBLE) {
-                    arrowBack.setVisibility(View.VISIBLE);
-                }
+    public void setArrows(int position) {
+        View arrowBack = findViewById(R.id.Action_Back);
+        if (position == 0) {
+            arrowBack.setVisibility(View.INVISIBLE);
+        } else if (arrowBack.getVisibility() == View.INVISIBLE) {
+            arrowBack.setVisibility(View.VISIBLE);
+        }
 
-                View arrowForward = findViewById(R.id.Action_Forward);
-                if (position == mViewPager.getAdapter().getCount()-1) {
-                    arrowForward.setVisibility(View.INVISIBLE);
-                } else if (arrowForward.getVisibility() == View.INVISIBLE) {
-                    arrowForward.setVisibility(View.VISIBLE);
-                }
-            }
+        View arrowForward = findViewById(R.id.Action_Forward);
+        if (position == mViewPager.getAdapter().getCount() - 1) {
+            arrowForward.setVisibility(View.INVISIBLE);
+        } else if (arrowForward.getVisibility() == View.INVISIBLE) {
+            arrowForward.setVisibility(View.VISIBLE);
+        }
+    }
 }

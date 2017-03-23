@@ -2,6 +2,7 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -22,7 +23,7 @@ public class AnswerLayout extends AppCompatActivity {
     public AnswerLayout(Context context) {
         // Main Layout has to be incorporated in ScrollView for Overflow Handling
         scrollContent = new ScrollView(context);
-        scrollContent.setBackgroundColor(0x00FFFFFF);
+        scrollContent.setBackgroundColor(Color.WHITE);
         scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT));
@@ -31,9 +32,9 @@ public class AnswerLayout extends AppCompatActivity {
         // Main Layout - Right now Framework carrying ONE Question
         layoutAnswer = new LinearLayout(context);
 
-        layoutAnswer.setPadding(0, 48, 48, 48);
+        layoutAnswer.setPadding(48, 48, 48, 48);
         layoutAnswer.setOrientation(LinearLayout.VERTICAL);
-        layoutAnswer.setBackgroundColor(Color.LTGRAY);
+        layoutAnswer.setBackgroundColor(Color.WHITE);
 
         // Linear Layout is Child to ScrollView
         scrollContent.addView(layoutAnswer);

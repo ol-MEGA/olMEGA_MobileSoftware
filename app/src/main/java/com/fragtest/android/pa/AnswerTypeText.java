@@ -38,6 +38,7 @@ public class AnswerTypeText extends AppCompatActivity {
         mAnswerText.setTextColor(Color.BLACK);
         mAnswerText.setBackgroundColor(Color.WHITE);
         mAnswerText.setHint("kurze Beschreibung");
+        mAnswerText.setHintTextColor(R.color.colorAccent);
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
