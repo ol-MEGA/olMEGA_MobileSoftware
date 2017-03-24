@@ -3,6 +3,7 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -32,24 +33,24 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         mContext = context;
         nAnswerID = ID;
         parent = qParent;
-        mAnswerButton = new CheckBox(context);
+        mAnswerButton = new CheckBox(mContext);
         mAnswerButton.setId(nAnswerID);
         mAnswerButton.setText(sAnswer);
-        mAnswerButton.setTextSize(20);                           //<<<<< TO DO: DP
+        mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setChecked(false);
         mAnswerButton.setGravity(Gravity.START);
-        mAnswerButton.setTextColor(Color.BLACK);
-        mAnswerButton.setBackgroundColor(Color.WHITE);
+        mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
+        mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
         int states[][] = {{android.R.attr.state_checked}, {}};
-        int colors[] = {R.color.JadeRed, R.color.JadeRed};
+        int colors[] = {ContextCompat.getColor(context, R.color.JadeRed),
+                ContextCompat.getColor(context, R.color.JadeRed)};
         CompoundButtonCompat.setButtonTintList(mAnswerButton, new ColorStateList(states, colors));
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        //answerParams.setMargins(0,8,0,8);                           //<<<<< TO DO: DP
-        mAnswerButton.setMinHeight(96);
+        mAnswerButton.setMinHeight(Units.getCheckBoxMinHeight());
     }
 
     public boolean addAnswer() {
@@ -71,7 +72,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                     vAnswerIDs.removeAll(AnswerID);
                 }
 
-                Toast.makeText(mContext,""+vAnswerIDs.size(),Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext,""+vAnswerIDs.size(),Toast.LENGTH_SHORT).show();
             }
         });
         return vAnswerIDs;

@@ -7,4 +7,6 @@
     <color name="lighterGray">#EEEEEE</color>
     <color name="JadeRed">#C2102A</color>
     <color name="JadeGray">#8F9092</color>
+    <color name="TextColor">#000000</color>
+    <color name="BackgroundColor">#FFFFFF</color>
 </resources>

@@ -3,6 +3,7 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Environment;
+import android.os.MemoryFile;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
@@ -27,32 +28,30 @@ import static android.util.Log.e;
 
 public class Questionnaire {
 
-    // Number of Pages in Questionnaire (visible and hidden)
+    // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
-    // Current Element Position in Questionnaire
+    // Current element position in questionnaire
     private int mPosition;
-    // Object containing System Information e.g. Time and Date
-    private MetaData mMetaData;
-    // String containing the whole raw basis XML Input
+    // String containing the whole raw basis XML input
     private String mRawInput;
-    // String Array that contains all Question Basis Data
+    // String array that contains all question basis data
     private String[] mQuestionnaire;
+    // List containing all questions (including all attached information)
     private List<String> mQuestionList;
-    // Context of QuestionnairePageAdapter for Visibility
+    // Context of QuestionnairePageAdapter for visibility
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
     private Context mContext;
-    // Accumulator for IDs checked in by given Answers
+    // Accumulator for ids checked in by given answers
     private AnswerIDs mAnswerIDs;
-
-    // Performs general Calculations
-    private Calculations mCalculations;
-    // Basic Information about all available Questions
+    // Accumulator for contents of filled in text boxes
+    private AnswerTexts mAnswerTexts;
+    // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
 
     private FileIO mFileIO;
 
-    // Flag: Display forced empty vertical Spaces
+    // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
 
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
@@ -61,15 +60,18 @@ public class Questionnaire {
         mContextQPA = contextQPA;
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
-        //mRawInput = readRawTextFile(mContext, R.raw.question_single);
         mRawInput = mFileIO.readRawTextFile();
+
+        // Split basis data into question segments
         mQuestionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
         mQuestionList = stringArrayToListString(mQuestionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
-        mCalculations = new Calculations(mContext);
-        // Contains all IDs of checked Elements and Methods of Logic
+
+        // Contains all ids of checked elements
         mAnswerIDs = new AnswerIDs(mContextQPA);
+        // Contains all contents of text answers
+        mAnswerTexts = new AnswerTexts(mContextQPA);
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -160,6 +162,7 @@ public class Questionnaire {
                         AnswerTypeText answer = new AnswerTypeText(mContext,
                                 nAnswerID, answerLayout);
                         answer.addAnswer();
+                        answer.addClickListener(mAnswerTexts);
                         break;
                     }
                     case "finish": {
@@ -207,8 +210,8 @@ public class Questionnaire {
         return question.getQuestionId();
     }
 
-    // Function checks all available Pages whether their filtering Condition has been met and
-    // toggles Visibility by destroying or creating the Views and adding them to the List of Views
+    // Function checks all available pages whether their filtering condition has been met and
+    // toggles visibility by destroying or creating the views and adding them to the list of views
     // which is handled by QuestionnairePagerAdapter
     public void checkVisibility() {
 
@@ -269,6 +272,7 @@ public class Questionnaire {
      **/
 
 
+    // Adds the question to the displayed list
     private boolean addQuestion(int iPos) {
         mQuestionInfo.get(iPos).setActive();
         // View is fetched from Storage List and added to Active List
@@ -280,6 +284,7 @@ public class Questionnaire {
         return true;
     }
 
+    // Removes the question from the displayed list
     private boolean removeQuestion(int iPos) {
         mQuestionInfo.get(iPos).setInactive();
         // Remove View from ActiveList
@@ -289,6 +294,7 @@ public class Questionnaire {
         return true;
     }
 
+    // Renews all the positions in information object gathered from actual order
     private void renewPositionsInPager() {
         for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
             int iId = mQuestionInfo.get(iItem).getId();
@@ -296,6 +302,7 @@ public class Questionnaire {
         }
     }
 
+    // Removes irrelevant data from question sheet
     private List<String> thinOutList(List<String> mQuestionList) {
         for (int iItem = mQuestionList.size() - 1; iItem >= 0; iItem = iItem - 2) {
             mQuestionList.remove(iItem);
@@ -303,6 +310,7 @@ public class Questionnaire {
         return mQuestionList;
     }
 
+    // Turns an array of Strings into a List of Strings
     private List<String> stringArrayToListString(String[] stringArray) {
         List<String> listString = new ArrayList<>();
         Collections.addAll(listString, stringArray);

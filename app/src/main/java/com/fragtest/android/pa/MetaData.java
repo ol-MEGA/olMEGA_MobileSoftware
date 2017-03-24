@@ -14,20 +14,23 @@ import android.widget.Chronometer;
 
 public class MetaData extends AppCompatActivity{
 
-    private String _DeviceID;
-    private String _StartDate;
-    private String _StartDateUTC;
-    private String _EndDate;
-    private String _EndDateUTC;
-    private Chronometer mTimer;
-    private Context mContext;
     public boolean timerActive = false;
 
-    long _TimeToCompleteSeconds;
+    private String DEVICE_ID;
+    private String START_DATE;
+    private String START_DATE_UTC;
+    private String END_DATE;
+    private String END_DATE_UTC;
+
+    private long TIME_TO_COMPLETE_SECONDS;
+
+    private Chronometer mTimer;
+    private Context mContext;
+
 
     public MetaData(Context context) {
         mContext = context;
-        _TimeToCompleteSeconds = -1;
+        TIME_TO_COMPLETE_SECONDS = -1;
         mTimer = new Chronometer(mContext);
     }
 
@@ -59,28 +62,28 @@ public class MetaData extends AppCompatActivity{
         stopTimer();
         Log.e("finalised at",getEndDate());
         Log.e("finalised at (UTC)",getEndDateUTC());
-        Log.e("it took this much time",""+_TimeToCompleteSeconds);
+        Log.e("it took this much time",""+ TIME_TO_COMPLETE_SECONDS);
         return true;
     }
 
     private void setDeviceID(String DeviceID) {
-        _DeviceID = DeviceID;
+        DEVICE_ID = DeviceID;
     }
 
     private void setStartDate(String StartDate) {
-        _StartDate = StartDate;
+        START_DATE = StartDate;
     }
 
     private void setStartDateUTC(String StartDateUTC) {
-        _StartDateUTC = StartDateUTC;
+        START_DATE_UTC = StartDateUTC;
     }
 
     private void setEndDate(String EndDate) {
-        _EndDate = EndDate;
+        END_DATE = EndDate;
     }
 
     private void setEndDateUTC(String EndDateUTC) {
-        _EndDateUTC = EndDateUTC;
+        END_DATE_UTC = EndDateUTC;
     }
 
     private void startTimer() {
@@ -94,19 +97,19 @@ public class MetaData extends AppCompatActivity{
         if (timerActive) {
             timerActive = false;
             mTimer.stop();
-            _TimeToCompleteSeconds = mTimer.getBase();
+            TIME_TO_COMPLETE_SECONDS = mTimer.getBase();
         }
     }
 
-    public String getDeviceID() { return _DeviceID; }
+    public String getDeviceID() { return DEVICE_ID; }
 
-    public String getStartDate() { return _StartDate; }
+    public String getStartDate() { return START_DATE; }
 
-    public String getStartDateUTC() { return _StartDateUTC; }
+    public String getStartDateUTC() { return START_DATE_UTC; }
 
-    public String getEndDate() { return _EndDate; }
+    public String getEndDate() { return END_DATE; }
 
-    public String getEndDateUTC() { return _EndDateUTC; }
+    public String getEndDateUTC() { return END_DATE_UTC; }
 
-    public long getTimeToCompleteSeconds() { return _TimeToCompleteSeconds; }
+    public long getTimeToCompleteSeconds() { return TIME_TO_COMPLETE_SECONDS; }
 }

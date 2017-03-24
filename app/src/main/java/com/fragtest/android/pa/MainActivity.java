@@ -1,7 +1,5 @@
 package com.fragtest.android.pa;
 
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,12 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
-    private QuestionnairePagerAdapter pagerAdapter = null;
+    //private QuestionnairePagerAdapter pagerAdapter = null;
 
     private View mArrowBack;
     private View mArrowForward;
@@ -25,19 +22,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Intro Video -> might be better Option to include additional Activity
-        //setContentView(R.layout.intro);
-        //VideoView videoView = (VideoView)findViewById(R.id.introVideo);
-        //videoView.setMediaController(mc);
-        //Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.logo);
-        //videoView.setVideoURI(uri);
-        //videoView.start();
-
-        //videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-        //   @Override
-        //   public void onCompletion(MediaPlayer mp) {
-
 
         setContentView(R.layout.activity_main);
 
@@ -71,17 +55,13 @@ public class MainActivity extends AppCompatActivity {
         mRevert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Data was reverted.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
                 mViewPager.setCurrentItem(0);
             }
         });
 
         setQuestionnaireProgBar(0);
         setArrows(0);
-
-        //}
-        //});
-
 
     }
 

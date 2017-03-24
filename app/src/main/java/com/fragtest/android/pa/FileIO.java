@@ -3,6 +3,7 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,7 +20,8 @@ import static android.util.Log.e;
 
 public class FileIO {
 
-    public static final String DATA_FOLDER = "IHAB";
+    private static final String DATA_FOLDER = "IHAB";
+    private static final String FILE_NAME = "hoersituation-v0.xml";
     private static String FILE_IO = "FileIO";
 
     public FileIO() {
@@ -62,7 +64,7 @@ public class FileIO {
             // Obtain working Directory
             File dir = new File (getFolderPath());
             // Address Basis File in working Directory
-            File file = new File(dir, "hoersituation-v0.xml");
+            File file = new File(dir, FILE_NAME);
 
             FileInputStream inputStream = new FileInputStream(file);
             InputStreamReader inputReader = new InputStreamReader(inputStream);
@@ -86,5 +88,12 @@ public class FileIO {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    public boolean saveDataToFile(MetaData metaData, AnswerIDs answerIDs) {
+
+
+        return true;
     }
 }

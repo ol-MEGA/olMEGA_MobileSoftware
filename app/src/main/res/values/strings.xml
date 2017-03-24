@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">IHAB</string>
-    <string name="textFinish">Abschließen</string>
+    <string name="buttonTextFinish">Push to complete</string>
+    <string name="infoTextRevert">Data was reverted</string>
+    <string name="infoTextSave">Data was saved</string>
+    <string name="hintTextAnswer">Please give a short Description.</string>
+    <string name="buttonTextOkay">OK</string>
 </resources>

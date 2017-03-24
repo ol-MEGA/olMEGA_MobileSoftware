@@ -2,11 +2,13 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.TypedValue;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import static android.util.TypedValue.COMPLEX_UNIT_PX;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -17,28 +19,26 @@ public class QuestionText extends AppCompatActivity {
     TextView questionTextView;
     LinearLayout.LayoutParams questionLayoutParams;
     LinearLayout parent;
-    Calculations mCalculations;
+    Units mUnits;
 
     public QuestionText(Context context, int nQuestionID, String sQuestion, LinearLayout qParent) {
 
-        mCalculations = new Calculations(context);
         parent = qParent;
+        mUnits = new Units(context);
         questionTextView = new TextView(context);
         questionTextView.setId(nQuestionID);
-        questionTextView.setTextColor(Color.BLACK);
+        questionTextView.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
         questionTextView.setBackgroundColor(0xFFEEEEEE);
-        questionTextView.setTextSize(mCalculations.convertSpToPixels(9));        //<<<<< TO DO: SP
+        questionTextView.setTextSize(Units.getTextSizeQuestion());
         questionTextView.setText(sQuestion);
-        questionTextView.setPadding(mCalculations.convertDpToPixels(16),
-                mCalculations.convertDpToPixels(8),
-                mCalculations.convertDpToPixels(16),
-                mCalculations.convertDpToPixels(16));
+        questionTextView.setPadding(mUnits.convertDpToPixels(16),
+                mUnits.convertDpToPixels(8),
+                mUnits.convertDpToPixels(16),
+                mUnits.convertDpToPixels(16));
         questionLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        questionTextView.setHeight(160);
-
-
+        questionTextView.setHeight(Units.getQuestionTextHeight());
     }
 
     public boolean addQuestion() {
@@ -46,4 +46,6 @@ public class QuestionText extends AppCompatActivity {
                 questionTextView,questionLayoutParams);
         return true;
     }
+
+
 }

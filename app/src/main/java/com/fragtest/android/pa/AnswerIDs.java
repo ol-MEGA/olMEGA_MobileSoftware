@@ -24,15 +24,16 @@ public class AnswerIDs extends ArrayList<Integer> {
         mAnswerIDs = new ArrayList<Integer>();
     }
 
-    public int getNumAnswers() {
-        return mAnswerIDs.size();
-    }
 
-    public void generateVisibility() {
-        /**  DECIDE WHICH IDS TRIGGER WHICH VIEW TO TOGGLE  **/
+    //public int getNumAnswers() {
+      //  return mAnswerIDs.size();
+    //}
+
+    //public void generateVisibility() {
+      //  /**  DECIDE WHICH IDS TRIGGER WHICH VIEW TO TOGGLE  **/
         //mContextQPA.toggleVisibility();
 
-    }
+    //}
 
 
 

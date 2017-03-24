@@ -30,6 +30,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
     public ViewPager mViewPager;
+
+    // Object containing system information e.g. time and date
     private MetaData mMetaData;
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
@@ -61,7 +63,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion));
         }
 
-        // Creates and Destroys Views based on Filter ID Settings
+        // Creates and destroys views based on filter id settings
         mQuestionnaire.checkVisibility();
         mMetaData.initialise();
     }
@@ -96,7 +98,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public int addView(View view, int position, int positionInRaw) {
         mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw));
-        // Sort the Views by their ID (implicitly their determined order)
+        // Sort the Views by their id (implicitly their determined order)
         Collections.sort(mListOfActiveViews);
         return position;
     }
@@ -123,7 +125,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        //return super.getPageTitle(position);
         return "";
     }
 
