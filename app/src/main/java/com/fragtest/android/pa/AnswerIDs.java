@@ -23,48 +23,4 @@ public class AnswerIDs extends ArrayList<Integer> {
         mContextQPA = contextQPA;
         mAnswerIDs = new ArrayList<Integer>();
     }
-
-
-    //public int getNumAnswers() {
-      //  return mAnswerIDs.size();
-    //}
-
-    //public void generateVisibility() {
-      //  /**  DECIDE WHICH IDS TRIGGER WHICH VIEW TO TOGGLE  **/
-        //mContextQPA.toggleVisibility();
-
-    //}
-
-
-
-
-/*
-
-    public boolean toggleIDRadio(int checkedID, RadioGroup radioGroup) {
-
-        int nChildren = radioGroup.getChildCount();
-
-        for (int iChild = 0;iChild < nChildren; iChild++) {
-            View child = radioGroup.getChildAt(iChild);
-            int nID = child.getId();
-            if (vAnswerIDs.contains(nID) && (nID != checkedID)) {
-                removeID(nID);
-            } else if ((!vAnswerIDs.contains(nID)) && (nID == checkedID)) {
-                addID(nID);
-            }
-        }
-
-        return true;
-
-    }
-
-    public boolean contains(int nID) {
-        for (int iID = 0; iID < vAnswerIDs.size(); iID++) {
-            if (vAnswerIDs.get(iID) == nID) {
-                return true;
-            }
-        }
-        return false;
-    }
-    */
 }

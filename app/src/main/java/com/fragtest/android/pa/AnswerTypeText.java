@@ -1,26 +1,18 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
-import android.graphics.Color;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.KeyEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
-import static java.security.AccessController.getContext;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -33,17 +25,19 @@ public class AnswerTypeText extends AppCompatActivity {
     public AnswerLayout parent;
     private Button mButtonOkay;
     private LinearLayout.LayoutParams buttonParams;
-    private int nAnswerID;
+    private int mAnswerID;
     private Context mContext;
+    private AnswerTexts mAnswerTexts;
 
-    public AnswerTypeText(Context context, int ID, AnswerLayout qParent) {
 
+    public AnswerTypeText(Context context, int ID, AnswerLayout qParent, AnswerTexts answerTexts){
         mContext = context;
-        nAnswerID = ID;
+        mAnswerID = ID;
         parent = qParent;
+        mAnswerTexts = answerTexts;
 
         mAnswerText = new EditText(mContext);
-        mAnswerText.setId(nAnswerID);
+        mAnswerText.setId(mAnswerID);
         mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
         mAnswerText.setTextSize(Units.getTextSizeAnswer());
         mAnswerText.setGravity(Gravity.START);
@@ -69,6 +63,10 @@ public class AnswerTypeText extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
+
+        mAnswerText.isFocusableInTouchMode();
+
+
     }
 
     public boolean addAnswer() {
@@ -77,24 +75,47 @@ public class AnswerTypeText extends AppCompatActivity {
         return true;
     }
 
-    public void addClickListener(final AnswerTexts answerTexts) {
+    public AnswerTexts addClickListener(final AnswerTexts answerTexts) {
+
         mButtonOkay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(mAnswerText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                // Check if no view has focus:
+                View view = (View) mAnswerText;
+                if (view != null) {
+                    Log.i("No","Focus");
 
+                    InputMethodManager imm = (InputMethodManager) mAnswerText.getContext().
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(mAnswerText.getWindowToken(), 0);
+                    mAnswerText.setCursorVisible(false);
+                }
 
                 String text = mAnswerText.getText().toString();
                 if (text.length() != 0) {
-                    answerTexts.add(text);
+                    mAnswerTexts.add(text);
                     Log.e("Text",text);
                 } else {
                     Log.e("No","Text");
                 }
+
+
+
             }
         });
+
+        /*
+        mAnswerText.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                    mAnswerText.setCursorVisible(true);
+                return true;
+            }
+        });
+        */
+
+        return answerTexts;
     }
 
 

@@ -160,9 +160,9 @@ public class Questionnaire {
                     case "text": {
                         bRadio = false;
                         AnswerTypeText answer = new AnswerTypeText(mContext,
-                                nAnswerID, answerLayout);
+                                nAnswerID, answerLayout, mAnswerTexts);
+                        mAnswerTexts = answer.addClickListener(mAnswerTexts);
                         answer.addAnswer();
-                        answer.addClickListener(mAnswerTexts);
                         break;
                     }
                     case "finish": {
