@@ -5,22 +5,21 @@ import android.content.Context;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
-    //private QuestionnairePagerAdapter pagerAdapter = null;
-
-    private View mArrowBack;
-    private View mArrowForward;
-    private View mRevert;
+    private TextView mLogo;
+    private View mArrowBack, mArrowForward, mRevert;
     private int mPosition;
-
+    private QuestionnairePagerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,10 +28,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mViewPager.setAdapter(new QuestionnairePagerAdapter(getApplicationContext(), mViewPager));
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
+        mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
 
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+
+        mLogo = (TextView) findViewById(R.id.Action_Logo);
+        mLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewPager.setCurrentItem(mAdapter.getCount());
+            }
+        });
 
         mArrowBack = findViewById(R.id.Action_Back);
         mArrowBack.setOnClickListener(new View.OnClickListener() {
@@ -59,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
+                mAdapter.clearAnswerIDs();
+                mAdapter.clearAnswerTexts();
                 mViewPager.setCurrentItem(0);
             }
         });

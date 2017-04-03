@@ -1,11 +1,9 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
@@ -17,10 +15,6 @@ public class AnswerLayout extends AppCompatActivity {
 
     LinearLayout layoutAnswer;
     ScrollView scrollContent;
-    /*
-    boolean bNegative = false;
-    int nFilterID;
-*/
 
     public AnswerLayout(Context context) {
         // Main Layout has to be incorporated in ScrollView for Overflow Handling
@@ -45,20 +39,4 @@ public class AnswerLayout extends AppCompatActivity {
         scrollContent.addView(layoutAnswer);
 
     }
-
-    /*
-    public boolean setTag(int tag) {
-        scrollContent.setTag(tag);
-        return true;
-    }
-
-    public int getTag() {
-        int tag = Integer.parseInt(scrollContent.getTag().toString());
-        return tag;
-    }
-
-    public void setVisibility(int visibility) {
-        scrollContent.setVisibility(visibility);
-    }
-    */
 }

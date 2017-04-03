@@ -2,6 +2,8 @@ package com.fragtest.android.pa;
 
 import android.util.Log;
 
+import java.util.List;
+
 import static android.R.attr.handle;
 
 /**
@@ -17,9 +19,10 @@ public class QuestionInfo {
     private boolean mHidden;
     private int mPositionInPager;
     private Question mQuestion;
+    private List<Integer> mListOfAnswerIDs;
 
     public QuestionInfo(Question question, int id, int filterId,
-                        boolean condition, int position, boolean hidden) {
+                        boolean condition, int position, boolean hidden, List<Integer> answerIDs) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
@@ -27,6 +30,7 @@ public class QuestionInfo {
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
+        mListOfAnswerIDs = answerIDs;
     }
 
     public boolean isActive() { return mActive; }
@@ -48,5 +52,7 @@ public class QuestionInfo {
     public Question getQuestion() { return mQuestion; }
 
     public boolean isHidden() { return mHidden; }
+
+    public List<Integer> getAnswerIDs() { return mListOfAnswerIDs; }
 
 }

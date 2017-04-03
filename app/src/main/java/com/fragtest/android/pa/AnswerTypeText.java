@@ -28,6 +28,7 @@ public class AnswerTypeText extends AppCompatActivity {
     private int mAnswerID;
     private Context mContext;
     private AnswerTexts mAnswerTexts;
+    private String CLASS_NAME = this.getClass().getSimpleName().toUpperCase();
 
 
     public AnswerTypeText(Context context, int ID, AnswerLayout qParent, AnswerTexts answerTexts){
@@ -65,8 +66,6 @@ public class AnswerTypeText extends AppCompatActivity {
         );
 
         mAnswerText.isFocusableInTouchMode();
-
-
     }
 
     public boolean addAnswer() {
@@ -75,17 +74,15 @@ public class AnswerTypeText extends AppCompatActivity {
         return true;
     }
 
-    public AnswerTexts addClickListener(final AnswerTexts answerTexts) {
+    public AnswerTexts addClickListener(AnswerTexts answerTexts) {
 
         mButtonOkay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                // Check if no view has focus:
+                // Check if no view has focus, then hide soft keyboard:
                 View view = (View) mAnswerText;
                 if (view != null) {
-                    Log.i("No","Focus");
-
                     InputMethodManager imm = (InputMethodManager) mAnswerText.getContext().
                             getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(mAnswerText.getWindowToken(), 0);
@@ -94,29 +91,12 @@ public class AnswerTypeText extends AppCompatActivity {
 
                 String text = mAnswerText.getText().toString();
                 if (text.length() != 0) {
-                    mAnswerTexts.add(text);
-                    Log.e("Text",text);
+                    mAnswerTexts.add(new StringAndInteger(text, mAnswerID));
                 } else {
-                    Log.e("No","Text");
+                    Log.e(CLASS_NAME,"No text was entered.");
                 }
-
-
-
             }
         });
-
-        /*
-        mAnswerText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                    mAnswerText.setCursorVisible(true);
-                return true;
-            }
-        });
-        */
-
         return answerTexts;
     }
-
-
 }

@@ -2,24 +2,14 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Environment;
-import android.os.MemoryFile;
 import android.util.Log;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static android.os.Environment.getExternalStorageDirectory;
-import static android.util.Log.e;
 
 
 /**
@@ -38,16 +28,20 @@ public class Questionnaire {
     private String[] mQuestionnaire;
     // List containing all questions (including all attached information)
     private List<String> mQuestionList;
+
+    //private List<Integer> mAnswerList;
     // Context of QuestionnairePageAdapter for visibility
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
     private Context mContext;
     // Accumulator for ids checked in by given answers
     private AnswerIDs mAnswerIDs;
-    // Accumulator for contents of filled in text boxes
+    // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
+
+    private MetaData mMetaData;
 
     private FileIO mFileIO;
 
@@ -62,16 +56,22 @@ public class Questionnaire {
         mQuestionInfo = new ArrayList<>();
         mRawInput = mFileIO.readRawTextFile();
 
+        mMetaData = new MetaData(mContext, mRawInput);
+        mMetaData.initialise();
+
         // Split basis data into question segments
         mQuestionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
         mQuestionList = stringArrayToListString(mQuestionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
 
+        //mMetaData.setNumQuestions(mNumPages);
+
         // Contains all ids of checked elements
-        mAnswerIDs = new AnswerIDs(mContextQPA);
+        mAnswerIDs = new AnswerIDs();
         // Contains all contents of text answers
-        mAnswerTexts = new AnswerTexts(mContextQPA);
+        mAnswerTexts = new AnswerTexts();
+
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -80,7 +80,9 @@ public class Questionnaire {
         String sQuestionBlueprint = mQuestionList.get(mPosition);
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), question.getFilterCondition(), position, question.isHidden()));
+                question.getFilterId(), question.getFilterCondition(), position,
+                question.isHidden(), question.getAnswerIDs()));
+        mMetaData.addQuestion(question);
 
         return question;
     }
@@ -169,13 +171,13 @@ public class Questionnaire {
                         bRadio = false;
                         AnswerTypeFinish answer = new AnswerTypeFinish(mContext,
                                 nAnswerID, answerLayout);
-                        answer.addClickListener();
+                        answer.addClickListener(mContext, mMetaData, mAnswerIDs, mAnswerTexts);
                         answer.addAnswer();
                         break;
                     }
                     default: {
                         bRadio = false;
-                        e("strange", "Wat nu?");
+                        Log.i("Questionnaire", "Weird object found. ID: "+question.getQuestionId());
                         break;
                     }
                 }
@@ -264,6 +266,38 @@ public class Questionnaire {
                 removeQuestion(iPos);
             }
         }
+        manageCheckedIDs();
+    }
+
+    public void manageCheckedIDs() {
+
+        // Obtain outdated ids
+        ArrayList<Integer> listOfIDsToRemove = new ArrayList<>();
+        // Iterate over all ids that have been checked before
+        for (int iID = 0; iID < mAnswerIDs.size(); iID++) {
+            int nID = mAnswerIDs.get(iID);
+            boolean bFoundID = false;
+            // Iterate over all currently visible/active Views
+            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
+                List<Answer> listOfAnswerIDs =
+                        mContextQPA.mListOfActiveViews.get(iView).getListOfAnswerIDs();
+                for (int iAnswer = 0; iAnswer < listOfAnswerIDs.size(); iAnswer++) {
+                    if (listOfAnswerIDs.get(iAnswer).Id == nID){
+                        bFoundID = true;
+                    }
+                }
+            }
+            if (!bFoundID && nID != 111111) {
+                listOfIDsToRemove.add(nID);
+            }
+        }
+
+        // Remove all outdated ids
+        if (listOfIDsToRemove.size() > 0) {
+            mAnswerIDs.removeAll(listOfIDsToRemove);
+        }
+
+
     }
 
 
@@ -278,15 +312,33 @@ public class Questionnaire {
         // View is fetched from Storage List and added to Active List
         mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
                 mContextQPA.mListOfActiveViews.size(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw());
+                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
+                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIDs());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
+
         return true;
     }
 
     // Removes the question from the displayed list
     private boolean removeQuestion(int iPos) {
         mQuestionInfo.get(iPos).setInactive();
+
+        // Remove checked answers on removed questions
+        String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
+        List<Integer> mListOfAnswerIDs = mQuestionInfo.get(iPos).getAnswerIDs();
+
+        for (int iAnswer = 0; iAnswer < mListOfAnswerIDs.size(); iAnswer++) {
+            if (sType.equals("checkbox")) {
+                CheckBox checkBox = (CheckBox) mContextQPA.mListOfViewsStorage.get(iPos).getView().
+                        findViewById(mQuestionInfo.get(iPos).getAnswerIDs().get(iAnswer));
+                if (checkBox != null) {
+                    checkBox.setChecked(false);
+                }
+            }
+        }
+
+
         // Remove View from ActiveList
         mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
         renewPositionsInPager();
@@ -317,4 +369,15 @@ public class Questionnaire {
         return listString;
     }
 
+    public boolean clearAnswerIDs(){
+        mAnswerIDs = new AnswerIDs();
+        checkVisibility();
+        return true;
+    }
+
+    public boolean clearAnswerTexts(){
+        mAnswerTexts = new AnswerTexts();
+        checkVisibility();
+        return true;
+    }
 }

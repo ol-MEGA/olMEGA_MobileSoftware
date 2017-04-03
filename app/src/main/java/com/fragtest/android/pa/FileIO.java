@@ -3,16 +3,15 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
-import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
-import static android.util.Log.e;
+import java.io.OutputStreamWriter;
 
 /**
  * Created by ulrikkowalk on 23.03.17.
@@ -20,11 +19,23 @@ import static android.util.Log.e;
 
 public class FileIO {
 
-    private static final String DATA_FOLDER = "IHAB";
+    private static final String MAIN_FOLDER = "IHAB";
+    private static final String DATA_FOLDER = "data";
     private static final String FILE_NAME = "hoersituation-v0.xml";
-    private static String FILE_IO = "FileIO";
+    private static final String FILE_IO = "FileIO";
+
 
     public FileIO() {
+    }
+
+    // Create / Find main Folder
+    private static String getFolderPath() {
+        File baseDirectory = Environment.getExternalStoragePublicDirectory(MAIN_FOLDER);
+        if (!baseDirectory.exists()) {
+            Log.e(FILE_IO, "Directory does not exist ->create");
+            baseDirectory.mkdir();
+        }
+        return baseDirectory.getAbsolutePath();
     }
 
     // Offline version reads XML Basis Sheet from Raw Folder
@@ -47,22 +58,11 @@ public class FileIO {
         return text.toString();
     }
 
-    // Create / Find main Folder
-    private static String getFolderPath(){
-        File baseDirectory = Environment.getExternalStoragePublicDirectory( DATA_FOLDER );
-        if( !baseDirectory.exists() ){
-            Log.e(FILE_IO,"Directory does not exist ->create");
-            baseDirectory.mkdir();
-        }
-        return baseDirectory.getAbsolutePath();
-    }
-
-
     public String readRawTextFile() {
 
         try {
             // Obtain working Directory
-            File dir = new File (getFolderPath());
+            File dir = new File(getFolderPath());
             // Address Basis File in working Directory
             File file = new File(dir, FILE_NAME);
 
@@ -90,10 +90,48 @@ public class FileIO {
         }
     }
 
+    public boolean saveDataToFile(Context context, String filename, String data) {
 
-    public boolean saveDataToFile(MetaData metaData, AnswerIDs answerIDs) {
+        //MediaScannerConnection mMs = new MediaScannerConnection(context, this);
+        //mMs.connect();
 
+        String sFileName = filename;
 
+        // Obtain working Directory
+        File dir = new File(getFolderPath() + "/" + DATA_FOLDER + "/");
+        // Address Basis File in working Directory
+        File file = new File(dir, sFileName);
+
+        // Make sure the path directory exists.
+        if (!dir.exists()) {
+            dir.mkdirs();
+            Log.i(FILE_IO, "Directory created: " + dir);
+        }
+
+        String stringToSave = data;
+
+        Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileOutputStream fOut = new FileOutputStream(file);
+            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+
+            myOutWriter.append(stringToSave);
+
+            myOutWriter.close();
+
+            fOut.flush();
+            fOut.close();
+
+            new SingleMediaScanner(context, file);
+        } catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
+
+        Log.i(FILE_IO, "Data successfully written.");
         return true;
     }
 }

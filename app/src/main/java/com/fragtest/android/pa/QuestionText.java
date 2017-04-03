@@ -38,7 +38,7 @@ public class QuestionText extends AppCompatActivity {
         questionLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        questionTextView.setHeight(Units.getQuestionTextHeight());
+        questionTextView.setMinHeight(Units.getQuestionTextHeight());
     }
 
     public boolean addQuestion() {

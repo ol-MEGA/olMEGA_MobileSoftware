@@ -8,8 +8,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import android.provider.Settings.Secure;
 
@@ -27,6 +29,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public ArrayList<QuestionViewActive> mListOfViewsStorage;
     private Context mContext;
     private int mNUM_PAGES;
+    private int mNUM_QUESTIONS;
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
     public ViewPager mViewPager;
@@ -38,14 +41,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         mContext = context;
         mViewPager = viewPager;
-        mMetaData = new MetaData(mContext);
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(mContext, this);
         mNUM_PAGES = mQuestionnaire.getNumPages();
+        mNUM_QUESTIONS = mNUM_PAGES;
         mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);
 
         mListOfActiveViews = new ArrayList<>();
         mListOfViewsStorage = new ArrayList<>();
+
         createLayout();
     }
 
@@ -58,14 +62,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Sets Layout ID to Question ID
             mLayout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
-            mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion));
+            mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion, question.getAnswers()));
             // Adds the Layout to List storing ALL Views
-            mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion));
+            mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion, question.getAnswers()));
         }
 
         // Creates and destroys views based on filter id settings
         mQuestionnaire.checkVisibility();
-        mMetaData.initialise();
     }
 
     @Override
@@ -96,8 +99,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         super.notifyDataSetChanged();
     }
 
-    public int addView(View view, int position, int positionInRaw) {
-        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw));
+    public int addView(View view, int position, int positionInRaw, List<Answer> listOfAnswers) {
+        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, listOfAnswers));
         // Sort the Views by their id (implicitly their determined order)
         Collections.sort(mListOfActiveViews);
         return position;
@@ -135,5 +138,29 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             }
         }
         return -1;
+    }
+
+    public boolean clearAnswerIDs() {
+        if (mQuestionnaire.clearAnswerIDs()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean clearAnswerTexts() {
+        if (mQuestionnaire.clearAnswerTexts()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public MetaData getMetaData() {
+        return mMetaData;
+    }
+
+    public int getNumQuestions() {
+        return mNUM_QUESTIONS;
     }
 }

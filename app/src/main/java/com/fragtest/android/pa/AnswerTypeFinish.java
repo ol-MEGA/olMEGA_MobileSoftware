@@ -1,20 +1,14 @@
 package com.fragtest.android.pa;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -27,6 +21,7 @@ public class AnswerTypeFinish extends AppCompatActivity {
     public AnswerLayout parent;
     private int mAnswerID;
     private Context mContext;
+    private FileIO fileIO;
 
     public AnswerTypeFinish(Context context, int ID, AnswerLayout qParent) {
 
@@ -44,7 +39,7 @@ public class AnswerTypeFinish extends AppCompatActivity {
         mAnswerButton.setTypeface(null, Typeface.NORMAL);
 
         int sdk = android.os.Build.VERSION.SDK_INT;
-        if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
+        if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
             mAnswerButton.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.button));
         } else {
             mAnswerButton.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
@@ -56,20 +51,27 @@ public class AnswerTypeFinish extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT);
 
         int[] AnswerFinishMargins = Units.getAnswerFinishMargin();
-        answerParams.setMargins(AnswerFinishMargins[0],AnswerFinishMargins[1],
-                AnswerFinishMargins[2],AnswerFinishMargins[3]);
+        answerParams.setMargins(AnswerFinishMargins[0], AnswerFinishMargins[1],
+                AnswerFinishMargins[2], AnswerFinishMargins[3]);
     }
 
     public boolean addAnswer() {
-        parent.layoutAnswer.addView(mAnswerButton,answerParams);
+        parent.layoutAnswer.addView(mAnswerButton, answerParams);
         return true;
     }
 
-    public void addClickListener() {
+    public void addClickListener(final Context context, final MetaData metaData,
+                                 final AnswerIDs answerIDs, final AnswerTexts answerTexts) {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();
+
+                metaData.finalise(answerIDs, answerTexts);
+                fileIO = new FileIO();
+                fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
+                //Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();
+                ((Activity)context).finish();
+
             }
         });
     }

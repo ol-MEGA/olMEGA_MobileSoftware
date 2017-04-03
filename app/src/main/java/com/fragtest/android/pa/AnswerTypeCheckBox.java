@@ -71,8 +71,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 } else {
                     vAnswerIDs.removeAll(AnswerID);
                 }
-
-                //Toast.makeText(mContext,""+vAnswerIDs.size(),Toast.LENGTH_SHORT).show();
             }
         });
         return vAnswerIDs;
