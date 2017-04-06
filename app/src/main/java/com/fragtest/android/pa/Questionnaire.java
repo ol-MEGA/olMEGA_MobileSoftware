@@ -6,10 +6,13 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static android.R.attr.y;
 
 
 /**
@@ -92,6 +95,7 @@ public class Questionnaire {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean bRadio = false;
+        boolean bSlider = false;
 
         LinearLayout linearContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -119,10 +123,15 @@ public class Questionnaire {
         answerRadioGroup.setOrientation(RadioGroup.VERTICAL);
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
+        // In case of sliderFix type
+        AnswerTypeSliderFix answerSlider = new AnswerTypeSliderFix(mContext, answerLayout);
+
+
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer IDs
         List<Answer> answerList = question.getAnswers();
+
 
         // Iteration over all possible Answers
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
@@ -149,7 +158,6 @@ public class Questionnaire {
                         break;
                     }
                     case "checkbox": {
-                        bRadio = false;
                         AnswerTypeCheckBox answer = new AnswerTypeCheckBox(mContext,
                                 nAnswerID, sAnswer, answerLayout);
                         if (isDefault) {
@@ -160,7 +168,6 @@ public class Questionnaire {
                         break;
                     }
                     case "text": {
-                        bRadio = false;
                         AnswerTypeText answer = new AnswerTypeText(mContext,
                                 nAnswerID, answerLayout, mAnswerTexts);
                         mAnswerTexts = answer.addClickListener(mAnswerTexts);
@@ -168,11 +175,15 @@ public class Questionnaire {
                         break;
                     }
                     case "finish": {
-                        bRadio = false;
                         AnswerTypeFinish answer = new AnswerTypeFinish(mContext,
                                 nAnswerID, answerLayout);
                         answer.addClickListener(mContext, mMetaData, mAnswerIDs, mAnswerTexts);
                         answer.addAnswer();
+                        break;
+                    }
+                    case "sliderFix": {
+                        bSlider = true;
+                        answerSlider.addAnswer(nAnswerID,sAnswer);
                         break;
                     }
                     default: {
@@ -182,6 +193,11 @@ public class Questionnaire {
                     }
                 }
             }
+        }
+
+        // In case of sliderFix, create View
+        if (bSlider) {
+            answerSlider.buildSlider();
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
@@ -300,6 +316,19 @@ public class Questionnaire {
 
     }
 
+    public void revertEnteredText() {
+
+        for (int iText = 0; iText < mAnswerTexts.size(); iText++) {
+            int nTextId = mAnswerTexts.get(iText).getID();
+            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
+                if (mContextQPA.mListOfActiveViews.get(iView).getView().getId() == nTextId) {
+                    TextView tV = (TextView) mContextQPA.mListOfActiveViews.get(iView).getView().findViewById(nTextId);
+                    tV.setText("");
+                }
+            }
+        }
+    }
+
 
     /**
      * ----------------------------------- Useful Methods -------------------------------------
@@ -376,8 +405,8 @@ public class Questionnaire {
     }
 
     public boolean clearAnswerTexts(){
+        revertEnteredText();
         mAnswerTexts = new AnswerTexts();
-        checkVisibility();
         return true;
     }
 }

@@ -4,6 +4,26 @@
         <title>
             <text>Hörsituation</text>
         </title>
+        <question id="10815" type="sliderFix">
+            <label>
+                <text>Bitte wählen Sie eine Kategorie</text>
+            </label>
+            <option id="214301">
+                <text>wenig</text>
+            </option>
+            <option id="214311">
+                <text>mehr</text>
+            </option>
+            <option id="214321">
+                <text>schon recht viel</text>
+            </option>
+            <option id="214331">
+                <text>genug</text>
+            </option>
+            <option id="214341">
+                <text>einen drüber</text>
+            </option>
+        </question>
         <question id="10816" type="text" hidden="true" mandatory="true">
             <label>
                 <text>Device ID</text>

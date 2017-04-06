@@ -18,7 +18,7 @@ public class Units extends AppCompatActivity {
     private static int TEXT_SIZE_ANSWER = 20;
     private static int RADIO_MIN_HEIGHT = 96;
     private static int CHECKBOX_MIN_HEIGHT = 96;
-    private static int QUESTION_TEXT_HEIGHT = 160;
+    private static int QUESTION_TEXT_HEIGHT = 165;
     private static int[] ANSWER_TEXT_MARGIN = {48, 32, 24, 32};
     private static int[] ANSWER_LAYOUT_PADDING = {48, 48, 48, 48};
     private static int[] ANSWER_FINISH_MARGIN = {0,48,0,0};

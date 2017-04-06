@@ -183,7 +183,7 @@ public class Question extends AppCompatActivity {
         String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
 
         switch (mTypeAnswer) {
-            case "radio": case "checkbox":
+            case "radio": case "checkbox":case "sliderFix":
 
                 for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
 
@@ -320,6 +320,7 @@ public class Question extends AppCompatActivity {
     }
 
     public List<Integer> getAnswerIDs() {
+        Log.e("num",""+mNumAnswers);
         if (mNumAnswers > 0) {
             for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
                 mListOfAnswerIDs.add(mAnswers.get(iAnswer).Id);

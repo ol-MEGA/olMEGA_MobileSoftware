@@ -14,7 +14,9 @@ import java.util.Collections;
 import java.util.List;
 
 import android.provider.Settings.Secure;
+import android.widget.TextView;
 
+import static android.R.attr.id;
 import static java.security.AccessController.getContext;
 
 /**
@@ -114,6 +116,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setAdapter(this);
         mViewPager.setCurrentItem(nCurrentItem);
         return position;
+    }
+
+    public QuestionViewActive getTextViewById(int id){
+        for (int iView = 0; iView < mListOfActiveViews.size(); iView++) {
+            if (mListOfActiveViews.get(iView).getId() == id) {
+                return mListOfActiveViews.get(iView);
+            }
+        }
+        return null;
     }
 
     @Override
