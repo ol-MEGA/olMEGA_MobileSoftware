@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static android.R.attr.y;
-
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -57,7 +55,10 @@ public class Questionnaire {
         mContextQPA = contextQPA;
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
-        mRawInput = mFileIO.readRawTextFile();
+        //mRawInput = mFileIO.readRawTextFile();
+        // offline version
+        mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_single);
+
 
         mMetaData = new MetaData(mContext, mRawInput);
         mMetaData.initialise();
@@ -67,8 +68,6 @@ public class Questionnaire {
         mQuestionList = stringArrayToListString(mQuestionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
-
-        //mMetaData.setNumQuestions(mNumPages);
 
         // Contains all ids of checked elements
         mAnswerIDs = new AnswerIDs();

@@ -22,11 +22,23 @@ public class Units extends AppCompatActivity {
     private static int[] ANSWER_TEXT_MARGIN = {48, 32, 24, 32};
     private static int[] ANSWER_LAYOUT_PADDING = {48, 48, 48, 48};
     private static int[] ANSWER_FINISH_MARGIN = {0,48,0,0};
+    private static int SCREEN_SIZE_HEIGHT;
+    private static int SCREEN_SIZE_WIDTH;
 
     public Units(Context context){
         mResources = context.getResources();
         mMetrics = mResources.getDisplayMetrics();
+        SCREEN_SIZE_WIDTH = mMetrics.widthPixels;
+        SCREEN_SIZE_HEIGHT = mMetrics.heightPixels;
     }
+
+    public int getStatusBarHeight() {
+        return (int) (24 * mMetrics.density);
+    }
+
+    public static int getScreenHeight() { return SCREEN_SIZE_HEIGHT; }
+
+    public static int getScreenWidth() { return SCREEN_SIZE_WIDTH; }
 
     public static int[] getAnswerFinishMargin() { return ANSWER_FINISH_MARGIN; }
 

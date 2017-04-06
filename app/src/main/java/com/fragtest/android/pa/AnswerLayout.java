@@ -34,8 +34,11 @@ public class AnswerLayout extends AppCompatActivity {
         layoutAnswer.setOrientation(LinearLayout.VERTICAL);
         layoutAnswer.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
         layoutAnswer.setGravity(Gravity.CENTER_HORIZONTAL);
+        layoutAnswer.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT));
 
-        // Linear Layout is Child to ScrollView
+        // Linear Layout is Child to ScrollView (must always be)
         scrollContent.addView(layoutAnswer);
 
     }
