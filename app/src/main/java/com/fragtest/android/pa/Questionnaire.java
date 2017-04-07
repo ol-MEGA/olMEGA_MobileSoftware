@@ -21,16 +21,8 @@ public class Questionnaire {
 
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
-    // Current element position in questionnaire
-    private int mPosition;
-    // String containing the whole raw basis XML input
-    private String mRawInput;
-    // String array that contains all question basis data
-    private String[] mQuestionnaire;
     // List containing all questions (including all attached information)
     private List<String> mQuestionList;
-
-    //private List<Integer> mAnswerList;
     // Context of QuestionnairePageAdapter for visibility
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
@@ -41,10 +33,7 @@ public class Questionnaire {
     private AnswerTexts mAnswerTexts;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
-
     private MetaData mMetaData;
-
-    private FileIO mFileIO;
 
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
@@ -53,19 +42,19 @@ public class Questionnaire {
 
         mContext = context;
         mContextQPA = contextQPA;
-        mFileIO = new FileIO();
+        FileIO mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
-        mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_single);
+        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_single);
 
 
         mMetaData = new MetaData(mContext, mRawInput);
         mMetaData.initialise();
 
         // Split basis data into question segments
-        mQuestionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
-        mQuestionList = stringArrayToListString(mQuestionnaire);
+        String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
+        mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
 
@@ -78,8 +67,8 @@ public class Questionnaire {
 
     // Generate a Layout for Question at desired Position based on String Blueprint
     public Question createQuestion(int position) {
-        mPosition = position;
-        String sQuestionBlueprint = mQuestionList.get(mPosition);
+
+        String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), question.getFilterCondition(), position,
@@ -93,8 +82,8 @@ public class Questionnaire {
     public LinearLayout generateView(Question question) {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
-        boolean bRadio = false;
-        boolean bSlider = false;
+        boolean isRadio = false;
+        boolean isSlider = false;
 
         LinearLayout linearContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -120,17 +109,16 @@ public class Questionnaire {
         // Only needed in case of Radio Buttons
         final RadioGroup answerRadioGroup = new RadioGroup(mContext);
         answerRadioGroup.setOrientation(RadioGroup.VERTICAL);
+        // Works with all single-option tasks e.g. radio buttons, slider, ...
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
         // In case of sliderFix type
         AnswerTypeSliderFix answerSlider = new AnswerTypeSliderFix(mContext, answerLayout);
 
-
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer IDs
         List<Answer> answerList = question.getAnswers();
-
 
         // Iteration over all possible Answers
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
@@ -146,7 +134,7 @@ public class Questionnaire {
 
                 switch (sType) {
                     case "radio": {
-                        bRadio = true;
+                        isRadio = true;
                         AnswerTypeRadio answer = new AnswerTypeRadio(mContext,
                                 nAnswerID, sAnswer, answerRadioGroup);
                         if (isDefault) {
@@ -181,12 +169,13 @@ public class Questionnaire {
                         break;
                     }
                     case "sliderFix": {
-                        bSlider = true;
+                        isSlider = true;
                         answerSlider.addAnswer(nAnswerID,sAnswer);
+                        answerSlider.addClickListener(mAnswerIDs);
                         break;
                     }
                     default: {
-                        bRadio = false;
+                        isRadio = false;
                         Log.i("Questionnaire", "Weird object found. ID: "+question.getQuestionId());
                         break;
                     }
@@ -195,12 +184,12 @@ public class Questionnaire {
         }
 
         // In case of sliderFix, create View
-        if (bSlider) {
+        if (isSlider) {
             answerSlider.buildSlider();
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
-        if (bRadio) {
+        if (isRadio) {
             answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(RadioGroup group, int checkedID) {

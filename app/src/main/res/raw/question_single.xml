@@ -8,11 +8,14 @@
             <label>
                 <text>Bitte wählen Sie eine Kategorie</text>
             </label>
+            <option id="214300">
+                <text>Watt?</text>
+            </option>
+            <option id="214299">
+                <text>Soll ich lachen?</text>
+            </option>
             <option id="214301">
                 <text>wenig</text>
-            </option>
-            <option id="214311">
-                <text>mehr</text>
             </option>
             <option id="214321">
                 <text>schon recht viel</text>

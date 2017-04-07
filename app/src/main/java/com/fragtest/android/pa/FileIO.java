@@ -127,11 +127,11 @@ public class FileIO {
             fOut.close();
 
             new SingleMediaScanner(context, file);
+            Log.i(FILE_IO, "Data successfully written.");
+            return true;
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
-
-        Log.i(FILE_IO, "Data successfully written.");
-        return true;
+        return false;
     }
 }

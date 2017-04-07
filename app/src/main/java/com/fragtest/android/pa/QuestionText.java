@@ -1,14 +1,10 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.TypedValue;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import static android.util.TypedValue.COMPLEX_UNIT_PX;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -28,7 +24,7 @@ public class QuestionText extends AppCompatActivity {
         questionTextView = new TextView(context);
         questionTextView.setId(nQuestionID);
         questionTextView.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
-        questionTextView.setBackgroundColor(0xFFEEEEEE);
+        questionTextView.setBackgroundColor(ContextCompat.getColor(context, R.color.lighterGray));
         questionTextView.setTextSize(Units.getTextSizeQuestion());
         questionTextView.setText(sQuestion);
         questionTextView.setPadding(mUnits.convertDpToPixels(16),
