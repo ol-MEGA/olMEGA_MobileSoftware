@@ -2,19 +2,15 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -25,16 +21,16 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     public CheckBox mAnswerButton;
     public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
-    private int nAnswerID;
+    private int nAnswerId;
     private Context mContext;
 
-    public AnswerTypeCheckBox(Context context, int ID, String sAnswer, AnswerLayout qParent) {
+    public AnswerTypeCheckBox(Context context, int Id, String sAnswer, AnswerLayout qParent) {
 
         mContext = context;
-        nAnswerID = ID;
+        nAnswerId = Id;
         parent = qParent;
         mAnswerButton = new CheckBox(mContext);
-        mAnswerButton.setId(nAnswerID);
+        mAnswerButton.setId(nAnswerId);
         mAnswerButton.setText(sAnswer);
         mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setChecked(false);
@@ -59,21 +55,21 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     }
 
 
-    public AnswerIDs addClickListener(final AnswerIDs vAnswerIDs) {
+    public AnswerIds addClickListener(final AnswerIds vAnswerIds) {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Implementing Lists simplifies the task of finding and removing the correct ID
-                ArrayList<Integer> AnswerID = new ArrayList<>();
-                AnswerID.add(nAnswerID);
+                // Implementing Lists simplifies the task of finding and removing the correct Id
+                ArrayList<Integer> AnswerId = new ArrayList<>();
+                AnswerId.add(nAnswerId);
                 if (mAnswerButton.isChecked()) {
-                    vAnswerIDs.addAll(AnswerID);
+                    vAnswerIds.addAll(AnswerId);
                 } else {
-                    vAnswerIDs.removeAll(AnswerID);
+                    vAnswerIds.removeAll(AnswerId);
                 }
             }
         });
-        return vAnswerIDs;
+        return vAnswerIds;
     }
 
     public void setChecked() {

@@ -2,7 +2,6 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -23,15 +22,15 @@ public class AnswerTypeRadio extends AppCompatActivity {
     LinearLayout.LayoutParams answerParams;
     RadioGroup mParent;
     private boolean mChecked = false;
-    private int nAnswerID;
+    private int nAnswerId;
 
-    public AnswerTypeRadio(Context context, int ID, String sAnswer, RadioGroup qParent) {
+    public AnswerTypeRadio(Context context, int Id, String sAnswer, RadioGroup qParent) {
 
         mContext = context;
-        nAnswerID = ID;
+        nAnswerId = Id;
         mParent = qParent;
         mAnswerButton = new RadioButton(context);
-        mAnswerButton.setId(nAnswerID);
+        mAnswerButton.setId(nAnswerId);
         mAnswerButton.setText(sAnswer);
         mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setChecked(false);

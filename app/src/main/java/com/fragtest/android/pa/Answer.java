@@ -25,7 +25,5 @@ public class Answer {
         Default = def;
     }
 
-    public void setDefault() { Default = true; }
-
     public boolean isDefault() { return Default; }
 }

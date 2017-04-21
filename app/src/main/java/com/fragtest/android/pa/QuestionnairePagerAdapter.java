@@ -3,21 +3,13 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import android.provider.Settings.Secure;
-import android.widget.TextView;
-
-import static android.R.attr.id;
-import static java.security.AccessController.getContext;
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -29,22 +21,17 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
     public ArrayList<QuestionViewActive> mListOfViewsStorage;
-    private Context mContext;
     private int mNUM_PAGES;
     private int mNUM_QUESTIONS;
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
     public ViewPager mViewPager;
 
-    // Object containing system information e.g. time and date
-    private MetaData mMetaData;
-
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
-        mContext = context;
         mViewPager = viewPager;
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(mContext, this);
+        mQuestionnaire = new Questionnaire(context, this);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mNUM_QUESTIONS = mNUM_PAGES;
         mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);
@@ -61,7 +48,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             Question question = mQuestionnaire.createQuestion(iQuestion);
             // Inflates Question Layout based on Question Details
             mLayout = mQuestionnaire.generateView(question);
-            // Sets Layout ID to Question ID
+            // Sets Layout Id to Question Id
             mLayout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
             mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion, question.getAnswers()));
@@ -118,7 +105,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return position;
     }
 
-    public QuestionViewActive getTextViewById(int id){
+    public QuestionViewActive getTextViewById(int id) {
         for (int iView = 0; iView < mListOfActiveViews.size(); iView++) {
             if (mListOfActiveViews.get(iView).getId() == id) {
                 return mListOfActiveViews.get(iView);
@@ -151,8 +138,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return -1;
     }
 
-    public boolean clearAnswerIDs() {
-        if (mQuestionnaire.clearAnswerIDs()) {
+    public boolean clearAnswerIds() {
+        if (mQuestionnaire.clearAnswerIds()) {
             return true;
         } else {
             return false;
@@ -167,6 +154,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
+    /*
     public MetaData getMetaData() {
         return mMetaData;
     }
@@ -174,4 +162,5 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public int getNumQuestions() {
         return mNUM_QUESTIONS;
     }
+    */
 }

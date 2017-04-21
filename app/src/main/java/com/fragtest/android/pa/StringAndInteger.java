@@ -7,16 +7,16 @@ package com.fragtest.android.pa;
 public class StringAndInteger {
 
     private String Text;
-    private int ID;
+    private int Id;
 
     public StringAndInteger(String string, int id) {
         Text = string;
-        ID = id;
+        Id = id;
     }
 
     public void setText(String text) { Text = text; }
 
     public String getText() { return Text; }
 
-    public int getID() { return ID; }
+    public int getId() { return Id; }
 }

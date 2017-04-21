@@ -19,10 +19,10 @@ public class MetaData extends AppCompatActivity {
 
     private static String META_DATA = "MetaData";
 
-    private String DEVICE_ID, START_DATE, START_DATE_UTC, END_DATE,
+    private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
             KEY_TAG_CLOSE_SOFT, KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
-            KEY_QUESTID, mRawInput, FILE_NAME;
+            KEY_QUESTId, mRawInput, FILE_NAME;
 
     private SimpleDateFormat DATE_FORMAT;
 
@@ -33,7 +33,7 @@ public class MetaData extends AppCompatActivity {
 
     private Context mContext;
 
-    private AnswerIDs mAnswerIDs;
+    private AnswerIds mAnswerIds;
     private AnswerTexts mAnswerTexts;
 
     public MetaData(Context context, String rawInput) {
@@ -51,8 +51,8 @@ public class MetaData extends AppCompatActivity {
     }
 
     public boolean initialise() {
-        // Obtain Device ID
-        DEVICE_ID = generateDeviceID();
+        // Obtain Device Id
+        DEVICE_Id = generateDeviceId();
         // Obtain current Time Stamp at the Beginning of Questionnaire
         START_DATE = generateTimeNow();
         // Obtain current UTC Time Stamp at the Beginning of Questionnaire
@@ -63,16 +63,16 @@ public class MetaData extends AppCompatActivity {
         KEY_HEAD = mRawInputLines[0] + mRawInputLines[1];
         KEY_SURVEY_URI = mRawInputLines[2].split("\"")[1];
         KEY_FOOT = mRawInputLines[mRawInputLines.length - 1];
-        KEY_QUESTID = generateQuestID();
+        KEY_QUESTId = generateQuestId();
         FILE_NAME = generateFileName();
 
         Log.i(META_DATA, "Object initialised");
         return true;
     }
 
-    public boolean finalise(AnswerIDs answerIDs, AnswerTexts answerTexts) {
+    public boolean finalise(AnswerIds answerIds, AnswerTexts answerTexts) {
 
-        mAnswerIDs = answerIDs;
+        mAnswerIds = answerIds;
         mAnswerTexts = answerTexts;
         // Obtain current Time Stamp at the End of Questionnaire
         END_DATE = generateTimeNow();
@@ -95,11 +95,11 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += " uri=\"";
         KEY_DATA += KEY_SURVEY_URI.substring(0, KEY_SURVEY_URI.length() - 4);        // loose ".xml"
         KEY_DATA += "/";
-        KEY_DATA += KEY_QUESTID;
+        KEY_DATA += KEY_QUESTId;
         KEY_DATA += ".xml\"";
         KEY_DATA += " survey uri=\"";
         KEY_DATA += KEY_SURVEY_URI;
-        KEY_DATA += ".xml";
+        KEY_DATA += "\"";
         KEY_DATA += KEY_TAG_CLOSE;
 
         for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
@@ -113,7 +113,7 @@ public class MetaData extends AppCompatActivity {
 
                 if (((int) Math.floor(mQuestionList.get(iQuestion).getAnswers().get(0).Id/100000))
                         == 333) {
-                    /** ID 333* means editable text input and as such the answer was saved
+                    /** Id 333* means editable text input and as such the answer was saved
                      * in mAnswerTexts array along with 333 + associated question id (unfortunately
                      * no specific answer id is featured in original implementation) **/
 
@@ -127,7 +127,7 @@ public class MetaData extends AppCompatActivity {
                         case "$device.id":
 
                             KEY_DATA += KEY_TAG_CLOSE;
-                            KEY_DATA += getDeviceID();
+                            KEY_DATA += getDeviceId();
                             KEY_DATA += KEY_VALUE_CLOSE;
                             break;
 
@@ -151,23 +151,23 @@ public class MetaData extends AppCompatActivity {
                             for (int iAnswer = 0; iAnswer < mQuestionList.get(iQuestion).
                                     getNumAnswers();
                                  iAnswer++) {
-                                /** All possible answer IDs are found, but have to be checked for
-                                 * whether they appear in mAnswerIDs or not. If yes, they are
+                                /** All possible answer Ids are found, but have to be checked for
+                                 * whether they appear in mAnswerIds or not. If yes, they are
                                  * printed to output String. Pay attention to forced blank spaces -
-                                 * ID 66666 **/
+                                 * Id 66666 **/
 
                                 // Collect all checked ids and bundle them
-                                if ((mQuestionList.get(iQuestion).getAnswerIDs().
+                                if ((mQuestionList.get(iQuestion).getAnswerIds().
                                         get(iAnswer) != 66666) &&
-                                        (mAnswerIDs.contains(mQuestionList.get(iQuestion).
-                                                getAnswerIDs().get(iAnswer)))) {
+                                        (mAnswerIds.contains(mQuestionList.get(iQuestion).
+                                                getAnswerIds().get(iAnswer)))) {
 
                                     // Option ids are separated by semicolon
                                     if (!ANSWER_DATA.isEmpty()) {
                                         ANSWER_DATA += ";";
                                     }
                                     ANSWER_DATA += mQuestionList.get(iQuestion).
-                                            getAnswerIDs().get(iAnswer).toString();
+                                            getAnswerIds().get(iAnswer).toString();
                                 }
                             }
                             // Add bundle of checked ids to record
@@ -188,14 +188,14 @@ public class MetaData extends AppCompatActivity {
     }
 
     private String generateFileName() {
-        return getQuestID() + ".xml";
+        return getQuestId() + ".xml";
     }
 
-    private String generateQuestID() {
-        return getDeviceID() + "_" + getStartDateUTC();
+    private String generateQuestId() {
+        return getDeviceId() + "_" + getStartDateUTC();
     }
 
-    private String generateDeviceID() {
+    private String generateDeviceId() {
         return Secure.getString(mContext.getContentResolver(), Secure.ANDROID_ID);
     }
 
@@ -209,12 +209,12 @@ public class MetaData extends AppCompatActivity {
         return DATE_FORMAT.format(dateTime.getTime());
     }
 
-    private String getQuestID() {
-        return KEY_QUESTID;
+    private String getQuestId() {
+        return KEY_QUESTId;
     }
 
-    private String getDeviceID() {
-        return DEVICE_ID;
+    private String getDeviceId() {
+        return DEVICE_Id;
     }
 
     private String getStartDate() {
@@ -253,7 +253,7 @@ public class MetaData extends AppCompatActivity {
 
     private String getTextFromId(int id) {
         for (int iText = 0; iText <mAnswerTexts.size(); iText++){
-            if (mAnswerTexts.get(iText).getID() == id) {
+            if (mAnswerTexts.get(iText).getId() == id) {
                 return mAnswerTexts.get(iText).getText();
             }
         }

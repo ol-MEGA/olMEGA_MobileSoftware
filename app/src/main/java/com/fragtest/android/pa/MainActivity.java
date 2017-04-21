@@ -1,14 +1,10 @@
 package com.fragtest.android.pa;
 
-import android.app.Activity;
-import android.content.Context;
+import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
-                mAdapter.clearAnswerIDs();
+                mAdapter.clearAnswerIds();
                 mAdapter.clearAnswerTexts();
                 mViewPager.setCurrentItem(0);
             }

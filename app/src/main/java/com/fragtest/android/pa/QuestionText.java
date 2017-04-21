@@ -17,12 +17,12 @@ public class QuestionText extends AppCompatActivity {
     LinearLayout parent;
     Units mUnits;
 
-    public QuestionText(Context context, int nQuestionID, String sQuestion, LinearLayout qParent) {
+    public QuestionText(Context context, int nQuestionId, String sQuestion, LinearLayout qParent) {
 
         parent = qParent;
         mUnits = new Units(context);
         questionTextView = new TextView(context);
-        questionTextView.setId(nQuestionID);
+        questionTextView.setId(nQuestionId);
         questionTextView.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
         questionTextView.setBackgroundColor(ContextCompat.getColor(context, R.color.lighterGray));
         questionTextView.setTextSize(Units.getTextSizeQuestion());

@@ -1,10 +1,6 @@
 package com.fragtest.android.pa;
 
-import android.util.Log;
-
 import java.util.List;
-
-import static android.R.attr.handle;
 
 /**
  * Created by ulrikkowalk on 06.03.17.
@@ -19,10 +15,10 @@ public class QuestionInfo {
     private boolean mHidden;
     private int mPositionInPager;
     private Question mQuestion;
-    private List<Integer> mListOfAnswerIDs;
+    private List<Integer> mListOfAnswerIds;
 
     public QuestionInfo(Question question, int id, int filterId,
-                        boolean condition, int position, boolean hidden, List<Integer> answerIDs) {
+                        boolean condition, int position, boolean hidden, List<Integer> answerIds) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
@@ -30,7 +26,7 @@ public class QuestionInfo {
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
-        mListOfAnswerIDs = answerIDs;
+        mListOfAnswerIds = answerIds;
     }
 
     public boolean isActive() { return mActive; }
@@ -53,6 +49,6 @@ public class QuestionInfo {
 
     public boolean isHidden() { return mHidden; }
 
-    public List<Integer> getAnswerIDs() { return mListOfAnswerIDs; }
+    public List<Integer> getAnswerIds() { return mListOfAnswerIds; }
 
 }

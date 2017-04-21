@@ -2,18 +2,13 @@ package com.fragtest.android.pa;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
-import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,20 +19,15 @@ import java.util.List;
 
 public class AnswerTypeSliderFix extends AppCompatActivity {
 
-
-    public CheckBox mAnswerButton;
-    public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
-    private int nAnswerID;
     private Context mContext;
     private List<StringAndInteger> mListOfAnswers;
-    private VerticalSeekBar mSeekBar;
-    private LinearLayout mLayout, mCategoryLayout, mSeekBarMainLayout;
-    private RelativeLayout mSeekBarContainer;
-    private Units mUnits;
-    private int mSeekBarProgress;
+    public VerticalSeekBar mSeekBar;
+    private LinearLayout mLayout, mCategoryLayout;
     private final List<Integer> mListOfIds = new ArrayList<>();
-    private AnswerIDs mAnswerIDs = new AnswerIDs();
+    private AnswerIds mAnswerIds;
+    private int mDefaultAnswer = 0;
+    public static String CLASS_NAME = "AnswerTypeSliderFix";
 
     public AnswerTypeSliderFix(Context context, AnswerLayout qParent) {
 
@@ -55,35 +45,30 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mContext = context;
         parent = qParent;
         mListOfAnswers = new ArrayList<>();
-        mUnits = new Units(mContext);
-        mSeekBarProgress = 0;
 
-        int usableHeight = mUnits.getUsableSliderHeight();
-
-        //parent.scrollContent.setBackgroundColor(Color.YELLOW);
-        //parent.layoutAnswer.setBackgroundColor(Color.GREEN);
+        int usableHeight = (new Units(mContext)).getUsableSliderHeight();
         parent.scrollContent.setMinimumHeight(usableHeight);
-
-        Log.i("Usable height",""+usableHeight);
 
         mLayout = new LinearLayout(mContext);
         mLayout.setOrientation(LinearLayout.HORIZONTAL);
         mLayout.setMinimumHeight(usableHeight);
 
-        mSeekBarMainLayout = new LinearLayout(mContext);
+
+        LinearLayout mSeekBarMainLayout = new LinearLayout(mContext);
         LinearLayout.LayoutParams seekBarMainLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0.3f
         );
 
-        mSeekBarContainer = new RelativeLayout(mContext);
-        //mSeekBarContainer.setBackgroundColor(Color.MAGENTA);
+
+        RelativeLayout mSeekBarContainer = new RelativeLayout(mContext);
         RelativeLayout.LayoutParams seekBarContainerParams = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT,
                 RelativeLayout.LayoutParams.MATCH_PARENT);
         seekBarContainerParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
         seekBarContainerParams.addRule(RelativeLayout.CENTER_VERTICAL);
+
 
         mSeekBar = new VerticalSeekBar(mContext);
         RelativeLayout.LayoutParams seekBarParams = new RelativeLayout.LayoutParams(
@@ -93,7 +78,8 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         seekBarParams.addRule(RelativeLayout.CENTER_VERTICAL);
         seekBarParams.setMargins(0,0,0,40);
         mSeekBar.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
-        mSeekBar.setThumb(ContextCompat.getDrawable(mContext,android.R.drawable.radiobutton_on_background));
+        mSeekBar.setThumb(ContextCompat.getDrawable(mContext,
+                android.R.drawable.radiobutton_on_background));
 
         int states[][] = {{android.R.attr.state_checked}, {}};
         int colorsThumb[] = {ContextCompat.getColor(context, R.color.JadeRed),
@@ -102,9 +88,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 ContextCompat.getColor(context, R.color.JadeRed)};
         mSeekBar.setThumbTintList(new ColorStateList(states, colorsThumb));
         mSeekBar.setProgressTintList(new ColorStateList(states, colorsProgress));
-
-
-
 
 
         mCategoryLayout = new LinearLayout(mContext);
@@ -117,14 +100,16 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 0.7f
         );
 
+
         mSeekBarContainer.addView(mSeekBar,seekBarParams);
         mSeekBarMainLayout.addView(mSeekBarContainer,seekBarContainerParams);
         mLayout.addView(mSeekBarMainLayout,seekBarMainLayoutParams);
         mLayout.addView(mCategoryLayout,categoryLayoutParams);
     }
 
+    public AnswerIds buildSlider(AnswerIds answerIds) {
 
-    public void buildSlider() {
+        mAnswerIds = answerIds;
 
         for (int iAnswer = mListOfAnswers.size()-1; iAnswer >= 0; iAnswer--) {
             TextView textMark = new TextView(mContext);
@@ -134,16 +119,31 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                     1.0f);
 
             if (iAnswer == 0) {
-                textParams.setMargins(0, 20, 0, 0);
+                textParams.setMargins(
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextMargin_Left),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextMargin_Top),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextMargin_Right),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextMargin_Bottom));
             } else if (iAnswer == mListOfAnswers.size()-1) {
-                textParams.setMargins(0, -20, 0, 20);
+                textParams.setMargins(
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextTopMargin_Left),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextTopMargin_Top),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextTopMargin_Right),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextTopMargin_Bottom));
             } else {
-                textParams.setMargins(0, 20, 0, 0);
+                textParams.setMargins(
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Left),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Top),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Right),
+                        (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Bottom));
             }
-
-            textMark.setPadding(0, 0, 0, 0);
+            textMark.setPadding(
+                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Left),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Top),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Right),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Bottom));
             textMark.setText(mListOfAnswers.get(iAnswer).getText());
-            textMark.setId(mListOfAnswers.get(iAnswer).getID());
+            textMark.setId(mListOfAnswers.get(iAnswer).getId());
             textMark.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
 
             // Adaptive size and lightness of font of in-between tick marks
@@ -158,56 +158,43 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 textMark.setTextSize(Units.getTextSizeAnswer());
             }
 
-
             textMark.setGravity(Gravity.CENTER_VERTICAL);
             textMark.setLayoutParams(textParams);
             mCategoryLayout.addView(textMark);
-
-            mSeekBar.setProgress(mListOfAnswers.size()/2);
-
         }
 
+        if (mDefaultAnswer == 0) {
+            mAnswerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
+            mSeekBar.setProgress(mListOfAnswers.size() / 2);
+        } else {
+            mAnswerIds.add(mListOfAnswers.get(mDefaultAnswer).getId());
+            mSeekBar.setProgress(mDefaultAnswer);
+        }
 
         mSeekBar.setMax(mListOfAnswers.size()-1);
         parent.layoutAnswer.addView(mLayout);
+
+        Log.i(CLASS_NAME,"Slider successfully built.");
+
+        return mAnswerIds;
     }
 
-    public void addClickListener(AnswerIDs answerIDs) {
-        mAnswerIDs = answerIDs;
-
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                //if (fromUser) {
-                    mSeekBarProgress = progress;
-                    mAnswerIDs.removeAll(mListOfIds);
-                    mAnswerIDs.add(mListOfAnswers.get(mSeekBarProgress).getID());
-                    Log.e("ID added", "" + mListOfAnswers.get(mSeekBarProgress).getID());
-                //}
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                //Log.e("Touch","Started");
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                //Log.e("Touch","Stopped");
-            }
-        });
-
-
-    }
-
-    public boolean addAnswer(int nAnswerID, String sAnswer) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer,nAnswerID));
-        mListOfIds.add(nAnswerID);
+    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
+        mListOfAnswers.add(new StringAndInteger(sAnswer,nAnswerId));
+        // index of default answer if present
+        if (isDefault) {
+            // If default present, this element is the one
+            mDefaultAnswer = mListOfAnswers.size() - 1;
+        }
+        mListOfIds.add(nAnswerId);
         return true;
     }
 
-
-
+    public AnswerIds addIdFromProgress(int progress) {
+        mAnswerIds.removeAll(mListOfIds);
+        mAnswerIds.add(mListOfAnswers.get(progress).getId());
+        return mAnswerIds;
+    }
 }
 
 

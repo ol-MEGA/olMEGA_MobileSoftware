@@ -1,13 +1,11 @@
 package com.fragtest.android.pa;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -25,20 +23,20 @@ public class AnswerTypeText extends AppCompatActivity {
     public AnswerLayout parent;
     private Button mButtonOkay;
     private LinearLayout.LayoutParams buttonParams;
-    private int mAnswerID;
+    private int mAnswerId;
     private Context mContext;
     private AnswerTexts mAnswerTexts;
     private String CLASS_NAME = this.getClass().getSimpleName().toUpperCase();
 
 
-    public AnswerTypeText(Context context, int ID, AnswerLayout qParent, AnswerTexts answerTexts){
+    public AnswerTypeText(Context context, int Id, AnswerLayout qParent, AnswerTexts answerTexts){
         mContext = context;
-        mAnswerID = ID;
+        mAnswerId = Id;
         parent = qParent;
         mAnswerTexts = answerTexts;
 
         mAnswerText = new EditText(mContext);
-        mAnswerText.setId(mAnswerID);
+        mAnswerText.setId(mAnswerId);
         mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
         mAnswerText.setTextSize(Units.getTextSizeAnswer());
         mAnswerText.setGravity(Gravity.START);
@@ -91,7 +89,7 @@ public class AnswerTypeText extends AppCompatActivity {
 
                 String text = mAnswerText.getText().toString();
                 if (text.length() != 0) {
-                    mAnswerTexts.add(new StringAndInteger(text, mAnswerID));
+                    mAnswerTexts.add(new StringAndInteger(text, mAnswerId));
                 } else {
                     Log.e(CLASS_NAME,"No text was entered.");
                 }

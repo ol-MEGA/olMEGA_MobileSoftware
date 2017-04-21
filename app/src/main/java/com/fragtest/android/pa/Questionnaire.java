@@ -6,7 +6,9 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,15 +30,18 @@ public class Questionnaire {
     // Context of MainActivity()
     private Context mContext;
     // Accumulator for ids checked in by given answers
-    private AnswerIDs mAnswerIDs;
+    private AnswerIds mAnswerIds;
     // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
+    private static String CLASS_NAME = "Questionnaire";
 
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
+    // Use on screen debug output
+    private boolean isDebug = true;
 
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -59,7 +64,7 @@ public class Questionnaire {
         mNumPages = mQuestionList.size();
 
         // Contains all ids of checked elements
-        mAnswerIDs = new AnswerIDs();
+        mAnswerIds = new AnswerIds();
         // Contains all contents of text answers
         mAnswerTexts = new AnswerTexts();
 
@@ -72,7 +77,7 @@ public class Questionnaire {
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), question.getFilterCondition(), position,
-                question.isHidden(), question.getAnswerIDs()));
+                question.isHidden(), question.getAnswerIds()));
         mMetaData.addQuestion(question);
 
         return question;
@@ -113,11 +118,11 @@ public class Questionnaire {
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
         // In case of sliderFix type
-        AnswerTypeSliderFix answerSlider = new AnswerTypeSliderFix(mContext, answerLayout);
+        final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(mContext, answerLayout);
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
-        // List carrying all Answers and Answer IDs
+        // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
         // Iteration over all possible Answers
@@ -127,56 +132,57 @@ public class Questionnaire {
             // Obtain Answer specific Parameters
             Answer currentAnswer = answerList.get(iAnswer);
             String sAnswer = currentAnswer.Text;
-            int nAnswerID = currentAnswer.Id;
+            int nAnswerId = currentAnswer.Id;
             boolean isDefault = currentAnswer.isDefault();
 
-            if (((nAnswerID == 66666) && (acceptBlankSpaces)) || (nAnswerID != 66666)) {
+            if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
 
                 switch (sType) {
                     case "radio": {
                         isRadio = true;
                         AnswerTypeRadio answer = new AnswerTypeRadio(mContext,
-                                nAnswerID, sAnswer, answerRadioGroup);
+                                nAnswerId, sAnswer, answerRadioGroup);
                         if (isDefault) {
-                            answer.setChecked(); mAnswerIDs.add(nAnswerID);
+                            answer.setChecked();
+                            mAnswerIds.add(nAnswerId);
                         }
                         answer.addAnswer();
-                        listOfRadioIds.add(nAnswerID);
+                        listOfRadioIds.add(nAnswerId);
                         break;
                     }
                     case "checkbox": {
                         AnswerTypeCheckBox answer = new AnswerTypeCheckBox(mContext,
-                                nAnswerID, sAnswer, answerLayout);
+                                nAnswerId, sAnswer, answerLayout);
                         if (isDefault) {
-                            answer.setChecked(); mAnswerIDs.add(nAnswerID);
+                            answer.setChecked();
+                            mAnswerIds.add(nAnswerId);
                         }
                         answer.addAnswer();
-                        mAnswerIDs = answer.addClickListener(mAnswerIDs);
+                        mAnswerIds = answer.addClickListener(mAnswerIds);
                         break;
                     }
                     case "text": {
                         AnswerTypeText answer = new AnswerTypeText(mContext,
-                                nAnswerID, answerLayout, mAnswerTexts);
+                                nAnswerId, answerLayout, mAnswerTexts);
                         mAnswerTexts = answer.addClickListener(mAnswerTexts);
                         answer.addAnswer();
                         break;
                     }
                     case "finish": {
                         AnswerTypeFinish answer = new AnswerTypeFinish(mContext,
-                                nAnswerID, answerLayout);
-                        answer.addClickListener(mContext, mMetaData, mAnswerIDs, mAnswerTexts);
+                                nAnswerId, answerLayout);
+                        answer.addClickListener(mContext, mMetaData, mAnswerIds, mAnswerTexts);
                         answer.addAnswer();
                         break;
                     }
                     case "sliderFix": {
                         isSlider = true;
-                        answerSlider.addAnswer(nAnswerID,sAnswer);
-                        answerSlider.addClickListener(mAnswerIDs);
+                        answerSliderFix.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     default: {
                         isRadio = false;
-                        Log.i("Questionnaire", "Weird object found. ID: "+question.getQuestionId());
+                        Log.i(CLASS_NAME, "Weird object found. Id: " + question.getQuestionId());
                         break;
                     }
                 }
@@ -185,20 +191,38 @@ public class Questionnaire {
 
         // In case of sliderFix, create View
         if (isSlider) {
-            answerSlider.buildSlider();
+            //mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
+            mAnswerIds = answerSliderFix.buildSlider(mAnswerIds);
+            //mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
+            answerSliderFix.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    Log.e(CLASS_NAME, "" + progress);
+                    mAnswerIds = answerSliderFix.addIdFromProgress(progress);
+                    checkVisibility();
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
+            });
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
         if (isRadio) {
             answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
-                public void onCheckedChanged(RadioGroup group, int checkedID) {
-                    // In Case of Radio Buttons checking one means unchecking all other Elements
+                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    // In Case of Radio Buttons checking one means un-checking all other Elements
                     // Therefore onClickListening must be handled on Group Level
-                    // listOfRadioIds contains all IDs of current Radio Group
-                    mAnswerIDs.removeAll(listOfRadioIds);
-                    mAnswerIDs.add(checkedID);
-                    answerRadioGroup.check(checkedID);
+                    // listOfRadioIds contains all Ids of current Radio Group
+                    mAnswerIds.removeAll(listOfRadioIds);
+                    mAnswerIds.add(checkedId);
+                    answerRadioGroup.check(checkedId);
                     // Toggle Visibility of suited/unsuited frames
                     checkVisibility();
                 }
@@ -225,41 +249,41 @@ public class Questionnaire {
 
             QuestionInfo qI = mQuestionInfo.get(iPos);
 
-            if (qI.getFilterId() != -1                              // Specific Filter ID
-                    && qI.getCondition()                            // which MUST exist
-                    && mAnswerIDs.contains(qI.getFilterId())        // DOES exist
-                    && !qI.isActive())                              // on an INACTIVE Layout
-            {
-                addQuestion(iPos);
-            }
-
-            if (qI.getFilterId() != -1                              // Specific Filter ID
-                    && qI.getCondition()                            // which MUST exist
-                    && !mAnswerIDs.contains(qI.getFilterId())       // does NOT exist
-                    && qI.isActive())                               // on an ACTIVE Layout
-            {
-                removeQuestion(iPos);
-            }
-
-            if (qI.getFilterId() != -1                                  // Specific Filter ID
-                    && !qI.getCondition()                               // which MUST NOT exist
-                    && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
+            if (qI.getFilterId() != -1                                  // Specific Filter Id
+                    && qI.getCondition()                                // which MUST exist
+                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
             }
 
-            if ((qI.getFilterId() != -1)                                // Specific Filter ID
-                    && (!qI.getCondition())                             // which MUST NOT exist
-                    && mAnswerIDs.contains(qI.getFilterId())            // DOES exist
+            if (qI.getFilterId() != -1                                  // Specific Filter Id
+                    && qI.getCondition()                                // which MUST exist
+                    && !mAnswerIds.contains(qI.getFilterId())           // does NOT exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
                 removeQuestion(iPos);
             }
 
-            if (qI.getFilterId() != -1                                  // Specific Filter ID
+            if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && !qI.getCondition()                               // which MUST NOT exist
-                    && !mAnswerIDs.contains(qI.getFilterId())           // DOES NOT exist
+                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
+                    && !qI.isActive())                                  // on an INACTIVE Layout
+            {
+                addQuestion(iPos);
+            }
+
+            if ((qI.getFilterId() != -1)                                // Specific Filter Id
+                    && (!qI.getCondition())                             // which MUST NOT exist
+                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
+                    && qI.isActive())                                   // on an ACTIVE Layout
+            {
+                removeQuestion(iPos);
+            }
+
+            if (qI.getFilterId() != -1                                  // Specific Filter Id
+                    && !qI.getCondition()                               // which MUST NOT exist
+                    && !mAnswerIds.contains(qI.getFilterId())           // DOES NOT exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -270,58 +294,39 @@ public class Questionnaire {
                 removeQuestion(iPos);
             }
         }
-        manageCheckedIDs();
+        manageCheckedIds();
     }
 
-    public void manageCheckedIDs() {
+    public void manageCheckedIds() {
 
-        // Obtain outdated ids
-        ArrayList<Integer> listOfIDsToRemove = new ArrayList<>();
+        // Obtain outdated ids and prepare list for removal simultaneously
+        ArrayList<Integer> listOfIdsToRemove = new ArrayList<>();
         // Iterate over all ids that have been checked before
-        for (int iID = 0; iID < mAnswerIDs.size(); iID++) {
-            int nID = mAnswerIDs.get(iID);
-            boolean bFoundID = false;
+        for (int iId = 0; iId < mAnswerIds.size(); iId++) {
+            int nId = mAnswerIds.get(iId);
+            boolean bFoundId = false;
             // Iterate over all currently visible/active Views
             for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
-                List<Answer> listOfAnswerIDs =
-                        mContextQPA.mListOfActiveViews.get(iView).getListOfAnswerIDs();
-                for (int iAnswer = 0; iAnswer < listOfAnswerIDs.size(); iAnswer++) {
-                    if (listOfAnswerIDs.get(iAnswer).Id == nID){
-                        bFoundID = true;
+                List<Answer> listOfAnswerIds =
+                        mContextQPA.mListOfActiveViews.get(iView).getListOfAnswerIds();
+                for (int iAnswer = 0; iAnswer < listOfAnswerIds.size(); iAnswer++) {
+                    if (listOfAnswerIds.get(iAnswer).Id == nId) {
+                        bFoundId = true;
                     }
                 }
             }
-            if (!bFoundID && nID != 111111) {
-                listOfIDsToRemove.add(nID);
+            if (!bFoundId && nId != 111111) {
+                listOfIdsToRemove.add(nId);
             }
         }
-
         // Remove all outdated ids
-        if (listOfIDsToRemove.size() > 0) {
-            mAnswerIDs.removeAll(listOfIDsToRemove);
+        if (listOfIdsToRemove.size() > 0) {
+            mAnswerIds.removeAll(listOfIdsToRemove);
         }
-
-
-    }
-
-    public void revertEnteredText() {
-
-        for (int iText = 0; iText < mAnswerTexts.size(); iText++) {
-            int nTextId = mAnswerTexts.get(iText).getID();
-            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
-                if (mContextQPA.mListOfActiveViews.get(iView).getView().getId() == nTextId) {
-                    TextView tV = (TextView) mContextQPA.mListOfActiveViews.get(iView).getView().findViewById(nTextId);
-                    tV.setText("");
-                }
-            }
+        if (isDebug) {
+            showListOfIds();
         }
     }
-
-
-    /**
-     * ----------------------------------- Useful Methods -------------------------------------
-     **/
-
 
     // Adds the question to the displayed list
     private boolean addQuestion(int iPos) {
@@ -330,10 +335,9 @@ public class Questionnaire {
         mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
                 mContextQPA.mListOfActiveViews.size(),
                 mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIDs());
+                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
-
         return true;
     }
 
@@ -343,18 +347,17 @@ public class Questionnaire {
 
         // Remove checked answers on removed questions
         String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
-        List<Integer> mListOfAnswerIDs = mQuestionInfo.get(iPos).getAnswerIDs();
+        List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
 
-        for (int iAnswer = 0; iAnswer < mListOfAnswerIDs.size(); iAnswer++) {
+        for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
             if (sType.equals("checkbox")) {
                 CheckBox checkBox = (CheckBox) mContextQPA.mListOfViewsStorage.get(iPos).getView().
-                        findViewById(mQuestionInfo.get(iPos).getAnswerIDs().get(iAnswer));
+                        findViewById(mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
                 if (checkBox != null) {
                     checkBox.setChecked(false);
                 }
             }
         }
-
 
         // Remove View from ActiveList
         mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
@@ -386,15 +389,40 @@ public class Questionnaire {
         return listString;
     }
 
-    public boolean clearAnswerIDs(){
-        mAnswerIDs = new AnswerIDs();
+    public boolean clearAnswerIds() {
+        mAnswerIds = new AnswerIds();
         checkVisibility();
         return true;
     }
 
-    public boolean clearAnswerTexts(){
+    // Clears all entered answer Ids in mAnswerIds
+    public boolean clearAnswerTexts() {
         revertEnteredText();
         mAnswerTexts = new AnswerTexts();
         return true;
+    }
+
+    // Clears all text answer entries in mAnswerTexts
+    public void revertEnteredText() {
+
+        for (int iText = 0; iText < mAnswerTexts.size(); iText++) {
+            int nTextId = mAnswerTexts.get(iText).getId();
+            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
+                if (mContextQPA.mListOfActiveViews.get(iView).getView().getId() == nTextId) {
+                    TextView tV = (TextView) mContextQPA.mListOfActiveViews.get(iView).getView().findViewById(nTextId);
+                    tV.setText("");
+                }
+            }
+        }
+    }
+
+    private void showListOfIds() {
+        if (mAnswerIds.size() > 0) {
+            String LIST = "" + mAnswerIds.get(0);
+            for (int iId = 1; iId < mAnswerIds.size(); iId++) {
+                LIST += ",\n" + mAnswerIds.get(iId);
+            }
+            Toast.makeText(mContext, LIST, Toast.LENGTH_SHORT).show();
+        }
     }
 }

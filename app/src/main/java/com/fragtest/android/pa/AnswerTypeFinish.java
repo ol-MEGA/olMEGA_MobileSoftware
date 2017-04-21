@@ -19,17 +19,17 @@ public class AnswerTypeFinish extends AppCompatActivity {
     public Button mAnswerButton;
     public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
-    private int mAnswerID;
+    private int mAnswerId;
     private Context mContext;
     private FileIO fileIO;
 
-    public AnswerTypeFinish(Context context, int ID, AnswerLayout qParent) {
+    public AnswerTypeFinish(Context context, int Id, AnswerLayout qParent) {
 
         mContext = context;
-        mAnswerID = ID;
+        mAnswerId = Id;
         parent = qParent;
         mAnswerButton = new Button(context);
-        mAnswerButton.setId(mAnswerID);
+        mAnswerButton.setId(mAnswerId);
         mAnswerButton.setText(R.string.buttonTextFinish);
         mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -37,22 +37,18 @@ public class AnswerTypeFinish extends AppCompatActivity {
         mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
         mAnswerButton.setAllCaps(false);
         mAnswerButton.setTypeface(null, Typeface.NORMAL);
-
-        int sdk = android.os.Build.VERSION.SDK_INT;
-        if (sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            mAnswerButton.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.button));
-        } else {
-            mAnswerButton.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
-        }
+        mAnswerButton.setBackgroundResource(R.drawable.button);
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
 
-        int[] AnswerFinishMargins = Units.getAnswerFinishMargin();
-        answerParams.setMargins(AnswerFinishMargins[0], AnswerFinishMargins[1],
-                AnswerFinishMargins[2], AnswerFinishMargins[3]);
+        answerParams.setMargins(
+                (int) mContext.getResources().getDimension(R.dimen.answerFinishMargin_Left),
+                (int) mContext.getResources().getDimension(R.dimen.answerFinishMargin_Top),
+                (int) mContext.getResources().getDimension(R.dimen.answerFinishMargin_Right),
+                (int) mContext.getResources().getDimension(R.dimen.answerFinishMargin_Bottom));
     }
 
     public boolean addAnswer() {
@@ -61,12 +57,12 @@ public class AnswerTypeFinish extends AppCompatActivity {
     }
 
     public void addClickListener(final Context context, final MetaData metaData,
-                                 final AnswerIDs answerIDs, final AnswerTexts answerTexts) {
+                                 final AnswerIds answerIds, final AnswerTexts answerTexts) {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                metaData.finalise(answerIDs, answerTexts);
+                metaData.finalise(answerIds, answerTexts);
                 fileIO = new FileIO();
                 fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
                 //Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();

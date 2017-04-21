@@ -2,4 +2,30 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="SliderFixTextTopMargin_Left">0px</dimen>
+    <dimen name="SliderFixTextTopMargin_Top">-20px</dimen>
+    <dimen name="SliderFixTextTopMargin_Right">0px</dimen>
+    <dimen name="SliderFixTextTopMargin_Bottom">20px</dimen>
+
+    <dimen name="SliderFixTextMargin_Left">0px</dimen>
+    <dimen name="SliderFixTextMargin_Top">20px</dimen>
+    <dimen name="SliderFixTextMargin_Right">0px</dimen>
+    <dimen name="SliderFixTextMargin_Bottom">0px</dimen>
+
+    <dimen name="SliderFixTextBottomMargin_Left">0px</dimen>
+    <dimen name="SliderFixTextBottomMargin_Top">20px</dimen>
+    <dimen name="SliderFixTextBottomMargin_Right">0px</dimen>
+    <dimen name="SliderFixTextBottomMargin_Bottom">0px</dimen>
+
+    <dimen name="SliderFixTextPadding_Left">0px</dimen>
+    <dimen name="SliderFixTextPadding_Top">0px</dimen>
+    <dimen name="SliderFixTextPadding_Right">0px</dimen>
+    <dimen name="SliderFixTextPadding_Bottom">0px</dimen>
+
+    <dimen name="answerFinishMargin_Left">0px</dimen>
+    <dimen name="answerFinishMargin_Top">48px</dimen>
+    <dimen name="answerFinishMargin_Right">0px</dimen>
+    <dimen name="answerFinishMargin_Bottom">0px</dimen>
+
 </resources>

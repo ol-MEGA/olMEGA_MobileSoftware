@@ -46,11 +46,14 @@ public class FileIO {
         BufferedReader buffReader = new BufferedReader(inputReader);
         String line;
         StringBuilder text = new StringBuilder();
-
         try {
             while ((line = buffReader.readLine()) != null) {
-                text.append(line);
-                text.append('\n');
+                if (!line.trim().isEmpty() && !line.trim().startsWith("//")) {
+                    text.append(line);
+                    text.append('\n');
+                } else {
+                    Log.i(FILE_IO,"Dropping line: "+line.trim());
+                }
             }
         } catch (IOException e) {
             return null;
@@ -74,8 +77,12 @@ public class FileIO {
 
             try {
                 while ((line = buffReader.readLine()) != null) {
-                    text.append(line);
-                    text.append('\n');
+                    if (!line.trim().isEmpty() && !line.trim().startsWith("//")) {
+                        text.append(line);
+                        text.append('\n');
+                    } else {
+                        Log.i(FILE_IO,"Dropping line: "+line.trim());
+                    }
                 }
             } catch (IOException e) {
                 return null;
@@ -132,6 +139,54 @@ public class FileIO {
         } catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
+        return false;
+    }
+
+    public boolean saveDataToFileOffline(Context context, String filename, String data) {
+
+        String sFileName = filename;
+
+        // Obtain working Directory
+        File dir = new File("C:/Users/ul1021/Desktop/data");
+        // Address Basis File in working Directory
+        File file = new File(dir, sFileName);
+
+        Log.i(FILE_IO,file.getAbsolutePath());
+
+        // Make sure the path directory exists.
+        if (!dir.exists()) {
+            if (dir.mkdirs()) {
+                Log.i(FILE_IO, "Directory created: " + dir);
+
+                String stringToSave = data;
+
+                Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+
+                try {
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+                    FileOutputStream fOut = new FileOutputStream(file);
+                    OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+
+                    myOutWriter.append(stringToSave);
+                    myOutWriter.close();
+
+                    fOut.flush();
+                    fOut.close();
+
+                    new SingleMediaScanner(context, file);
+                    Log.i(FILE_IO, "Data successfully written.");
+                    return true;
+                } catch (IOException e) {
+                    Log.e("Exception", "File write failed: " + e.toString());
+                }
+            } else {
+                Log.e(FILE_IO, "Unable to create directory. Shutting down.");
+            }
+        }
+
+
         return false;
     }
 }

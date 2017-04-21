@@ -1,19 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <mobiquest>
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        // Beispielkommentar: Hier wird die Hörsituation erfragt
         <title>
             <text>Hörsituation</text>
         </title>
-        <question id="10815" type="sliderFix">
+        <question id="10810" type="text" hidden="true" mandatory="true">
+            <label>
+                <text>Device ID</text>
+            </label>
+            <default>
+                <text>$device.id</text>
+            </default>
+        </question>
+        <question id="10811" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>Start Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+        <question id="10812" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>Start Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+        <question id="10813" type="sliderFix">
             <label>
                 <text>Bitte wählen Sie eine Kategorie</text>
             </label>
             <option id="214300">
                 <text>Watt?</text>
             </option>
-            <option id="214299">
+            <default id="214299">
                 <text>Soll ich lachen?</text>
-            </option>
+            </default>
             <option id="214301">
                 <text>wenig</text>
             </option>
@@ -30,29 +55,21 @@
                 <text>You serious?!?</text>
             </option>
         </question>
-        <question id="10816" type="text" hidden="true" mandatory="true">
+        <question id="10814" type="radio" filter="10813_214331">
             <label>
-                <text>Device ID</text>
+                <text>Warum genug?</text>
             </label>
-            <default>
-                <text>$device.id</text>
-            </default>
+            <option id="214399">
+                <text>darum!</text>
+            </option>
         </question>
-        <question id="10817" type="date" hidden="true" mandatory="true">
+        <question id="10815" type="checkbox" filter="10813_214341">
             <label>
-                <text>Start Date</text>
+                <text>Einen drüber?</text>
             </label>
-            <default>
-                <text>$now</text>
-            </default>
-        </question>
-        <question id="10818" type="date" hidden="true" mandatory="true">
-            <label>
-                <text>Start Date (UTC)</text>
-            </label>
-            <default>
-                <text>$utcnow</text>
-            </default>
+            <option id="214398">
+                <text>ja.</text>
+            </option>
         </question>
         <question id="10819" type="radio">
             <label>
