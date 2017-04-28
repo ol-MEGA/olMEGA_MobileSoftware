@@ -34,7 +34,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
         mAnswerButton.setText(sAnswer);
         mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setChecked(false);
-        mAnswerButton.setGravity(Gravity.START);
+        mAnswerButton.setGravity(Gravity.CENTER_VERTICAL);
         mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
         mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
         int states[][] = {{android.R.attr.state_checked}, {}};
@@ -43,6 +43,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
         CompoundButtonCompat.setButtonTintList(mAnswerButton, new ColorStateList(states, colors));
         mAnswerButton.setMinHeight(Units.getRadioMinHeight());
         mAnswerButton.setChecked(mChecked);
+        mAnswerButton.setPadding(24,24,24,24);
 
         // Parameters of Answer Button
         answerParams = new LinearLayout.LayoutParams(

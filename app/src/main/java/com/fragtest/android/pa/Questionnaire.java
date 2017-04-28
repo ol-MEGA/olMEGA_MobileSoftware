@@ -6,7 +6,6 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,6 +88,7 @@ public class Questionnaire {
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
         boolean isSlider = false;
+        boolean isEmoji = false;
 
         LinearLayout linearContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -104,7 +104,7 @@ public class Questionnaire {
         questionText.addQuestion();
 
         // Creates a Canvas for the Answer Layout
-        AnswerLayout answerLayout = new AnswerLayout(mContext);
+        final AnswerLayout answerLayout = new AnswerLayout(mContext);
         linearContainer.addView(answerLayout.scrollContent);
 
         // Format of Answer e.g. "radio", "checkbox", ...
@@ -180,6 +180,15 @@ public class Questionnaire {
                         answerSliderFix.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
+                    case "emoji": {
+                        isRadio = true;
+                        AnswerTypeEmoji answer = new AnswerTypeEmoji(mContext,
+                                nAnswerId, sAnswer, answerRadioGroup);
+                        answer.addAnswer();
+                        listOfRadioIds.add(nAnswerId);
+                        //mAnswerIds = answer.addClickListener(mAnswerIds);
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         Log.i(CLASS_NAME, "Weird object found. Id: " + question.getQuestionId());
@@ -191,26 +200,28 @@ public class Questionnaire {
 
         // In case of sliderFix, create View
         if (isSlider) {
-            //mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
             mAnswerIds = answerSliderFix.buildSlider(mAnswerIds);
-            //mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
-            answerSliderFix.mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
+        }
+
+        // In Case of Radio Buttons, additional RadioGroup is implemented
+        if (isRadio) {
+            answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
                 @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    Log.e(CLASS_NAME, "" + progress);
-                    mAnswerIds = answerSliderFix.addIdFromProgress(progress);
+                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    // In Case of Radio Buttons checking one means un-checking all other Elements
+                    // Therefore onClickListening must be handled on Group Level
+                    // listOfRadioIds contains all Ids of current Radio Group
+                    mAnswerIds.removeAll(listOfRadioIds);
+                    mAnswerIds.add(checkedId);
+                    answerRadioGroup.check(checkedId);
+                    // Toggle Visibility of suited/unsuited frames
                     checkVisibility();
                 }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                }
             });
+            answerLayout.layoutAnswer.addView(answerRadioGroup);
         }
+
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
         if (isRadio) {

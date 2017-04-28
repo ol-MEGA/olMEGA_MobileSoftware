@@ -3,6 +3,7 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -26,6 +27,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
     public ViewPager mViewPager;
+    public String CLASS_NAME = "Quest..PagerAdapter";
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
@@ -40,6 +42,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mListOfViewsStorage = new ArrayList<>();
 
         createLayout();
+        // Creates and destroys views based on filter id settings
+        mQuestionnaire.checkVisibility();
     }
 
     private void createLayout() {
@@ -51,19 +55,19 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Sets Layout Id to Question Id
             mLayout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
-            mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion, question.getAnswers()));
+            mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(),
+                    iQuestion, question.getAnswers()));
             // Adds the Layout to List storing ALL Views
-            mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(), iQuestion, question.getAnswers()));
+            mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(),
+                    iQuestion, question.getAnswers()));
         }
-
-        // Creates and destroys views based on filter id settings
-        mQuestionnaire.checkVisibility();
     }
 
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
         View view = mListOfActiveViews.get(position).getView();
         collection.addView(view);
+        Log.e(CLASS_NAME,"instantiateItem");
         return view;
     }
 

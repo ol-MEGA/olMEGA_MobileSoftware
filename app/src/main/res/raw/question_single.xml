@@ -29,6 +29,26 @@
                 <text>$utcnow</text>
             </default>
         </question>
+        <question id="10809" type="emoji">
+            <label>
+                <text>Wie fühlen Sie sich?</text>
+            </label>
+            <option id="214311">
+                <text>emoji1of5</text>
+            </option>
+            <option id="214312">
+                <text>emoji2of5</text>
+            </option>
+            <option id="214313">
+                <text>emoji3of5</text>
+            </option>
+            <option id="214314">
+                <text>emoji4of5</text>
+            </option>
+            <option id="214315">
+                <text>emoji5of5</text>
+            </option>
+        </question>
         <question id="10813" type="sliderFix">
             <label>
                 <text>Bitte wählen Sie eine Kategorie</text>
@@ -36,9 +56,9 @@
             <option id="214300">
                 <text>Watt?</text>
             </option>
-            <default id="214299">
+            <option id="214299">
                 <text>Soll ich lachen?</text>
-            </default>
+            </option>
             <option id="214301">
                 <text>wenig</text>
             </option>
@@ -51,9 +71,9 @@
             <option id="214341">
                 <text>einen drüber</text>
             </option>
-            <option id="214342">
+            <default id="214342">
                 <text>You serious?!?</text>
-            </option>
+            </default>
         </question>
         <question id="10814" type="radio" filter="10813_214331">
             <label>

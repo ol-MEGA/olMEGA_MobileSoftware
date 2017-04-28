@@ -171,7 +171,7 @@ public class Question extends AppCompatActivity {
         String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
 
         switch (mTypeAnswer) {
-            case "radio": case "checkbox":case "sliderFix":
+            case "radio": case "checkbox": case "sliderFix": case "emoji":
 
                 for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
 
