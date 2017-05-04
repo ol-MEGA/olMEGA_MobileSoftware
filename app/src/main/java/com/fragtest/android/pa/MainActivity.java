@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        setQuestionnaireProgBar(0);
+        setQuestionnaireProgressBar(0);
         setArrows(0);
 
     }
@@ -88,13 +88,13 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onPageSelected(int position) {
-                    setQuestionnaireProgBar(position);
+                    setQuestionnaireProgressBar(position);
                     setArrows(position);
                 }
             };
 
     // Set the horizontal Indicator at the Top to follow Page Position
-    public void setQuestionnaireProgBar(int position) {
+    public void setQuestionnaireProgressBar(int position) {
 
         mPosition = position;
         int nAccuracy = 100;

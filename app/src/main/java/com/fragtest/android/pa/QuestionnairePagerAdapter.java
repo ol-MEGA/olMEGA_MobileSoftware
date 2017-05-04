@@ -158,13 +158,4 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
-    /*
-    public MetaData getMetaData() {
-        return mMetaData;
-    }
-
-    public int getNumQuestions() {
-        return mNUM_QUESTIONS;
-    }
-    */
 }

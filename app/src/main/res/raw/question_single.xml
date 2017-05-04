@@ -39,9 +39,9 @@
             <option id="214312">
                 <text>emoji2of5</text>
             </option>
-            <option id="214313">
+            <default id="214313">
                 <text>emoji3of5</text>
-            </option>
+            </default>
             <option id="214314">
                 <text>emoji4of5</text>
             </option>

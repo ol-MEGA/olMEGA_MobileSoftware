@@ -29,7 +29,7 @@ public class Questionnaire {
     // Context of MainActivity()
     private Context mContext;
     // Accumulator for ids checked in by given answers
-    private AnswerIds mAnswerIds;
+    public AnswerIds mAnswerIds;
     // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
     // Basic information about all available questions
@@ -117,6 +117,9 @@ public class Questionnaire {
         // Works with all single-option tasks e.g. radio buttons, slider, ...
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
+        // In case of emoji type
+        final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(mContext, mContextQPA, answerLayout);
+
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(mContext, answerLayout);
 
@@ -181,12 +184,8 @@ public class Questionnaire {
                         break;
                     }
                     case "emoji": {
-                        isRadio = true;
-                        AnswerTypeEmoji answer = new AnswerTypeEmoji(mContext,
-                                nAnswerId, sAnswer, answerRadioGroup);
-                        answer.addAnswer();
-                        listOfRadioIds.add(nAnswerId);
-                        //mAnswerIds = answer.addClickListener(mAnswerIds);
+                        isEmoji = true;
+                        answerTypeEmoji.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     default: {
@@ -204,6 +203,11 @@ public class Questionnaire {
             mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
         }
 
+        if (isEmoji) {
+            mAnswerIds = answerTypeEmoji.buildView(mAnswerIds);
+            mAnswerIds = answerTypeEmoji.addClickListener(mAnswerIds);
+        }
+
         // In Case of Radio Buttons, additional RadioGroup is implemented
         if (isRadio) {
             answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -222,24 +226,6 @@ public class Questionnaire {
             answerLayout.layoutAnswer.addView(answerRadioGroup);
         }
 
-
-        // In Case of Radio Buttons, additional RadioGroup is implemented
-        if (isRadio) {
-            answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    // In Case of Radio Buttons checking one means un-checking all other Elements
-                    // Therefore onClickListening must be handled on Group Level
-                    // listOfRadioIds contains all Ids of current Radio Group
-                    mAnswerIds.removeAll(listOfRadioIds);
-                    mAnswerIds.add(checkedId);
-                    answerRadioGroup.check(checkedId);
-                    // Toggle Visibility of suited/unsuited frames
-                    checkVisibility();
-                }
-            });
-            answerLayout.layoutAnswer.addView(answerRadioGroup);
-        }
         return linearContainer;
     }
 
@@ -255,6 +241,8 @@ public class Questionnaire {
     // toggles visibility by destroying or creating the views and adding them to the list of views
     // which is handled by QuestionnairePagerAdapter
     public void checkVisibility() {
+
+        Log.i("Checking","visibility");
 
         for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
@@ -427,7 +415,7 @@ public class Questionnaire {
         }
     }
 
-    private void showListOfIds() {
+    public void showListOfIds() {
         if (mAnswerIds.size() > 0) {
             String LIST = "" + mAnswerIds.get(0);
             for (int iId = 1; iId < mAnswerIds.size(); iId++) {
