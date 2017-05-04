@@ -29,27 +29,27 @@
                 <text>$utcnow</text>
             </default>
         </question>
-        <question id="10809" type="emoji">
-            <label>
-                <text>Wie fühlen Sie sich?</text>
-            </label>
-            <option id="214311">
-                <text>emoji1of5</text>
-            </option>
-            <option id="214312">
-                <text>emoji2of5</text>
-            </option>
-            <option id="214313">
-                <text>emoji3of5</text>
-            </option>
-            <option id="214314">
-                <text>emoji4of5</text>
-            </option>
-            <option id="214315">
-                <text>emoji5of5</text>
-            </option>
-        </question>
-        <question id="10813" type="sliderFix">
+        //<question id="10809" type="emoji">
+        //    <label>
+        //        <text>Wie fühlen Sie sich?</text>
+        //    </label>
+        //    <option id="214311">
+        //        <text>emoji1of5</text>
+        //    </option>
+        //    <option id="214312">
+        //        <text>emoji2of5</text>
+        //    </option>
+        //    <option id="214313">
+        //        <text>emoji3of5</text>
+        //    </option>
+        //    <option id="214314">
+        //       <text>emoji4of5</text>
+        //    </option>
+        //    <option id="214315">
+        //        <text>emoji5of5</text>
+        //    </option>
+        //</question>
+        <question id="10813" type="sliderFree">
             <label>
                 <text>Bitte wählen Sie eine Kategorie</text>
             </label>
@@ -74,22 +74,6 @@
             <default id="214342">
                 <text>You serious?!?</text>
             </default>
-        </question>
-        <question id="10814" type="radio" filter="10813_214331">
-            <label>
-                <text>Warum genug?</text>
-            </label>
-            <option id="214399">
-                <text>darum!</text>
-            </option>
-        </question>
-        <question id="10815" type="checkbox" filter="10813_214341">
-            <label>
-                <text>Einen drüber?</text>
-            </label>
-            <option id="214398">
-                <text>ja.</text>
-            </option>
         </question>
         <question id="10819" type="radio">
             <label>

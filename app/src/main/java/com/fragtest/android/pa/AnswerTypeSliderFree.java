@@ -24,7 +24,7 @@ import static android.R.attr.text;
  * Created by ulrikkowalk on 04.04.17.
  */
 
-public class AnswerTypeSliderFix extends AppCompatActivity {
+public class AnswerTypeSliderFree extends AppCompatActivity {
 
     public AnswerLayout parent;
     private Context mContext;
@@ -37,9 +37,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     //private AnswerIds mAnswerIds;
     private int mDefaultAnswer = -1;
     public static String CLASS_NAME = "AnswerTypeSliderFix";
-    private int width, mUsableHeight, mSliderMaxHeight;
+    private int width, mUsableHeight, mSliderMaxHeight, mQuestionId;
+    private AnswerValues mAnswerValues;
 
-    public AnswerTypeSliderFix(Context context, AnswerLayout qParent) {
+    public AnswerTypeSliderFree(Context context, AnswerLayout qParent) {
 
         mContext = context;
         parent = qParent;
@@ -143,20 +144,20 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         return true;
     }
 
-    public AnswerIds addIdFromProgress(int progress, AnswerIds answerIds) {
-        answerIds.removeAll(mListOfIds);
-        answerIds.add(mListOfAnswers.get(progress).getId());
-        return answerIds;
-    }
+    public AnswerValues addClickListener(AnswerValues answerValues, int questionId) {
 
-    public AnswerIds addClickListener(final AnswerIds answerIds) {
+        mQuestionId = questionId;
+        mAnswerValues = answerValues;
 
         // Handles default id if existent
         if (mDefaultAnswer == -1) {
-            answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
-            setProgressPixels((mHorizontalContainer.getLayoutParams().height)/2);
+            //answerValues.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
+            answerValues.add(mQuestionId,(int) mListOfAnswers.size()/2);
+            setProgressItem((int) mListOfAnswers.size()/2);
+            //setProgressPixels((mHorizontalContainer.getLayoutParams().height)/2);
         } else {
-            answerIds.add(mListOfAnswers.get(mDefaultAnswer).getId());
+            //answerIds.add(mListOfAnswers.get(mDefaultAnswer).getId());
+            answerValues.add(mQuestionId,mDefaultAnswer);
             final TextView tvDefault = (TextView) mAnswerListContainer.findViewById(
                     mListOfAnswers.get(mDefaultAnswer).getId());
             tvDefault.post(new Runnable()
@@ -180,8 +181,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     setProgressItem(numAnswer);
-                    answerIds.removeAll(mListOfIds);
-                    answerIds.add(currentId);
+                    mAnswerValues.removeValueWithId(mQuestionId);
+                    mAnswerValues.add(mQuestionId,numAnswer);
+                    //answerIds.removeAll(mListOfIds);
+                    //answerIds.add(currentId);
                 }
             });
         }
@@ -208,11 +211,11 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
                         Log.d("Motion","Action was MOVE");
-                        rescale(event, answerIds);
+                        mAnswerValues = rescale(event, mAnswerValues);
                         return true;
                     case (MotionEvent.ACTION_UP) :
                         Log.d("Motion","Action was UP");
-                        rescale(event, answerIds);
+                        mAnswerValues = rescale(event, mAnswerValues);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         Log.d("Motion","Action was CANCEL");
@@ -239,11 +242,11 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
                         Log.d("Motion","Action was MOVE");
-                        rescale(event, answerIds);
+                        mAnswerValues = rescale(event, mAnswerValues);
                         return true;
                     case (MotionEvent.ACTION_UP) :
                         Log.d("Motion","Action was UP");
-                        rescale(event, answerIds);
+                        mAnswerValues = rescale(event, mAnswerValues);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         Log.d("Motion","Action was CANCEL");
@@ -257,21 +260,29 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 return true;
             }
         });
-        return answerIds;
+        return mAnswerValues;
     }
 
     // Set progress  bar according to user input
-    private AnswerIds rescale(MotionEvent motionEvent, AnswerIds answerIds) {
+    private AnswerValues rescale(MotionEvent motionEvent, AnswerValues answerValues) {
+        mAnswerValues = answerValues;
+        Log.i("re","scaling");
         // Clip selection to fixed items
         int numItem = clipValuesToElements(motionEvent.getRawY());
         try {
             setProgressItem(numItem);
-            answerIds.removeAll(mListOfIds);
-            answerIds.add(mListOfAnswers.get(numItem).getId());
+            mAnswerValues.removeValueWithId(mQuestionId);
+            mAnswerValues.add(mQuestionId,numItem);
+
+
+            for (int iA = 0; iA<mAnswerValues.size(); iA++) {
+                Log.i("AV",""+mAnswerValues.get(iA).getId());
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-    return answerIds;
+        return mAnswerValues;
     }
 
     // Enables rasterization of values (fixed choice options)

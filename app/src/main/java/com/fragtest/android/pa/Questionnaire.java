@@ -32,6 +32,8 @@ public class Questionnaire {
     private AnswerIds mAnswerIds;
     // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
+    // Accumulator for question id and metric input
+    private AnswerValues mAnswerValues;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
@@ -66,6 +68,8 @@ public class Questionnaire {
         mAnswerIds = new AnswerIds();
         // Contains all contents of text answers
         mAnswerTexts = new AnswerTexts();
+        // Contains all metric answers
+        mAnswerValues = new AnswerValues();
 
     }
 
@@ -87,25 +91,26 @@ public class Questionnaire {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
-        boolean isSlider = false;
+        boolean isSliderFix = false;
+        boolean isSliderFree = false;
         boolean isEmoji = false;
 
-        LinearLayout linearContainer = new LinearLayout(mContext);
+        LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
-        linearContainer.setOrientation(LinearLayout.VERTICAL);
-        linearContainer.setLayoutParams(linearContainerParams);
-        linearContainer.setBackgroundColor(Color.WHITE);
+        answerContainer.setOrientation(LinearLayout.VERTICAL);
+        answerContainer.setLayoutParams(linearContainerParams);
+        answerContainer.setBackgroundColor(Color.WHITE);
 
         // TextView carrying the Question
         QuestionText questionText = new QuestionText(mContext, question.getQuestionId(),
-                question.getQuestionText(), linearContainer);
+                question.getQuestionText(), answerContainer);
         questionText.addQuestion();
 
         // Creates a Canvas for the Answer Layout
         final AnswerLayout answerLayout = new AnswerLayout(mContext);
-        linearContainer.addView(answerLayout.scrollContent);
+        answerContainer.addView(answerLayout.scrollContent);
 
         // Format of Answer e.g. "radio", "checkbox", ...
         String sType = question.getTypeAnswer();
@@ -120,12 +125,15 @@ public class Questionnaire {
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(mContext, answerLayout);
 
+        // In case of sliderFree type
+        final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(mContext, answerLayout);
+
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
-        // Iteration over all possible Answers
+        // Iteration over all possible Answers attributed to current question
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
             /** ANSWER OBJECT **/
@@ -176,8 +184,13 @@ public class Questionnaire {
                         break;
                     }
                     case "sliderFix": {
-                        isSlider = true;
+                        isSliderFix = true;
                         answerSliderFix.addAnswer(nAnswerId, sAnswer, isDefault);
+                        break;
+                    }
+                    case "sliderFree": {
+                        isSliderFree = true;
+                        answerSliderFree.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     case "emoji": {
@@ -186,7 +199,6 @@ public class Questionnaire {
                                 nAnswerId, sAnswer, answerRadioGroup);
                         answer.addAnswer();
                         listOfRadioIds.add(nAnswerId);
-                        //mAnswerIds = answer.addClickListener(mAnswerIds);
                         break;
                     }
                     default: {
@@ -199,11 +211,17 @@ public class Questionnaire {
         }
 
         // In case of sliderFix, create View
-        if (isSlider) {
-            mAnswerIds = answerSliderFix.buildSlider(mAnswerIds);
+        if (isSliderFix) {
+            answerSliderFix.buildSlider();
             mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
         }
 
+        // In case of sliderFix, create View
+        if (isSliderFree) {
+            answerSliderFree.buildSlider();
+            mAnswerValues = answerSliderFree.addClickListener(mAnswerValues, question.getQuestionId());
+        }
+
         // In Case of Radio Buttons, additional RadioGroup is implemented
         if (isRadio) {
             answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -222,25 +240,7 @@ public class Questionnaire {
             answerLayout.layoutAnswer.addView(answerRadioGroup);
         }
 
-
-        // In Case of Radio Buttons, additional RadioGroup is implemented
-        if (isRadio) {
-            answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    // In Case of Radio Buttons checking one means un-checking all other Elements
-                    // Therefore onClickListening must be handled on Group Level
-                    // listOfRadioIds contains all Ids of current Radio Group
-                    mAnswerIds.removeAll(listOfRadioIds);
-                    mAnswerIds.add(checkedId);
-                    answerRadioGroup.check(checkedId);
-                    // Toggle Visibility of suited/unsuited frames
-                    checkVisibility();
-                }
-            });
-            answerLayout.layoutAnswer.addView(answerRadioGroup);
-        }
-        return linearContainer;
+        return answerContainer;
     }
 
     public int getNumPages() {
