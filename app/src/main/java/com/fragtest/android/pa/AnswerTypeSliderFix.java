@@ -288,7 +288,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         return item;
     }
 
-    // Enables rasterization of values (fixed choice options), counting from 0 (lowest)
+    // Enables quantisation of values (fixed choice options), counting from 0 (lowest)
     private int mapValuesToItems(float inVal) {
         return (int) ((inVal - (Units.getScreenHeight() -
                 mUsableHeight-answerLayoutPadding[3]))/(nTextViewHeight));

@@ -20,6 +20,9 @@ import java.util.List;
 
 public class Questionnaire {
 
+    private static String CLASS_NAME = "Questionnaire";
+    // Accumulator for ids checked in by given answers
+    public AnswerIds mAnswerIds;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
     // List containing all questions (including all attached information)
@@ -28,8 +31,6 @@ public class Questionnaire {
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
     private Context mContext;
-    // Accumulator for ids checked in by given answers
-    public AnswerIds mAnswerIds;
     // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
     // Accumulator for question id and metric input
@@ -37,8 +38,6 @@ public class Questionnaire {
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
-    private static String CLASS_NAME = "Questionnaire";
-
     private FileIO mFileIO;
 
     // Flag: display forced empty vertical spaces
@@ -230,7 +229,7 @@ public class Questionnaire {
         // In case of sliderFix, create View
         if (isSliderFree) {
             answerSliderFree.buildSlider();
-            mAnswerValues = answerSliderFree.addClickListener(mAnswerValues);
+            mAnswerIds = answerSliderFree.addClickListener(mAnswerIds);
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
