@@ -23,6 +23,7 @@ public class Questionnaire {
     private static String CLASS_NAME = "Questionnaire";
     // Accumulator for ids checked in by given answers
     public AnswerIds mAnswerIds;
+    public EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
     // List containing all questions (including all attached information)
@@ -39,9 +40,6 @@ public class Questionnaire {
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
     private FileIO mFileIO;
-
-    private EvaluationList mEvaluationList;
-
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
     // Use on screen debug output
@@ -97,6 +95,7 @@ public class Questionnaire {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
+        boolean isCheckBox = false;
         boolean isSliderFix = false;
         boolean isSliderFree = false;
         boolean isEmoji = false;
@@ -128,9 +127,13 @@ public class Questionnaire {
         // Works with all single-option tasks e.g. radio buttons, slider, ...
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
+        // In case of checkbox type
+        final AnswerTypeCheckBox answerTypeCheckBox = new AnswerTypeCheckBox(
+                mContext, answerLayout, question.getQuestionId());
+
         // In case of emoji type
         final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
-                mContext, mContextQPA, answerLayout);
+                mContext, mContextQPA, answerLayout, question.getQuestionId());
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
@@ -145,10 +148,10 @@ public class Questionnaire {
         // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
-        // Iteration over all possible Answers attributed to current question
+        //
+        /** Iteration over all possible Answers attributed to current question **/
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
-            /** ANSWER OBJECT **/
             // Obtain Answer specific Parameters
             Answer currentAnswer = answerList.get(iAnswer);
             String sAnswer = currentAnswer.Text;
@@ -171,14 +174,8 @@ public class Questionnaire {
                         break;
                     }
                     case "checkbox": {
-                        AnswerTypeCheckBox answer = new AnswerTypeCheckBox(mContext,
-                                nAnswerId, sAnswer, answerLayout);
-                        if (isDefault) {
-                            answer.setChecked();
-                            mAnswerIds.add(nAnswerId);
-                        }
-                        answer.addAnswer();
-                        mAnswerIds = answer.addClickListener(mAnswerIds);
+                        isCheckBox = true;
+                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     case "text": {
@@ -219,20 +216,25 @@ public class Questionnaire {
             }
         }
 
+        if (isCheckBox) {
+            answerTypeCheckBox.buildView();
+            mEvaluationList = answerTypeCheckBox.addClickListener(mEvaluationList);
+        }
+
         if (isEmoji) {
-            mAnswerIds = answerTypeEmoji.buildView(mAnswerIds);
-            mAnswerIds = answerTypeEmoji.addClickListener(mAnswerIds);
+            mEvaluationList = answerTypeEmoji.buildView(mEvaluationList);
+            mEvaluationList = answerTypeEmoji.addClickListener();
         }
 
         // In case of sliderFix, create View
         if (isSliderFix) {
-            answerSliderFix.buildSlider();
+            answerSliderFix.buildView();
             mEvaluationList = answerSliderFix.addClickListener(mEvaluationList);
         }
 
         // In case of sliderFix, create View
         if (isSliderFree) {
-            answerSliderFree.buildSlider();
+            answerSliderFree.buildView();
             mEvaluationList = answerSliderFree.addClickListener(mEvaluationList);
         }
 

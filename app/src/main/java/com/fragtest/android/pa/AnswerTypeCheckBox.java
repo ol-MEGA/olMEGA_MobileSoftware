@@ -11,6 +11,7 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -18,62 +19,88 @@ import java.util.ArrayList;
 
 public class AnswerTypeCheckBox extends AppCompatActivity {
 
-    public CheckBox mAnswerButton;
     public LinearLayout.LayoutParams answerParams;
-    public AnswerLayout parent;
-    private int nAnswerId;
+    public AnswerLayout mParent;
     private Context mContext;
+    private int mQuestionId;
+    private List<StringAndInteger> mListOfAnswers;
+    private List<Integer> mListOfDefaults;
+    private EvaluationList mEvaluationList;
 
-    public AnswerTypeCheckBox(Context context, int Id, String sAnswer, AnswerLayout qParent) {
+    public AnswerTypeCheckBox(Context context, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
-        nAnswerId = Id;
-        parent = qParent;
-        mAnswerButton = new CheckBox(mContext);
-        mAnswerButton.setId(nAnswerId);
-        mAnswerButton.setText(sAnswer);
-        mAnswerButton.setTextSize(Units.getTextSizeAnswer());
-        mAnswerButton.setChecked(false);
-        mAnswerButton.setGravity(Gravity.START);
-        mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
-        mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
-        int states[][] = {{android.R.attr.state_checked}, {}};
-        int colors[] = {ContextCompat.getColor(context, R.color.JadeRed),
-                ContextCompat.getColor(context, R.color.JadeRed)};
-        CompoundButtonCompat.setButtonTintList(mAnswerButton, new ColorStateList(states, colors));
+        mParent = qParent;
+        mQuestionId = nQuestionId;
+        mListOfDefaults = new ArrayList<>();
+        mListOfAnswers = new ArrayList<>();
 
-        // Parameters of Answer Button
-        answerParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mAnswerButton.setMinHeight(Units.getCheckBoxMinHeight());
     }
 
-    public boolean addAnswer() {
-        parent.layoutAnswer.addView(mAnswerButton,answerParams);
+    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
+        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
+        if (isDefault) {
+            mListOfDefaults.add(mListOfAnswers.size() - 1);
+        }
         return true;
     }
 
+    public void buildView() {
 
-    public AnswerIds addClickListener(final AnswerIds vAnswerIds) {
-        mAnswerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Implementing Lists simplifies the task of finding and removing the correct Id
-                ArrayList<Integer> AnswerId = new ArrayList<>();
-                AnswerId.add(nAnswerId);
-                if (mAnswerButton.isChecked()) {
-                    vAnswerIds.addAll(AnswerId);
-                } else {
-                    vAnswerIds.removeAll(AnswerId);
-                }
+        for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+
+            int currentId = mListOfAnswers.get(iAnswer).getId();
+            String currentString = mListOfAnswers.get(iAnswer).getText();
+
+            CheckBox checkBox = new CheckBox(mContext);
+            checkBox.setId(currentId);
+            checkBox.setText(currentString);
+            checkBox.setTextSize(Units.getTextSizeAnswer());
+            checkBox.setChecked(false);
+            checkBox.setGravity(Gravity.START);
+            checkBox.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
+            checkBox.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
+            int states[][] = {{android.R.attr.state_checked}, {}};
+            int colors[] = {ContextCompat.getColor(mContext, R.color.JadeRed),
+                    ContextCompat.getColor(mContext, R.color.JadeRed)};
+            CompoundButtonCompat.setButtonTintList(checkBox, new ColorStateList(states, colors));
+
+            // Parameters of Answer Button
+            answerParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            checkBox.setMinHeight(Units.getCheckBoxMinHeight());
+
+            mParent.layoutAnswer.addView(checkBox, answerParams);
+        }
+    }
+
+    public EvaluationList addClickListener(final EvaluationList evaluationList) {
+
+        mEvaluationList = evaluationList;
+
+        for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+
+            final int currentId = mListOfAnswers.get(iAnswer).getId();
+            final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(currentId);
+
+            if (mListOfDefaults.contains(currentId)) {
+                checkBox.setChecked(true);
+                mEvaluationList.add(mQuestionId, currentId);
             }
-        });
-        return vAnswerIds;
-    }
 
-    public void setChecked() {
-        mAnswerButton.setChecked(true);
-    }
+            checkBox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
 
+                    if (checkBox.isChecked()) {
+                        mEvaluationList.add(mQuestionId, currentId);
+                    } else {
+                        mEvaluationList.removeAnswerId(currentId);
+                    }
+                }
+            });
+        }
+        return mEvaluationList;
+    }
 }

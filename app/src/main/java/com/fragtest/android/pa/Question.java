@@ -58,8 +58,6 @@ public class Question extends AppCompatActivity {
             mAnswers = extractAnswerList();
             // Determine whether Element is hidden
             mHidden = extractHidden();
-
-            //Log.e("Type",""+mQuestionId+": "+mTypeAnswer+": "+mNumAnswers);
         }
     }
 

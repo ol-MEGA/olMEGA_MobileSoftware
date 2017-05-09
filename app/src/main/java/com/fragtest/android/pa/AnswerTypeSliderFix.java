@@ -100,7 +100,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mResizeView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.JadeRed));
     }
 
-    public void buildSlider() {
+    public void buildView() {
 
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {

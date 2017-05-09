@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <mobiquest>
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
         // Beispielkommentar: Hier wird die Hörsituation erfragt
@@ -81,7 +81,7 @@
                 <text>emoji3of5</text>
             </option>
             <option id="214314">
-               <text>emoji4of5</text>
+                <text>emoji4of5</text>
             </option>
             <option id="214315">
                 <text>emoji5of5</text>
@@ -94,9 +94,9 @@
             <option id="214300">
                 <text>Watt?</text>
             </option>
-            <default id="214299">
+            <option id="214299">
                 <text>Soll ich lachen?</text>
-            </default>
+            </option>
             <option id="214301">
                 <text>wenig</text>
             </option>
@@ -109,23 +109,23 @@
             <option id="214341">
                 <text>einen drüber</text>
             </option>
-            <option id="214351">
-                <text>einen drüber</text>
-            </option>
             <option id="214361">
                 <text>einen drüber</text>
             </option>
-            <option id="214342">
-                <text>You serious?!?</text>
+            <option id="214371">
+                <text>einen drüber</text>
             </option>
+            <default id="214342">
+                <text>You serious?!?</text>
+            </default>
         </question>
         <question id="10819" type="radio">
             <label>
                 <text>In welcher Situation befinden Sie sich gerade?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21430">
                 <text>Zu Hause</text>
             </option>
@@ -149,9 +149,9 @@
             <label>
                 <text>Zu Hause - und zwar:</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21436">
                 <text>Ausruhen</text>
             </option>
@@ -184,9 +184,9 @@
             <label>
                 <text>Unterwegs - und zwar:</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21445">
                 <text>Auto selbst fahren</text>
             </option>
@@ -216,9 +216,9 @@
             <label>
                 <text>Gesellschaft und Erledigungen - und zwar:</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21453">
                 <text>Jemanden besuchen</text>
             </option>
@@ -251,9 +251,9 @@
             <label>
                 <text>Beruf - und zwar:</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21464">
                 <text>Büro</text>
             </option>
@@ -288,9 +288,9 @@
             <label>
                 <text>Wie laut ist es?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21488">
                 <text>Zu laut</text>
             </option>
@@ -317,9 +317,9 @@
             <label>
                 <text>Wie anstrengend ist das Hören?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21495">
                 <text>Extrem anstrengend</text>
             </option>
@@ -346,9 +346,9 @@
             <label>
                 <text>Wie angenehm sind die Geräusche/Klänge?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21502">
                 <text>Sehr angenehm</text>
             </option>
@@ -375,9 +375,9 @@
             <label>
                 <text>Wie wichtig ist es, in der Situation gut zu hören?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21509">
                 <text>Sehr wichtig</text>
             </option>
@@ -404,9 +404,9 @@
             <label>
                 <text>Wie viel verstehen Sie?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21473">
                 <text>Alles</text>
             </option>
@@ -428,9 +428,9 @@
             <option id="21479">
                 <text>Gar nichts</text>
             </option>
-			<option id="66666">
-				<text></text>
-			</option>            
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21480">
                 <text>Keine Sprache</text>
             </option>
@@ -442,9 +442,9 @@
             <label>
                 <text>Sind Ihnen die Stimmen vertraut?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21481">
                 <text>Vertraut</text>
             </option>
@@ -462,9 +462,9 @@
             <label>
                 <text>Wem oder was hören Sie zu?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>			
+            <option id="66666">
+                <text></text>
+            </option>
             <default>
                 <text>0</text>
             </default>
@@ -497,9 +497,9 @@
             <label>
                 <text>Um wie viele Minuten liegt das bewertete Ereignis zurück?</text>
             </label>
-			<option id="66666">
-				<text></text>
-			</option>			
+            <option id="66666">
+                <text></text>
+            </option>
             <option id="21516">
                 <text>&lt; 1 Minute</text>
             </option>

@@ -98,7 +98,19 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mResizeView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.JadeRed));
     }
 
-    public void buildSlider() {
+    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
+        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
+        // index of default answer if present
+        if (isDefault) {
+            // If default present, this element is the one
+            mDefaultAnswer = mListOfAnswers.size() - 1;
+            // Handles default id if existent
+            setProgressItem(mDefaultAnswer);
+        }
+        return true;
+    }
+
+    public void buildView() {
 
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
@@ -141,18 +153,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             mAnswerListContainer.addView(textMark);
         }
         parent.layoutAnswer.addView(mHorizontalContainer);
-    }
-
-    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer,nAnswerId));
-        // index of default answer if present
-        if (isDefault) {
-            // If default present, this element is the one
-            mDefaultAnswer = mListOfAnswers.size() - 1;
-            // Handles default id if existent
-            setProgressItem(mDefaultAnswer);
-        }
-        return true;
     }
 
     public EvaluationList addClickListener(EvaluationList evaluationList) {
@@ -246,7 +246,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         });
         return mEvaluationList;
     }
-
 
     // Set progress  bar according to user input
     private void rescaleSliderFinal(MotionEvent motionEvent, EvaluationList evaluationList) {
