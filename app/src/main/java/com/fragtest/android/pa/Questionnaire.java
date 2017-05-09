@@ -32,10 +32,14 @@ public class Questionnaire {
     public AnswerIds mAnswerIds;
     // Accumulator for Text and id of text format answers
     private AnswerTexts mAnswerTexts;
+    // Accumulator for question id and metric input
+    private AnswerValues mAnswerValues;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
     private static String CLASS_NAME = "Questionnaire";
+
+    private FileIO mFileIO;
 
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
@@ -46,12 +50,21 @@ public class Questionnaire {
 
         mContext = context;
         mContextQPA = contextQPA;
-        FileIO mFileIO = new FileIO();
+        mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
+
+        // Contains all ids of checked elements
+        mAnswerIds = new AnswerIds();
+        // Contains all contents of text answers
+        mAnswerTexts = new AnswerTexts();
+        // Contains all metric answers
+        mAnswerValues = new AnswerValues();
+    }
+
+    public void setUp(){
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
         String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_single);
-
 
         mMetaData = new MetaData(mContext, mRawInput);
         mMetaData.initialise();
@@ -61,12 +74,6 @@ public class Questionnaire {
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
-
-        // Contains all ids of checked elements
-        mAnswerIds = new AnswerIds();
-        // Contains all contents of text answers
-        mAnswerTexts = new AnswerTexts();
-
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -87,25 +94,26 @@ public class Questionnaire {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
-        boolean isSlider = false;
+        boolean isSliderFix = false;
+        boolean isSliderFree = false;
         boolean isEmoji = false;
 
-        LinearLayout linearContainer = new LinearLayout(mContext);
+        LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
-        linearContainer.setOrientation(LinearLayout.VERTICAL);
-        linearContainer.setLayoutParams(linearContainerParams);
-        linearContainer.setBackgroundColor(Color.WHITE);
+        answerContainer.setOrientation(LinearLayout.VERTICAL);
+        answerContainer.setLayoutParams(linearContainerParams);
+        answerContainer.setBackgroundColor(Color.WHITE);
 
         // TextView carrying the Question
         QuestionText questionText = new QuestionText(mContext, question.getQuestionId(),
-                question.getQuestionText(), linearContainer);
+                question.getQuestionText(), answerContainer);
         questionText.addQuestion();
 
         // Creates a Canvas for the Answer Layout
         final AnswerLayout answerLayout = new AnswerLayout(mContext);
-        linearContainer.addView(answerLayout.scrollContent);
+        answerContainer.addView(answerLayout.scrollContent);
 
         // Format of Answer e.g. "radio", "checkbox", ...
         String sType = question.getTypeAnswer();
@@ -118,17 +126,23 @@ public class Questionnaire {
         final List<Integer> listOfRadioIds = new ArrayList<>();
 
         // In case of emoji type
-        final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(mContext, mContextQPA, answerLayout);
+        final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
+                mContext, mContextQPA, answerLayout);
 
         // In case of sliderFix type
-        final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(mContext, answerLayout);
+        final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
+                mContext, answerLayout);
+
+        // In case of sliderFree type
+        final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
+                mContext, answerLayout, question.getQuestionId());
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
-        // Iteration over all possible Answers
+        // Iteration over all possible Answers attributed to current question
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
             /** ANSWER OBJECT **/
@@ -179,8 +193,13 @@ public class Questionnaire {
                         break;
                     }
                     case "sliderFix": {
-                        isSlider = true;
+                        isSliderFix = true;
                         answerSliderFix.addAnswer(nAnswerId, sAnswer, isDefault);
+                        break;
+                    }
+                    case "sliderFree": {
+                        isSliderFree = true;
+                        answerSliderFree.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     case "emoji": {
@@ -197,15 +216,21 @@ public class Questionnaire {
             }
         }
 
-        // In case of sliderFix, create View
-        if (isSlider) {
-            mAnswerIds = answerSliderFix.buildSlider(mAnswerIds);
-            mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
-        }
-
         if (isEmoji) {
             mAnswerIds = answerTypeEmoji.buildView(mAnswerIds);
             mAnswerIds = answerTypeEmoji.addClickListener(mAnswerIds);
+        }
+
+        // In case of sliderFix, create View
+        if (isSliderFix) {
+            answerSliderFix.buildSlider();
+            mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
+        }
+
+        // In case of sliderFix, create View
+        if (isSliderFree) {
+            answerSliderFree.buildSlider();
+            mAnswerValues = answerSliderFree.addClickListener(mAnswerValues);
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented
@@ -226,7 +251,7 @@ public class Questionnaire {
             answerLayout.layoutAnswer.addView(answerRadioGroup);
         }
 
-        return linearContainer;
+        return answerContainer;
     }
 
     public int getNumPages() {

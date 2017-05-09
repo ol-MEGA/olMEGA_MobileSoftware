@@ -171,7 +171,7 @@ public class Question extends AppCompatActivity {
         String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
 
         switch (mTypeAnswer) {
-            case "radio": case "checkbox": case "sliderFix": case "emoji":
+            case "radio": case "checkbox": case "sliderFix": case "sliderFree": case "emoji":
 
                 for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
 
@@ -206,7 +206,7 @@ public class Question extends AppCompatActivity {
                 }
                 break;
 
-            case "text":case "date":
+            case "text": case "date":
 
                 if (itemQuestionLines.length < 6) {
                     // Real editable text -> unfortunately no provided id since no answers defined -

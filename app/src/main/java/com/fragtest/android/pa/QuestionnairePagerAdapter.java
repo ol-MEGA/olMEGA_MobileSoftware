@@ -34,6 +34,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager = viewPager;
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(context, this);
+
+        mQuestionnaire.setUp();
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mNUM_QUESTIONS = mNUM_PAGES;
         mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);

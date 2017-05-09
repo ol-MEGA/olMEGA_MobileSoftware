@@ -9,7 +9,8 @@
         android:id="@+id/SliderContainer"
         android:layout_width="100dp"
         android:layout_height="match_parent"
-        android:background="@android:color/holo_green_light">
+        android:background="@android:color/holo_green_light"
+        android:layout_gravity="center_horizontal">
 
         <View
             android:id="@+id/RemainView"
@@ -21,7 +22,7 @@
             android:id="@+id/ResizeView"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@android:color/holo_red_dark"
+            android:background="@drawable/slider_shape"
             android:layout_alignParentBottom="true">
         </View>
 

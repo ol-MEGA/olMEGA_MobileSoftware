@@ -14,7 +14,7 @@
     <dimen name="SliderFixTextMargin_Bottom">0px</dimen>
 
     <dimen name="SliderFixTextBottomMargin_Left">20px</dimen>
-    <dimen name="SliderFixTextBottomMargin_Top">20px</dimen>
+    <dimen name="SliderFixTextBottomMargin_Top">0px</dimen>
     <dimen name="SliderFixTextBottomMargin_Right">0px</dimen>
     <dimen name="SliderFixTextBottomMargin_Bottom">0px</dimen>
 
