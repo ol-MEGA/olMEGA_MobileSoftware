@@ -22,15 +22,15 @@ import java.util.List;
 
 public class AnswerTypeSliderFix extends AppCompatActivity {
 
+    public static String CLASS_NAME = "AnswerTypeSliderFix";
+    private final List<Integer> mListOfIds = new ArrayList<>();
     public AnswerLayout parent;
     private Context mContext;
     private List<StringAndInteger> mListOfAnswers;
     private LinearLayout mHorizontalContainer, mAnswerListContainer;
     private View mResizeView, mRemainView;
     private RelativeLayout mSliderContainer;
-    private final List<Integer> mListOfIds = new ArrayList<>();
     private int mDefaultAnswer = -1;
-    public static String CLASS_NAME = "AnswerTypeSliderFix";
     private int width, mUsableHeight;
     private int nTextViewHeight;
     private int[] answerLayoutPadding;
@@ -41,6 +41,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         parent = qParent;
         mListOfAnswers = new ArrayList<>();
 
+        // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
         width = Units.getScreenWidth();
         answerLayoutPadding = Units.getAnswerLayoutPadding();
@@ -53,6 +54,13 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
         mUsableHeight = (new Units(mContext)).getUsableSliderHeight();
 
+        /**
+         *
+         *  |           mHorizontalContainer          |
+         *  | mSliderContainer | mAnswerListContainer |
+         *
+         * **/
+
         // mHorizontalContainer is parent to both slider and answer option containers
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
@@ -62,18 +70,22 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 mUsableHeight,
                 1.f
         ));
-        mHorizontalContainer.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        mHorizontalContainer.setBackgroundColor(
+                ContextCompat.getColor(mContext, R.color.BackgroundColor));
 
         // mSliderContainer is host to slider on the left
-        mSliderContainer = (RelativeLayout) mHorizontalContainer.findViewById(R.id.SliderContainer);
-        mSliderContainer.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        mSliderContainer = (RelativeLayout) mHorizontalContainer.findViewById(
+                R.id.SliderContainer);
+        mSliderContainer.setBackgroundColor(ContextCompat.getColor(
+                mContext, R.color.BackgroundColor));
 
         // mAnswerListContainer is host to vertical array of answer options
         mAnswerListContainer = (LinearLayout) mHorizontalContainer.
                 findViewById(R.id.AnswerTextContainer);
 
         mAnswerListContainer.setOrientation(LinearLayout.VERTICAL);
-        mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(
+                mContext, R.color.BackgroundColor));
         mAnswerListContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width-100,
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -195,10 +207,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescale(event, answerIds);
+                        rescaleSlider(event, answerIds);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescale(event, answerIds);
+                        rescaleSlider(event, answerIds);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -222,10 +234,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescale(event, answerIds);
+                        rescaleSlider(event, answerIds);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescale(event, answerIds);
+                        rescaleSlider(event, answerIds);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -242,8 +254,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     }
 
     // Set progress  bar according to user input
-    private AnswerIds rescale(MotionEvent motionEvent, AnswerIds answerIds) {
-        // Clip selection to fixed items
+    private AnswerIds rescaleSlider(MotionEvent motionEvent, AnswerIds answerIds) {
         float nValueSelected = clipValuesToRange(motionEvent.getRawY());
         int nItem = mapValuesToItems(nValueSelected);
         nItem = clipItemsToRange(nItem);
@@ -257,6 +268,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     return answerIds;
     }
 
+    // Ensure values inside slider boundaries
     private float clipValuesToRange(float inVal) {
         if (inVal < Units.getScreenHeight()-mUsableHeight-answerLayoutPadding[3]) {
             inVal =  Units.getScreenHeight()-mUsableHeight-answerLayoutPadding[3];
@@ -266,6 +278,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         return inVal;
     }
 
+    // Ensure valid item numbers
     private int clipItemsToRange(int item) {
         if (item > mListOfAnswers.size()-1) {
             item = mListOfAnswers.size()-1;
@@ -277,9 +290,8 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
     // Enables rasterization of values (fixed choice options), counting from 0 (lowest)
     private int mapValuesToItems(float inVal) {
-        int item = (int) ((inVal-(Units.getScreenHeight()-
+        return (int) ((inVal - (Units.getScreenHeight() -
                 mUsableHeight-answerLayoutPadding[3]))/(nTextViewHeight));
-        return item;
     }
 
     // Set progress/slider according to number of selected item (counting from 0)
@@ -288,43 +300,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 (int) ((2*(mListOfAnswers.size()-numItem)-1)/2.0f*nTextViewHeight);
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
     }
-
-    /*
-    // Set progress/slider based on percentage of total height
-    public void setProgressPercent(float percent) {
-        mResizeView.getLayoutParams().height =
-                (int) (mSliderMaxHeight*percent/100);
-        mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-    }
-    */
-
-    /*
-    // Set progress/slider based on fraction of whole set of options e.g. 1.f/7
-    public void setProgressFraction(float fraction) {
-        mResizeView.getLayoutParams().height =
-                (int) (mSliderMaxHeight*(fraction-1.f/mListOfAnswers.size()));
-        mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-    }
-    */
-
-    /*
-    // Set progress/slider according to exact pixel number
-    public void setProgressPixels(float progress) {
-        if (progress > getPixelHeightOfItem(mListOfAnswers.size()-1)) {
-            progress = getPixelHeightOfItem(mListOfAnswers.size()-1);
-        } else if (progress < 0) {
-            progress = 0;
-        }
-        mResizeView.getLayoutParams().height = (int) (progress);
-        mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-    }
-*/
-
-    /*
-    private int getPixelHeightOfItem(int numItem) {
-        return (int) (mSliderMaxHeight*(numItem)/mListOfAnswers.size());
-    }
-    */
 }
 
 
