@@ -32,14 +32,16 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private RelativeLayout mSliderContainer;
     private int mDefaultAnswer = -1;
     private int width, mUsableHeight;
-    private int nTextViewHeight;
+    private int nTextViewHeight, mQuestionId;
     private int[] answerLayoutPadding;
+    private EvaluationList mEvaluationList;
 
-    public AnswerTypeSliderFix(Context context, AnswerLayout qParent) {
+    public AnswerTypeSliderFix(Context context, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
         parent = qParent;
         mListOfAnswers = new ArrayList<>();
+        mQuestionId = nQuestionId;
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -150,7 +152,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
             // If default present, this element is the one
             mDefaultAnswer = mListOfAnswers.size() - 1;
             // Handles default id if existent
-
             setProgressItem(mDefaultAnswer);
 
         }
@@ -164,7 +165,8 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         return answerIds;
     }
 
-    public AnswerIds addClickListener(final AnswerIds answerIds) {
+    public EvaluationList addClickListener(EvaluationList evaluationList) {
+        mEvaluationList = evaluationList;
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
         tvTemp.post(new Runnable()
@@ -174,10 +176,13 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
-                    answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
+
+                    //                    answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                     setProgressItem((int) ((mListOfAnswers.size()-1)/2.0f));
+                    mEvaluationList.add(mQuestionId, mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                 } else {
                     setProgressItem(mDefaultAnswer);
+                    mEvaluationList.add(mQuestionId, mListOfAnswers.get(mDefaultAnswer).getId());
                 }
             }
         });
@@ -191,8 +196,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     setProgressItem(numAnswer);
-                    answerIds.removeAll(mListOfIds);
-                    answerIds.add(currentId);
+                    mEvaluationList.removeQuestionId(mQuestionId);
+                    mEvaluationList.add(mQuestionId, currentId);
+                    //answerIds.removeAll(mListOfIds);
+                    //answerIds.add(currentId);
                 }
             });
         }
@@ -207,10 +214,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderFinal(event, mEvaluationList);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -234,10 +241,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderFinal(event, mEvaluationList);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -250,22 +257,44 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 return true;
             }
         });
-        return answerIds;
+        return mEvaluationList;
     }
 
+
     // Set progress  bar according to user input
-    private AnswerIds rescaleSlider(MotionEvent motionEvent, AnswerIds answerIds) {
-        float nValueSelected = clipValuesToRange(motionEvent.getRawY());
+    private void rescaleSliderFinal(MotionEvent motionEvent, EvaluationList evaluationList) {
+        int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
         int nItem = mapValuesToItems(nValueSelected);
         nItem = clipItemsToRange(nItem);
+        //int nItem = mapValuesToItems(nValueSelected);
+        //nItem = clipItemsToRange(nItem);
         try {
             setProgressItem(nItem);
-            answerIds.removeAll(mListOfIds);
-            addIdFromItem(nItem, answerIds);
+            //setProgressPixels(nValueSelected);
+            evaluationList.removeQuestionId(mQuestionId);
+            evaluationList.add(mQuestionId, mListOfAnswers.get(nItem).getId());
+            //setProgressItem(nItem);
+            //answerIds.removeAll(mListOfIds);
+            //addIdFromItem(nItem, answerIds);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    return answerIds;
+    }
+
+    // Set progress  bar according to user input
+    private void rescaleSliderOnline(MotionEvent motionEvent) {
+        int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
+        int nItem = mapValuesToItems(nValueSelected);
+        nItem = clipItemsToRange(nItem);
+        try {
+            //setProgressPixels(nValueSelected);
+            setProgressItem(nItem);
+            //setProgressItem(nItem);
+            //answerIds.removeAll(mListOfIds);
+            //addIdFromItem(nItem, answerIds);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // Ensure values inside slider boundaries

@@ -40,6 +40,8 @@ public class Questionnaire {
     private MetaData mMetaData;
     private FileIO mFileIO;
 
+    private EvaluationList mEvaluationList;
+
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
     // Use on screen debug output
@@ -58,6 +60,8 @@ public class Questionnaire {
         mAnswerTexts = new AnswerTexts();
         // Contains all metric answers
         mAnswerValues = new AnswerValues();
+
+        mEvaluationList = new EvaluationList();
     }
 
     public void setUp(){
@@ -130,7 +134,7 @@ public class Questionnaire {
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mContext, answerLayout);
+                mContext, answerLayout, question.getQuestionId());
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
@@ -223,13 +227,13 @@ public class Questionnaire {
         // In case of sliderFix, create View
         if (isSliderFix) {
             answerSliderFix.buildSlider();
-            mAnswerIds = answerSliderFix.addClickListener(mAnswerIds);
+            mEvaluationList = answerSliderFix.addClickListener(mEvaluationList);
         }
 
         // In case of sliderFix, create View
         if (isSliderFree) {
             answerSliderFree.buildSlider();
-            mAnswerIds = answerSliderFree.addClickListener(mAnswerIds);
+            mEvaluationList = answerSliderFree.addClickListener(mEvaluationList);
         }
 
         // In Case of Radio Buttons, additional RadioGroup is implemented

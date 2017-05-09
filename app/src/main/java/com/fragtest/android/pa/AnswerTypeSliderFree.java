@@ -22,29 +22,28 @@ import java.util.List;
 
 public class AnswerTypeSliderFree extends AppCompatActivity {
 
-    public static String CLASS_NAME = "AnswerTypeSliderFix";
-    private final List<Integer> mListOfIds = new ArrayList<>();
-    public AnswerLayout parent;
+    private static String LOG_STRING = "AnswerTypeSliderFree";
+    private AnswerLayout parent;
     private Context mContext;
     private List<StringAndInteger> mListOfAnswers;
     private LinearLayout mHorizontalContainer, mAnswerListContainer;
     private View mResizeView, mRemainView;
-    private RelativeLayout mSliderContainer;
+    private int mUsableHeight, nTextViewHeight, mQuestionId;
     private int mDefaultAnswer = -1;
-    private int width, mUsableHeight;
-    private int nTextViewHeight;
-    private int[] answerLayoutPadding;
     private int mMinProgress = 10;
+    private int[] answerLayoutPadding;
+    private EvaluationList mEvaluationList;
 
     public AnswerTypeSliderFree(Context context, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
         parent = qParent;
         mListOfAnswers = new ArrayList<>();
+        mQuestionId = nQuestionId;
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
-        width = Units.getScreenWidth();
+        int width = Units.getScreenWidth();
         answerLayoutPadding = Units.getAnswerLayoutPadding();
 
         parent.scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
@@ -75,7 +74,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 ContextCompat.getColor(mContext, R.color.BackgroundColor));
 
         // mSliderContainer is host to slider on the left
-        mSliderContainer = (RelativeLayout) mHorizontalContainer.findViewById(
+        RelativeLayout mSliderContainer = (RelativeLayout) mHorizontalContainer.findViewById(
                 R.id.SliderContainer);
         mSliderContainer.setBackgroundColor(ContextCompat.getColor(
                 mContext, R.color.BackgroundColor));
@@ -151,21 +150,13 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             // If default present, this element is the one
             mDefaultAnswer = mListOfAnswers.size() - 1;
             // Handles default id if existent
-
             setProgressItem(mDefaultAnswer);
-
         }
-        mListOfIds.add(nAnswerId);
         return true;
     }
 
-    public AnswerIds addIdFromItem(int item, AnswerIds answerIds) {
-        answerIds.removeAll(mListOfIds);
-        answerIds.add(mListOfAnswers.get(item).getId());
-        return answerIds;
-    }
-
-    public AnswerIds addClickListener(final AnswerIds answerIds) {
+    public EvaluationList addClickListener(EvaluationList evaluationList) {
+        mEvaluationList = evaluationList;
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
         tvTemp.post(new Runnable() {
@@ -174,10 +165,13 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
-                    answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
-                    setProgressItem((int) ((mListOfAnswers.size() - 1) / 2.0f));
+
+                    setProgressFraction(0.5f);
+                    mEvaluationList.add(mQuestionId, 0.5f);
+                    //answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                 } else {
-                    setProgressItem(mDefaultAnswer);
+                    mEvaluationList.add(mQuestionId, getFractionFromProgress(
+                            setProgressItem(mDefaultAnswer)));
                 }
             }
         });
@@ -190,9 +184,11 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             tv.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    mEvaluationList.removeQuestionId(mQuestionId);
                     setProgressItem(numAnswer);
-                    answerIds.removeAll(mListOfIds);
-                    answerIds.add(currentId);
+                    mEvaluationList.add(mQuestionId, getFractionFromProgress());
+                    //answerIds.removeAll(mListOfIds);
+                    //answerIds.add(currentId);
                 }
             });
         }
@@ -202,15 +198,14 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
-
                 switch(action) {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderFinal(event, mEvaluationList);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -229,15 +224,14 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
-
                 switch(action) {
                     case (MotionEvent.ACTION_DOWN) :
                         return true;
                     case (MotionEvent.ACTION_MOVE) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSlider(event, answerIds);
+                        rescaleSliderFinal(event, mEvaluationList);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -250,11 +244,29 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 return true;
             }
         });
-        return answerIds;
+        return mEvaluationList;
+    }
+
+
+    // Set progress  bar according to user input
+    private void rescaleSliderFinal(MotionEvent motionEvent, EvaluationList evaluationList) {
+        int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
+        //int nItem = mapValuesToItems(nValueSelected);
+        //nItem = clipItemsToRange(nItem);
+        try {
+            setProgressPixels(nValueSelected);
+            evaluationList.removeQuestionId(mQuestionId);
+            evaluationList.add(mQuestionId, getFractionFromProgress());
+            //setProgressItem(nItem);
+            //answerIds.removeAll(mListOfIds);
+            //addIdFromItem(nItem, answerIds);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // Set progress  bar according to user input
-    private AnswerIds rescaleSlider(MotionEvent motionEvent, AnswerIds answerIds) {
+    private void rescaleSliderOnline(MotionEvent motionEvent) {
         int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
         //int nItem = mapValuesToItems(nValueSelected);
         //nItem = clipItemsToRange(nItem);
@@ -266,7 +278,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return answerIds;
     }
 
     // Ensure values inside slider boundaries
@@ -280,23 +291,37 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     }
 
     // Set progress/slider according to number of selected item (counting from 0)
-    private void setProgressItem(int numItem) {
-        mResizeView.getLayoutParams().height =
-                (int) ((2 * (mListOfAnswers.size() - numItem) - 1) / 2.0f * nTextViewHeight);
+    private int setProgressItem(int numItem) {
+        int nPixProgress = (int) ((2 * (mListOfAnswers.size() - numItem) - 1) /
+                2.0f * nTextViewHeight);
+        mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
+        return nPixProgress;
     }
 
     // Set progress/slider according to user input measured in pixels
     private void setProgressPixels(int nPixels) {
-        int nPixProgress = Units.getScreenHeight() - answerLayoutPadding[3] - nPixels;
+        mResizeView.getLayoutParams().height = Units.getScreenHeight() - answerLayoutPadding[3] - nPixels;
+        mResizeView.setLayoutParams(mResizeView.getLayoutParams());
+    }
+
+    // Set progress/slider according to floating point input between 0.0 and 1.0
+    private int setProgressFraction(float nFraction) {
+        int nPixProgress = (int) (mUsableHeight * nFraction);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-        getPercentageFromProgress(nPixProgress);
+        return nPixProgress;
     }
 
     // Obtain percentage value of user input
-    private float getPercentageFromProgress(int nPixels) {
+    private float getFractionFromProgress(int nPixels) {
         return (float) (nPixels - mMinProgress) / (mUsableHeight - mMinProgress);
+    }
+
+    // Returns a floating point number between 0.0 and 1.0 according to progress
+    private float getFractionFromProgress() {
+        return (float) (mResizeView.getLayoutParams().height - mMinProgress) /
+                (mUsableHeight - mMinProgress);
     }
 }
 

@@ -5,7 +5,11 @@
         <title>
             <text>Hörsituation</text>
         </title>
-        <question id="10810" type="text" hidden="true" mandatory="true">
+        <question
+            hidden="true"
+            id="10810"
+            mandatory="true"
+            type="text">
             <label>
                 <text>Device ID</text>
             </label>
@@ -13,7 +17,11 @@
                 <text>$device.id</text>
             </default>
         </question>
-        <question id="10811" type="date" hidden="true" mandatory="true">
+        <question
+            hidden="true"
+            id="10811"
+            mandatory="true"
+            type="date">
             <label>
                 <text>Start Date</text>
             </label>
@@ -21,7 +29,11 @@
                 <text>$now</text>
             </default>
         </question>
-        <question id="10812" type="date" hidden="true" mandatory="true">
+        <question
+            hidden="true"
+            id="10812"
+            mandatory="true"
+            type="date">
             <label>
                 <text>Start Date (UTC)</text>
             </label>
@@ -82,9 +94,9 @@
             <option id="214300">
                 <text>Watt?</text>
             </option>
-            <option id="214299">
+            <default id="214299">
                 <text>Soll ich lachen?</text>
-            </option>
+            </default>
             <option id="214301">
                 <text>wenig</text>
             </option>
@@ -97,15 +109,15 @@
             <option id="214341">
                 <text>einen drüber</text>
             </option>
-            <option id="214341">
+            <option id="214351">
                 <text>einen drüber</text>
             </option>
-            <option id="214341">
+            <option id="214361">
                 <text>einen drüber</text>
             </option>
-            <default id="214342">
+            <option id="214342">
                 <text>You serious?!?</text>
-            </default>
+            </option>
         </question>
         <question id="10819" type="radio">
             <label>
@@ -130,7 +142,10 @@
                 <text>Keine Situation trifft zu</text>
             </option>
         </question>
-        <question id="10820" type="checkbox" filter="10819_21430">
+        <question
+            filter="10819_21430"
+            id="10820"
+            type="checkbox">
             <label>
                 <text>Zu Hause - und zwar:</text>
             </label>
@@ -162,7 +177,10 @@
                 <text>Sonstiges</text>
             </option>
         </question>
-        <question id="10821" type="checkbox" filter="10819_21431">
+        <question
+            filter="10819_21431"
+            id="10821"
+            type="checkbox">
             <label>
                 <text>Unterwegs - und zwar:</text>
             </label>
@@ -191,7 +209,10 @@
                 <text>Sonstiges</text>
             </option>
         </question>
-        <question id="10822" type="checkbox" filter="10819_21432">
+        <question
+            filter="10819_21432"
+            id="10822"
+            type="checkbox">
             <label>
                 <text>Gesellschaft und Erledigungen - und zwar:</text>
             </label>
@@ -223,7 +244,10 @@
                 <text>Sonstiges</text>
             </option>
         </question>
-        <question id="10823" type="checkbox" filter="10819_21433">
+        <question
+            filter="10819_21433"
+            id="10823"
+            type="checkbox">
             <label>
                 <text>Beruf - und zwar:</text>
             </label>
@@ -252,7 +276,10 @@
                 <text>Sonstiges</text>
             </option>
         </question>
-        <question id="10824" type="text" filter="10819_21434">
+        <question
+            filter="10819_21434"
+            id="10824"
+            type="text">
             <label>
                 <text>Beschreiben Sie bitte die Situation:</text>
             </label>
@@ -408,7 +435,10 @@
                 <text>Keine Sprache</text>
             </option>
         </question>
-        <question id="10830" type="radio" filter ="!10829_21480">
+        <question
+            filter="!10829_21480"
+            id="10830"
+            type="radio">
             <label>
                 <text>Sind Ihnen die Stimmen vertraut?</text>
             </label>
@@ -425,7 +455,10 @@
                 <text>Beides</text>
             </option>
         </question>
-        <question id="10836" type="checkbox" filter ="!10829_21480">
+        <question
+            filter="!10829_21480"
+            id="10836"
+            type="checkbox">
             <label>
                 <text>Wem oder was hören Sie zu?</text>
             </label>
@@ -489,7 +522,11 @@
                 <text>&gt; 30 Minuten</text>
             </option>
         </question>
-        <question id="10834" type="date" hidden="true" mandatory="true">
+        <question
+            hidden="true"
+            id="10834"
+            mandatory="true"
+            type="date">
             <label>
                 <text>End Date</text>
             </label>
@@ -497,7 +534,11 @@
                 <text>$now</text>
             </default>
         </question>
-        <question id="10835" type="date" hidden="true" mandatory="true">
+        <question
+            hidden="true"
+            id="10835"
+            mandatory="true"
+            type="date">
             <label>
                 <text>End Date (UTC)</text>
             </label>
