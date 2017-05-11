@@ -72,19 +72,19 @@
                 <text>Wie fühlen Sie sich?</text>
             </label>
             <option id="214311">
-                <text>emoji1of5</text>
+                <text>emoji_happy2</text>
             </option>
             <default id="214312">
-                <text>emoji2of5</text>
+                <text>emoji_happy1</text>
             </default>
             <option id="214313">
-                <text>emoji3of5</text>
+                <text>emoji_neutral</text>
             </option>
             <option id="214314">
-                <text>emoji4of5</text>
+                <text>emoji_sad1</text>
             </option>
             <option id="214315">
-                <text>emoji5of5</text>
+                <text>emoji_sad2</text>
             </option>
         </question>
         <question id="10801" type="sliderFree">

@@ -20,7 +20,7 @@ import java.util.List;
 
 public class Questionnaire {
 
-    private static String CLASS_NAME = "Questionnaire";
+    private static String LOG_STRING = "Questionnaire";
     // Accumulator for ids checked in by given answers
     public AnswerIds mAnswerIds;
     public EvaluationList mEvaluationList;
@@ -60,6 +60,10 @@ public class Questionnaire {
         mAnswerValues = new AnswerValues();
 
         mEvaluationList = new EvaluationList();
+
+        if (isDebug) {
+            Log.i(LOG_STRING, "Constructor successful.");
+        }
     }
 
     public void setUp(){
@@ -75,11 +79,16 @@ public class Questionnaire {
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
+
+        if (isDebug) {
+            Log.i(LOG_STRING, "Setup was successful.");
+        }
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
     public Question createQuestion(int position) {
 
+        Log.i(LOG_STRING, "Creating view for position " + position);
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
@@ -99,6 +108,7 @@ public class Questionnaire {
         boolean isSliderFix = false;
         boolean isSliderFree = false;
         boolean isEmoji = false;
+        boolean isText = false;
 
         LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -143,6 +153,9 @@ public class Questionnaire {
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
                 mContext, answerLayout, question.getQuestionId());
 
+        final AnswerTypeText answerTypeText = new AnswerTypeText(
+                mContext, answerLayout, question.getQuestionId());
+
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer Ids
@@ -179,10 +192,7 @@ public class Questionnaire {
                         break;
                     }
                     case "text": {
-                        AnswerTypeText answer = new AnswerTypeText(mContext,
-                                nAnswerId, answerLayout, mAnswerTexts);
-                        mAnswerTexts = answer.addClickListener(mAnswerTexts);
-                        answer.addAnswer();
+                        isText = true;
                         break;
                     }
                     case "finish": {
@@ -209,11 +219,16 @@ public class Questionnaire {
                     }
                     default: {
                         isRadio = false;
-                        Log.i(CLASS_NAME, "Weird object found. Id: " + question.getQuestionId());
+                        Log.i(LOG_STRING, "Weird object found. Id: " + question.getQuestionId());
                         break;
                     }
                 }
             }
+        }
+
+        if (isText) {
+            answerTypeText.buildView();
+            mEvaluationList = answerTypeText.addClickListener(mEvaluationList);
         }
 
         if (isCheckBox) {
@@ -272,7 +287,9 @@ public class Questionnaire {
     // which is handled by QuestionnairePagerAdapter
     public void checkVisibility() {
 
-        Log.i("Checking","visibility");
+        if (isDebug) {
+            Log.i(LOG_STRING, "Checking visibility");
+        }
 
         for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
@@ -327,6 +344,10 @@ public class Questionnaire {
     }
 
     public void manageCheckedIds() {
+
+        if (isDebug) {
+            Log.i(LOG_STRING, "Managing Ids.");
+        }
 
         // Obtain outdated ids and prepare list for removal simultaneously
         ArrayList<Integer> listOfIdsToRemove = new ArrayList<>();

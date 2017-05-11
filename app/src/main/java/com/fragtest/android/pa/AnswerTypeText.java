@@ -21,58 +21,61 @@ public class AnswerTypeText extends AppCompatActivity {
     public EditText mAnswerText;
     public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
+    private String LOG_STRING = "AnswerTypeText";
     private Button mButtonOkay;
     private LinearLayout.LayoutParams buttonParams;
-    private int mAnswerId;
     private Context mContext;
-    private AnswerTexts mAnswerTexts;
-    private String CLASS_NAME = this.getClass().getSimpleName().toUpperCase();
+    private EvaluationList mEvaluationList;
+    private int mQuestionId;
 
 
-    public AnswerTypeText(Context context, int Id, AnswerLayout qParent, AnswerTexts answerTexts){
+    public AnswerTypeText(Context context, AnswerLayout qParent, int nQuestionId) {
         mContext = context;
-        mAnswerId = Id;
+        mQuestionId = nQuestionId;
         parent = qParent;
-        mAnswerTexts = answerTexts;
+
+    }
+
+    public void buildView() {
 
         mAnswerText = new EditText(mContext);
-        mAnswerText.setId(mAnswerId);
         mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
         mAnswerText.setTextSize(Units.getTextSizeAnswer());
         mAnswerText.setGravity(Gravity.START);
-        mAnswerText.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
-        mAnswerText.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
+        mAnswerText.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
+        mAnswerText.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
         mAnswerText.setHint(R.string.hintTextAnswer);
-        mAnswerText.setHintTextColor(ContextCompat.getColor(context, R.color.JadeGray));
+        mAnswerText.setHintTextColor(ContextCompat.getColor(mContext, R.color.JadeGray));
 
         // Parameters of Answer Button Layout
         answerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
 
-        int[] AnswerTextMargins = Units.getAnswerTextMargin();
-        answerParams.setMargins(AnswerTextMargins[0],AnswerTextMargins[1],
-                AnswerTextMargins[2],AnswerTextMargins[3]);
+        answerParams.setMargins(
+                (int) mContext.getResources().getDimension(R.dimen.answerTextMargin_Left),
+                (int) mContext.getResources().getDimension(R.dimen.answerTextMargin_Top),
+                (int) mContext.getResources().getDimension(R.dimen.answerTextMargin_Right),
+                (int) mContext.getResources().getDimension(R.dimen.answerTextMargin_Bottom));
 
         mButtonOkay = new Button(mContext);
         mButtonOkay.setText(R.string.buttonTextOkay);
-        mButtonOkay.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
-        mButtonOkay.setBackground(ContextCompat.getDrawable(context, R.drawable.button));
+        mButtonOkay.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
+        mButtonOkay.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button));
         buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
 
         mAnswerText.isFocusableInTouchMode();
-    }
 
-    public boolean addAnswer() {
         parent.layoutAnswer.addView(mAnswerText, answerParams);
         parent.layoutAnswer.addView(mButtonOkay, buttonParams);
-        return true;
     }
 
-    public AnswerTexts addClickListener(AnswerTexts answerTexts) {
+    public EvaluationList addClickListener(EvaluationList evaluationList) {
+
+        mEvaluationList = evaluationList;
 
         mButtonOkay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,12 +92,13 @@ public class AnswerTypeText extends AppCompatActivity {
 
                 String text = mAnswerText.getText().toString();
                 if (text.length() != 0) {
-                    mAnswerTexts.add(new StringAndInteger(text, mAnswerId));
+                    mEvaluationList.removeQuestionId(mQuestionId);
+                    mEvaluationList.add(mQuestionId, text);
                 } else {
-                    Log.e(CLASS_NAME,"No text was entered.");
+                    Log.e(LOG_STRING, "No text was entered.");
                 }
             }
         });
-        return answerTexts;
+        return mEvaluationList;
     }
 }

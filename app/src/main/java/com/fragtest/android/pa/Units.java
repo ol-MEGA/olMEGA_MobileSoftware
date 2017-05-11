@@ -11,19 +11,17 @@ import android.util.DisplayMetrics;
 
 public class Units extends AppCompatActivity {
 
-    private Resources mResources;
-    private DisplayMetrics mMetrics;
-
     private static int TEXT_SIZE_QUESTION = 20;
     private static int TEXT_SIZE_ANSWER = 20;
     private static int RADIO_MIN_HEIGHT = 96;
     private static int CHECKBOX_MIN_HEIGHT = 96;
     private static int QUESTION_TEXT_HEIGHT = 165; //225 is enough space for 2 lines of text
-    private static int[] ANSWER_TEXT_MARGIN = {48, 32, 24, 32};
     private static int[] ANSWER_LAYOUT_PADDING = {48, 48, 48, 48};
     private static int[] ANSWER_FINISH_MARGIN = {0,48,0,0};
     private static int SCREEN_SIZE_HEIGHT;
     private static int SCREEN_SIZE_WIDTH;
+    private Resources mResources;
+    private DisplayMetrics mMetrics;
     private Context mContext;
 
     public Units(Context context){
@@ -34,11 +32,8 @@ public class Units extends AppCompatActivity {
         SCREEN_SIZE_HEIGHT = mMetrics.heightPixels;
     }
 
-    public int getUsableSliderHeight() {
-        return getScreenHeight() - getQuestionTextHeight() -
-                convertDpToPixels(32) - convertDpToPixels(6) -
-                getAnswerLayoutPadding()[1] - getAnswerLayoutPadding()[3] -
-                getStatusBarHeight() - getAnswerLayoutPadding()[1];
+    public static int getScreenHeight() {
+        return SCREEN_SIZE_HEIGHT;
     }
 
     /*
@@ -86,21 +81,11 @@ public class Units extends AppCompatActivity {
     }
 */
 
-
-
-    public int getStatusBarHeight() {
-        return (int) (24 * mMetrics.density);
-    }
-
-    public static int getScreenHeight() { return SCREEN_SIZE_HEIGHT; }
-
     public static int getScreenWidth() { return SCREEN_SIZE_WIDTH; }
 
     public static int[] getAnswerFinishMargin() { return ANSWER_FINISH_MARGIN; }
 
     public static int[] getAnswerLayoutPadding() {return ANSWER_LAYOUT_PADDING; }
-
-    public static int[] getAnswerTextMargin() { return ANSWER_TEXT_MARGIN; }
 
     public static int getQuestionTextHeight() { return QUESTION_TEXT_HEIGHT; }
 
@@ -111,6 +96,17 @@ public class Units extends AppCompatActivity {
     public static int getTextSizeQuestion() { return TEXT_SIZE_QUESTION; }
 
     public static int getTextSizeAnswer() { return TEXT_SIZE_ANSWER; }
+
+    public int getUsableSliderHeight() {
+        return getScreenHeight() - getQuestionTextHeight() -
+                convertDpToPixels(32) - convertDpToPixels(6) -
+                getAnswerLayoutPadding()[1] - getAnswerLayoutPadding()[3] -
+                getStatusBarHeight() - getAnswerLayoutPadding()[1];
+    }
+
+    public int getStatusBarHeight() {
+        return (int) (24 * mMetrics.density);
+    }
 
     public int convertDpToPixels(float dp){
         return (int) (dp * ((float) mMetrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT));

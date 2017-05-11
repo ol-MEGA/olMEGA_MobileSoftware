@@ -28,4 +28,14 @@
     <dimen name="answerFinishMargin_Right">0px</dimen>
     <dimen name="answerFinishMargin_Bottom">0px</dimen>
 
+    <dimen name="answerTextMargin_Left">48px</dimen>
+    <dimen name="answerTextMargin_Top">32px</dimen>
+    <dimen name="answerTextMargin_Right">24px</dimen>
+    <dimen name="answerTextMargin_Bottom">32px</dimen>
+
+    <dimen name="textSizeQuestion">20sp</dimen>
+    <dimen name="textSizeAnswer">20sp</dimen>
+
+    <dimen name="minHeightRadio">20px</dimen>
+    <dimen name="minHeightCheckBox">20px</dimen>
 </resources>

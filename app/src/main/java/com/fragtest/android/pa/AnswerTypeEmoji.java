@@ -64,6 +64,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
         mEvaluationList = evaluationList;
         int usableHeight = (new Units(mContext)).getUsableSliderHeight();
         int numEmojis = mListOfAnswers.size();
+        // Make size of emojies adaptive
         int emojiSize = (int) (usableHeight / (1.2f*numEmojis));
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
@@ -76,23 +77,23 @@ public class AnswerTypeEmoji extends AppCompatActivity {
 
             String sAnswer = mListOfAnswers.get(iAnswer).getText();
             switch(sAnswer){
-                case "emoji1of5":
+                case "emoji_happy2":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[0]));
                     answerButton.setTag(0);
                     break;
-                case "emoji2of5":
+                case "emoji_happy1":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[1]));
                     answerButton.setTag(1);
                     break;
-                case "emoji3of5":
+                case "emoji_neutral":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[2]));
                     answerButton.setTag(2);
                     break;
-                case "emoji4of5":
+                case "emoji_sad1":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[3]));
                     answerButton.setTag(3);
                     break;
-                case "emoji5of5":
+                case "emoji_sad2":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[4]));
                     answerButton.setTag(4);
                     break;

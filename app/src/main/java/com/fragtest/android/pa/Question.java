@@ -13,6 +13,7 @@ import java.util.List;
 
 public class Question extends AppCompatActivity {
 
+    private String LOG_STRING = "Question";
     private String mQuestionBlueprint;
     private String mQuestionText;
     private String mTypeAnswer;
@@ -63,12 +64,12 @@ public class Question extends AppCompatActivity {
 
     private int extractQuestionId() {
         // Obtain Question Id from Questionnaire
-        return Integer.parseInt(mQuestionBlueprint.split("\"")[1]);
+        return Integer.parseInt(mQuestionBlueprint.split("id=\"")[1].split("\"")[0]);
     }
 
     private String extractQuestionText() {
             // Obtain Question Text from Questionnaire
-            return (mQuestionBlueprint.split("\\r?\\n")[2].split("<text>|</text>")[1]);
+        return (mQuestionBlueprint.split("<label>|</label>")[1].split("<text>|</text>")[1]);
     }
 
     private String extractQuestionTextFinish() {
@@ -77,18 +78,9 @@ public class Question extends AppCompatActivity {
     }
 
     private int extractFilterId() {
-
         if (mQuestionBlueprint.split("\"")[4].contains("filter")) {
-            // String carrying the Filter Id terms
-            String sFilterIdLine = mQuestionBlueprint.split("\"")[5];
-            // Filter Id is extracted
-            String[] sFilterId = sFilterIdLine.split("_");
-
-            if (sFilterId.length > 1) {
-                return Integer.parseInt(sFilterId[1]);
-            } else {
-                return -1;
-            }
+            return Integer.parseInt(
+                    mQuestionBlueprint.split("filter=\"")[1].split("\"")[0].split("_")[1]);
         }
         return -1;
     }
@@ -120,48 +112,22 @@ public class Question extends AppCompatActivity {
         }
     }
 
-    private boolean extractHidden() {
-        if (mQuestionBlueprint.contains("hidden=\"true\"")) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isFinish() {
-        // String Array carrying introductory Line with Id, Type, Filter
-        String[] introductoryLine = mQuestionBlueprint.split("\"");
-        if (introductoryLine.length == 1) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isHidden() {
-        return mHidden; }
-
-    private boolean nonTypicalAnswer(String sTypeAnswer) {
-        return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);}
-
     private String extractTypeAnswers() {
-        // String Array carrying introductory Line with Id, Type, Filter
-        String[] introductoryLine = mQuestionBlueprint.split("\"");
         // Obtain Answer Type (e.g. Radio, Button, Slider,...)
-        return introductoryLine[3];
+        return mQuestionBlueprint.split("type=\"")[1].split("\"")[0];
     }
 
     private List<Answer> extractAnswerList() {
 
         /**  Automatically given answer Ids
-        //
-        //  Answer Id:  Class:
-        //
-        //  11111       meta data (no answer id provided in Quest)
-        //  33333       editable text (no answer id provided in Quest)
-        //  66666       forced blank space
-        //  99999       finish (handled in earlier stage)
-        **/
+         //
+         //  Answer Id:  Class:
+         //
+         //  11111       meta data (no answer id provided in Quest)
+         //  33333       editable text (no answer id provided in Quest)
+         //  66666       forced blank space
+         //  99999       finish (handled in earlier stage)
+         **/
 
         // List of Answers
         List<Answer> listAnswers = new ArrayList<>();
@@ -223,58 +189,34 @@ public class Question extends AppCompatActivity {
             default:
                 Log.e("CASE","Something doesn't fit.");
                 break;
-
         }
-
-        /*
-
-
-        for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
-
-            int nAnswerId;
-            // Obtain Answer Id
-            String sAnswerIdLine = itemQuestionLines[iAnswer * 3 + 1 + 3];
-            String[] sAnswerIdSplit = sAnswerIdLine.split("\"");
-
-            // Sort out common and uncommon Ids
-            if (((sAnswerIdSplit.length < 2) && (!sAnswerIdLine.contains("default"))) ||
-                    (nonTypicalAnswer(mTypeAnswer))) {
-                // 33333 means no visible consequences but not Default value
-                nAnswerId = 33333;
-            } else if (sAnswerIdLine.contains("default")) {
-                // 11111 means Default without visible consequences
-                nAnswerId = 11111;
-            } else {
-                nAnswerId = Integer.parseInt(sAnswerIdSplit[1]);
-            }
-
-            // Create Answers based on their respective Ids
-            if (nAnswerId == 66666) {
-                // An Id of 66666 means an empty vertical Space
-                // 33333 is usually editable Text
-                listAnswers.add(new Answer("", nAnswerId));
-            } else if (nAnswerId == 33333) {
-                // Obtain Answer Text
-                String sAnswerTextLine = itemQuestionLines[iAnswer * 3 + 2 + 3];
-
-                String[] answerParts = sAnswerTextLine.split("<text>|</text>");
-                listAnswers.add(new Answer(answerParts[1], nAnswerId, true));
-                Log.e("AP 33333",answerParts[1]);
-            } else {
-                // Obtain Answer Text
-                String sAnswerTextLine = itemQuestionLines[iAnswer * 3 + 2 + 3];
-                String[] answerParts = sAnswerTextLine.split("<text>|</text>");
-                if (sAnswerIdLine.contains("default")) {
-                    Log.e("Id","default");
-                    listAnswers.add(new Answer(answerParts[1], nAnswerId, true));
-                } else {
-                    listAnswers.add(new Answer(answerParts[1], nAnswerId));
-                }
-            }
-
-        }
-        */
         return listAnswers;
+    }
+
+    private boolean extractHidden() {
+        if (mQuestionBlueprint.contains("hidden=\"true\"")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isFinish() {
+        // String Array carrying introductory Line with Id, Type, Filter
+        String[] introductoryLine = mQuestionBlueprint.split("\"");
+        if (introductoryLine.length == 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isHidden() {
+        return mHidden;
+    }
+
+    private boolean nonTypicalAnswer(String sTypeAnswer) {
+        return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);
     }
 
     public String getQuestionText() {
