@@ -6,6 +6,34 @@
             <text>Hörsituation</text>
         </title>
         <question
+            id="10809"
+            type="sliderFix">
+            <label>
+                <text>Wie fühlen Sie sich?</text>
+            </label>
+            <option id="414309">
+                <text>joa auch</text>
+            </option>
+            <option id="414310">
+                <text>geht</text>
+            </option>
+            <option>
+                <text>supi</text>
+            </option>
+            <option id="414312">
+                <text>joa auch</text>
+            </option>
+            <option id="414313">
+                <text>geht</text>
+            </option>
+            <option id="414314">
+                <text>eher nicht so</text>
+            </option>
+            <default id="414315">
+                <text>leck mich</text>
+            </default>
+        </question>
+        <question
             hidden="true"
             id="10810"
             mandatory="true"

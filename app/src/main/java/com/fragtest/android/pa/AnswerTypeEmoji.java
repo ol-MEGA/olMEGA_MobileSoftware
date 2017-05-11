@@ -78,6 +78,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
             String sAnswer = mListOfAnswers.get(iAnswer).getText();
             switch(sAnswer){
                 case "emoji_happy2":
+                    //answerButton.setBackgroundResource(R.drawable.em1of5);
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[0]));
                     answerButton.setTag(0);
                     break;

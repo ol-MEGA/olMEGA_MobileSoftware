@@ -25,7 +25,7 @@ public class QuestionText extends AppCompatActivity {
         questionTextView.setId(nQuestionId);
         questionTextView.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
         questionTextView.setBackgroundColor(ContextCompat.getColor(context, R.color.lighterGray));
-        questionTextView.setTextSize(Units.getTextSizeQuestion());
+        questionTextView.setTextSize(context.getResources().getDimension(R.dimen.textSizeQuestion));
         questionTextView.setText(sQuestion);
         questionTextView.setPadding(mUnits.convertDpToPixels(16),
                 mUnits.convertDpToPixels(8),

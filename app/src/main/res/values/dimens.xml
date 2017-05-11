@@ -33,9 +33,14 @@
     <dimen name="answerTextMargin_Right">24px</dimen>
     <dimen name="answerTextMargin_Bottom">32px</dimen>
 
-    <dimen name="textSizeQuestion">20sp</dimen>
-    <dimen name="textSizeAnswer">20sp</dimen>
+    <dimen name="textSizeQuestion">10sp</dimen>
+    <dimen name="textSizeAnswer">8sp</dimen>
 
     <dimen name="minHeightRadio">20px</dimen>
     <dimen name="minHeightCheckBox">20px</dimen>
+
+    <dimen name="answerTypeCheckBoxPadding_Left">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Top">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Right">0px</dimen>
+    <dimen name="answerTypeCheckBoxPadding_Bottom">18dp</dimen>
 </resources>

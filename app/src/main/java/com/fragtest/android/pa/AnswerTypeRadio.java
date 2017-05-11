@@ -18,9 +18,9 @@ import android.widget.RadioGroup;
 public class AnswerTypeRadio extends AppCompatActivity {
 
     RadioButton mAnswerButton;
-    private Context mContext;
     LinearLayout.LayoutParams answerParams;
     RadioGroup mParent;
+    private Context mContext;
     private boolean mChecked = false;
     private int nAnswerId;
 
@@ -32,7 +32,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
         mAnswerButton = new RadioButton(context);
         mAnswerButton.setId(nAnswerId);
         mAnswerButton.setText(sAnswer);
-        mAnswerButton.setTextSize(Units.getTextSizeAnswer());
+        mAnswerButton.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mAnswerButton.setChecked(false);
         mAnswerButton.setGravity(Gravity.CENTER_VERTICAL);
         mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));

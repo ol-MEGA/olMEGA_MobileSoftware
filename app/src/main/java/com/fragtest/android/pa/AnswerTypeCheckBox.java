@@ -55,9 +55,15 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             CheckBox checkBox = new CheckBox(mContext);
             checkBox.setId(currentId);
             checkBox.setText(currentString);
-            checkBox.setTextSize(Units.getTextSizeAnswer());
+            checkBox.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             checkBox.setChecked(false);
             checkBox.setGravity(Gravity.START);
+            checkBox.setPadding(
+                    (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Left),
+                    (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Top),
+                    (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Right),
+                    (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Bottom)
+            );
             checkBox.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             checkBox.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
             int states[][] = {{android.R.attr.state_checked}, {}};

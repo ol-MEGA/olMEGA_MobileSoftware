@@ -53,10 +53,16 @@ public class Question extends AppCompatActivity {
             mFilterCondition = extractFilterCondition();
             // Obtain Answer Type (e.g. Radio, Button, Slider,...)
             mTypeAnswer = extractTypeAnswers();
+
+            if (!mTypeAnswer.equals("text")) {
+                // Create List of Answers
+                mAnswers = extractAnswerList();
+            } else {
+                mAnswers = new ArrayList<>();
+                mAnswers.add(new Answer("", 33333, false));
+            }
             // Obtain Number of Answers
             mNumAnswers = extractNumAnswers();
-            // Create List of Answers
-            mAnswers = extractAnswerList();
             // Determine whether Element is hidden
             mHidden = extractHidden();
         }
@@ -99,16 +105,11 @@ public class Question extends AppCompatActivity {
     }
 
     private int extractNumAnswers() {
-        //if (mQuestionBlueprint.contains("hidden=\"true\"")) {
-        //    return 0;
-        //} else
         if (nonTypicalAnswer(mTypeAnswer)) {
             return 1;
         } else {
-            // String Array carrying  the whole Question with Answers etc
-            String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
             // Obtain Number of Answers
-            return (itemQuestionLines.length - 4) / 3;
+            return mAnswers.size();
         }
     }
 
@@ -119,6 +120,94 @@ public class Question extends AppCompatActivity {
 
     private List<Answer> extractAnswerList() {
 
+        // List of Answers
+        List<Answer> listAnswers = new ArrayList<>();
+        String[] stringArray = mQuestionBlueprint.split("<option|<default");
+
+        String answerString = "";
+        int answerId = -1;
+        boolean isDefault = false;
+
+        for (int iA = 1; iA < stringArray.length; iA++) {
+            //Log.i(LOG_STRING, "" + iA + " " + stringArray[iA]);
+
+
+            if (stringArray[iA].contains("option")) {
+                //Log.e(LOG_STRING,"option");
+                isDefault = false;
+                if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
+                    //Log.e(LOG_STRING,stringArray[iA].split("id=\"|\"")[1]);
+                    answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
+                }
+                if (stringArray[iA].split("<text>|</text>").length > 1) {
+                    //Log.e(LOG_STRING, stringArray[iA].split("<text>|</text>")[1]);
+                    answerString = stringArray[iA].split("<text>|</text>")[1];
+                }
+
+                listAnswers.add(new Answer(
+                        answerString,
+                        answerId,
+                        isDefault
+                ));
+            }
+
+            if (stringArray[iA].contains("default")) {
+                isDefault = true;
+                //Log.e(LOG_STRING,"default");
+                if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
+                    //Log.e(LOG_STRING,stringArray[iA].split("id=\"|\"")[1]);
+                    answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
+                }
+                if (stringArray[iA].split("<text>|</text>").length > 1) {
+                    //Log.e(LOG_STRING, stringArray[iA].split("<text>|</text>")[1]);
+                    answerString = stringArray[iA].split("<text>|</text>")[1];
+                }
+
+                listAnswers.add(new Answer(
+                        answerString,
+                        answerId,
+                        isDefault
+                ));
+            }
+/*
+            if (stringArray[iA].contains("option")) {
+                if (stringArray[iA].contains("id=")) {
+                    listAnswers.add(new Answer(
+                            stringArray[iA + 1].split("text>")[1],
+                            Integer.parseInt(stringArray[iA].split("id=\"|\"")[1])
+                    ));
+                } else {
+                    listAnswers.add(new Answer(
+                            stringArray[iA + 1].split("text>")[1],
+                            11111
+                    ));
+                }
+
+            } else if (stringArray[iA].contains("default")) {
+                if (stringArray[iA].contains("id=")) {
+                    if (stringArray[iA].contains("id=")) {
+                        listAnswers.add(new Answer(
+                                stringArray[iA + 1].split("text>")[1],
+                                Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]),
+                                true
+                        ));
+                    }
+                } else {
+                    listAnswers.add(new Answer(
+                            stringArray[iA + 1].split("text>")[1],
+                            11111,
+                            true
+                    ));
+                }
+            }
+            */
+        }
+        return listAnswers;
+    }
+
+
+    private List<Answer> FextractAnswerList() {
+
         /**  Automatically given answer Ids
          //
          //  Answer Id:  Class:
@@ -128,6 +217,7 @@ public class Question extends AppCompatActivity {
          //  66666       forced blank space
          //  99999       finish (handled in earlier stage)
          **/
+
 
         // List of Answers
         List<Answer> listAnswers = new ArrayList<>();
@@ -181,6 +271,7 @@ public class Question extends AppCompatActivity {
                     // Text/date that is used to acquire meta data
                     int nAnswerId = 11111;
                     String sAnswerTextLine = itemQuestionLines[5];
+                    Log.i(LOG_STRING, sAnswerTextLine);
                     String[] answerParts = sAnswerTextLine.split("<text>|</text>");
                     listAnswers.add(new Answer(answerParts[1], nAnswerId));
                 }
@@ -192,6 +283,7 @@ public class Question extends AppCompatActivity {
         }
         return listAnswers;
     }
+
 
     private boolean extractHidden() {
         if (mQuestionBlueprint.contains("hidden=\"true\"")) {
