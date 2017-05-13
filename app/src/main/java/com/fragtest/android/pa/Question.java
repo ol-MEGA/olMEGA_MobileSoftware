@@ -84,22 +84,18 @@ public class Question extends AppCompatActivity {
     }
 
     private int extractFilterId() {
-        if (mQuestionBlueprint.split("\"")[4].contains("filter")) {
+        if (mQuestionBlueprint.split("filter=\"").length > 1) {
             return Integer.parseInt(
-                    mQuestionBlueprint.split("filter=\"")[1].split("\"")[0].split("_")[1]);
+                    mQuestionBlueprint.split("filter=\"")[1].split("_|\"")[1]);
         }
         return -1;
     }
 
     private boolean extractFilterCondition() {
 
-        if (mQuestionBlueprint.split("\"")[4].contains("filter")) {
-            // String carrying the Filter Id terms
-            String sFilterIdLine = mQuestionBlueprint.split("\"")[5];
+        if (mQuestionBlueprint.split("filter=\"!").length > 1) {
             // '!' before Filter Id means the Question is shown ONLY if Id was not checked
-            if (sFilterIdLine.charAt(0) == '!') {
-                return false;
-            }
+            return false;
         }
         return true;
     }
@@ -204,86 +200,6 @@ public class Question extends AppCompatActivity {
         }
         return listAnswers;
     }
-
-
-    private List<Answer> FextractAnswerList() {
-
-        /**  Automatically given answer Ids
-         //
-         //  Answer Id:  Class:
-         //
-         //  11111       meta data (no answer id provided in Quest)
-         //  33333       editable text (no answer id provided in Quest)
-         //  66666       forced blank space
-         //  99999       finish (handled in earlier stage)
-         **/
-
-
-        // List of Answers
-        List<Answer> listAnswers = new ArrayList<>();
-        // String Array carrying  the whole Question with Answers etc
-        String[] itemQuestionLines = mQuestionBlueprint.split("\\r?\\n");
-
-        switch (mTypeAnswer) {
-            case "radio": case "checkbox": case "sliderFix": case "sliderFree": case "emoji":
-
-                for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
-
-                    int nAnswerId = -1;
-                    // Obtain Answer Id
-                    String sAnswerIdLine = itemQuestionLines[iAnswer * 3 + 1 + 3];
-                    String[] sAnswerIdSplit = sAnswerIdLine.split("\"");
-
-                    // Obtain answer id
-                    if (sAnswerIdSplit.length < 3) {
-                        nAnswerId = mQuestionId*2;
-                    } else {
-                        nAnswerId = Integer.parseInt(sAnswerIdSplit[1]);
-                    }
-
-                    // Obtain answer id
-                    String sAnswerTextLine = itemQuestionLines[iAnswer * 3 + 2 + 3];
-                    String[] answerParts = sAnswerTextLine.split("<text>|</text>");
-                    if (answerParts.length > 1) {
-                        if (sAnswerIdLine.contains("default")) {
-                            listAnswers.add(new Answer(answerParts[1], nAnswerId, true));
-                        } else {
-                            listAnswers.add(new Answer(answerParts[1], nAnswerId));
-                        }
-                    } else {
-                        if (sAnswerIdLine.contains("default")) {
-                            listAnswers.add(new Answer("", nAnswerId, true));
-                        } else {
-                            listAnswers.add(new Answer("", nAnswerId));
-                        }
-                    }
-                }
-                break;
-
-            case "text": case "date":
-
-                if (itemQuestionLines.length < 6) {
-                    // Real editable text -> unfortunately no provided id since no answers defined -
-                    // therefore question id is used with prefix 333
-                    int nAnswerId = mQuestionId + 33300000;
-                    listAnswers.add(new Answer("", nAnswerId));
-                } else {
-                    // Text/date that is used to acquire meta data
-                    int nAnswerId = 11111;
-                    String sAnswerTextLine = itemQuestionLines[5];
-                    Log.i(LOG_STRING, sAnswerTextLine);
-                    String[] answerParts = sAnswerTextLine.split("<text>|</text>");
-                    listAnswers.add(new Answer(answerParts[1], nAnswerId));
-                }
-                break;
-
-            default:
-                Log.e("CASE","Something doesn't fit.");
-                break;
-        }
-        return listAnswers;
-    }
-
 
     private boolean extractHidden() {
         if (mQuestionBlueprint.contains("hidden=\"true\"")) {

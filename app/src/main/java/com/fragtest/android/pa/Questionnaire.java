@@ -5,8 +5,6 @@ import android.graphics.Color;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -22,7 +20,7 @@ public class Questionnaire {
 
     private static String LOG_STRING = "Questionnaire";
     // Accumulator for ids checked in by given answers
-    public AnswerIds mAnswerIds;
+    //public AnswerIds mAnswerIds;
     public EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
@@ -33,9 +31,9 @@ public class Questionnaire {
     // Context of MainActivity()
     private Context mContext;
     // Accumulator for Text and id of text format answers
-    private AnswerTexts mAnswerTexts;
+    // private AnswerTexts mAnswerTexts;
     // Accumulator for question id and metric input
-    private AnswerValues mAnswerValues;
+    // private AnswerValues mAnswerValues;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
@@ -49,17 +47,18 @@ public class Questionnaire {
 
         mContext = context;
         mContextQPA = contextQPA;
+        mEvaluationList = new EvaluationList();
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
 
         // Contains all ids of checked elements
-        mAnswerIds = new AnswerIds();
+        // mAnswerIds = new AnswerIds();
         // Contains all contents of text answers
-        mAnswerTexts = new AnswerTexts();
+        // mAnswerTexts = new AnswerTexts();
         // Contains all metric answers
-        mAnswerValues = new AnswerValues();
+        // mAnswerValues = new AnswerValues();
 
-        mEvaluationList = new EvaluationList();
+        //mEvaluationList = new EvaluationList();
 
         if (isDebug) {
             Log.i(LOG_STRING, "Constructor successful.");
@@ -109,6 +108,7 @@ public class Questionnaire {
         boolean isSliderFree = false;
         boolean isEmoji = false;
         boolean isText = false;
+        boolean isFinish = false;
 
         LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -130,38 +130,33 @@ public class Questionnaire {
         // Format of Answer e.g. "radio", "checkbox", ...
         String sType = question.getTypeAnswer();
 
-        // Answer Buttons of type "radio" are grouped and handled together
-        // Only needed in case of Radio Buttons
-        final RadioGroup answerRadioGroup = new RadioGroup(mContext);
-        answerRadioGroup.setOrientation(RadioGroup.VERTICAL);
-        // Works with all single-option tasks e.g. radio buttons, slider, ...
-        final List<Integer> listOfRadioIds = new ArrayList<>();
+        final AnswerTypeRadio answerTypeRadio = new AnswerTypeRadio(
+                mContext, this, answerLayout, question.getQuestionId());
 
         // In case of checkbox type
         final AnswerTypeCheckBox answerTypeCheckBox = new AnswerTypeCheckBox(
-                mContext, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId());
 
         // In case of emoji type
         final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
-                mContext, mContextQPA, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId());
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mContext, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId());
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
-                mContext, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId());
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
-                mContext, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId());
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
-        //
         /** Iteration over all possible Answers attributed to current question **/
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
@@ -176,14 +171,7 @@ public class Questionnaire {
                 switch (sType) {
                     case "radio": {
                         isRadio = true;
-                        AnswerTypeRadio answer = new AnswerTypeRadio(mContext,
-                                nAnswerId, sAnswer, answerRadioGroup);
-                        if (isDefault) {
-                            answer.setChecked();
-                            mAnswerIds.add(nAnswerId);
-                        }
-                        answer.addAnswer();
-                        listOfRadioIds.add(nAnswerId);
+                        answerTypeRadio.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
                     case "checkbox": {
@@ -196,10 +184,7 @@ public class Questionnaire {
                         break;
                     }
                     case "finish": {
-                        AnswerTypeFinish answer = new AnswerTypeFinish(mContext,
-                                nAnswerId, answerLayout);
-                        answer.addClickListener(mContext, mMetaData, mAnswerIds, mAnswerTexts);
-                        answer.addAnswer();
+                        isFinish = true;
                         break;
                     }
                     case "sliderFix": {
@@ -228,51 +213,81 @@ public class Questionnaire {
 
         if (isText) {
             answerTypeText.buildView();
-            mEvaluationList = answerTypeText.addClickListener(mEvaluationList);
+            answerTypeText.addClickListener();
         }
 
         if (isCheckBox) {
             answerTypeCheckBox.buildView();
-            mEvaluationList = answerTypeCheckBox.addClickListener(mEvaluationList);
+            answerTypeCheckBox.addClickListener();
         }
 
         if (isEmoji) {
-            mEvaluationList = answerTypeEmoji.buildView(mEvaluationList);
-            mEvaluationList = answerTypeEmoji.addClickListener();
+            answerTypeEmoji.buildView();
+            answerTypeEmoji.addClickListener();
         }
 
-        // In case of sliderFix, create View
         if (isSliderFix) {
             answerSliderFix.buildView();
-            mEvaluationList = answerSliderFix.addClickListener(mEvaluationList);
+            answerSliderFix.addClickListener();
         }
 
-        // In case of sliderFix, create View
         if (isSliderFree) {
             answerSliderFree.buildView();
-            mEvaluationList = answerSliderFree.addClickListener(mEvaluationList);
+            answerSliderFree.addClickListener();
         }
 
-        // In Case of Radio Buttons, additional RadioGroup is implemented
         if (isRadio) {
-            answerRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    // In Case of Radio Buttons checking one means un-checking all other Elements
-                    // Therefore onClickListening must be handled on Group Level
-                    // listOfRadioIds contains all Ids of current Radio Group
-                    mAnswerIds.removeAll(listOfRadioIds);
-                    mAnswerIds.add(checkedId);
-                    answerRadioGroup.check(checkedId);
-                    // Toggle Visibility of suited/unsuited frames
-                    checkVisibility();
-                }
-            });
-            answerLayout.layoutAnswer.addView(answerRadioGroup);
+            answerTypeRadio.buildView();
+            answerTypeRadio.addClickListener();
+        }
+
+        if (isFinish) {
+            AnswerTypeFinish answer = new AnswerTypeFinish(mContext, answerLayout);
+            answer.addClickListener(mContext, mMetaData, mEvaluationList);
+            answer.addAnswer();
         }
 
         return answerContainer;
     }
+
+    public boolean addValueToEvaluationList(int questionId, float value) {
+        mEvaluationList.add(questionId, value);
+        return true;
+    }
+
+    public boolean addTextToEvaluationLst(int questionId, String text) {
+        mEvaluationList.add(questionId, text);
+        return true;
+    }
+
+    public boolean addIdToEvaluationList(int questionId, int id) {
+        mEvaluationList.add(questionId, id);
+        return true;
+    }
+
+    public boolean addIdListToEvaluationList(int questionId, List<Integer> listOfIds) {
+        mEvaluationList.add(questionId, listOfIds);
+        return true;
+    }
+
+    public boolean removeIdFromEvaluationList(int id) {
+        mEvaluationList.removeAnswerId(id);
+        return true;
+    }
+
+    public boolean removeQuestionIdFromEvaluationList(int questionId) {
+        mEvaluationList.removeQuestionId(questionId);
+        return true;
+    }
+
+
+
+
+
+
+
+
+
 
     public int getNumPages() {
         return mNumPages;
@@ -282,10 +297,11 @@ public class Questionnaire {
         return question.getQuestionId();
     }
 
+    /** **/
     // Function checks all available pages whether their filtering condition has been met and
     // toggles visibility by destroying or creating the views and adding them to the list of views
     // which is handled by QuestionnairePagerAdapter
-    public void checkVisibility() {
+    public boolean checkVisibility() {
 
         if (isDebug) {
             Log.i(LOG_STRING, "Checking visibility");
@@ -297,7 +313,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && qI.getCondition()                                // which MUST exist
-                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
+                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -305,7 +321,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && qI.getCondition()                                // which MUST exist
-                    && !mAnswerIds.contains(qI.getFilterId())           // does NOT exist
+                    && !mEvaluationList.containsId(qI.getFilterId())    // does NOT exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
                 removeQuestion(iPos);
@@ -313,7 +329,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && !qI.getCondition()                               // which MUST NOT exist
-                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
+                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -321,7 +337,7 @@ public class Questionnaire {
 
             if ((qI.getFilterId() != -1)                                // Specific Filter Id
                     && (!qI.getCondition())                             // which MUST NOT exist
-                    && mAnswerIds.contains(qI.getFilterId())            // DOES exist
+                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
                 removeQuestion(iPos);
@@ -329,7 +345,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && !qI.getCondition()                               // which MUST NOT exist
-                    && !mAnswerIds.contains(qI.getFilterId())           // DOES NOT exist
+                    && !mEvaluationList.containsId(qI.getFilterId())    // DOES NOT exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -340,10 +356,13 @@ public class Questionnaire {
                 removeQuestion(iPos);
             }
         }
-        manageCheckedIds();
+        return manageCheckedIds();
     }
 
-    public void manageCheckedIds() {
+    /**
+     * CHECK WHETHER THIS IS NEEDED ANYMORE
+     **/
+    public boolean manageCheckedIds() {
 
         if (isDebug) {
             Log.i(LOG_STRING, "Managing Ids.");
@@ -352,30 +371,34 @@ public class Questionnaire {
         // Obtain outdated ids and prepare list for removal simultaneously
         ArrayList<Integer> listOfIdsToRemove = new ArrayList<>();
         // Iterate over all ids that have been checked before
-        for (int iId = 0; iId < mAnswerIds.size(); iId++) {
-            int nId = mAnswerIds.get(iId);
-            boolean bFoundId = false;
-            // Iterate over all currently visible/active Views
-            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
-                List<Answer> listOfAnswerIds =
-                        mContextQPA.mListOfActiveViews.get(iView).getListOfAnswerIds();
-                for (int iAnswer = 0; iAnswer < listOfAnswerIds.size(); iAnswer++) {
-                    if (listOfAnswerIds.get(iAnswer).Id == nId) {
-                        bFoundId = true;
+        for (int iId = 0; iId < mEvaluationList.size(); iId++) {
+
+            if (mEvaluationList.get(iId).getAnswerType().equals("Id")) {
+                int nId = Integer.parseInt(mEvaluationList.get(iId).getValue());
+                boolean bFoundId = false;
+                // Iterate over all currently visible/active Views
+                for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
+                    List<Answer> listOfAnswerIds =
+                            mContextQPA.mListOfActiveViews.get(iView).getListOfAnswerIds();
+                    for (int iAnswer = 0; iAnswer < listOfAnswerIds.size(); iAnswer++) {
+                        if (listOfAnswerIds.get(iAnswer).Id == nId) {
+                            bFoundId = true;
+                        }
                     }
                 }
-            }
-            if (!bFoundId && nId != 111111) {
-                listOfIdsToRemove.add(nId);
+                if (!bFoundId && nId != 111111) {
+                    listOfIdsToRemove.add(nId);
+                }
             }
         }
         // Remove all outdated ids
         if (listOfIdsToRemove.size() > 0) {
-            mAnswerIds.removeAll(listOfIdsToRemove);
+            mEvaluationList.removeAll(listOfIdsToRemove);
         }
         if (isDebug) {
             showListOfIds();
         }
+        return true;
     }
 
     // Adds the question to the displayed list
@@ -394,6 +417,7 @@ public class Questionnaire {
     // Removes the question from the displayed list
     private boolean removeQuestion(int iPos) {
         mQuestionInfo.get(iPos).setInactive();
+        mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
 
         // Remove checked answers on removed questions
         String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
@@ -401,8 +425,8 @@ public class Questionnaire {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
             if (sType.equals("checkbox")) {
-                CheckBox checkBox = (CheckBox) mContextQPA.mListOfViewsStorage.get(iPos).getView().
-                        findViewById(mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
+                CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
+                        mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
                 if (checkBox != null) {
                     checkBox.setChecked(false);
                 }
@@ -440,37 +464,25 @@ public class Questionnaire {
     }
 
     public boolean clearAnswerIds() {
-        mAnswerIds = new AnswerIds();
+        mEvaluationList.removeAll("Id");
         checkVisibility();
         return true;
     }
 
-    // Clears all entered answer Ids in mAnswerIds
+    // Clears all entered answer Texts in mEvaluationList
     public boolean clearAnswerTexts() {
-        revertEnteredText();
-        mAnswerTexts = new AnswerTexts();
+        mEvaluationList.removeAll("Text");
         return true;
     }
 
-    // Clears all text answer entries in mAnswerTexts
-    public void revertEnteredText() {
 
-        for (int iText = 0; iText < mAnswerTexts.size(); iText++) {
-            int nTextId = mAnswerTexts.get(iText).getId();
-            for (int iView = 0; iView < mContextQPA.mListOfActiveViews.size(); iView++) {
-                if (mContextQPA.mListOfActiveViews.get(iView).getView().getId() == nTextId) {
-                    TextView tV = (TextView) mContextQPA.mListOfActiveViews.get(iView).getView().findViewById(nTextId);
-                    tV.setText("");
-                }
-            }
-        }
-    }
-
+    /** **/
     public void showListOfIds() {
-        if (mAnswerIds.size() > 0) {
-            String LIST = "" + mAnswerIds.get(0);
-            for (int iId = 1; iId < mAnswerIds.size(); iId++) {
-                LIST += ",\n" + mAnswerIds.get(iId);
+        Log.e(LOG_STRING, "Show" + mEvaluationList.size());
+        if (mEvaluationList.size() > 0) {
+            String LIST = "" + mEvaluationList.get(0).getValue();
+            for (int iId = 1; iId < mEvaluationList.size(); iId++) {
+                LIST += ",\n" + Integer.parseInt(mEvaluationList.get(iId).getValue());
             }
             Toast.makeText(mContext, LIST, Toast.LENGTH_SHORT).show();
         }

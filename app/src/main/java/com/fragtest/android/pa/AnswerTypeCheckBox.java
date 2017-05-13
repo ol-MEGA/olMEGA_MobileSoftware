@@ -25,13 +25,14 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     private int mQuestionId;
     private List<StringAndInteger> mListOfAnswers;
     private List<Integer> mListOfDefaults;
-    private EvaluationList mEvaluationList;
+    private Questionnaire mQuestionnaire;
 
-    public AnswerTypeCheckBox(Context context, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeCheckBox(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
         mParent = qParent;
         mQuestionId = nQuestionId;
+        mQuestionnaire = questionnaire;
         mListOfDefaults = new ArrayList<>();
         mListOfAnswers = new ArrayList<>();
 
@@ -81,9 +82,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         }
     }
 
-    public EvaluationList addClickListener(final EvaluationList evaluationList) {
-
-        mEvaluationList = evaluationList;
+    public boolean addClickListener() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
 
@@ -92,7 +91,8 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
             if (mListOfDefaults.contains(currentId)) {
                 checkBox.setChecked(true);
-                mEvaluationList.add(mQuestionId, currentId);
+                mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
+                //      mEvaluationList.add(mQuestionId, currentId);
             }
 
             checkBox.setOnClickListener(new View.OnClickListener() {
@@ -100,13 +100,15 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 public void onClick(View v) {
 
                     if (checkBox.isChecked()) {
-                        mEvaluationList.add(mQuestionId, currentId);
+                        //   mEvaluationList.add(mQuestionId, currentId);
+                        mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
                     } else {
-                        mEvaluationList.removeAnswerId(currentId);
+                        //     mEvaluationList.removeAnswerId(currentId);
+                        mQuestionnaire.removeIdFromEvaluationList(currentId);
                     }
                 }
             });
         }
-        return mEvaluationList;
+        return true;
     }
 }

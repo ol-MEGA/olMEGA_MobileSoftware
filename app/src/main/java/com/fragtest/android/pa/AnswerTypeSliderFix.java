@@ -22,7 +22,7 @@ import java.util.List;
 
 public class AnswerTypeSliderFix extends AppCompatActivity {
 
-    public static String CLASS_NAME = "AnswerTypeSliderFix";
+    public static String LOG_STRING = "AnswerTypeSliderFix";
     private final List<Integer> mListOfIds = new ArrayList<>();
     public AnswerLayout parent;
     private Context mContext;
@@ -34,12 +34,13 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private int width, mUsableHeight;
     private int nTextViewHeight, mQuestionId;
     private int[] answerLayoutPadding;
-    private EvaluationList mEvaluationList;
+    private Questionnaire mQuestionnaire;
 
-    public AnswerTypeSliderFix(Context context, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
         parent = qParent;
+        mQuestionnaire = questionnaire;
         mListOfAnswers = new ArrayList<>();
         mQuestionId = nQuestionId;
 
@@ -100,7 +101,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mResizeView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.JadeRed));
     }
 
-    public void buildView() {
+    public boolean buildView() {
 
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
@@ -143,6 +144,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
             mAnswerListContainer.addView(textMark);
         }
         parent.layoutAnswer.addView(mHorizontalContainer);
+        return true;
     }
 
     public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
@@ -159,14 +161,17 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         return true;
     }
 
-    public AnswerIds addIdFromItem(int item, AnswerIds answerIds) {
-        answerIds.removeAll(mListOfIds);
-        answerIds.add(mListOfAnswers.get(item).getId());
-        return answerIds;
+    public boolean addIdFromItem(int item) {
+        //    answerIds.removeAll(mListOfIds);
+        //    answerIds.add(mListOfAnswers.get(item).getId());
+
+        mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+        mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(item).getId());
+
+        return true;
     }
 
-    public EvaluationList addClickListener(EvaluationList evaluationList) {
-        mEvaluationList = evaluationList;
+    public boolean addClickListener() {
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
         tvTemp.post(new Runnable()
@@ -179,10 +184,16 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
                     //                    answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                     setProgressItem((int) ((mListOfAnswers.size()-1)/2.0f));
-                    mEvaluationList.add(mQuestionId, mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
+                    // mEvaluationList.add(mQuestionId, mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
+
+                    mQuestionnaire.addIdToEvaluationList(mQuestionId,
+                            mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                 } else {
                     setProgressItem(mDefaultAnswer);
-                    mEvaluationList.add(mQuestionId, mListOfAnswers.get(mDefaultAnswer).getId());
+                    //    mEvaluationList.add(mQuestionId, mListOfAnswers.get(mDefaultAnswer).getId());
+
+                    mQuestionnaire.addIdToEvaluationList(mQuestionId,
+                            mListOfAnswers.get(mDefaultAnswer).getId());
                 }
             }
         });
@@ -196,8 +207,12 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     setProgressItem(numAnswer);
-                    mEvaluationList.removeQuestionId(mQuestionId);
-                    mEvaluationList.add(mQuestionId, currentId);
+                    //     mEvaluationList.removeQuestionId(mQuestionId);
+                    //     mEvaluationList.add(mQuestionId, currentId);
+
+                    mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+                    mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
+
                     //answerIds.removeAll(mListOfIds);
                     //answerIds.add(currentId);
                 }
@@ -217,7 +232,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                         rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSliderFinal(event, mEvaluationList);
+                        rescaleSliderFinal(event);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -244,7 +259,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                         rescaleSliderOnline(event);
                         return true;
                     case (MotionEvent.ACTION_UP) :
-                        rescaleSliderFinal(event, mEvaluationList);
+                        rescaleSliderFinal(event);
                         return true;
                     case (MotionEvent.ACTION_CANCEL) :
                         return true;
@@ -257,12 +272,12 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 return true;
             }
         });
-        return mEvaluationList;
+        return true;
     }
 
 
     // Set progress  bar according to user input
-    private void rescaleSliderFinal(MotionEvent motionEvent, EvaluationList evaluationList) {
+    private void rescaleSliderFinal(MotionEvent motionEvent) {
         int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
         int nItem = mapValuesToItems(nValueSelected);
         nItem = clipItemsToRange(nItem);
@@ -271,8 +286,12 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         try {
             setProgressItem(nItem);
             //setProgressPixels(nValueSelected);
-            evaluationList.removeQuestionId(mQuestionId);
-            evaluationList.add(mQuestionId, mListOfAnswers.get(nItem).getId());
+            //       evaluationList.removeQuestionId(mQuestionId);
+            //       evaluationList.add(mQuestionId, mListOfAnswers.get(nItem).getId());
+
+            mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+            mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(nItem).getId());
+            mQuestionnaire.checkVisibility();
             //setProgressItem(nItem);
             //answerIds.removeAll(mListOfIds);
             //addIdFromItem(nItem, answerIds);

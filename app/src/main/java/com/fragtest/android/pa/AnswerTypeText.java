@@ -23,17 +23,16 @@ public class AnswerTypeText extends AppCompatActivity {
     public AnswerLayout parent;
     private String LOG_STRING = "AnswerTypeText";
     private Button mButtonOkay;
-    private LinearLayout.LayoutParams buttonParams;
     private Context mContext;
-    private EvaluationList mEvaluationList;
     private int mQuestionId;
+    private Questionnaire mQuestionnaire;
 
 
-    public AnswerTypeText(Context context, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeText(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
         mContext = context;
         mQuestionId = nQuestionId;
         parent = qParent;
-
+        mQuestionnaire = questionnaire;
     }
 
     public void buildView() {
@@ -62,7 +61,7 @@ public class AnswerTypeText extends AppCompatActivity {
         mButtonOkay.setText(R.string.buttonTextOkay);
         mButtonOkay.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
         mButtonOkay.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button));
-        buttonParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
@@ -73,9 +72,7 @@ public class AnswerTypeText extends AppCompatActivity {
         parent.layoutAnswer.addView(mButtonOkay, buttonParams);
     }
 
-    public EvaluationList addClickListener(EvaluationList evaluationList) {
-
-        mEvaluationList = evaluationList;
+    public boolean addClickListener() {
 
         mButtonOkay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,13 +89,15 @@ public class AnswerTypeText extends AppCompatActivity {
 
                 String text = mAnswerText.getText().toString();
                 if (text.length() != 0) {
-                    mEvaluationList.removeQuestionId(mQuestionId);
-                    mEvaluationList.add(mQuestionId, text);
+                    mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+                    // mEvaluationList.removeQuestionId(mQuestionId);
+                    mQuestionnaire.addTextToEvaluationLst(mQuestionId, text);
+                    //  mEvaluationList.add(mQuestionId, text);
                 } else {
                     Log.e(LOG_STRING, "No text was entered.");
                 }
             }
         });
-        return mEvaluationList;
+        return true;
     }
 }

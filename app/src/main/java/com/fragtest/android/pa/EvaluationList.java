@@ -39,6 +39,14 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         return true;
     }
 
+    public boolean add(int nQuestionId, List<Integer> listOfIds) {
+        for (int iId = 0; iId < listOfIds.size(); iId++) {
+            mEvaluationList.add(new QuestionIdTypeAndValue(nQuestionId,
+                    "Id", listOfIds.get(iId).toString()));
+        }
+        return true;
+    }
+
     //Remove all answers with given Ids in input list
     public boolean removeAll(ArrayList<Integer> listOfIds) {
         int nRemoved = 0;
@@ -95,5 +103,16 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         }
         Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         return true;
+    }
+
+    //Check whether List contains answer Id
+    public boolean containsId(int id) {
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getAnswerType().equals("Id") &&
+                    Integer.parseInt(mEvaluationList.get(iItem).getValue()) == id) {
+                return true;
+            }
+        }
+        return false;
     }
 }

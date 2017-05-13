@@ -33,11 +33,14 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     private int mMinProgress = 10;
     private int[] answerLayoutPadding;
     private EvaluationList mEvaluationList;
+    private Questionnaire mQuestionnaire;
 
-    public AnswerTypeSliderFree(Context context, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
+                                AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
         parent = qParent;
+        mQuestionnaire = questionnaire;
         mListOfAnswers = new ArrayList<>();
         mQuestionId = nQuestionId;
 
@@ -155,8 +158,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         parent.layoutAnswer.addView(mHorizontalContainer);
     }
 
-    public EvaluationList addClickListener(EvaluationList evaluationList) {
-        mEvaluationList = evaluationList;
+    public boolean addClickListener() {
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
         tvTemp.post(new Runnable() {
@@ -165,12 +167,10 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
-
+                    mQuestionnaire.addValueToEvaluationList(mQuestionId, 0.5f);
                     setProgressFraction(0.5f);
-                    mEvaluationList.add(mQuestionId, 0.5f);
-                    //answerIds.add(mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                 } else {
-                    mEvaluationList.add(mQuestionId, getFractionFromProgress(
+                    mQuestionnaire.addValueToEvaluationList(mQuestionId, getFractionFromProgress(
                             setProgressItem(mDefaultAnswer)));
                 }
             }
@@ -187,8 +187,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                     mEvaluationList.removeQuestionId(mQuestionId);
                     setProgressItem(numAnswer);
                     mEvaluationList.add(mQuestionId, getFractionFromProgress());
-                    //answerIds.removeAll(mListOfIds);
-                    //answerIds.add(currentId);
                 }
             });
         }
@@ -244,7 +242,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 return true;
             }
         });
-        return mEvaluationList;
+        return true;
     }
 
     // Set progress  bar according to user input

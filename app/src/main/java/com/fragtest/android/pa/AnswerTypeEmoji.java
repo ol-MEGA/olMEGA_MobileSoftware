@@ -16,6 +16,7 @@ import java.util.List;
 
 public class AnswerTypeEmoji extends AppCompatActivity {
 
+    private String LOG_STRING = "AnswerTypeEmoji";
     private Context mContext;
     private AnswerLayout mParent;
     private List<StringAndInteger> mListOfAnswers;
@@ -25,16 +26,15 @@ public class AnswerTypeEmoji extends AppCompatActivity {
     private int mDefault = -1;
     private Questionnaire mQuestionnaire;
     private int mQuestionId;
-    private EvaluationList mEvaluationList;
 
-    public AnswerTypeEmoji(Context context, QuestionnairePagerAdapter contextQPA,
+    public AnswerTypeEmoji(Context context, Questionnaire questionnaire,
                            AnswerLayout qParent, int questionId) {
 
         mContext = context;
         mParent = qParent;
+        mQuestionnaire = questionnaire;
         mListOfAnswers = new ArrayList<>();
         mListOfIds = new ArrayList<>();
-        mQuestionnaire = new Questionnaire(mContext, contextQPA);
         mQuestionId = questionId;
 
         drawables[0] = R.drawable.em1of5;
@@ -59,9 +59,8 @@ public class AnswerTypeEmoji extends AppCompatActivity {
         return true;
     }
 
-    public EvaluationList buildView(EvaluationList evaluationList) {
+    public boolean buildView() {
 
-        mEvaluationList = evaluationList;
         int usableHeight = (new Units(mContext)).getUsableSliderHeight();
         int numEmojis = mListOfAnswers.size();
         // Make size of emojies adaptive
@@ -104,8 +103,11 @@ public class AnswerTypeEmoji extends AppCompatActivity {
 
             if (iAnswer == mDefault) {
                 setChecked(true, answerButton);
-                mEvaluationList.removeQuestionId(mQuestionId);
-                mEvaluationList.add(mQuestionId, mListOfAnswers.get(iAnswer).getId());
+                //    mEvaluationList.removeQuestionId(mQuestionId);
+                //   mEvaluationList.add(mQuestionId, mListOfAnswers.get(iAnswer).getId());
+
+                mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+                mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(iAnswer).getId());
             } else {
                 setChecked(false, answerButton);
             }
@@ -124,10 +126,10 @@ public class AnswerTypeEmoji extends AppCompatActivity {
             ));
             mParent.layoutAnswer.addView(placeHolder);
         }
-        return mEvaluationList;
+        return true;
     }
 
-    public EvaluationList addClickListener() {
+    public boolean addClickListener() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
             final Button button = (Button) mParent.layoutAnswer.findViewById(
@@ -145,15 +147,15 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                             setChecked(false, button);
                         }
                     }
-                    mEvaluationList.removeQuestionId(mQuestionId);
-                    mEvaluationList.add(mQuestionId, mListOfAnswers.get(currentAnswer).getId());
-
-                    mQuestionnaire.mEvaluationList = mEvaluationList;
+                    mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
+                    //  mEvaluationList.removeQuestionId(mQuestionId);
+                    mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(currentAnswer).getId());
+                    //   mEvaluationList.add(mQuestionId, mListOfAnswers.get(currentAnswer).getId());
                     mQuestionnaire.checkVisibility();
                 }
             });
         }
-        return mEvaluationList;
+        return true;
     }
 
     public void setChecked(boolean isChecked, Button answerButton) {

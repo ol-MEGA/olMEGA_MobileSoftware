@@ -22,12 +22,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
     public ArrayList<QuestionViewActive> mListOfViewsStorage;
-    private int mNUM_PAGES;
-    private int mNUM_QUESTIONS;
-    private Questionnaire mQuestionnaire;
-    private LinearLayout mLayout;
     public ViewPager mViewPager;
     public String CLASS_NAME = "Quest..PagerAdapter";
+    private int mNUM_PAGES;
+    private Questionnaire mQuestionnaire;
+    private LinearLayout mLayout;
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
@@ -37,11 +36,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         mQuestionnaire.setUp();
         mNUM_PAGES = mQuestionnaire.getNumPages();
-        mNUM_QUESTIONS = mNUM_PAGES;
         mViewPager.setOffscreenPageLimit(mNUM_PAGES - 1);
 
         mListOfActiveViews = new ArrayList<>();
         mListOfViewsStorage = new ArrayList<>();
+
 
         createLayout();
         // Creates and destroys views based on filter id settings
@@ -92,6 +91,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
+
     }
 
     public int addView(View view, int position, int positionInRaw, List<Answer> listOfAnswers) {

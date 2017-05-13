@@ -22,14 +22,14 @@ public class AnswerTypeFinish extends AppCompatActivity {
     private int mAnswerId;
     private Context mContext;
     private FileIO fileIO;
+    private EvaluationList mEvaluationList;
 
-    public AnswerTypeFinish(Context context, int Id, AnswerLayout qParent) {
+    public AnswerTypeFinish(Context context, AnswerLayout qParent) {
 
         mContext = context;
-        mAnswerId = Id;
         parent = qParent;
+
         mAnswerButton = new Button(context);
-        mAnswerButton.setId(mAnswerId);
         mAnswerButton.setText(R.string.buttonTextFinish);
         mAnswerButton.setTextSize(Units.getTextSizeAnswer());
         mAnswerButton.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -57,12 +57,13 @@ public class AnswerTypeFinish extends AppCompatActivity {
     }
 
     public void addClickListener(final Context context, final MetaData metaData,
-                                 final AnswerIds answerIds, final AnswerTexts answerTexts) {
+                                 EvaluationList evaluationList) {
+        mEvaluationList = evaluationList;
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                metaData.finalise(answerIds, answerTexts);
+                //metaData.finalise(mEvaluationList);
                 fileIO = new FileIO();
                 fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
                 //Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();

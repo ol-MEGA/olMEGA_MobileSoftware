@@ -95,25 +95,47 @@
                 <text>leck mich</text>
             </default>
         </question>
-        <question id="10813" type="emoji">
+        //
+        <question
+            id="10813"
+            type="emoji">
+            //
             <label>
+                //
                 <text>Wie fühlen Sie sich?</text>
+                //
             </label>
+            //
             <option id="214311">
+                //
                 <text>emoji_happy2</text>
+                //
             </option>
+            //
             <default id="214312">
+                //
                 <text>emoji_happy1</text>
+                //
             </default>
+            //
             <option id="214313">
+                //
                 <text>emoji_neutral</text>
+                //
             </option>
+            //
             <option id="214314">
+                //
                 <text>emoji_sad1</text>
+                //
             </option>
+            //
             <option id="214315">
+                //
                 <text>emoji_sad2</text>
+                //
             </option>
+            //
         </question>
         <question id="10801" type="sliderFree">
             <label>
