@@ -22,7 +22,7 @@
             android:id="@+id/ResizeView"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@drawable/slider_shape"
+            android:background="@color/JadeRed"
             android:layout_alignParentBottom="true">
         </View>
 

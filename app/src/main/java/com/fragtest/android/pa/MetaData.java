@@ -17,7 +17,7 @@ import java.util.TimeZone;
 
 public class MetaData extends AppCompatActivity {
 
-    private static String META_DATA = "MetaData";
+    private static String LOG_STRING = "MetaData";
 
     private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
@@ -33,7 +33,7 @@ public class MetaData extends AppCompatActivity {
 
     private Context mContext;
 
-    private AnswerIds mAnswerIds;
+    private EvaluationList mEvaluationList;
     private AnswerTexts mAnswerTexts;
 
     public MetaData(Context context, String rawInput) {
@@ -66,29 +66,32 @@ public class MetaData extends AppCompatActivity {
         KEY_QUESTId = generateQuestId();
         FILE_NAME = generateFileName();
 
-        Log.i(META_DATA, "Object initialised");
+        Log.i(LOG_STRING, "Object initialised");
         return true;
     }
 
-    public boolean finalise(AnswerIds answerIds, AnswerTexts answerTexts) {
+    public boolean finalise(EvaluationList evaluationList) {
 
-        mAnswerIds = answerIds;
-        mAnswerTexts = answerTexts;
+        mEvaluationList = evaluationList;
         // Obtain current Time Stamp at the End of Questionnaire
         END_DATE = generateTimeNow();
         // Obtain current UTC Time Stamp at the End of Questionnaire
         END_DATE_UTC = generateTimeNowUTC();
         collectData();
 
-        Log.i(META_DATA, "Object finalised");
+        Log.i(LOG_STRING, "Object finalised");
         return true;
     }
 
+
+    // List of questions according to questionnaire - neede to account for unanswered questions
     public void addQuestion(Question question) {
         mQuestionList.add(question);
     }
 
     private void collectData() {
+
+        int questionId = -255;
 
         KEY_DATA = KEY_HEAD;
         KEY_DATA += KEY_RECORD_OPEN;
@@ -106,81 +109,120 @@ public class MetaData extends AppCompatActivity {
 
             if (mQuestionList.get(iQuestion).getQuestionId() != 99999) {
 
+                questionId = mQuestionList.get(iQuestion).getQuestionId();
+
                 KEY_DATA += KEY_VALUE_OPEN;
                 KEY_DATA += "question_id=\"";
-                KEY_DATA += mQuestionList.get(iQuestion).getQuestionId();
+                KEY_DATA += questionId;
                 KEY_DATA += "\"";
 
+                /*
                 if (((int) Math.floor(mQuestionList.get(iQuestion).getAnswers().get(0).Id/100000))
                         == 333) {
                     /** Id 333* means editable text input and as such the answer was saved
                      * in mAnswerTexts array along with 333 + associated question id (unfortunately
                      * no specific answer id is featured in original implementation) **/
 
+                /*
                     KEY_DATA += KEY_TAG_CLOSE;
                     KEY_DATA += getTextFromId(mQuestionList.get(iQuestion).getAnswers().get(0).Id);
                     KEY_DATA += KEY_VALUE_CLOSE;
 
                 } else {
+*/
+                switch (mQuestionList.get(iQuestion).getAnswers().get(0).Text) {
+                    case "$device.id":
 
-                    switch (mQuestionList.get(iQuestion).getAnswers().get(0).Text) {
-                        case "$device.id":
+                        KEY_DATA += KEY_TAG_CLOSE;
+                        KEY_DATA += getDeviceId();
+                        KEY_DATA += KEY_VALUE_CLOSE;
+                        break;
 
-                            KEY_DATA += KEY_TAG_CLOSE;
-                            KEY_DATA += getDeviceId();
-                            KEY_DATA += KEY_VALUE_CLOSE;
-                            break;
+                    case "$now":
 
-                        case "$now":
+                        KEY_DATA += KEY_TAG_CLOSE;
+                        KEY_DATA += getTimeNow();
+                        KEY_DATA += KEY_VALUE_CLOSE;
+                        break;
 
-                            KEY_DATA += KEY_TAG_CLOSE;
-                            KEY_DATA += getTimeNow();
-                            KEY_DATA += KEY_VALUE_CLOSE;
-                            break;
+                    case "$utcnow":
 
-                        case "$utcnow":
+                        KEY_DATA += KEY_TAG_CLOSE;
+                        KEY_DATA += getTimeNowUTC();
+                        KEY_DATA += KEY_VALUE_CLOSE;
+                        break;
 
-                            KEY_DATA += KEY_TAG_CLOSE;
-                            KEY_DATA += getTimeNowUTC();
-                            KEY_DATA += KEY_VALUE_CLOSE;
-                            break;
+                    default:
 
-                        default:
+                        String ANSWER_DATA = "";
 
-                            String ANSWER_DATA = "";
-                            for (int iAnswer = 0; iAnswer < mQuestionList.get(iQuestion).
-                                    getNumAnswers();
-                                 iAnswer++) {
-                                /** All possible answer Ids are found, but have to be checked for
-                                 * whether they appear in mAnswerIds or not. If yes, they are
-                                 * printed to output String. Pay attention to forced blank spaces -
-                                 * Id 66666 **/
+                        switch (mEvaluationList.getAnswerTypeFromQuestionId(questionId)) {
+                            case "none":
+                                break;
+                            case "text":
+                                ANSWER_DATA += mEvaluationList.getTextFromQuestionId(
+                                        questionId);
+                                break;
+                            case "id":
+                                ArrayList<String> listOfAnswerIds = mEvaluationList.
+                                        getCheckedAnswerIdsFromQuestionId(questionId);
 
-                                // Collect all checked ids and bundle them
-                                if ((mQuestionList.get(iQuestion).getAnswerIds().
-                                        get(iAnswer) != 66666) &&
-                                        (mAnswerIds.contains(mQuestionList.get(iQuestion).
-                                                getAnswerIds().get(iAnswer)))) {
-
-                                    // Option ids are separated by semicolon
-                                    if (!ANSWER_DATA.isEmpty()) {
-                                        ANSWER_DATA += ";";
+                                if (listOfAnswerIds.size() > 0) {
+                                    for (int iId = 0; iId < listOfAnswerIds.size(); iId++) {
+                                        // Option ids are separated by semicolon
+                                        if (!ANSWER_DATA.isEmpty()) {
+                                            ANSWER_DATA += ";";
+                                        }
+                                        ANSWER_DATA += listOfAnswerIds.get(iId);
                                     }
-                                    ANSWER_DATA += mQuestionList.get(iQuestion).
-                                            getAnswerIds().get(iAnswer).toString();
                                 }
-                            }
-                            // Add bundle of checked ids to record
-                            if (!ANSWER_DATA.isEmpty()) {
-                                KEY_DATA += " ";
-                                KEY_DATA += "option_ids=\"";
-                                KEY_DATA += ANSWER_DATA;
-                                KEY_DATA += "\" ";
-                            }
-                            KEY_DATA += KEY_TAG_CLOSE_SOFT;
-                            break;
-                    }
+/*
+                                        for (int iAnswer = 0; iAnswer < mQuestionList.get(iQuestion).
+                                                getNumAnswers();
+                                             iAnswer++) {
+                                            // Collect all checked ids and bundle them
+                                            if ((mQuestionList.get(iQuestion).getAnswerIds().
+                                                    get(iAnswer) != 66666) &&
+                                                    (mEvaluationList.containsAnswerId(mQuestionList.get(iQuestion).
+                                                            getAnswerIds().get(iAnswer)))) {
+
+                                                // Option ids are separated by semicolon
+                                                if (!ANSWER_DATA.isEmpty()) {
+                                                    ANSWER_DATA += ";";
+                                                }
+                                                ANSWER_DATA += mQuestionList.get(iQuestion).
+                                                        getAnswerIds().get(iAnswer).toString();
+                                            }
+                                        }*/
+                                break;
+                            case "value":
+                                ArrayList<String> listOfAnswerValues = mEvaluationList.
+                                        getCheckedAnswerValuesFromQuestionId(questionId);
+
+                                if (listOfAnswerValues.size() > 0) {
+                                    for (int iId = 0; iId < listOfAnswerValues.size(); iId++) {
+                                        // Option ids are separated by semicolon
+                                        if (!ANSWER_DATA.isEmpty()) {
+                                            ANSWER_DATA += ";";
+                                        }
+                                        ANSWER_DATA += listOfAnswerValues.get(iId);
+                                    }
+                                }
+                                break;
+
+
+                        }
+                        // Add bundle of checked ids to record
+                        if (!ANSWER_DATA.isEmpty()) {
+                            KEY_DATA += " ";
+                            KEY_DATA += "option_ids=\"";
+                            KEY_DATA += ANSWER_DATA;
+                            KEY_DATA += "\" ";
+                        }
+                        KEY_DATA += KEY_TAG_CLOSE_SOFT;
+                        break;
                 }
+                //}
             }
         }
         KEY_DATA += KEY_RECORD_CLOSE;
@@ -252,10 +294,10 @@ public class MetaData extends AppCompatActivity {
     }
 
     private String getTextFromId(int id) {
-        for (int iText = 0; iText <mAnswerTexts.size(); iText++){
-            if (mAnswerTexts.get(iText).getId() == id) {
-                return mAnswerTexts.get(iText).getText();
-            }
+        try {
+            return mEvaluationList.getTextFromQuestionId(id);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return null;
     }

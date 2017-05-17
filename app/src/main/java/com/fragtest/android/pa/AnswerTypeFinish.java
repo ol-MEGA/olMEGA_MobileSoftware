@@ -1,6 +1,5 @@
 package com.fragtest.android.pa;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
@@ -19,14 +18,13 @@ public class AnswerTypeFinish extends AppCompatActivity {
     public Button mAnswerButton;
     public LinearLayout.LayoutParams answerParams;
     public AnswerLayout parent;
-    private int mAnswerId;
     private Context mContext;
-    private FileIO fileIO;
-    private EvaluationList mEvaluationList;
+    private Questionnaire mQuestionnaire;
 
-    public AnswerTypeFinish(Context context, AnswerLayout qParent) {
+    public AnswerTypeFinish(Context context, Questionnaire questionnaire, AnswerLayout qParent) {
 
         mContext = context;
+        mQuestionnaire = questionnaire;
         parent = qParent;
 
         mAnswerButton = new Button(context);
@@ -56,18 +54,17 @@ public class AnswerTypeFinish extends AppCompatActivity {
         return true;
     }
 
-    public void addClickListener(final Context context, final MetaData metaData,
-                                 EvaluationList evaluationList) {
-        mEvaluationList = evaluationList;
+    public void addClickListener() {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
+                mQuestionnaire.finaliseEvaluation();
                 //metaData.finalise(mEvaluationList);
-                fileIO = new FileIO();
-                fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
+                //fileIO = new FileIO();
+                //fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
                 //Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();
-                ((Activity)context).finish();
+                //((Activity)context).finish();
 
             }
         });

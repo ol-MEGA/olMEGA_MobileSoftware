@@ -105,8 +105,18 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         return true;
     }
 
+    //Check whether List contains question Id
+    public boolean containsQuestionId(int id) {
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getQuestionId() == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //Check whether List contains answer Id
-    public boolean containsId(int id) {
+    public boolean containsAnswerId(int id) {
         for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
             if (mEvaluationList.get(iItem).getAnswerType().equals("Id") &&
                     Integer.parseInt(mEvaluationList.get(iItem).getValue()) == id) {
@@ -115,4 +125,48 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         }
         return false;
     }
+
+    public String getTextFromQuestionId(int id) {
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getAnswerType().equals("text") &&
+                    mEvaluationList.get(iItem).getQuestionId() == id) {
+                return mEvaluationList.get(iItem).getValue();
+            }
+        }
+        return null;
+    }
+
+    public String getAnswerTypeFromQuestionId(int id) {
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getQuestionId() == id) {
+                Log.e(LOG_STRING, mEvaluationList.get(iItem).getAnswerType());
+                return mEvaluationList.get(iItem).getAnswerType();
+            }
+        }
+        return "none";
+    }
+
+    public ArrayList<String> getCheckedAnswerIdsFromQuestionId(int id) {
+        ArrayList<String> listOfAnswerIds = new ArrayList<>();
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getQuestionId() == id &&
+                    mEvaluationList.get(iItem).getAnswerType() == "id") {
+                listOfAnswerIds.add(mEvaluationList.get(iItem).getValue());
+            }
+        }
+        return listOfAnswerIds;
+    }
+
+    public ArrayList<String> getCheckedAnswerValuesFromQuestionId(int id) {
+        ArrayList<String> listOfAnswerValues = new ArrayList<>();
+        for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+            if (mEvaluationList.get(iItem).getQuestionId() == id &&
+                    mEvaluationList.get(iItem).getAnswerType() == "value") {
+                listOfAnswerValues.add(mEvaluationList.get(iItem).getValue());
+            }
+        }
+        return listOfAnswerValues;
+    }
+
+
 }

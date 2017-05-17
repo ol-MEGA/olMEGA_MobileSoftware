@@ -46,14 +46,25 @@ public class FileIO {
         BufferedReader buffReader = new BufferedReader(inputReader);
         String line;
         StringBuilder text = new StringBuilder();
+        boolean isComment = false;
         try {
             while ((line = buffReader.readLine()) != null) {
-                if (!line.trim().isEmpty() && !line.trim().startsWith("//")) {
+
+                if (line.trim().startsWith("/*")) {
+                    isComment = true;
+                }
+
+                if (!line.trim().isEmpty() && !line.trim().startsWith("//") && !isComment) {
                     text.append(line);
                     text.append('\n');
                 } else {
                     Log.i(FILE_IO,"Dropping line: "+line.trim());
                 }
+
+                if (line.trim().endsWith("*/")) {
+                    isComment = false;
+                }
+
             }
         } catch (IOException e) {
             return null;
@@ -74,15 +85,26 @@ public class FileIO {
             BufferedReader buffReader = new BufferedReader(inputReader);
             String line;
             StringBuilder text = new StringBuilder();
+            boolean isComment = false;
 
             try {
                 while ((line = buffReader.readLine()) != null) {
-                    if (!line.trim().isEmpty() && !line.trim().startsWith("//")) {
+
+                    if (line.trim().startsWith("/*")) {
+                        isComment = true;
+                    }
+
+                    if (!line.trim().isEmpty() && !line.trim().startsWith("//") && isComment) {
                         text.append(line);
                         text.append('\n');
                     } else {
                         Log.i(FILE_IO,"Dropping line: "+line.trim());
                     }
+
+                    if (line.trim().endsWith("*/")) {
+                        isComment = false;
+                    }
+
                 }
             } catch (IOException e) {
                 return null;

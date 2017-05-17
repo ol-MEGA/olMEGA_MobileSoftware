@@ -125,18 +125,13 @@ public class Question extends AppCompatActivity {
         boolean isDefault = false;
 
         for (int iA = 1; iA < stringArray.length; iA++) {
-            //Log.i(LOG_STRING, "" + iA + " " + stringArray[iA]);
-
 
             if (stringArray[iA].contains("option")) {
-                //Log.e(LOG_STRING,"option");
                 isDefault = false;
                 if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
-                    //Log.e(LOG_STRING,stringArray[iA].split("id=\"|\"")[1]);
                     answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
                 }
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
-                    //Log.e(LOG_STRING, stringArray[iA].split("<text>|</text>")[1]);
                     answerString = stringArray[iA].split("<text>|</text>")[1];
                 }
 
@@ -149,54 +144,18 @@ public class Question extends AppCompatActivity {
 
             if (stringArray[iA].contains("default")) {
                 isDefault = true;
-                //Log.e(LOG_STRING,"default");
                 if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
-                    //Log.e(LOG_STRING,stringArray[iA].split("id=\"|\"")[1]);
                     answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
                 }
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
-                    //Log.e(LOG_STRING, stringArray[iA].split("<text>|</text>")[1]);
                     answerString = stringArray[iA].split("<text>|</text>")[1];
                 }
-
                 listAnswers.add(new Answer(
                         answerString,
                         answerId,
                         isDefault
                 ));
             }
-/*
-            if (stringArray[iA].contains("option")) {
-                if (stringArray[iA].contains("id=")) {
-                    listAnswers.add(new Answer(
-                            stringArray[iA + 1].split("text>")[1],
-                            Integer.parseInt(stringArray[iA].split("id=\"|\"")[1])
-                    ));
-                } else {
-                    listAnswers.add(new Answer(
-                            stringArray[iA + 1].split("text>")[1],
-                            11111
-                    ));
-                }
-
-            } else if (stringArray[iA].contains("default")) {
-                if (stringArray[iA].contains("id=")) {
-                    if (stringArray[iA].contains("id=")) {
-                        listAnswers.add(new Answer(
-                                stringArray[iA + 1].split("text>")[1],
-                                Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]),
-                                true
-                        ));
-                    }
-                } else {
-                    listAnswers.add(new Answer(
-                            stringArray[iA + 1].split("text>")[1],
-                            11111,
-                            true
-                    ));
-                }
-            }
-            */
         }
         return listAnswers;
     }

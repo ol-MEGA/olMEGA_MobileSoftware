@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
@@ -19,8 +20,7 @@ import java.util.List;
 public class Questionnaire {
 
     private static String LOG_STRING = "Questionnaire";
-    // Accumulator for ids checked in by given answers
-    //public AnswerIds mAnswerIds;
+    // Accumulator for ids, values and texts gathered from user input
     public EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
@@ -30,10 +30,6 @@ public class Questionnaire {
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
     private Context mContext;
-    // Accumulator for Text and id of text format answers
-    // private AnswerTexts mAnswerTexts;
-    // Accumulator for question id and metric input
-    // private AnswerValues mAnswerValues;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MetaData mMetaData;
@@ -50,15 +46,6 @@ public class Questionnaire {
         mEvaluationList = new EvaluationList();
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
-
-        // Contains all ids of checked elements
-        // mAnswerIds = new AnswerIds();
-        // Contains all contents of text answers
-        // mAnswerTexts = new AnswerTexts();
-        // Contains all metric answers
-        // mAnswerValues = new AnswerValues();
-
-        //mEvaluationList = new EvaluationList();
 
         if (isDebug) {
             Log.i(LOG_STRING, "Constructor successful.");
@@ -93,7 +80,7 @@ public class Questionnaire {
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), question.getFilterCondition(), position,
                 question.isHidden(), question.getAnswerIds()));
-        mMetaData.addQuestion(question);
+       mMetaData.addQuestion(question);
 
         return question;
     }
@@ -152,6 +139,9 @@ public class Questionnaire {
         final AnswerTypeText answerTypeText = new AnswerTypeText(
                 mContext, this, answerLayout, question.getQuestionId());
 
+        final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
+                mContext, this, answerLayout);
+
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
         // List carrying all Answers and Answer Ids
@@ -185,6 +175,7 @@ public class Questionnaire {
                     }
                     case "finish": {
                         isFinish = true;
+                        answerTypeFinish.addAnswer();
                         break;
                     }
                     case "sliderFix": {
@@ -242,9 +233,7 @@ public class Questionnaire {
         }
 
         if (isFinish) {
-            AnswerTypeFinish answer = new AnswerTypeFinish(mContext, answerLayout);
-            answer.addClickListener(mContext, mMetaData, mEvaluationList);
-            answer.addAnswer();
+            answerTypeFinish.addClickListener();
         }
 
         return answerContainer;
@@ -280,6 +269,13 @@ public class Questionnaire {
         return true;
     }
 
+    public boolean finaliseEvaluation() {
+        mMetaData.finalise(mEvaluationList);
+        mFileIO.saveDataToFile(mContext, mMetaData.getFileName(), mMetaData.getData());
+        Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();
+        ((Activity) mContext).finish();
+        return true;
+    }
 
 
 
@@ -313,7 +309,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && qI.getCondition()                                // which MUST exist
-                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
+                    && mEvaluationList.containsAnswerId(qI.getFilterId())     // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -321,7 +317,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && qI.getCondition()                                // which MUST exist
-                    && !mEvaluationList.containsId(qI.getFilterId())    // does NOT exist
+                    && !mEvaluationList.containsAnswerId(qI.getFilterId())    // does NOT exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
                 removeQuestion(iPos);
@@ -329,7 +325,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && !qI.getCondition()                               // which MUST NOT exist
-                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
+                    && mEvaluationList.containsAnswerId(qI.getFilterId())     // DOES exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);
@@ -337,7 +333,7 @@ public class Questionnaire {
 
             if ((qI.getFilterId() != -1)                                // Specific Filter Id
                     && (!qI.getCondition())                             // which MUST NOT exist
-                    && mEvaluationList.containsId(qI.getFilterId())     // DOES exist
+                    && mEvaluationList.containsAnswerId(qI.getFilterId())     // DOES exist
                     && qI.isActive())                                   // on an ACTIVE Layout
             {
                 removeQuestion(iPos);
@@ -345,7 +341,7 @@ public class Questionnaire {
 
             if (qI.getFilterId() != -1                                  // Specific Filter Id
                     && !qI.getCondition()                               // which MUST NOT exist
-                    && !mEvaluationList.containsId(qI.getFilterId())    // DOES NOT exist
+                    && !mEvaluationList.containsAnswerId(qI.getFilterId())    // DOES NOT exist
                     && !qI.isActive())                                  // on an INACTIVE Layout
             {
                 addQuestion(iPos);

@@ -6,34 +6,6 @@
             <text>Hörsituation</text>
         </title>
         <question
-            id="10809"
-            type="sliderFix">
-            <label>
-                <text>Wie fühlen Sie sich?</text>
-            </label>
-            <option id="414309">
-                <text>joa auch</text>
-            </option>
-            <option id="414310">
-                <text>geht</text>
-            </option>
-            <option>
-                <text>supi</text>
-            </option>
-            <option id="414312">
-                <text>joa auch</text>
-            </option>
-            <option id="414313">
-                <text>geht</text>
-            </option>
-            <option id="414314">
-                <text>eher nicht so</text>
-            </option>
-            <default id="414315">
-                <text>leck mich</text>
-            </default>
-        </question>
-        <question
             hidden="true"
             id="10810"
             mandatory="true"
@@ -95,78 +67,51 @@
                 <text>leck mich</text>
             </default>
         </question>
-        //
-        <question
-            id="10813"
-            type="emoji">
-            //
+        /*
+        <question id="10813" type="emoji">
             <label>
-                //
                 <text>Wie fühlen Sie sich?</text>
-                //
-            </label>
-            //
+                </label>
             <option id="214311">
-                //
                 <text>emoji_happy2</text>
-                //
-            </option>
-            //
+                </option>
             <default id="214312">
-                //
                 <text>emoji_happy1</text>
-                //
-            </default>
-            //
+                </default>
             <option id="214313">
-                //
                 <text>emoji_neutral</text>
-                //
-            </option>
-            //
+                </option>
             <option id="214314">
-                //
                 <text>emoji_sad1</text>
-                //
-            </option>
-            //
+                </option>
             <option id="214315">
-                //
                 <text>emoji_sad2</text>
-                //
-            </option>
-            //
-        </question>
-        <question id="10801" type="sliderFree">
+                </option>
+            </question>*/
+        <question id="10891" type="sliderFree">
             <label>
-                <text>Bitte wählen Sie eine Kategorie</text>
+                <text>Wie fühlen Sie sich?</text>
             </label>
-            <option id="214300">
-                <text>Watt?</text>
+            <option id="414399">
+                <text>joa auch</text>
             </option>
-            <option id="214299">
-                <text>Soll ich lachen?</text>
+            <option id="414390">
+                <text>geht</text>
             </option>
-            <option id="214301">
-                <text>wenig</text>
+            <option id="414391">
+                <text>supi</text>
             </option>
-            <option id="214321">
-                <text>schon recht viel</text>
+            <option id="414392">
+                <text>joa auch</text>
             </option>
-            <option id="214331">
-                <text>genug</text>
+            <option id="414393">
+                <text>geht</text>
             </option>
-            <option id="214341">
-                <text>einen drüber</text>
+            <option id="414394">
+                <text>eher nicht so</text>
             </option>
-            <option id="214361">
-                <text>einen drüber</text>
-            </option>
-            <option id="214371">
-                <text>einen drüber</text>
-            </option>
-            <default id="214342">
-                <text>You serious?!?</text>
+            <default id="414395">
+                <text>leck mich</text>
             </default>
         </question>
         <question id="10819" type="radio">
