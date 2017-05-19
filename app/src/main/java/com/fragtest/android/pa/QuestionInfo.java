@@ -13,12 +13,14 @@ public class QuestionInfo {
     private boolean mCondition;
     private boolean mActive;
     private boolean mHidden;
+    private boolean mMandatory;
     private int mPositionInPager;
     private Question mQuestion;
     private List<Integer> mListOfAnswerIds;
 
     public QuestionInfo(Question question, int id, int filterId,
-                        boolean condition, int position, boolean hidden, List<Integer> answerIds) {
+                        boolean condition, int position, boolean hidden, boolean mandatory,
+                        List<Integer> answerIds) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
@@ -26,6 +28,7 @@ public class QuestionInfo {
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
+        mMandatory = mandatory;
         mListOfAnswerIds = answerIds;
     }
 
@@ -36,6 +39,8 @@ public class QuestionInfo {
     public int getFilterId() { return mFilterId; }
 
     public boolean getCondition() { return mCondition; }
+
+    public boolean isMandatory() { return mMandatory; }
 
     public void setInactive() { mActive = false; }
 

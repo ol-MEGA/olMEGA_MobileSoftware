@@ -92,7 +92,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             if (mListOfDefaults.contains(currentId)) {
                 checkBox.setChecked(true);
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
-                //      mEvaluationList.add(mQuestionId, currentId);
             }
 
             checkBox.setOnClickListener(new View.OnClickListener() {
@@ -100,10 +99,8 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 public void onClick(View v) {
 
                     if (checkBox.isChecked()) {
-                        //   mEvaluationList.add(mQuestionId, currentId);
                         mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
                     } else {
-                        //     mEvaluationList.removeAnswerId(currentId);
                         mQuestionnaire.removeIdFromEvaluationList(currentId);
                     }
                 }

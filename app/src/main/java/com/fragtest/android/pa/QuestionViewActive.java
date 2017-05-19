@@ -10,20 +10,23 @@ import java.util.List;
 
 public class QuestionViewActive implements Comparable<QuestionViewActive> {
 
-    View mView;
-    Integer mId;
-    Integer mPositionInRaw;
-    List<Answer> mListOfAnswerIds;
+    private View mView;
+    private Integer mId;
+    private Integer mPositionInRaw;
+    private boolean mMandatory;
+    private List<Answer> mListOfAnswerIds;
 
     @Override
     public int compareTo(QuestionViewActive questionViewActive) {
         return this.mPositionInRaw.compareTo(questionViewActive.getPositionInRaw());
     }
 
-    public QuestionViewActive (View view, int id, int positionInRaw, List<Answer> listOfAnswerIds) {
+    public QuestionViewActive (View view, int id, int positionInRaw, boolean mandatory,
+                               List<Answer> listOfAnswerIds) {
         mView = view;
         mId = id;
         mPositionInRaw = positionInRaw;
+        mMandatory = mandatory;
         mListOfAnswerIds = listOfAnswerIds;
     }
 
@@ -31,4 +34,5 @@ public class QuestionViewActive implements Comparable<QuestionViewActive> {
     public int getId() { return mId; }
     public List<Answer> getListOfAnswerIds() { return mListOfAnswerIds; }
     public int getPositionInRaw() { return mPositionInRaw; }
+    public boolean isMandatory() { return mMandatory; }
 }

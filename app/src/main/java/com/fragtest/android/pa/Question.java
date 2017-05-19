@@ -23,6 +23,8 @@ public class Question extends AppCompatActivity {
     private int mFilterId;
     private boolean mHidden;
     private boolean mFilterCondition;
+    private boolean mMandatory;
+    private boolean isDebug = false;
     private List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
     private List<Integer> mListOfAnswerIds = new ArrayList<>();
 
@@ -31,14 +33,19 @@ public class Question extends AppCompatActivity {
 
         mQuestionBlueprint = sQuestionBlueprint;
 
+        if (isDebug) {
+            Log.i(LOG_STRING, "=====================================================");
+        }
+
         if (isFinish()) {
             mQuestionId = 99999;
             mQuestionText = extractQuestionTextFinish();
-            mFilterId = -1;
+            mMandatory = true;
+            mFilterId = -255;
             mFilterCondition = true;
             mTypeAnswer = "finish";
             mNumAnswers = 1;
-            mHidden = extractHidden();
+            mHidden = false;
             mAnswers = new ArrayList<>();
             mAnswers.add(new Answer("Abschließen", 99999));
 
@@ -53,14 +60,17 @@ public class Question extends AppCompatActivity {
             mFilterCondition = extractFilterCondition();
             // Obtain Answer Type (e.g. Radio, Button, Slider,...)
             mTypeAnswer = extractTypeAnswers();
+            // Obtain information whether question is mandatory
+            mMandatory = extractMandatory();
 
-            if (!mTypeAnswer.equals("text")) {
-                // Create List of Answers
-                mAnswers = extractAnswerList();
-            } else {
+            // Create List of Answers
+            mAnswers = extractAnswerList();
+            // In case of real text input no answer text is given
+            if (mAnswers.size() == 0) {
                 mAnswers = new ArrayList<>();
                 mAnswers.add(new Answer("", 33333, false));
             }
+
             // Obtain Number of Answers
             mNumAnswers = extractNumAnswers();
             // Determine whether Element is hidden
@@ -88,7 +98,11 @@ public class Question extends AppCompatActivity {
             return Integer.parseInt(
                     mQuestionBlueprint.split("filter=\"")[1].split("_|\"")[1]);
         }
-        return -1;
+        return -255;
+    }
+
+    private boolean extractMandatory() {
+        return mQuestionBlueprint.contains("mandatory=\"true\"");
     }
 
     private boolean extractFilterCondition() {
@@ -182,6 +196,8 @@ public class Question extends AppCompatActivity {
         return mHidden;
     }
 
+    public boolean isMandatory() { return mMandatory; }
+
     private boolean nonTypicalAnswer(String sTypeAnswer) {
         return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);
     }
@@ -215,7 +231,6 @@ public class Question extends AppCompatActivity {
     }
 
     public List<Integer> getAnswerIds() {
-        Log.e("num",""+mNumAnswers);
         if (mNumAnswers > 0) {
             for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
                 mListOfAnswerIds.add(mAnswers.get(iAnswer).Id);

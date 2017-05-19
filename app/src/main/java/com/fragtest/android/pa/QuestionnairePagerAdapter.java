@@ -3,7 +3,6 @@ package com.fragtest.android.pa;
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -57,10 +56,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mLayout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
             mListOfActiveViews.add(new QuestionViewActive(mLayout, mLayout.getId(),
-                    iQuestion, question.getAnswers()));
+                    iQuestion, question.isMandatory(), question.getAnswers()));
             // Adds the Layout to List storing ALL Views
             mListOfViewsStorage.add(new QuestionViewActive(mLayout, mLayout.getId(),
-                    iQuestion, question.getAnswers()));
+                    iQuestion, question.isMandatory(), question.getAnswers()));
         }
     }
 
@@ -68,7 +67,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup collection, int position) {
         View view = mListOfActiveViews.get(position).getView();
         collection.addView(view);
-        Log.e(CLASS_NAME,"instantiateItem");
         return view;
     }
 
@@ -94,8 +92,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     }
 
-    public int addView(View view, int position, int positionInRaw, List<Answer> listOfAnswers) {
-        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, listOfAnswers));
+    public int addView(View view, int position, int positionInRaw, boolean mandatory,
+                       List<Answer> listOfAnswers) {
+        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, mandatory,
+                listOfAnswers));
         // Sort the Views by their id (implicitly their determined order)
         Collections.sort(mListOfActiveViews);
         return position;
