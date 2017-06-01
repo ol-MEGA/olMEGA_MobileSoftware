@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mobiquest>
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <timed>
+        /*
+        minute hour day - analog to cron
+        1,2,3 * 4,5     - 4:01, 4:02, 4:03, 5:01, 5:02 and 5:03 of every day
+        */10 * *        - every ten minutes
+        */
+        <schedule>*/2 5,6-9,14,21-23 * </schedule>
+        /*
+        random is standard deviation of event timing
+        */
+        <random>0 0 0</random>
+        </timed>
         // Beispielkommentar: Hier wird die Hörsituation erfragt
         <title>
             <text>Hörsituation</text>

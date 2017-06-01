@@ -34,7 +34,6 @@ public class MetaData extends AppCompatActivity {
     private Context mContext;
 
     private EvaluationList mEvaluationList;
-    private AnswerTexts mAnswerTexts;
 
     public MetaData(Context context, String rawInput) {
         mContext = context;
@@ -65,6 +64,8 @@ public class MetaData extends AppCompatActivity {
         KEY_FOOT = mRawInputLines[mRawInputLines.length - 1];
         KEY_QUESTID = generateQuestId();
         FILE_NAME = generateFileName();
+
+
 
         Log.i(LOG_STRING, "Object initialised");
         return true;
