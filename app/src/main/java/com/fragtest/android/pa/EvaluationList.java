@@ -13,7 +13,6 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
 
     private String LOG_STRING = "EvaluationList";
     private List<QuestionIdTypeAndValue> mEvaluationList;
-    private boolean isDebug = false;
 
     public EvaluationList() {
         mEvaluationList = new ArrayList<>();
@@ -62,7 +61,9 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
                 }
             }
         }
-        Log.i(LOG_STRING, "Entries removed: " + nRemoved);
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Entries removed: " + nRemoved);
+        }
         return true;
     }
 
@@ -79,7 +80,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         }
 
@@ -96,7 +97,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Entries removed of Type " + sType + ":" + nRemoved);
         }
         return true;
@@ -113,7 +114,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         }
         return true;
@@ -135,6 +136,22 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             if (mEvaluationList.get(iItem).getAnswerType().equals("id") &&
                     Integer.parseInt(mEvaluationList.get(iItem).getValue()) == id) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    // Check whether List contains member of answer Id List
+    public boolean containsAnswerId(ArrayList<Integer> listOfIds) {
+
+        for (int iId = 0; iId < listOfIds.size(); iId++) {
+
+            for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+                if (mEvaluationList.get(iItem).getAnswerType().equals("id") &&
+                        Integer.parseInt(mEvaluationList.get(iItem).getValue()) ==
+                                listOfIds.get(iId)) {
+                    return true;
+                }
             }
         }
         return false;

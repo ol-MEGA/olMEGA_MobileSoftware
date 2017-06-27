@@ -17,12 +17,12 @@ import java.util.List;
 
 public class QuestionnairePagerAdapter extends PagerAdapter {
 
+    private String LOG_STRING = "Quest..PagerAdapter";
     // Stores all active Views
     public ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
     public ArrayList<QuestionViewActive> mListOfViewsStorage;
     public ViewPager mViewPager;
-    public String CLASS_NAME = "Quest..PagerAdapter";
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
     private LinearLayout mLayout;
@@ -145,19 +145,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     public boolean clearAnswerIds() {
-        if (mQuestionnaire.clearAnswerIds()) {
-            return true;
-        } else {
-            return false;
-        }
+        return mQuestionnaire.clearAnswerIds();
     }
 
     public boolean clearAnswerTexts() {
-        if (mQuestionnaire.clearAnswerTexts()) {
-            return true;
-        } else {
-            return false;
-        }
+        return mQuestionnaire.clearAnswerTexts();
     }
 
 }

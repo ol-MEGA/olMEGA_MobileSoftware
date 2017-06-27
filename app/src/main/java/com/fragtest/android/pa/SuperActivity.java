@@ -3,7 +3,6 @@ package com.fragtest.android.pa;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.support.v7.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
@@ -27,12 +26,12 @@ public class SuperActivity extends AppCompatActivity{
         @Override
         public void run() {
 
-            ((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(durVibrationMilliseconds);
+            //((Vibrator)getSystemService(VIBRATOR_SERVICE)).vibrate(durVibrationMilliseconds);
 
             Intent mainIntent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(mainIntent);
-            finish();
-            timerHandler.postDelayed(this, delayMilliseconds);
+            //finish();
+            //timerHandler.postDelayed(this, delayMilliseconds);
         }
     };
     //private int REQUEST_EXIT = 0;
@@ -46,7 +45,8 @@ public class SuperActivity extends AppCompatActivity{
 
         super.onCreate(savedInstanceState);
 
-
+        Intent mainIntent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(mainIntent);
 
 
         //timerHandler.postDelayed(runnable, 0);

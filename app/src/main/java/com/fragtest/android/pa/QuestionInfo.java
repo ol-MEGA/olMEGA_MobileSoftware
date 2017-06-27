@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
 public class QuestionInfo {
 
     private int mId;
-    private int mFilterId;
+    private ArrayList<Integer> mFilterId;
     private boolean mCondition;
     private boolean mActive;
     private boolean mHidden;
@@ -18,13 +19,13 @@ public class QuestionInfo {
     private Question mQuestion;
     private List<Integer> mListOfAnswerIds;
 
-    public QuestionInfo(Question question, int id, int filterId,
-                        boolean condition, int position, boolean hidden, boolean mandatory,
+    public QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
+                        int position, boolean hidden, boolean mandatory,
                         List<Integer> answerIds) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
-        mCondition = condition;
+        //mCondition = condition;
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
@@ -36,9 +37,37 @@ public class QuestionInfo {
 
     public int getId() { return mId; }
 
-    public int getFilterId() { return mFilterId; }
+    public ArrayList<Integer> getFilterId() { return mFilterId; }
 
-    public boolean getCondition() { return mCondition; }
+    public ArrayList<Integer> getFilterIdPositive() {
+        ArrayList<Integer> listOfPositiveIds = new ArrayList<>();
+        for (int iElement =0; iElement < mFilterId.size(); iElement++) {
+            if (mFilterId.get(iElement) >= 0) {
+                listOfPositiveIds.add(mFilterId.get(iElement));
+            }
+        }
+        return listOfPositiveIds;
+    }
+
+    public ArrayList<Integer> getFilterIdNegative() {
+        ArrayList<Integer> listOfNegativeIds = new ArrayList<>();
+        for (int iElement = 0; iElement < mFilterId.size(); iElement++) {
+            if (mFilterId.get(iElement) < 0) {
+                listOfNegativeIds.add((-1)*mFilterId.get(iElement));
+            }
+        }
+        return listOfNegativeIds;
+    }
+
+    public boolean existsFilterId() {
+        if (mFilterId.size()>0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //public boolean getCondition() { return mCondition; }
 
     public boolean isMandatory() { return mMandatory; }
 

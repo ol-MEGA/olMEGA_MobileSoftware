@@ -68,10 +68,12 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         // mHorizontalContainer is parent to both slider and answer option containers
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
+
+        // ACHTUNG _ MAGIC NUMBER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight,
+                mUsableHeight-140,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(
@@ -113,15 +115,15 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                     1.0f);
 
             textParams.setMargins(
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Left),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Top),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Right),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextBottomMargin_Bottom));
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextBottomMargin_Left),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextBottomMargin_Top),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextBottomMargin_Right),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextBottomMargin_Bottom));
             textMark.setPadding(
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Left),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Top),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Right),
-                    (int) mContext.getResources().getDimension(R.dimen.SliderFixTextPadding_Bottom));
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextPadding_Left),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextPadding_Top),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextPadding_Right),
+                    (int) mContext.getResources().getDimension(R.dimen.SliderTextPadding_Bottom));
             textMark.setText(mListOfAnswers.get(iAnswer).getText());
             textMark.setId(mListOfAnswers.get(iAnswer).getId());
             textMark.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));

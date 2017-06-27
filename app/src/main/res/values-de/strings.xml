@@ -3,6 +3,6 @@
     <string name="buttonTextFinish">Abschließen</string>
     <string name="infoTextRevert">Daten wurden verworfen</string>
     <string name="infoTextSave">Daten wurden gespeichert</string>
-    <string name="hintTextAnswer">Bitte beschreiben Sie kurz.</string>
+    <string name="hintTextAnswer">Bitte hier Text eingeben.</string>
     <string name="buttonTextOkay">OK</string>
 </resources>

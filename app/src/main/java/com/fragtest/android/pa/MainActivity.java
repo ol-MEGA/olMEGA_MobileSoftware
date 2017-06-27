@@ -27,12 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
-        mViewPager.setAdapter(mAdapter);
-        mViewPager.setCurrentItem(0);
-
-        mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+        handleNewPagerAdapter();
 
         mLogo = (TextView) findViewById(R.id.Action_Logo);
         mLogo.setOnClickListener(new View.OnClickListener() {
@@ -67,15 +62,33 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(), R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
-                mAdapter.clearAnswerIds();
+                /*mAdapter.clearAnswerIds();
                 mAdapter.clearAnswerTexts();
-                mViewPager.setCurrentItem(0);
+                mViewPager.setCurrentItem(0);*/
+                handleNewPagerAdapter();
             }
         });
 
+
+
+    }
+
+    private void handleNewPagerAdapter() {
+        mViewPager = null;
+        // Explicitly call garbage collection -> might be critical
+        //System.gc();
+        mViewPager = (ViewPager) findViewById(R.id.viewpager);
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
+        mViewPager.setAdapter(mAdapter);
+        mViewPager.setCurrentItem(0);
+        mViewPager.addOnPageChangeListener(myOnPageChangeListener);
+
         setQuestionnaireProgressBar(0);
         setArrows(0);
+    }
 
+    public int getCurrentItem() {
+        return mViewPager.getCurrentItem();
     }
 
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
@@ -84,12 +97,10 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onPageScrollStateChanged(int state) {
                 }
-
                 @Override
                 public void onPageScrolled(int position,
                                            float positionOffset, int positionOffsetPixels) {
                 }
-
                 @Override
                 public void onPageSelected(int position) {
                     setQuestionnaireProgressBar(position);
@@ -107,6 +118,33 @@ public class MainActivity extends AppCompatActivity {
         View regress = findViewById(R.id.regress);
 
         float nProgress = (float) (position + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
+        float nRegress = (nAccuracy - nProgress);
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
+    }
+
+    // Set the horizontal Indicator at the Top to follow Page Position
+    public void setQuestionnaireProgressBar() {
+
+        mPosition = getCurrentItem();
+        int nAccuracy = 100;
+
+        View progress = findViewById(R.id.progress);
+        View regress = findViewById(R.id.regress);
+
+        float nProgress = (float) (mPosition + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
         float nRegress = (nAccuracy - nProgress);
 
         LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(

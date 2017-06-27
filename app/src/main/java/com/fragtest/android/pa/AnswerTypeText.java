@@ -94,7 +94,7 @@ public class AnswerTypeText extends AppCompatActivity {
                 public void onClick(View v) {
 
                     // Check if no view has focus, then hide soft keyboard:
-                    View view = (View) mAnswerText;
+                    View view = mAnswerText;
                     if (view != null) {
                         InputMethodManager imm = (InputMethodManager) mAnswerText.getContext().
                                 getSystemService(Context.INPUT_METHOD_SERVICE);

@@ -79,7 +79,7 @@
                 <text>leck mich</text>
             </default>
         </question>
-        /*
+
         <question id="10813" type="emoji">
             <label>
                 <text>Wie fühlen Sie sich?</text>
@@ -99,7 +99,7 @@
             <option id="214315">
                 <text>emoji_sad2</text>
                 </option>
-            </question>*/
+            </question>
         <question id="10891" type="sliderFree">
             <label>
                 <text>Wie fühlen Sie sich?</text>

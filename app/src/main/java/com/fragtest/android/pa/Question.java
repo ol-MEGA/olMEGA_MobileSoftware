@@ -20,11 +20,10 @@ public class Question extends AppCompatActivity {
     private List<Answer> mAnswers;
     private int mNumAnswers;
     private int mQuestionId;
-    private int mFilterId;
+    private ArrayList<Integer> mFilterId;
     private boolean mHidden;
-    private boolean mFilterCondition;
+    //private boolean mFilterCondition;
     private boolean mMandatory;
-    private boolean isDebug = false;
     private List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
     private List<Integer> mListOfAnswerIds = new ArrayList<>();
 
@@ -32,8 +31,9 @@ public class Question extends AppCompatActivity {
     public Question(String sQuestionBlueprint) {
 
         mQuestionBlueprint = sQuestionBlueprint;
+        mFilterId = new ArrayList<>();
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "=====================================================");
         }
 
@@ -41,8 +41,8 @@ public class Question extends AppCompatActivity {
             mQuestionId = 99999;
             mQuestionText = extractQuestionTextFinish();
             mMandatory = true;
-            mFilterId = -255;
-            mFilterCondition = true;
+            //mFilterId.add(0);
+            //mFilterCondition = true;
             mTypeAnswer = "finish";
             mNumAnswers = 1;
             mHidden = false;
@@ -57,7 +57,7 @@ public class Question extends AppCompatActivity {
             // Obtain Filter Id
             mFilterId = extractFilterId();
             // Obtain Filter Id Condition ("if true" or "if false")
-            mFilterCondition = extractFilterCondition();
+            //mFilterCondition = extractFilterCondition();
             // Obtain Answer Type (e.g. Radio, Button, Slider,...)
             mTypeAnswer = extractTypeAnswers();
             // Obtain information whether question is mandatory
@@ -93,6 +93,30 @@ public class Question extends AppCompatActivity {
         return (mQuestionBlueprint.split("\\r?\\n")[1].split("<text>|</text>")[1]);
     }
 
+    private ArrayList<Integer> extractFilterId() {
+        ArrayList<Integer> listOfFilterIds = new ArrayList<>();
+
+        if (mQuestionBlueprint.split("filter=\"").length > 1) {
+            String[] arrayTmp = mQuestionBlueprint.split("filter=\"")[1].split(",");
+            for (int iId = 0; iId < arrayTmp.length; iId++) {
+
+                // Negative factor represents EXCLUSION filter
+                int nFactor = 1;
+                if (arrayTmp[iId].startsWith("!")) {
+                    nFactor = -1;
+                }
+                listOfFilterIds.add(Integer.parseInt(
+                        arrayTmp[iId].split("_")[1].split("\"|>")[0]) * nFactor);
+            }
+        }
+        return listOfFilterIds;
+    }
+
+
+
+
+
+/*
     private int extractFilterId() {
         if (mQuestionBlueprint.split("filter=\"").length > 1) {
             return Integer.parseInt(
@@ -100,18 +124,20 @@ public class Question extends AppCompatActivity {
         }
         return -255;
     }
+*/
+/*
+    private boolean extractFilterCondition() {
+
+        return mQuestionBlueprint.split("filter=\"!").length <= 1;
+    }
+*/
+
+
+
+
 
     private boolean extractMandatory() {
         return mQuestionBlueprint.contains("mandatory=\"true\"");
-    }
-
-    private boolean extractFilterCondition() {
-
-        if (mQuestionBlueprint.split("filter=\"!").length > 1) {
-            // '!' before Filter Id means the Question is shown ONLY if Id was not checked
-            return false;
-        }
-        return true;
     }
 
     private int extractNumAnswers() {
@@ -175,21 +201,13 @@ public class Question extends AppCompatActivity {
     }
 
     private boolean extractHidden() {
-        if (mQuestionBlueprint.contains("hidden=\"true\"")) {
-            return true;
-        } else {
-            return false;
-        }
+        return mQuestionBlueprint.contains("hidden=\"true\"");
     }
 
     public boolean isFinish() {
         // String Array carrying introductory Line with Id, Type, Filter
         String[] introductoryLine = mQuestionBlueprint.split("\"");
-        if (introductoryLine.length == 1) {
-            return true;
-        } else {
-            return false;
-        }
+        return introductoryLine.length == 1;
     }
 
     public boolean isHidden() {
@@ -210,13 +228,13 @@ public class Question extends AppCompatActivity {
         return mQuestionId;
     }
 
-    public int getFilterId() {
+    public ArrayList<Integer> getFilterId() {
         return mFilterId;
     }
 
-    public boolean getFilterCondition() {
-        return mFilterCondition;
-    }
+    //public boolean getFilterCondition() {
+    //    return mFilterCondition;
+    //}
 
     public String getTypeAnswer() {
         return mTypeAnswer;

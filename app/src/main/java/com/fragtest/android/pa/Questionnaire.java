@@ -30,6 +30,7 @@ public class Questionnaire {
     private QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
     private Context mContext;
+    private MainActivity mMainActivity;
     // Basic information about all available questions
     private ArrayList<QuestionInfo> mQuestionInfo;
     private MandatoryInfo mMandatoryInfo;
@@ -37,19 +38,18 @@ public class Questionnaire {
     private FileIO mFileIO;
     // Flag: display forced empty vertical spaces
     private boolean acceptBlankSpaces = false;
-    // Use on screen debug output
-    private boolean isDebug = false;
 
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
+        mMainActivity = (MainActivity) mContext;
         mContextQPA = contextQPA;
         mEvaluationList = new EvaluationList();
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Constructor successful.");
         }
     }
@@ -57,7 +57,7 @@ public class Questionnaire {
     public void setUp() {
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
-        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_single);
+        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
         mMetaData = new MetaData(mContext, mRawInput);
         mMetaData.initialise();
@@ -68,7 +68,7 @@ public class Questionnaire {
         mQuestionList = thinOutList(mQuestionList);
         mNumPages = mQuestionList.size();
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Setup was successful.");
         }
     }
@@ -76,7 +76,7 @@ public class Questionnaire {
     // Generate a Layout for Question at desired Position based on String Blueprint
     public Question createQuestion(int position) {
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.e(LOG_STRING, "========================================================");
             Log.e(LOG_STRING, "Creating view for position " + position);
         }
@@ -84,12 +84,12 @@ public class Questionnaire {
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), question.getFilterCondition(), position,
+                question.getFilterId(), position,
                 question.isHidden(), question.isMandatory(), question.getAnswerIds()));
         mMetaData.addQuestion(question);
         mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(), question.isHidden());
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.e(LOG_STRING, "QuestionId: " + question.getQuestionId() + " mandatory: " +
                     question.isMandatory());
         }
@@ -217,7 +217,7 @@ public class Questionnaire {
                     }
                     default: {
                         isRadio = false;
-                        if (isDebug) {
+                        if (BuildConfig.DEBUG) {
                             Log.i(LOG_STRING, "Weird object found. Id: " +
                                     question.getQuestionId());
                         }
@@ -315,7 +315,7 @@ public class Questionnaire {
         // toggles visibility by destroying or creating the views and adding them to the list of
         // views which is handled by QuestionnairePagerAdapter
 
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.i(LOG_STRING, "Checking visibility");
         }
 
@@ -323,7 +323,63 @@ public class Questionnaire {
 
             QuestionInfo qI = mQuestionInfo.get(iPos);
 
-            if (qI.getFilterId() != -255                                    // Specific Filter Id
+            if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && mEvaluationList.containsAnswerId(qI.getFilterIdPositive())   // that MUST exist DOES exist
+                    && !qI.isActive())                                              // on an INACTIVE Layout
+                {
+                    Log.e(LOG_STRING,"Condition 1");
+                    addQuestion(iPos);
+                }
+
+            if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && !mEvaluationList.containsAnswerId(qI.getFilterIdNegative())  // that must NOT exist DOES NOT exist
+                    && !qI.isActive())                                              // on an INACTIVE Layout
+            {
+                Log.e(LOG_STRING,"Condition 5");
+                addQuestion(iPos);
+            }
+
+            if (qI.existsFilterId()                                                 // Specific Filter Id
+                && !mEvaluationList.containsAnswerId(qI.getFilterIdPositive())      // that MUST exist does NOT exist
+                && qI.isActive())                                                   // on an ACTIVE Layout
+                {
+                    Log.e(LOG_STRING,"Condition 2");
+                    removeQuestion(iPos);
+                }
+
+            if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && mEvaluationList.containsAnswerId(qI.getFilterIdNegative())   // that must NOT exist DOES exist
+                    && qI.isActive())                                               // on an ACTIVE Layout
+                {
+                    Log.e(LOG_STRING,"Condition 4");
+                    removeQuestion(iPos);
+                }
+
+            if (qI.isHidden() && qI.isActive()) {
+                qI.setInactive();
+                removeQuestion(iPos);
+                Log.e(LOG_STRING,"Condition 6");
+            }
+        }
+        return true;
+    }
+
+
+/*
+    public boolean checkVisibility() {
+        // Function checks all available pages on whether their filtering condition has been met and
+        // toggles visibility by destroying or creating the views and adding them to the list of
+        // views which is handled by QuestionnairePagerAdapter
+
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Checking visibility");
+        }
+
+        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
+
+            QuestionInfo qI = mQuestionInfo.get(iPos);
+
+            if (qI.existsFilterId()                                    // Specific Filter Id
                     && qI.getCondition()                                    // which MUST exist
                     && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
                     && !qI.isActive())                                      // on an INACTIVE Layout
@@ -331,7 +387,7 @@ public class Questionnaire {
                 addQuestion(iPos);
             }
 
-            if (qI.getFilterId() != -255                                    // Specific Filter Id
+            if (qI.existsFilterId()                                   // Specific Filter Id
                     && qI.getCondition()                                    // which MUST exist
                     && !mEvaluationList.containsAnswerId(qI.getFilterId())  // does NOT exist
                     && qI.isActive())                                       // on an ACTIVE Layout
@@ -339,7 +395,7 @@ public class Questionnaire {
                 removeQuestion(iPos);
             }
 
-            if (qI.getFilterId() != -255                                    // Specific Filter Id
+            if (qI.existsFilterId()                                 // Specific Filter Id
                     && !qI.getCondition()                                   // which MUST NOT exist
                     && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
                     && !qI.isActive())                                      // on an INACTIVE Layout
@@ -347,7 +403,7 @@ public class Questionnaire {
                 addQuestion(iPos);
             }
 
-            if ((qI.getFilterId() != -255)                                  // Specific Filter Id
+            if (qI.existsFilterId()                                 // Specific Filter Id
                     && (!qI.getCondition())                                 // which MUST NOT exist
                     && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
                     && qI.isActive())                                       // on an ACTIVE Layout
@@ -355,7 +411,7 @@ public class Questionnaire {
                 removeQuestion(iPos);
             }
 
-            if (qI.getFilterId() != -255                                    // Specific Filter Id
+            if (qI.existsFilterId()                                   // Specific Filter Id
                     && !qI.getCondition()                                   // which MUST NOT exist
                     && !mEvaluationList.containsAnswerId(qI.getFilterId())  // DOES NOT exist
                     && !qI.isActive())                                      // on an INACTIVE Layout
@@ -370,6 +426,7 @@ public class Questionnaire {
         }
         return true;
     }
+    */
 
     private boolean addQuestion(int iPos) {
         // Adds the question to the displayed list
@@ -382,6 +439,7 @@ public class Questionnaire {
                 mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
+        mMainActivity.setQuestionnaireProgressBar();
         return true;
     }
 
@@ -392,7 +450,7 @@ public class Questionnaire {
         if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
                 mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
 
-            if (isDebug) {
+            if (BuildConfig.DEBUG) {
                 Log.i(LOG_STRING, "Making invisible: " + mQuestionInfo.get(iPos).getId());
             }
         }
@@ -400,9 +458,12 @@ public class Questionnaire {
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
 
-            if (isDebug) {
+            if (BuildConfig.DEBUG) {
                 Log.i(LOG_STRING, "Removing: " + mQuestionInfo.get(iPos).getId());
             }
+
+
+            /** ER SAGT REMOVE ABER ER REMOVED ES NICHT!!!!!!!      **/
 
             mQuestionInfo.get(iPos).setInactive();
             mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
@@ -426,6 +487,7 @@ public class Questionnaire {
         mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
+        mMainActivity.setQuestionnaireProgressBar();
 
         return true;
     }
@@ -463,7 +525,6 @@ public class Questionnaire {
 
     public boolean clearAnswerTexts() {
         // Clears all entered answer Texts in mEvaluationList
-
         mEvaluationList.removeAllOfType("text");
         return true;
     }

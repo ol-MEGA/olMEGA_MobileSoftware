@@ -3,25 +3,25 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="SliderFixTextTopMargin_Left">20px</dimen>
-    <dimen name="SliderFixTextTopMargin_Top">-20px</dimen>
-    <dimen name="SliderFixTextTopMargin_Right">0px</dimen>
-    <dimen name="SliderFixTextTopMargin_Bottom">20px</dimen>
+    <dimen name="SliderTextTopMargin_Left">20px</dimen>
+    <dimen name="SliderTextTopMargin_Top">-20px</dimen>
+    <dimen name="SliderTextTopMargin_Right">0px</dimen>
+    <dimen name="SliderTextTopMargin_Bottom">20px</dimen>
 
-    <dimen name="SliderFixTextMargin_Left">20px</dimen>
-    <dimen name="SliderFixTextMargin_Top">20px</dimen>
-    <dimen name="SliderFixTextMargin_Right">0px</dimen>
-    <dimen name="SliderFixTextMargin_Bottom">0px</dimen>
+    <dimen name="SliderTextMargin_Left">20px</dimen>
+    <dimen name="SliderTextMargin_Top">20px</dimen>
+    <dimen name="SliderTextMargin_Right">0px</dimen>
+    <dimen name="SliderTextMargin_Bottom">0px</dimen>
 
-    <dimen name="SliderFixTextBottomMargin_Left">20px</dimen>
-    <dimen name="SliderFixTextBottomMargin_Top">0px</dimen>
-    <dimen name="SliderFixTextBottomMargin_Right">0px</dimen>
-    <dimen name="SliderFixTextBottomMargin_Bottom">0px</dimen>
+    <dimen name="SliderTextBottomMargin_Left">20px</dimen>
+    <dimen name="SliderTextBottomMargin_Top">0px</dimen>
+    <dimen name="SliderTextBottomMargin_Right">0px</dimen>
+    <dimen name="SliderTextBottomMargin_Bottom">0px</dimen>
 
-    <dimen name="SliderFixTextPadding_Left">0px</dimen>
-    <dimen name="SliderFixTextPadding_Top">0px</dimen>
-    <dimen name="SliderFixTextPadding_Right">0px</dimen>
-    <dimen name="SliderFixTextPadding_Bottom">0px</dimen>
+    <dimen name="SliderTextPadding_Left">80px</dimen>
+    <dimen name="SliderTextPadding_Top">0px</dimen>
+    <dimen name="SliderTextPadding_Right">0px</dimen>
+    <dimen name="SliderTextPadding_Bottom">0px</dimen>
 
     <dimen name="answerFinishMargin_Left">0px</dimen>
     <dimen name="answerFinishMargin_Top">48px</dimen>
