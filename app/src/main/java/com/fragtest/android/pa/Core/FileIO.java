@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Core;
 
 import android.content.Context;
 import android.os.Environment;

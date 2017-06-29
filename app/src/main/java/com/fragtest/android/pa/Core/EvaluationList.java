@@ -1,8 +1,12 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Core;
 
 import android.util.Log;
 
+import com.fragtest.android.pa.BuildConfig;
+import com.fragtest.android.pa.DataTypes.QuestionIdTypeAndValue;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -72,8 +76,8 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         int nRemoved = 0;
         for (int iAnswer = mEvaluationList.size() - 1; iAnswer >= 0; iAnswer--) {
             if (mEvaluationList.get(iAnswer).getQuestionId() == QuestionId) {
-                Log.i(LOG_STRING,"removing: "+mEvaluationList.get(iAnswer).getQuestionId()+" "+
-                        mEvaluationList.get(iAnswer).getAnswerType()+" "+
+                Log.i(LOG_STRING, "removing: " + mEvaluationList.get(iAnswer).getQuestionId() + " " +
+                        mEvaluationList.get(iAnswer).getAnswerType() + " " +
                         mEvaluationList.get(iAnswer).getValue());
                 mEvaluationList.remove(iAnswer);
                 nRemoved++;
@@ -157,6 +161,51 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         return false;
     }
 
+    // Check whether List contains member of answer Id List
+    public boolean containsAtLeastOneAnswerId(ArrayList<Integer> listOfIds) {
+
+        for (int iId = 0; iId < listOfIds.size(); iId++) {
+
+            for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+                if (mEvaluationList.get(iItem).getAnswerType().equals("id") &&
+                        Integer.parseInt(mEvaluationList.get(iItem).getValue()) ==
+                                listOfIds.get(iId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Check whether List contains member of answer Id List
+    public boolean containsAllAnswerIds(ArrayList<Integer> listOfIds) {
+
+        int[] resultArray = new int[listOfIds.size()];
+        Arrays.fill(resultArray, 0);
+
+        for (int iId = 0; iId < listOfIds.size(); iId++) {
+
+            for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+                if (mEvaluationList.get(iItem).getAnswerType().equals("id") &&
+                        Integer.parseInt(mEvaluationList.get(iItem).getValue()) ==
+                                listOfIds.get(iId)) {
+                    resultArray[iId] = 1;
+                }
+            }
+        }
+
+        int resultValue = 1;
+        for (int iRes = 0; iRes < listOfIds.size(); iRes++) {
+            resultValue *= resultArray[iRes];
+        }
+
+        if (resultValue == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     public String getTextFromQuestionId(int id) {
         for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
             if (mEvaluationList.get(iItem).getAnswerType().equals("text") &&
@@ -208,8 +257,12 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         return "none";
     }
 
-    public int size() { return mEvaluationList.size(); }
+    public int size() {
+        return mEvaluationList.size();
+    }
 
-    public QuestionIdTypeAndValue get(int item) { return mEvaluationList.get(item); }
+    public QuestionIdTypeAndValue get(int item) {
+        return mEvaluationList.get(item);
+    }
 
 }

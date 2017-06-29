@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.util.Log;
 

@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.DataTypes;
 
 import static android.R.attr.id;
 

@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -9,6 +9,9 @@ import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+
+import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +70,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
             int colors[] = {ContextCompat.getColor(mContext, R.color.JadeRed),
                     ContextCompat.getColor(mContext, R.color.JadeRed)};
             CompoundButtonCompat.setButtonTintList(button, new ColorStateList(states, colors));
-            button.setMinHeight(Units.getRadioMinHeight());
+            button.setMinHeight((int) mContext.getResources().getDimension(R.dimen.radioMinHeight));
             button.setPadding(24, 24, 24, 24);
 
             if (iAnswer == mDefault) {

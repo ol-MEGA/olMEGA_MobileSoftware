@@ -1,6 +1,7 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.provider.Settings.Secure;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
@@ -11,7 +12,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.provider.Settings.Secure;
+
+import com.fragtest.android.pa.R;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -52,7 +54,7 @@ public class AnswerTypeText extends AppCompatActivity {
         if (!isSystem) {
             mAnswerText = new EditText(mContext);
             mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
-            mAnswerText.setTextSize(Units.getTextSizeAnswer());
+            mAnswerText.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             mAnswerText.setGravity(Gravity.START);
             mAnswerText.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             mAnswerText.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));

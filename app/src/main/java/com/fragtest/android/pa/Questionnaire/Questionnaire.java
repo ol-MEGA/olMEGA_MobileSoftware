@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,6 +7,14 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.fragtest.android.pa.BuildConfig;
+import com.fragtest.android.pa.Core.EvaluationList;
+import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.Core.MandatoryInfo;
+import com.fragtest.android.pa.Core.MetaData;
+import com.fragtest.android.pa.MainActivity;
+import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,8 +98,11 @@ public class Questionnaire {
         mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(), question.isHidden());
 
         if (BuildConfig.DEBUG) {
-            Log.e(LOG_STRING, "QuestionId: " + question.getQuestionId() + " mandatory: " +
+            Log.i(LOG_STRING, "QuestionId: " + question.getQuestionId() + " mandatory: " +
                     question.isMandatory());
+            for (int iId = 0; iId < question.getFilterId().size(); iId++) {
+                Log.i(LOG_STRING, "FilterId: " + question.getFilterId().get(iId));
+            }
         }
 
         return question;
@@ -323,46 +334,127 @@ public class Questionnaire {
 
             QuestionInfo qI = mQuestionInfo.get(iPos);
 
-            if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && mEvaluationList.containsAnswerId(qI.getFilterIdPositive())   // that MUST exist DOES exist
-                    && !qI.isActive())                                              // on an INACTIVE Layout
-                {
-                    Log.e(LOG_STRING,"Condition 1");
+            if (qI.isActive()) {                                                                    // View is active but might be obsolete
+
+                if (qI.isHidden()) {                                                                // View has been declared invisible
+                    removeQuestion(iPos);
+                } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {       // Not ALL MUST EXIST ids are INCLUDED
+                    removeQuestion(iPos);
+                } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // at least one MUST NOT EXIST id IS INCLUDED
+                    removeQuestion(iPos);
+                }
+
+            } else {                                                                                // View is inactive but should possibly be active
+
+                if (!qI.isHidden()                                                                  // View has not been declared invisible
+                        && !mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())    // No MUST NOT EXIST id is  INCLUDED
+                        && mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {        // MUST EXIST ids are ALL INCLUDED
                     addQuestion(iPos);
                 }
-
-            if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && !mEvaluationList.containsAnswerId(qI.getFilterIdNegative())  // that must NOT exist DOES NOT exist
-                    && !qI.isActive())                                              // on an INACTIVE Layout
-            {
-                Log.e(LOG_STRING,"Condition 5");
-                addQuestion(iPos);
-            }
-
-            if (qI.existsFilterId()                                                 // Specific Filter Id
-                && !mEvaluationList.containsAnswerId(qI.getFilterIdPositive())      // that MUST exist does NOT exist
-                && qI.isActive())                                                   // on an ACTIVE Layout
-                {
-                    Log.e(LOG_STRING,"Condition 2");
-                    removeQuestion(iPos);
-                }
-
-            if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && mEvaluationList.containsAnswerId(qI.getFilterIdNegative())   // that must NOT exist DOES exist
-                    && qI.isActive())                                               // on an ACTIVE Layout
-                {
-                    Log.e(LOG_STRING,"Condition 4");
-                    removeQuestion(iPos);
-                }
-
-            if (qI.isHidden() && qI.isActive()) {
-                qI.setInactive();
-                removeQuestion(iPos);
-                Log.e(LOG_STRING,"Condition 6");
             }
         }
         return true;
     }
+
+    private boolean addQuestion(int iPos) {
+        // Adds the question to the displayed list
+        mQuestionInfo.get(iPos).setActive();
+        // View is fetched from Storage List and added to Active List
+        mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
+                mContextQPA.mListOfActiveViews.size(),                                  // this is were the injection happens
+                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
+                mContextQPA.mListOfViewsStorage.get(iPos).isMandatory(),
+                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
+        renewPositionsInPager();
+        mContextQPA.notifyDataSetChanged();
+        mMainActivity.setQuestionnaireProgressBar();
+        return true;
+    }
+
+    private boolean removeQuestion(int iPos) {
+        // Removes the question from the displayed list
+
+        // If view is mandatory but declared hidden
+        if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
+                mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
+
+            if (BuildConfig.DEBUG) {
+                Log.i(LOG_STRING, "Making invisible: " + mQuestionInfo.get(iPos).getId());
+            }
+        }
+
+        // If view is not mandatory -> can really be removed including entries in mEvaluationList
+        if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
+
+            if (BuildConfig.DEBUG) {
+                Log.i(LOG_STRING, "Removing: " + mQuestionInfo.get(iPos).getId());
+            }
+
+            mQuestionInfo.get(iPos).setInactive();
+            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+            // Remove checked answers on removed questions
+            String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
+            List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
+
+            for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
+                if (sType.equals("checkbox")) {
+                    CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
+                            mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
+                    if (checkBox != null) {
+                        checkBox.setChecked(false);
+                    }
+                }
+            }
+        }
+
+        // Remove View from ActiveList
+        mQuestionInfo.get(iPos).setInactive();
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
+        renewPositionsInPager();
+        mContextQPA.notifyDataSetChanged();
+        mMainActivity.setQuestionnaireProgressBar();
+
+        return true;
+    }
+
+    private void renewPositionsInPager() {
+        // Renews all the positions in information object gathered from actual order
+
+        for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
+            int iId = mQuestionInfo.get(iItem).getId();
+            mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
+        }
+    }
+
+    private List<String> thinOutList(List<String> mQuestionList) {
+        // Removes irrelevant data from question sheet
+
+        for (int iItem = mQuestionList.size() - 1; iItem >= 0; iItem = iItem - 2) {
+            mQuestionList.remove(iItem);
+        }
+        return mQuestionList;
+    }
+
+    private List<String> stringArrayToListString(String[] stringArray) {
+        // Turns an array of Strings into a List of Strings
+        List<String> listString = new ArrayList<>();
+        Collections.addAll(listString, stringArray);
+        return listString;
+    }
+
+    public boolean clearAnswerIds() {
+        mEvaluationList.removeAllOfType("id");
+        checkVisibility();
+        return true;
+    }
+
+    public boolean clearAnswerTexts() {
+        // Clears all entered answer Texts in mEvaluationList
+        mEvaluationList.removeAllOfType("text");
+        return true;
+    }
+
+}
 
 
 /*
@@ -428,104 +520,67 @@ public class Questionnaire {
     }
     */
 
-    private boolean addQuestion(int iPos) {
-        // Adds the question to the displayed list
-        mQuestionInfo.get(iPos).setActive();
-        // View is fetched from Storage List and added to Active List
-        mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
-                mContextQPA.mListOfActiveViews.size(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
-                mContextQPA.mListOfViewsStorage.get(iPos).isMandatory(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
-        renewPositionsInPager();
-        mContextQPA.notifyDataSetChanged();
-        mMainActivity.setQuestionnaireProgressBar();
-        return true;
-    }
 
-    private boolean removeQuestion(int iPos) {
-        // Removes the question from the displayed list
 
-        // If view is mandatory but declared hidden
-        if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
-                mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
+/*
 
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Making invisible: " + mQuestionInfo.get(iPos).getId());
-            }
+
+    public boolean checkVisibility() {
+        // Function checks all available pages on whether their filtering condition has been met and
+        // toggles visibility by destroying or creating the views and adding them to the list of
+        // views which is handled by QuestionnairePagerAdapter
+
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Checking visibility");
         }
 
-        // If view is not mandatory -> can really be removed including entries in mEvaluationList
-        if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
+        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Removing: " + mQuestionInfo.get(iPos).getId());
-            }
+            QuestionInfo qI = mQuestionInfo.get(iPos);
+
+            int iAdd =
 
 
-            /** ER SAGT REMOVE ABER ER REMOVED ES NICHT!!!!!!!      **/
 
-            mQuestionInfo.get(iPos).setInactive();
-            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
-            // Remove checked answers on removed questions
-            String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
-            List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
-
-            for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
-                if (sType.equals("checkbox")) {
-                    CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
-                            mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
-                    if (checkBox != null) {
-                        checkBox.setChecked(false);
+            if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && mEvaluationList.containsAnswerId(qI.getFilterIdPositive())   // that MUST exist DOES exist
+                    && !qI.isActive())                                              // on an INACTIVE Layout
+                    {
+                    Log.e(LOG_STRING, "Condition 1");
+                    addQuestion(iPos);
                     }
-                }
-            }
-        }
 
-        // Remove View from ActiveList
-        mQuestionInfo.get(iPos).setInactive();
-        mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
-        renewPositionsInPager();
-        mContextQPA.notifyDataSetChanged();
-        mMainActivity.setQuestionnaireProgressBar();
+                    if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && !mEvaluationList.containsAnswerId(qI.getFilterIdNegative())  // that must NOT exist DOES NOT exist
+                    && !qI.isActive())                                              // on an INACTIVE Layout
+                    {
+                    Log.e(LOG_STRING, "Condition 5");
+                    addQuestion(iPos);
+                    }
 
-        return true;
-    }
+                    if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && !mEvaluationList.containsAnswerId(qI.getFilterIdPositive())      // that MUST exist does NOT exist
+                    && qI.isActive())                                                   // on an ACTIVE Layout
+                    {
+                    Log.e(LOG_STRING, "Condition 2");
+                    removeQuestion(iPos);
+                    }
 
-    private void renewPositionsInPager() {
-        // Renews all the positions in information object gathered from actual order
+                    if (qI.existsFilterId()                                                 // Specific Filter Id
+                    && mEvaluationList.containsAnswerId(qI.getFilterIdNegative())   // that must NOT exist DOES exist
+                    && qI.isActive())                                               // on an ACTIVE Layout
+                    {
+                    Log.e(LOG_STRING, "Condition 4");
+                    removeQuestion(iPos);
+                    }
 
-        for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
-            int iId = mQuestionInfo.get(iItem).getId();
-            mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
-        }
-    }
+                    if (qI.isHidden() && qI.isActive()) {
+                    qI.setInactive();
+                    removeQuestion(iPos);
+                    Log.e(LOG_STRING, "Condition 6");
+                    }
+                    }
+                    return true;
+                    }
 
-    private List<String> thinOutList(List<String> mQuestionList) {
-        // Removes irrelevant data from question sheet
-
-        for (int iItem = mQuestionList.size() - 1; iItem >= 0; iItem = iItem - 2) {
-            mQuestionList.remove(iItem);
-        }
-        return mQuestionList;
-    }
-
-    private List<String> stringArrayToListString(String[] stringArray) {
-        // Turns an array of Strings into a List of Strings
-        List<String> listString = new ArrayList<>();
-        Collections.addAll(listString, stringArray);
-        return listString;
-    }
-
-    public boolean clearAnswerIds() {
-        mEvaluationList.removeAllOfType("id");
-        checkVisibility();
-        return true;
-    }
-
-    public boolean clearAnswerTexts() {
-        // Clears all entered answer Texts in mEvaluationList
-        mEvaluationList.removeAllOfType("text");
-        return true;
-    }
-}
+ */

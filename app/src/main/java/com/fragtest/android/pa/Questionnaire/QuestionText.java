@@ -1,10 +1,13 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.fragtest.android.pa.R;
+import com.fragtest.android.pa.Core.Units;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -34,7 +37,7 @@ public class QuestionText extends AppCompatActivity {
         questionLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        questionTextView.setMinHeight(Units.getQuestionTextHeight());
+        questionTextView.setMinHeight((int) (context.getResources().getDimension(R.dimen.textSizeQuestion)));
     }
 
     public boolean addQuestion() {
@@ -42,6 +45,5 @@ public class QuestionText extends AppCompatActivity {
                 questionTextView,questionLayoutParams);
         return true;
     }
-
 
 }

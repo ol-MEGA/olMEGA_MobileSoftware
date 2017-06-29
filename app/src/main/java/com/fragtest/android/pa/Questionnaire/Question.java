@@ -1,7 +1,9 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+
+import com.fragtest.android.pa.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,8 +43,6 @@ public class Question extends AppCompatActivity {
             mQuestionId = 99999;
             mQuestionText = extractQuestionTextFinish();
             mMandatory = true;
-            //mFilterId.add(0);
-            //mFilterCondition = true;
             mTypeAnswer = "finish";
             mNumAnswers = 1;
             mHidden = false;

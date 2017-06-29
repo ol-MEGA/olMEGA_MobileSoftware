@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
@@ -6,6 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+
+import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.R;
+import com.fragtest.android.pa.Core.Units;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +81,6 @@ public class AnswerTypeEmoji extends AppCompatActivity {
             String sAnswer = mListOfAnswers.get(iAnswer).getText();
             switch(sAnswer){
                 case "emoji_happy2":
-                    //answerButton.setBackgroundResource(R.drawable.em1of5);
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[0]));
                     answerButton.setTag(0);
                     break;
@@ -103,9 +106,6 @@ public class AnswerTypeEmoji extends AppCompatActivity {
 
             if (iAnswer == mDefault) {
                 setChecked(true, answerButton);
-                //    mEvaluationList.removeQuestionId(mQuestionId);
-                //   mEvaluationList.add(mQuestionId, mListOfAnswers.get(iAnswer).getId());
-
                 mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(iAnswer).getId());
             } else {
@@ -148,9 +148,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                         }
                     }
                     mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
-                    //  mEvaluationList.removeQuestionId(mQuestionId);
                     mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(currentAnswer).getId());
-                    //   mEvaluationList.add(mQuestionId, mListOfAnswers.get(currentAnswer).getId());
                     mQuestionnaire.checkVisibility();
                 }
             });

@@ -1,4 +1,8 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
+
+import android.util.Log;
+
+import com.fragtest.android.pa.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +13,9 @@ import java.util.List;
 
 public class QuestionInfo {
 
+    private String LOG_STRING = "QuestionInfo";
     private int mId;
     private ArrayList<Integer> mFilterId;
-    private boolean mCondition;
     private boolean mActive;
     private boolean mHidden;
     private boolean mMandatory;
@@ -33,15 +37,22 @@ public class QuestionInfo {
         mListOfAnswerIds = answerIds;
     }
 
-    public boolean isActive() { return mActive; }
+    public boolean isActive() {
+        return mActive;
+    }
 
-    public int getId() { return mId; }
+    public int getId() {
+        return mId;
+    }
 
-    public ArrayList<Integer> getFilterId() { return mFilterId; }
+    public ArrayList<Integer> getFilterId() {
+        return mFilterId;
+    }
 
     public ArrayList<Integer> getFilterIdPositive() {
+        // Function returns all positive Filter IDs which represent the MUST EXIST cases
         ArrayList<Integer> listOfPositiveIds = new ArrayList<>();
-        for (int iElement =0; iElement < mFilterId.size(); iElement++) {
+        for (int iElement = 0; iElement < mFilterId.size(); iElement++) {
             if (mFilterId.get(iElement) >= 0) {
                 listOfPositiveIds.add(mFilterId.get(iElement));
             }
@@ -50,39 +61,61 @@ public class QuestionInfo {
     }
 
     public ArrayList<Integer> getFilterIdNegative() {
+        // Function returns all negative IDs (only absolute values), which represent the MUST NOT
+        // EXIST case.
         ArrayList<Integer> listOfNegativeIds = new ArrayList<>();
         for (int iElement = 0; iElement < mFilterId.size(); iElement++) {
             if (mFilterId.get(iElement) < 0) {
-                listOfNegativeIds.add((-1)*mFilterId.get(iElement));
+                listOfNegativeIds.add((-1) * mFilterId.get(iElement));
             }
         }
         return listOfNegativeIds;
     }
 
     public boolean existsFilterId() {
-        if (mFilterId.size()>0) {
+        if (mFilterId.size() > 0) {
             return true;
         } else {
             return false;
         }
     }
 
-    //public boolean getCondition() { return mCondition; }
+    public boolean isMandatory() {
+        return mMandatory;
+    }
 
-    public boolean isMandatory() { return mMandatory; }
+    public void setInactive() {
+        mActive = false;
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "View set inactive");
+        }
+    }
 
-    public void setInactive() { mActive = false; }
+    public void setActive() {
+        mActive = true;
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "View set active");
+        }
+    }
 
-    public void setActive() { mActive = true; }
+    public int getPositionInPager() {
+        return mPositionInPager;
+    }
 
-    public void setPositionInPager(int position) { mPositionInPager = position; }
+    public void setPositionInPager(int position) {
+        mPositionInPager = position;
+    }
 
-    public int getPositionInPager() { return mPositionInPager; }
+    public Question getQuestion() {
+        return mQuestion;
+    }
 
-    public Question getQuestion() { return mQuestion; }
+    public boolean isHidden() {
+        return mHidden;
+    }
 
-    public boolean isHidden() { return mHidden; }
-
-    public List<Integer> getAnswerIds() { return mListOfAnswerIds; }
+    public List<Integer> getAnswerIds() {
+        return mListOfAnswerIds;
+    }
 
 }

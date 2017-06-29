@@ -1,9 +1,11 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Core;
 
 import android.content.Context;
 import android.provider.Settings.Secure;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+
+import com.fragtest.android.pa.Questionnaire.Question;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.DataTypes;
 
 /**
  * Created by ulrikkowalk on 31.03.17.

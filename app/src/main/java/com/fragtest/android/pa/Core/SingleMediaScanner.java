@@ -1,10 +1,11 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Core;
 
-import java.io.File;
 import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
+
+import java.io.File;
 
 public class SingleMediaScanner implements MediaScannerConnectionClient {
 

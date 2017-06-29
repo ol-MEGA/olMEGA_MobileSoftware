@@ -33,6 +33,11 @@
     <dimen name="answerTextMargin_Right">24px</dimen>
     <dimen name="answerTextMargin_Bottom">32px</dimen>
 
+    <dimen name="answerLayoutPadding_Left">48px</dimen>
+    <dimen name="answerLayoutPadding_Top">48px</dimen>
+    <dimen name="answerLayoutPadding_Right">48px</dimen>
+    <dimen name="answerLayoutPadding_Bottom">48px</dimen>
+
     <dimen name="textSizeQuestion">10sp</dimen>
     <dimen name="textSizeAnswer">8sp</dimen>
 
@@ -43,4 +48,9 @@
     <dimen name="answerTypeCheckBoxPadding_Top">0px</dimen>
     <dimen name="answerTypeCheckBoxPadding_Right">0px</dimen>
     <dimen name="answerTypeCheckBoxPadding_Bottom">18dp</dimen>
+
+    <dimen name="radioMinHeight">96px</dimen>
+    <dimen name="checkBoxMinHeight">96dp</dimen>
+    <dimen name="questionTextHeight">165px</dimen>
+
 </resources>

@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
@@ -39,7 +39,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         mListOfActiveViews = new ArrayList<>();
         mListOfViewsStorage = new ArrayList<>();
-
 
         createLayout();
         // Creates and destroys views based on filter id settings

@@ -1,8 +1,7 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Core;
 
 import android.app.Activity;
 import android.content.Context;
-import android.renderscript.ScriptGroup;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
@@ -32,7 +31,8 @@ public class Utils {
             return;
         }
 
-        InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 

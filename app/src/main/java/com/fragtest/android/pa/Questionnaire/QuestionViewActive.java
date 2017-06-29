@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.view.View;
 
@@ -31,8 +31,13 @@ public class QuestionViewActive implements Comparable<QuestionViewActive> {
     }
 
     public View getView() { return mView; }
+
     public int getId() { return mId; }
+
     public List<Answer> getListOfAnswerIds() { return mListOfAnswerIds; }
+
     public int getPositionInRaw() { return mPositionInRaw; }
+
     public boolean isMandatory() { return mMandatory; }
+
 }

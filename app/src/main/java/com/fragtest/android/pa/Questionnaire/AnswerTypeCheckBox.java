@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -9,6 +9,9 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+
+import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +79,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             answerParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            checkBox.setMinHeight(Units.getCheckBoxMinHeight());
+            checkBox.setMinHeight((int) mContext.getResources().getDimension(R.dimen.textSizeAnswer));
 
             mParent.layoutAnswer.addView(checkBox, answerParams);
         }
@@ -103,9 +106,11 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                     } else {
                         mQuestionnaire.removeIdFromEvaluationList(currentId);
                     }
+                    mQuestionnaire.checkVisibility();
                 }
             });
         }
         return true;
     }
+
 }

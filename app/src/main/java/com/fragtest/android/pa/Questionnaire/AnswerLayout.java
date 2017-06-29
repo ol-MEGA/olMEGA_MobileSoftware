@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+
+import com.fragtest.android.pa.R;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -15,8 +17,10 @@ public class AnswerLayout extends AppCompatActivity {
 
     LinearLayout layoutAnswer;
     ScrollView scrollContent;
+    private Context mContext;
 
     public AnswerLayout(Context context) {
+        mContext = context;
         // Main Layout has to be incorporated in ScrollView for Overflow Handling
         scrollContent = new ScrollView(context);
         scrollContent.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
@@ -28,9 +32,10 @@ public class AnswerLayout extends AppCompatActivity {
         // Main Layout - Right now Framework carrying ONE Question
         layoutAnswer = new LinearLayout(context);
 
-        int[] answerLayoutPadding = Units.getAnswerLayoutPadding();
-        layoutAnswer.setPadding(answerLayoutPadding[0], answerLayoutPadding[1],
-                answerLayoutPadding[2], answerLayoutPadding[3]);
+        layoutAnswer.setPadding((int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Left),
+                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Top),
+                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Right),
+                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom));
         layoutAnswer.setOrientation(LinearLayout.VERTICAL);
         layoutAnswer.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
         layoutAnswer.setGravity(Gravity.CENTER_HORIZONTAL);

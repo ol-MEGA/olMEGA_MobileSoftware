@@ -10,6 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
+
 public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;

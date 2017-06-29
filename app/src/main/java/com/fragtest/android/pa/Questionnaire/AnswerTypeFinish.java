@@ -1,4 +1,4 @@
-package com.fragtest.android.pa;
+package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -8,6 +8,8 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+
+import com.fragtest.android.pa.R;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -29,7 +31,7 @@ public class AnswerTypeFinish extends AppCompatActivity {
 
         mAnswerButton = new Button(context);
         mAnswerButton.setText(R.string.buttonTextFinish);
-        mAnswerButton.setTextSize(Units.getTextSizeAnswer());
+        mAnswerButton.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mAnswerButton.setGravity(Gravity.CENTER_HORIZONTAL);
         mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
         mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
@@ -58,14 +60,7 @@ public class AnswerTypeFinish extends AppCompatActivity {
         mAnswerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 mQuestionnaire.finaliseEvaluation();
-                //metaData.finalise(mEvaluationList);
-                //fileIO = new FileIO();
-                //fileIO.saveDataToFile(mContext, metaData.getFileName(), metaData.getData());
-                //Toast.makeText(mContext,R.string.infoTextSave,Toast.LENGTH_SHORT).show();
-                //((Activity)context).finish();
-
             }
         });
     }
