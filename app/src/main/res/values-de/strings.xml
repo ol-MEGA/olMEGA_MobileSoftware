@@ -5,4 +5,5 @@
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="hintTextAnswer">Bitte hier Text eingeben.</string>
     <string name="buttonTextOkay">OK</string>
+    <string name="timeRemaining">Nächster Q in %m %s</string>
 </resources>

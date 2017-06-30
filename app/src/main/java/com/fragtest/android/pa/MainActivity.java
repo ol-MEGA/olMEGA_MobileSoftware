@@ -4,78 +4,44 @@ import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
-    private TextView mLogo;
-    private View mArrowBack, mArrowForward, mRevert;
-    private int mPosition;
+    public TextView mLogo;
+    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress;
     private QuestionnairePagerAdapter mAdapter;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-
         setContentView(R.layout.activity_main);
 
-        handleNewPagerAdapter();
-
         mLogo = (TextView) findViewById(R.id.Action_Logo);
-        mLogo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mViewPager.setCurrentItem(mAdapter.getCount());
-            }
-        });
-
         mArrowBack = findViewById(R.id.Action_Back);
-        mArrowBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mPosition != 0) {
-                    mViewPager.setCurrentItem(mPosition - 1);
-                }
-            }
-        });
-
         mArrowForward = findViewById(R.id.Action_Forward);
-        mArrowForward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mPosition < mViewPager.getAdapter().getCount() - 1) {
-                    mViewPager.setCurrentItem(mPosition + 1);
-                }
-            }
-        });
-
         mRevert = findViewById(R.id.Action_Revert);
-        mRevert.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
-                /*mAdapter.clearAnswerIds();
-                mAdapter.clearAnswerTexts();
-                mViewPager.setCurrentItem(0);*/
-                handleNewPagerAdapter();
-            }
-        });
+        mProgress = findViewById(R.id.progress);
+        mRegress = findViewById(R.id.regress);
 
-
+        handleNewPagerAdapter();
+        //mAdapter.createQuestionnaire();
+        mAdapter.createMenu();
+        //mAdapter.startTimer();
 
     }
 
-    private void handleNewPagerAdapter() {
+    public void handleNewPagerAdapter() {
+
         mViewPager = null;
         // Explicitly call garbage collection -> might be critical
         //System.gc();
@@ -84,13 +50,6 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
-
-        setQuestionnaireProgressBar(0);
-        setArrows(0);
-    }
-
-    public int getCurrentItem() {
-        return mViewPager.getCurrentItem();
     }
 
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
@@ -105,78 +64,17 @@ public class MainActivity extends AppCompatActivity {
                 }
                 @Override
                 public void onPageSelected(int position) {
-                    setQuestionnaireProgressBar(position);
-                    setArrows(position);
+                    mAdapter.setQuestionnaireProgressBar(position);
+                    mAdapter.setArrows(position);
                 }
             };
 
-    // Set the horizontal Indicator at the Top to follow Page Position
-    public void setQuestionnaireProgressBar(int position) {
 
-        mPosition = position;
-        int nAccuracy = 100;
 
-        View progress = findViewById(R.id.progress);
-        View regress = findViewById(R.id.regress);
 
-        float nProgress = (float) (position + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
-        float nRegress = (nAccuracy - nProgress);
 
-        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nRegress
-        );
-        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nProgress
-        );
 
-        progress.setLayoutParams(progParams);
-        regress.setLayoutParams(regParams);
-    }
-
-    // Set the horizontal Indicator at the Top to follow Page Position
-    public void setQuestionnaireProgressBar() {
-
-        mPosition = getCurrentItem();
-        int nAccuracy = 100;
-
-        View progress = findViewById(R.id.progress);
-        View regress = findViewById(R.id.regress);
-
-        float nProgress = (float) (mPosition + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
-        float nRegress = (nAccuracy - nProgress);
-
-        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nRegress
-        );
-        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nProgress
-        );
-
-        progress.setLayoutParams(progParams);
-        regress.setLayoutParams(regParams);
-    }
-
-    public void setArrows(int position) {
-        View arrowBack = findViewById(R.id.Action_Back);
-        if (position == 0) {
-            arrowBack.setVisibility(View.INVISIBLE);
-        } else if (arrowBack.getVisibility() == View.INVISIBLE) {
-            arrowBack.setVisibility(View.VISIBLE);
-        }
-
-        View arrowForward = findViewById(R.id.Action_Forward);
-        if (position == mViewPager.getAdapter().getCount() - 1) {
-            arrowForward.setVisibility(View.INVISIBLE);
-        } else if (arrowForward.getVisibility() == View.INVISIBLE) {
-            arrowForward.setVisibility(View.VISIBLE);
-        }
-    }
+    /*public int getCurrentItem() {
+        return mViewPager.getCurrentItem();
+    }*/
 }

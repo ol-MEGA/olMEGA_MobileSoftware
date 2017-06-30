@@ -5,6 +5,7 @@ import android.provider.Settings.Secure;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.Questionnaire.Question;
 
 import java.text.SimpleDateFormat;
@@ -67,9 +68,9 @@ public class MetaData extends AppCompatActivity {
         KEY_QUESTID = generateQuestId();
         FILE_NAME = generateFileName();
 
-
-
-        Log.i(LOG_STRING, "Object initialised");
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Object initialised");
+        }
         return true;
     }
 
@@ -82,7 +83,9 @@ public class MetaData extends AppCompatActivity {
         END_DATE_UTC = generateTimeNowUTC();
         collectData();
 
-        Log.i(LOG_STRING, "Object finalised");
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Object finalised");
+        }
         return true;
     }
 

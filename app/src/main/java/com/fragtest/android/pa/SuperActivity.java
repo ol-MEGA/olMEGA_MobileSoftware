@@ -2,7 +2,6 @@ package com.fragtest.android.pa;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 import com.fragtest.android.pa.Core.FileIO;
@@ -23,7 +22,7 @@ public class SuperActivity extends AppCompatActivity{
     private int delayMilliseconds = delayMinutes*60*1000;
     private int durVibrationMilliseconds = 800;
 
-    private Handler timerHandler = new Handler();
+
     private Runnable runnable = new Runnable() {
         @Override
         public void run() {

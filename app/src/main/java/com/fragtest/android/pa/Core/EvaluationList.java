@@ -26,6 +26,9 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
     public boolean add(int nQuestionId, int nAnswerId) {
         mEvaluationList.add(new QuestionIdTypeAndValue(
                 nQuestionId, "id", Integer.toString(nAnswerId)));
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG_STRING, "Entry added: " + nAnswerId);
+        }
         return true;
     }
 

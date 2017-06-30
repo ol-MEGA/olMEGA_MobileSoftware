@@ -367,7 +367,7 @@ public class Questionnaire {
                 mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
-        mMainActivity.setQuestionnaireProgressBar();
+        mContextQPA.setQuestionnaireProgressBar();
         return true;
     }
 
@@ -412,7 +412,7 @@ public class Questionnaire {
         mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
-        mMainActivity.setQuestionnaireProgressBar();
+        mContextQPA.setQuestionnaireProgressBar();
 
         return true;
     }
