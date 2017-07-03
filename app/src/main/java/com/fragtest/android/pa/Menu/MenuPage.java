@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -30,6 +31,7 @@ public class MenuPage extends AppCompatActivity {
     private String questFileName;
     private TextView mTimeRemaining;
     private String[] tempTimeRemaining;
+    private int mTimerMean, mTimerDeviation;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
         mContext = context;
@@ -47,8 +49,27 @@ public class MenuPage extends AppCompatActivity {
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
         String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
-        String[] mTimerTemp = mRawInput.split("<timer>|</timer>");
+        String[] timerTemp = mRawInput.split("<timer|</timer>");
 
+        if(timerTemp[1].split("mean").length > 1) {
+            try {
+                mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
+                Log.e(LOG_STRING, "Timer mean set to "+mTimerMean+" Seconds.");
+            } catch (Exception e) {
+                mTimerMean = 30*60;
+                Log.e(LOG_STRING, "Invalid entry. Timer mean set to 1800 Seconds.");
+            }
+        }
+
+        if(timerTemp[1].split("deviation").length > 1) {
+            try {
+                mTimerDeviation = Integer.parseInt(timerTemp[1].split("\"")[3]);
+                Log.e(LOG_STRING, "Timer deviation set to "+mTimerDeviation+" Seconds.");
+            } catch (Exception e) {
+                mTimerDeviation = 5*60;
+                Log.e(LOG_STRING, "Invalid entry. Timer mean set to 300 Seconds.");
+            }
+        }
     }
 
     public LinearLayout generateView() {
@@ -72,7 +93,6 @@ public class MenuPage extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0,1f
         );
-        //textViewTitle.setLayoutParams(textParams);
         textViewTitle.setGravity(View.TEXT_ALIGNMENT_CENTER);
         textViewTitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
@@ -105,5 +125,13 @@ public class MenuPage extends AppCompatActivity {
         int secondsRemaining = seconds - minutesRemaining*60;
         mTimeRemaining.setText(""+tempTimeRemaining[0]+minutesRemaining+tempTimeRemaining[1]+
             secondsRemaining+tempTimeRemaining[2]);
+    }
+
+    public int getTimerMean() {
+        return mTimerMean;
+    }
+
+    public int getTimerDeviation() {
+        return mTimerDeviation;
     }
 }

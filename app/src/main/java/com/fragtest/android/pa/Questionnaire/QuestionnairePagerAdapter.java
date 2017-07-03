@@ -18,6 +18,8 @@ import com.fragtest.android.pa.R;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static android.content.Context.VIBRATOR_SERVICE;
 
@@ -46,6 +48,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mSecondsRemaining = 120;
     private int mDelayMilliseconds = 1000;
     private int mDurVibrationMilliseconds = 200;
+    private Random mRand = new Random();
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
@@ -67,6 +70,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         createMenuLayout();
         setControlsMenu();
+        setTimer(mMenuPage.getTimerMean(), mMenuPage.getTimerDeviation());
         startTimer();
     }
 
@@ -262,6 +266,65 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         });
     }
 
+    public int addView(View view, int position, int positionInRaw, boolean mandatory,
+                       List<Answer> listOfAnswers) {
+        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, mandatory,
+                listOfAnswers));
+        // Sort the Views by their id (implicitly their determined order)
+        Collections.sort(mListOfActiveViews);
+        return position;
+    }
+
+    public int removeView(int position) {
+
+        int nCurrentItem = mViewPager.getCurrentItem();
+        mViewPager.setAdapter(null);
+        mListOfActiveViews.remove(position);
+        mViewPager.setAdapter(this);
+        mViewPager.setCurrentItem(nCurrentItem);
+        return position;
+    }
+
+    public int getPositionFromId(int iId) {
+        for (int iItem = 0; iItem < mListOfActiveViews.size(); iItem++) {
+            if (mListOfActiveViews.get(iItem).getId() == iId) {
+                return iItem;
+            }
+        }
+        return -1;
+    }
+
+    public void setTimer(int secondsMean, int secondsDeviation) {
+        mSecondsDelay = ThreadLocalRandom.current().nextInt(
+                secondsMean-secondsDeviation, secondsMean+secondsDeviation+1);
+    }
+
+    public void startTimer() {
+        runTimer = true;
+        resetTimer();
+        timerHandler.postDelayed(runnable, 0);
+    }
+
+    public void resetTimer() {
+        mSecondsRemaining = mSecondsDelay;
+    }
+
+    public void stopTimer() {
+        runTimer = false;
+    }
+
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (runTimer) {
+                // float needed here (possibly)
+                mSecondsRemaining -= mDelayMilliseconds / 1000;
+                updateTime(mSecondsRemaining);
+                timerHandler.postDelayed(this, mDelayMilliseconds);
+            }
+        }
+    };
+
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
         View view = mListOfActiveViews.get(position).getView();
@@ -295,25 +358,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     }
 
-    public int addView(View view, int position, int positionInRaw, boolean mandatory,
-                       List<Answer> listOfAnswers) {
-        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, mandatory,
-                listOfAnswers));
-        // Sort the Views by their id (implicitly their determined order)
-        Collections.sort(mListOfActiveViews);
-        return position;
-    }
-
-    public int removeView(int position) {
-
-        int nCurrentItem = mViewPager.getCurrentItem();
-        mViewPager.setAdapter(null);
-        mListOfActiveViews.remove(position);
-        mViewPager.setAdapter(this);
-        mViewPager.setCurrentItem(nCurrentItem);
-        return position;
-    }
-
     @Override
     public int getItemPosition(Object object) {
         int index = mListOfActiveViews.indexOf(object);
@@ -328,41 +372,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public CharSequence getPageTitle(int position) {
         return "";
     }
-
-    public int getPositionFromId(int iId) {
-        for (int iItem = 0; iItem < mListOfActiveViews.size(); iItem++) {
-            if (mListOfActiveViews.get(iItem).getId() == iId) {
-                return iItem;
-            }
-        }
-        return -1;
-    }
-
-    public void startTimer() {
-        runTimer = true;
-        resetTimer();
-        timerHandler.postDelayed(runnable, 0);
-    }
-
-    public void resetTimer() {
-        mSecondsRemaining = mSecondsDelay;
-    }
-
-    public void stopTimer() {
-        runTimer = false;
-    }
-
-    private Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            if (runTimer) {
-                // float needed here (possibly)
-                mSecondsRemaining -= mDelayMilliseconds / 1000;
-                updateTime(mSecondsRemaining);
-                timerHandler.postDelayed(this, mDelayMilliseconds);
-            }
-        }
-    };
 
 
     /*

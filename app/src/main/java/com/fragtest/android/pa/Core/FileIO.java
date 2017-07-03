@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
+import com.fragtest.android.pa.BuildConfig;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +60,9 @@ public class FileIO {
                     text.append(line);
                     text.append('\n');
                 } else {
-                    Log.i(FILE_IO,"Dropping line: "+line.trim());
+                    if (BuildConfig.DEBUG) {
+                        Log.i(FILE_IO, "Dropping line: " + line.trim());
+                    }
                 }
 
                 if (line.trim().endsWith("*/")) {
@@ -98,7 +102,9 @@ public class FileIO {
                         text.append(line);
                         text.append('\n');
                     } else {
-                        Log.i(FILE_IO,"Dropping line: "+line.trim());
+                        if (BuildConfig.DEBUG) {
+                            Log.i(FILE_IO, "Dropping line: " + line.trim());
+                        }
                     }
 
                     if (line.trim().endsWith("*/")) {
@@ -134,12 +140,16 @@ public class FileIO {
         // Make sure the path directory exists.
         if (!dir.exists()) {
             dir.mkdirs();
-            Log.i(FILE_IO, "Directory created: " + dir);
+            if (BuildConfig.DEBUG) {
+                Log.i(FILE_IO, "Directory created: " + dir);
+            }
         }
 
         String stringToSave = data;
 
-        Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+        if (BuildConfig.DEBUG) {
+            Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+        }
 
         try {
             if (!file.exists()) {
@@ -156,10 +166,16 @@ public class FileIO {
             fOut.close();
 
             new SingleMediaScanner(context, file);
-            Log.i(FILE_IO, "Data successfully written.");
+
+            if (BuildConfig.DEBUG) {
+                Log.i(FILE_IO, "Data successfully written.");
+            }
             return true;
         } catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+
+            if (BuildConfig.DEBUG) {
+                Log.e("Exception", "File write failed: " + e.toString());
+            }
         }
         return false;
     }
@@ -178,11 +194,15 @@ public class FileIO {
         // Make sure the path directory exists.
         if (!dir.exists()) {
             if (dir.mkdirs()) {
-                Log.i(FILE_IO, "Directory created: " + dir);
+                if (BuildConfig.DEBUG) {
+                    Log.i(FILE_IO, "Directory created: " + dir);
+                }
 
                 String stringToSave = data;
 
-                Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+                if (BuildConfig.DEBUG) {
+                    Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+                }
 
                 try {
                     if (!file.exists()) {
@@ -198,17 +218,22 @@ public class FileIO {
                     fOut.close();
 
                     new SingleMediaScanner(context, file);
-                    Log.i(FILE_IO, "Data successfully written.");
+
+                    if (BuildConfig.DEBUG) {
+                        Log.i(FILE_IO, "Data successfully written.");
+                    }
                     return true;
                 } catch (IOException e) {
-                    Log.e("Exception", "File write failed: " + e.toString());
+                    if (BuildConfig.DEBUG) {
+                        Log.e("Exception", "File write failed: " + e.toString());
+                    }
                 }
             } else {
-                Log.e(FILE_IO, "Unable to create directory. Shutting down.");
+                if (BuildConfig.DEBUG) {
+                    Log.e(FILE_IO, "Unable to create directory. Shutting down.");
+                }
             }
         }
-
-
         return false;
     }
 }
