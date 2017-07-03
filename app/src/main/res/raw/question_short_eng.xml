@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mobiquest>
+
+    <timer mean="300" deviation="60"></timer>
+
+    <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <title>
+            <text>Hörsituation</text>
+        </title>
+        <question
+            hidden="true"
+            id="10810"
+            mandatory="true"
+            type="text">
+            <label>
+                <text>Device ID</text>
+            </label>
+            <default>
+                <text>$device.id</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="10811"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="10812"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+
+
+			
+        <question id="10813" type="radio">
+            <label>
+                <text>Please describe your situation.</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21430">
+                <text>At home</text>
+            </option>
+            <option id="21431">
+                <text>Travelling</text>
+            </option>
+            <option id="21432">
+                <text>Social interaction/errands</text>
+            </option>
+            <option id="21433">
+                <text>Work</text>
+            </option>
+            <option id="21434">
+                <text>None of the above</text>
+            </option>
+        </question>
+
+        <question
+            filter="10813_21430"
+            id="10814"
+            type="checkbox">
+            <label>
+                <text>At home - please specify:</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21436">
+                <text>Resting</text>
+            </option>
+            <option id="21437">
+                <text>Eating</text>
+            </option>
+            <option id="21438">
+                <text>Kitchen work</text>
+            </option>
+            <option id="21439">
+                <text>Reading/Computer</text>
+            </option>
+            <option id="21440">
+                <text>Listening to music</text>
+            </option>
+            <option id="21441">
+                <text>Various housework</text>
+            </option>
+            <option id="21442">
+                <text>Garden/balcony</text>
+            </option>
+            <option id="21443">
+                <text>Other</text>
+            </option>
+        </question>
+        <question
+            filter="10815_21431"
+            id="10821"
+            type="checkbox">
+            <label>
+                <text>Travelling - please specify:</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21445">
+                <text>Driving car</text>
+            </option>
+            <option id="21446">
+                <text>Riding in car</text>
+            </option>
+            <option id="21447">
+                <text>Bus</text>
+            </option>
+            <option id="21448">
+                <text>Train</text>
+            </option>
+            <option id="21449">
+                <text>On foot</text>
+            </option>
+            <option id="21450">
+                <text>Bicycle</text>
+            </option>
+            <option id="21451">
+                <text>Other</text>
+            </option>
+        </question>
+        <question
+            filter="10816_21432"
+            id="10822"
+            type="checkbox">
+            <label>
+                <text>Social interaction/errands - please specify:</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21453">
+                <text>Visiting someone</text>
+            </option>
+            <option id="21454">
+                <text>Party</text>
+            </option>
+            <option id="21455">
+                <text>Restaurant/Café</text>
+            </option>
+            <option id="21456">
+                <text>Theatre/Church/Speech</text>
+            </option>
+            <option id="21457">
+                <text>Meeting</text>
+            </option>
+            <option id="21458">
+                <text>Government/Doctor's office</text>
+            </option>
+            <option id="21459">
+                <text>Shopping</text>
+            </option>
+            <option id="214590000">
+                <text>Other</text>
+            </option>
+        </question>
+
+        <question
+            filter="10813_21433"
+            id="10817"
+            type="checkbox">
+            <label>
+                <text>Work - please specify:</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21464">
+                <text>Office</text>
+            </option>
+            <option id="21465">
+                <text>Workshop</text>
+            </option>
+            <option id="21466">
+                <text>Counter</text>
+            </option>
+            <option id="21467">
+                <text>Conference room</text>
+            </option>
+            <option id="21468">
+                <text>Outside</text>
+            </option>
+            <option id="21469">
+                <text>Cafeteria</text>
+            </option>
+            <option id="21470">
+                <text>Other</text>
+            </option>
+        </question>
+
+        <question
+            filter="10813_21434"
+            id="10818"
+            type="text">
+            <label>
+                <text>Please describe the current situation:</text>
+            </label>
+        </question>
+
+// Only shown if you're NOT home
+        <question id="10819" type="emoji" filter="!10813_21430">
+            <label>
+                <text>How are you feeling?</text>
+            </label>
+            <option id="214311">
+                <text>emoji_happy2</text>
+            </option>
+            <option id="214312">
+                <text>emoji_happy1</text>
+            </option>
+            <default id="214313">
+                <text>emoji_neutral</text>
+            </default>
+            <option id="214314">
+                <text>emoji_sad1</text>
+            </option>
+            <option id="214315">
+                <text>emoji_sad2</text>
+            </option>
+        </question>
+
+// only showing if you're not at home AND feeling really really good.
+        <question
+            id="10820"
+            type="sliderFix"
+            filter="!10819_214313,10813_21445,10813_21447,10813_21449">
+            <label>
+                <text>How loud do you perceive the scenery?</text>
+            </label>
+            <option id="41464">
+                <text>Too loud</text>
+            </option>
+            <option id="41465">
+                <text>Very loud</text>
+            </option>
+            <option id="41466">
+                <text>Loud</text>
+            </option>
+            <option id="41467">
+                <text>Medium</text>
+            </option>
+            <option id="41468">
+                <text>Quiet</text>
+            </option>
+            <option id="41469">
+                <text>Very quiet</text>
+            </option>
+            <option id="41470">
+                <text>Inaudible</text>
+            </option>
+        </question>
+
+
+
+        <question id="10821" type="radio" filter="10820_41464">
+            <label>
+                <text>How happy are you?</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="114307">
+                <text>Soo happy.</text>
+            </option>
+            <option id="114317">
+                <text>Pretty happy.</text>
+            </option>
+            <option id="114327">
+                <text>I'll survive.</text>
+            </option>
+            <option id="114337">
+                <text>Hm.</text>
+            </option>
+            <option id="114347">
+                <text>Not.</text>
+            </option>
+        </question>
+
+        <question
+            hidden="true"
+            id="10823"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+        <question
+            hidden="true"
+            id="10824"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+        <finish>
+            <text>Thank you very much for participating.</text>
+        </finish>
+    </survey>
+</mobiquest>
