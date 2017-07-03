@@ -15,19 +15,19 @@ import java.util.List;
 
 public class Question extends AppCompatActivity {
 
-    private String LOG_STRING = "Question";
-    private String mQuestionBlueprint;
-    private String mQuestionText;
-    private String mTypeAnswer;
-    private List<Answer> mAnswers;
-    private int mNumAnswers;
-    private int mQuestionId;
-    private ArrayList<Integer> mFilterId;
-    private boolean mHidden;
+    private final String LOG_STRING = "Question";
+    private final String mQuestionBlueprint;
+    private final String mQuestionText;
+    private final String mTypeAnswer;
+    private final int mNumAnswers;
+    private final int mQuestionId;
+    private final boolean mHidden;
     //private boolean mFilterCondition;
-    private boolean mMandatory;
-    private List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
-    private List<Integer> mListOfAnswerIds = new ArrayList<>();
+    private final boolean mMandatory;
+    private final List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
+    private final List<Integer> mListOfAnswerIds = new ArrayList<>();
+    private List<Answer> mAnswers;
+    private ArrayList<Integer> mFilterId;
 
     // Public Constructor
     public Question(String sQuestionBlueprint) {
@@ -84,7 +84,7 @@ public class Question extends AppCompatActivity {
     }
 
     private String extractQuestionText() {
-            // Obtain Question Text from Questionnaire
+        // Obtain Question Text from Questionnaire
         return (mQuestionBlueprint.split("<label>|</label>")[1].split("<text>|</text>")[1]);
     }
 
@@ -131,9 +131,6 @@ public class Question extends AppCompatActivity {
         return mQuestionBlueprint.split("filter=\"!").length <= 1;
     }
 */
-
-
-
 
 
     private boolean extractMandatory() {
@@ -214,7 +211,9 @@ public class Question extends AppCompatActivity {
         return mHidden;
     }
 
-    public boolean isMandatory() { return mMandatory; }
+    public boolean isMandatory() {
+        return mMandatory;
+    }
 
     private boolean nonTypicalAnswer(String sTypeAnswer) {
         return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);

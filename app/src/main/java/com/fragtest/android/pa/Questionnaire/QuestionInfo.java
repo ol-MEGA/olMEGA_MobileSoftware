@@ -13,15 +13,15 @@ import java.util.List;
 
 public class QuestionInfo {
 
-    private String LOG_STRING = "QuestionInfo";
-    private int mId;
-    private ArrayList<Integer> mFilterId;
+    private final String LOG_STRING = "QuestionInfo";
+    private final int mId;
+    private final ArrayList<Integer> mFilterId;
+    private final boolean mHidden;
+    //private final boolean mMandatory;
+    private final Question mQuestion;
+    private final List<Integer> mListOfAnswerIds;
     private boolean mActive;
-    private boolean mHidden;
-    private boolean mMandatory;
     private int mPositionInPager;
-    private Question mQuestion;
-    private List<Integer> mListOfAnswerIds;
 
     public QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
                         int position, boolean hidden, boolean mandatory,
@@ -33,7 +33,7 @@ public class QuestionInfo {
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
-        mMandatory = mandatory;
+        //mMandatory = mandatory;
         mListOfAnswerIds = answerIds;
     }
 
@@ -43,10 +43,6 @@ public class QuestionInfo {
 
     public int getId() {
         return mId;
-    }
-
-    public ArrayList<Integer> getFilterId() {
-        return mFilterId;
     }
 
     public ArrayList<Integer> getFilterIdPositive() {
@@ -70,18 +66,6 @@ public class QuestionInfo {
             }
         }
         return listOfNegativeIds;
-    }
-
-    public boolean existsFilterId() {
-        if (mFilterId.size() > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isMandatory() {
-        return mMandatory;
     }
 
     public void setInactive() {
@@ -119,3 +103,21 @@ public class QuestionInfo {
     }
 
 }
+
+/*
+    public ArrayList<Integer> getFilterId() {
+        return mFilterId;
+    }
+
+    public boolean existsFilterId() {
+        if (mFilterId.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isMandatory() {
+        return mMandatory;
+    }
+ */

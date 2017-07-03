@@ -6,8 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.fragtest.android.pa.R;
 import com.fragtest.android.pa.Core.Units;
+import com.fragtest.android.pa.R;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -15,10 +15,10 @@ import com.fragtest.android.pa.Core.Units;
 
 public class QuestionText extends AppCompatActivity {
 
-    TextView questionTextView;
-    LinearLayout.LayoutParams questionLayoutParams;
-    LinearLayout parent;
-    Units mUnits;
+    final TextView questionTextView;
+    final LinearLayout.LayoutParams questionLayoutParams;
+    final LinearLayout parent;
+    final Units mUnits;
 
     public QuestionText(Context context, int nQuestionId, String sQuestion, LinearLayout qParent) {
 
@@ -42,7 +42,7 @@ public class QuestionText extends AppCompatActivity {
 
     public boolean addQuestion() {
         parent.addView(
-                questionTextView,questionLayoutParams);
+                questionTextView, questionLayoutParams);
         return true;
     }
 

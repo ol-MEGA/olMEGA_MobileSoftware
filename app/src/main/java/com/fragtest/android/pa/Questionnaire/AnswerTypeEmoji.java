@@ -7,9 +7,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
 import com.fragtest.android.pa.R;
-import com.fragtest.android.pa.Core.Units;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +20,16 @@ import java.util.List;
 
 public class AnswerTypeEmoji extends AppCompatActivity {
 
+    private final Context mContext;
+    private final AnswerLayout mParent;
+    private final List<StringAndInteger> mListOfAnswers;
+    private final List<Integer> mListOfIds;
+    private final int[] drawables = new int[5];
+    private final int[] drawables_pressed = new int[5];
+    private final Questionnaire mQuestionnaire;
+    private final int mQuestionId;
     private String LOG_STRING = "AnswerTypeEmoji";
-    private Context mContext;
-    private AnswerLayout mParent;
-    private List<StringAndInteger> mListOfAnswers;
-    private List<Integer> mListOfIds;
-    private int[] drawables = new int[5];
-    private int[] drawables_pressed = new int[5];
     private int mDefault = -1;
-    private Questionnaire mQuestionnaire;
-    private int mQuestionId;
 
     public AnswerTypeEmoji(Context context, Questionnaire questionnaire,
                            AnswerLayout qParent, int questionId) {
@@ -55,10 +55,10 @@ public class AnswerTypeEmoji extends AppCompatActivity {
     }
 
     public boolean addAnswer(int nId, String sAnswer, boolean isDefault) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer,nId));
+        mListOfAnswers.add(new StringAndInteger(sAnswer, nId));
         mListOfIds.add(nId);
         if (isDefault) {
-            mDefault = mListOfAnswers.size()-1;
+            mDefault = mListOfAnswers.size() - 1;
         }
         return true;
     }
@@ -67,8 +67,8 @@ public class AnswerTypeEmoji extends AppCompatActivity {
 
         int usableHeight = (new Units(mContext)).getUsableSliderHeight();
         int numEmojis = mListOfAnswers.size();
-        // Make size of emojies adaptive
-        int emojiSize = (int) (usableHeight / (1.2f*numEmojis));
+        // Make size of emojis adaptive
+        int emojiSize = (int) (usableHeight / (1.2f * numEmojis));
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
 
@@ -79,7 +79,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                     1.0f));
 
             String sAnswer = mListOfAnswers.get(iAnswer).getText();
-            switch(sAnswer){
+            switch (sAnswer) {
                 case "emoji_happy2":
                     answerButton.setBackground(ContextCompat.getDrawable(mContext, drawables[0]));
                     answerButton.setTag(0);
@@ -120,8 +120,8 @@ public class AnswerTypeEmoji extends AppCompatActivity {
             placeHolder.setBackgroundColor(ContextCompat.getColor(
                     mContext, R.color.BackgroundColor));
             placeHolder.setLayoutParams(new LinearLayout.LayoutParams(
-                    (int) (0.2*emojiSize),
-                    (int) (0.2*emojiSize),
+                    (int) (0.2 * emojiSize),
+                    (int) (0.2 * emojiSize),
                     1.0f
             ));
             mParent.layoutAnswer.addView(placeHolder);
@@ -156,7 +156,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
         return true;
     }
 
-    public void setChecked(boolean isChecked, Button answerButton) {
+    private void setChecked(boolean isChecked, Button answerButton) {
         if (isChecked) {
             answerButton.setBackground(ContextCompat.getDrawable(mContext,
                     drawables_pressed[(int) answerButton.getTag()]));
@@ -165,7 +165,9 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                     drawables[(int) answerButton.getTag()]));
         }
     }
+}
 
+/*
     public void toggleChecked(Button answerButton) {
         if (answerButton.isPressed()) {
             answerButton.setBackground(ContextCompat.getDrawable(mContext,
@@ -175,4 +177,4 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                     drawables[(int) answerButton.getTag()]));
         }
     }
-}
+    */

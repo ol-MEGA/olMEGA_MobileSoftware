@@ -13,13 +13,12 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
 import com.fragtest.android.pa.R;
-import com.fragtest.android.pa.Core.Units;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 
 /**
@@ -28,17 +27,21 @@ import java.util.List;
 
 public class AnswerTypeSliderFree extends AppCompatActivity {
 
+    private static final int mMinProgress = 10;
     public static String LOG_STRING = "AnswerTypeSliderFree";
-    public AnswerLayout parent;
-    private Context mContext;
-    private List<StringAndInteger> mListOfAnswers;
-    private LinearLayout mHorizontalContainer, mAnswerListContainer;
-    private View mResizeView, mRemainView;
+    public final AnswerLayout parent;
+    private final Context mContext;
+    private final List<StringAndInteger> mListOfAnswers;
+    private final LinearLayout mHorizontalContainer;
+    private final LinearLayout mAnswerListContainer;
+    private final View mResizeView;
+    private final View mRemainView;
+    private final int width;
+    private final int mUsableHeight;
+    private final int mQuestionId;
+    private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
-    private int width, mUsableHeight;
-    private int nTextViewHeight, mQuestionId;
-    private Questionnaire mQuestionnaire;
-    private static int mMinProgress = 10;
+    private int nTextViewHeight;
 
     public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
                                 AnswerLayout qParent, int nQuestionId) {
@@ -77,7 +80,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight-140,
+                mUsableHeight - 140,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(
@@ -97,7 +100,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(
                 mContext, R.color.BackgroundColor));
         mAnswerListContainer.setLayoutParams(new LinearLayout.LayoutParams(
-                width-100,
+                width - 100,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 1.f
         ));
@@ -105,7 +108,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mResizeView = mHorizontalContainer.findViewById(R.id.ResizeView);
         mRemainView = mHorizontalContainer.findViewById(R.id.RemainView);
 
-        mResizeView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.JadeRed));
+        mResizeView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.JadeRed));
     }
 
     public boolean buildView() {
@@ -134,10 +137,10 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
 
             // Adaptive size and lightness of font of in-between tick marks
             if (mListOfAnswers.size() > 6) {
-                int textSize = (int) (mContext.getResources().getDimension(R.dimen.textSizeAnswer)) * 7 /mListOfAnswers.size();
-                if (iAnswer%2 == 1){
+                int textSize = (int) (mContext.getResources().getDimension(R.dimen.textSizeAnswer)) * 7 / mListOfAnswers.size();
+                if (iAnswer % 2 == 1) {
                     textSize -= 2;
-                    textMark.setTextColor(ContextCompat.getColor(mContext,R.color.TextColor_Light));
+                    textMark.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor_Light));
                 }
                 textMark.setTextSize(textSize);
             } else {
@@ -145,7 +148,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             }
             textMark.setGravity(Gravity.CENTER_VERTICAL);
             textMark.setLayoutParams(textParams);
-            textMark.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+            textMark.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
 
             mAnswerListContainer.addView(textMark);
         }
@@ -154,7 +157,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     }
 
     public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer,nAnswerId));
+        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
         // index of default answer if present
         if (isDefault) {
             // If default present, this element is the one
@@ -169,14 +172,13 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
 
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
-        tvTemp.post(new Runnable()
-        {
+        tvTemp.post(new Runnable() {
             @Override
             public void run() {
                 nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
-                    setProgressItem(((mListOfAnswers.size()-1)/2));
+                    setProgressItem(((mListOfAnswers.size() - 1) / 2));
                     mQuestionnaire.addValueToEvaluationList(mQuestionId, getFractionFromProgress());
                 } else {
                     setProgressItem(mDefaultAnswer);
@@ -206,20 +208,20 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
 
-                switch(action) {
-                    case (MotionEvent.ACTION_DOWN) :
+                switch (action) {
+                    case (MotionEvent.ACTION_DOWN):
                         return true;
-                    case (MotionEvent.ACTION_MOVE) :
+                    case (MotionEvent.ACTION_MOVE):
                         return rescaleSliderOnline(event);
-                    case (MotionEvent.ACTION_UP) :
+                    case (MotionEvent.ACTION_UP):
                         return rescaleSliderFinal(event);
-                    case (MotionEvent.ACTION_CANCEL) :
+                    case (MotionEvent.ACTION_CANCEL):
                         return true;
-                    case (MotionEvent.ACTION_OUTSIDE) :
-                        Log.d("Motion","Movement occurred outside bounds " +
+                    case (MotionEvent.ACTION_OUTSIDE):
+                        Log.d("Motion", "Movement occurred outside bounds " +
                                 "of current screen element");
                         return true;
-                    default :
+                    default:
                         break;
                 }
                 return true;
@@ -232,20 +234,20 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
 
-                switch(action) {
-                    case (MotionEvent.ACTION_DOWN) :
+                switch (action) {
+                    case (MotionEvent.ACTION_DOWN):
                         return true;
-                    case (MotionEvent.ACTION_MOVE) :
+                    case (MotionEvent.ACTION_MOVE):
                         return rescaleSliderOnline(event);
-                    case (MotionEvent.ACTION_UP) :
+                    case (MotionEvent.ACTION_UP):
                         return rescaleSliderFinal(event);
-                    case (MotionEvent.ACTION_CANCEL) :
+                    case (MotionEvent.ACTION_CANCEL):
                         return true;
-                    case (MotionEvent.ACTION_OUTSIDE) :
-                        Log.d("Motion","Movement occurred outside bounds " +
+                    case (MotionEvent.ACTION_OUTSIDE):
+                        Log.d("Motion", "Movement occurred outside bounds " +
                                 "of current screen element");
                         return true;
-                    default :
+                    default:
                         break;
                 }
                 return true;
@@ -302,8 +304,8 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     private boolean setProgressPixels(int nPixels) {
         mResizeView.getLayoutParams().height =
                 Units.getScreenHeight() -
-                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom) -
-                nPixels;
+                        (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom) -
+                        nPixels;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
         return true;
     }
@@ -313,7 +315,9 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         return (float) (mResizeView.getLayoutParams().height - mMinProgress) /
                 (mUsableHeight - mMinProgress);
     }
+}
 
+/*
     // Set progress/slider according to floating point input between 0.0 and 1.0
     private int setProgressFraction(float nFraction) {
         int nPixProgress = (int) (mUsableHeight * nFraction);
@@ -321,7 +325,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
         return nPixProgress;
     }
-}
+ */
 
 
 

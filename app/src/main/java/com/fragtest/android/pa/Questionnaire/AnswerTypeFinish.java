@@ -33,8 +33,8 @@ public class AnswerTypeFinish extends AppCompatActivity {
         mAnswerButton.setText(R.string.buttonTextFinish);
         mAnswerButton.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mAnswerButton.setGravity(Gravity.CENTER_HORIZONTAL);
-        mAnswerButton.setTextColor(ContextCompat.getColor(context, R.color.TextColor));
-        mAnswerButton.setBackgroundColor(ContextCompat.getColor(context, R.color.BackgroundColor));
+        mAnswerButton.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
+        mAnswerButton.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
         mAnswerButton.setAllCaps(false);
         mAnswerButton.setTypeface(null, Typeface.NORMAL);
         mAnswerButton.setBackgroundResource(R.drawable.button);

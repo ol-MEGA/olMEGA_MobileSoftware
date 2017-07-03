@@ -24,7 +24,7 @@ public class MetaData extends AppCompatActivity {
 
     private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
-            KEY_TAG_CLOSE_SOFT, KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
+            KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
             KEY_QUESTID, mRawInput, FILE_NAME;
 
     private SimpleDateFormat DATE_FORMAT;
@@ -49,7 +49,6 @@ public class MetaData extends AppCompatActivity {
         KEY_TAG_CLOSE = ">";
         KEY_VALUE_OPEN = "<value ";
         KEY_VALUE_CLOSE = "</value>";
-        KEY_TAG_CLOSE_SOFT = "/>";
     }
 
     public boolean initialise() {
@@ -63,7 +62,8 @@ public class MetaData extends AppCompatActivity {
         String[] mRawInputLines = mRawInput.split("\n");
 
         KEY_HEAD = mRawInputLines[0] + mRawInputLines[1];
-        KEY_SURVEY_URI = mRawInputLines[2].split("\"")[1];
+
+        KEY_SURVEY_URI = mRawInput.split("<survey uri=\"")[1].split("\">")[0];
         KEY_FOOT = mRawInputLines[mRawInputLines.length - 1];
         KEY_QUESTID = generateQuestId();
         FILE_NAME = generateFileName();
@@ -131,7 +131,7 @@ public class MetaData extends AppCompatActivity {
                     case "text":
                         ANSWER_DATA += ">";
                         ANSWER_DATA += mEvaluationList.getTextFromQuestionId(questionId);
-                        ANSWER_DATA += "</value>";
+                        ANSWER_DATA += KEY_VALUE_CLOSE;
                         break;
                     case "id":
                         ArrayList<String> listOfIds =

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
 
-<mobiquest>
-
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
     <timer mean="300" deviation="60"></timer>
 
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
@@ -47,8 +48,6 @@
             </default>
         </question>
 
-
-			
         <question id="10813" type="radio">
             <label>
                 <text>Please describe your situation.</text>
@@ -109,8 +108,8 @@
             </option>
         </question>
         <question
-            filter="10815_21431"
-            id="10821"
+            filter="10813_21431"
+            id="10815"
             type="checkbox">
             <label>
                 <text>Travelling - please specify:</text>
@@ -141,8 +140,8 @@
             </option>
         </question>
         <question
-            filter="10816_21432"
-            id="10822"
+            filter="10813_21432"
+            id="10816"
             type="checkbox">
             <label>
                 <text>Social interaction/errands - please specify:</text>

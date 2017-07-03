@@ -23,13 +23,13 @@ import java.util.List;
 
 public class AnswerTypeRadio extends AppCompatActivity {
 
+    private final RadioGroup mRadioGroup;
+    private final AnswerLayout mParent;
+    private final Context mContext;
+    private final Questionnaire mQuestionnaire;
+    private final int mQuestionId;
+    private final List<StringAndInteger> mListOfAnswers;
     private String LOG_STRING = "AnswerTypeRadio";
-    private RadioGroup mRadioGroup;
-    private AnswerLayout mParent;
-    private Context mContext;
-    private Questionnaire mQuestionnaire;
-    private int mQuestionId;
-    private List<StringAndInteger> mListOfAnswers;
     private int mDefault = -1;
 
 
@@ -98,9 +98,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
                 // Therefore onClickListening must be handled on Group Level
                 // listOfRadioIds contains all Ids of current Radio Group
                 mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
-                // mEvaluationList.removeQuestionId(mQuestionId);
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, checkedId);
-                //mEvaluationList.add(mQuestionId, checkedId);
                 mRadioGroup.check(checkedId);
 
                 // Toggle Visibility of suited/unsuited frames

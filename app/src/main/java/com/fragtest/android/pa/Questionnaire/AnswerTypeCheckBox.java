@@ -22,13 +22,13 @@ import java.util.List;
 
 public class AnswerTypeCheckBox extends AppCompatActivity {
 
+    public final AnswerLayout mParent;
+    private final Context mContext;
+    private final int mQuestionId;
+    private final List<StringAndInteger> mListOfAnswers;
+    private final List<Integer> mListOfDefaults;
+    private final Questionnaire mQuestionnaire;
     public LinearLayout.LayoutParams answerParams;
-    public AnswerLayout mParent;
-    private Context mContext;
-    private int mQuestionId;
-    private List<StringAndInteger> mListOfAnswers;
-    private List<Integer> mListOfDefaults;
-    private Questionnaire mQuestionnaire;
 
     public AnswerTypeCheckBox(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 

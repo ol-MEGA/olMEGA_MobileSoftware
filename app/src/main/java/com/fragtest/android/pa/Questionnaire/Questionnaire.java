@@ -1,6 +1,5 @@
 package com.fragtest.android.pa.Questionnaire;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
@@ -13,7 +12,6 @@ import com.fragtest.android.pa.Core.EvaluationList;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.MandatoryInfo;
 import com.fragtest.android.pa.Core.MetaData;
-import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
@@ -27,30 +25,28 @@ import java.util.List;
 
 public class Questionnaire {
 
-    private static String LOG_STRING = "Questionnaire";
+    private static final String LOG_STRING = "Questionnaire";
     // Accumulator for ids, values and texts gathered from user input
-    public EvaluationList mEvaluationList;
+    private final EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
     // List containing all questions (including all attached information)
     private List<String> mQuestionList;
     // Context of QuestionnairePageAdapter for visibility
-    private QuestionnairePagerAdapter mContextQPA;
+    private final QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
-    private Context mContext;
-    private MainActivity mMainActivity;
+    private final Context mContext;
     // Basic information about all available questions
-    private ArrayList<QuestionInfo> mQuestionInfo;
-    private MandatoryInfo mMandatoryInfo;
+    private final ArrayList<QuestionInfo> mQuestionInfo;
+    private final MandatoryInfo mMandatoryInfo;
     private MetaData mMetaData;
-    private FileIO mFileIO;
+    private final FileIO mFileIO;
     // Flag: display forced empty vertical spaces
-    private boolean acceptBlankSpaces = false;
+    private final boolean acceptBlankSpaces = false;
 
     public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
-        mMainActivity = (MainActivity) mContext;
         mContextQPA = contextQPA;
         mEvaluationList = new EvaluationList();
         mFileIO = new FileIO();
@@ -173,7 +169,7 @@ public class Questionnaire {
         // List carrying all Answers and Answer Ids
         List<Answer> answerList = question.getAnswers();
 
-        /** Iteration over all possible Answers attributed to current question **/
+        // Iteration over all possible Answers attributed to current question
         for (int iAnswer = 0; iAnswer < nNumAnswers; iAnswer++) {
 
             // Obtain Answer specific Parameters
@@ -290,11 +286,6 @@ public class Questionnaire {
         return true;
     }
 
-    public boolean addIdListToEvaluationList(int questionId, List<Integer> listOfIds) {
-        mEvaluationList.add(questionId, listOfIds);
-        return true;
-    }
-
     public boolean removeIdFromEvaluationList(int id) {
         mEvaluationList.removeAnswerId(id);
         return true;
@@ -309,7 +300,8 @@ public class Questionnaire {
         mMetaData.finalise(mEvaluationList);
         mFileIO.saveDataToFile(mContext, mMetaData.getFileName(), mMetaData.getData());
         Toast.makeText(mContext, R.string.infoTextSave, Toast.LENGTH_SHORT).show();
-        ((Activity) mContext).finish();
+        //((Activity) mContext).finish();
+        returnToMenu();
         return true;
     }
 
@@ -330,29 +322,39 @@ public class Questionnaire {
             Log.i(LOG_STRING, "Checking visibility");
         }
 
-        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
+        boolean wasChanged = true;
 
-            QuestionInfo qI = mQuestionInfo.get(iPos);
+        while (wasChanged) {
+            wasChanged = false;
 
-            if (qI.isActive()) {                                                                    // View is active but might be obsolete
+            for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
-                if (qI.isHidden()) {                                                                // View has been declared invisible
-                    removeQuestion(iPos);
-                } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {       // Not ALL MUST EXIST ids are INCLUDED
-                    removeQuestion(iPos);
-                } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // at least one MUST NOT EXIST id IS INCLUDED
-                    removeQuestion(iPos);
-                }
+                QuestionInfo qI = mQuestionInfo.get(iPos);
 
-            } else {                                                                                // View is inactive but should possibly be active
+                if (qI.isActive()) {                                                                    // View is active but might be obsolete
 
-                if (!qI.isHidden()                                                                  // View has not been declared invisible
-                        && !mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())    // No MUST NOT EXIST id is  INCLUDED
-                        && mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {        // MUST EXIST ids are ALL INCLUDED
-                    addQuestion(iPos);
+                    if (qI.isHidden()) {                                                                // View has been declared invisible
+                        removeQuestion(iPos);
+                        wasChanged = true;
+                    } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {       // Not ALL MUST EXIST ids are INCLUDED
+                        removeQuestion(iPos);
+                        wasChanged = true;
+                    } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // at least one MUST NOT EXIST id IS INCLUDED
+                        removeQuestion(iPos);
+                        wasChanged = true;
+                    }
+
+                } else {                                                                                // View is inactive but should possibly be active
+
+                    if (!qI.isHidden()                                                                  // View has not been declared invisible
+                            && !mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())    // No MUST NOT EXIST id is  INCLUDED
+                            && mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {        // MUST EXIST ids are ALL INCLUDED
+                        addQuestion(iPos);
+                        wasChanged = true;
+                    }
                 }
             }
-        }
+    }
         return true;
     }
 
@@ -442,6 +444,18 @@ public class Questionnaire {
         return listString;
     }
 
+    private void returnToMenu() {
+        mContextQPA.createMenu();
+    }
+
+}
+
+    /*
+    public boolean addIdListToEvaluationList(int questionId, List<Integer> listOfIds) {
+        mEvaluationList.add(questionId, listOfIds);
+        return true;
+    }*/
+    /*
     public boolean clearAnswerIds() {
         mEvaluationList.removeAllOfType("id");
         checkVisibility();
@@ -453,10 +467,7 @@ public class Questionnaire {
         mEvaluationList.removeAllOfType("text");
         return true;
     }
-
-}
-
-
+*/
 /*
     public boolean checkVisibility() {
         // Function checks all available pages on whether their filtering condition has been met and

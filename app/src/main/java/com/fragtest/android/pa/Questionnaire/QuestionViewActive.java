@@ -10,19 +10,14 @@ import java.util.List;
 
 public class QuestionViewActive implements Comparable<QuestionViewActive> {
 
-    private View mView;
-    private Integer mId;
-    private Integer mPositionInRaw;
-    private boolean mMandatory;
-    private List<Answer> mListOfAnswerIds;
+    private final View mView;
+    private final Integer mId;
+    private final Integer mPositionInRaw;
+    private final boolean mMandatory;
+    private final List<Answer> mListOfAnswerIds;
 
-    @Override
-    public int compareTo(QuestionViewActive questionViewActive) {
-        return this.mPositionInRaw.compareTo(questionViewActive.getPositionInRaw());
-    }
-
-    public QuestionViewActive (View view, int id, int positionInRaw, boolean mandatory,
-                               List<Answer> listOfAnswerIds) {
+    public QuestionViewActive(View view, int id, int positionInRaw, boolean mandatory,
+                              List<Answer> listOfAnswerIds) {
         mView = view;
         mId = id;
         mPositionInRaw = positionInRaw;
@@ -30,14 +25,29 @@ public class QuestionViewActive implements Comparable<QuestionViewActive> {
         mListOfAnswerIds = listOfAnswerIds;
     }
 
-    public View getView() { return mView; }
+    @Override
+    public int compareTo(QuestionViewActive questionViewActive) {
+        return this.mPositionInRaw.compareTo(questionViewActive.getPositionInRaw());
+    }
 
-    public int getId() { return mId; }
+    public View getView() {
+        return mView;
+    }
 
-    public List<Answer> getListOfAnswerIds() { return mListOfAnswerIds; }
+    public int getId() {
+        return mId;
+    }
 
-    public int getPositionInRaw() { return mPositionInRaw; }
+    List<Answer> getListOfAnswerIds() {
+        return mListOfAnswerIds;
+    }
 
-    public boolean isMandatory() { return mMandatory; }
+    int getPositionInRaw() {
+        return mPositionInRaw;
+    }
+
+    boolean isMandatory() {
+        return mMandatory;
+    }
 
 }

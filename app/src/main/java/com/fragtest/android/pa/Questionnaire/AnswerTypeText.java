@@ -21,14 +21,14 @@ import com.fragtest.android.pa.R;
 
 public class AnswerTypeText extends AppCompatActivity {
 
+    public final AnswerLayout parent;
+    private final String LOG_STRING = "AnswerTypeText";
+    private final Context mContext;
+    private final int mQuestionId;
+    private final Questionnaire mQuestionnaire;
     public EditText mAnswerText;
     public LinearLayout.LayoutParams answerParams;
-    public AnswerLayout parent;
-    private String LOG_STRING = "AnswerTypeText";
     private Button mButtonOkay;
-    private Context mContext;
-    private int mQuestionId;
-    private Questionnaire mQuestionnaire;
     private boolean isSystem = false;
 
 
@@ -40,7 +40,7 @@ public class AnswerTypeText extends AppCompatActivity {
     }
 
     public boolean addQuestion(String sAnswer) {
-        switch(sAnswer) {
+        switch (sAnswer) {
             case "$device.id":
                 isSystem = true;
                 mQuestionnaire.addTextToEvaluationLst(mQuestionId, generateDeviceId());
@@ -53,7 +53,7 @@ public class AnswerTypeText extends AppCompatActivity {
 
         if (!isSystem) {
             mAnswerText = new EditText(mContext);
-            mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+            mAnswerText.setRawInputType(InputType.TYPE_CLASS_TEXT);
             mAnswerText.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             mAnswerText.setGravity(Gravity.START);
             mAnswerText.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));

@@ -15,9 +15,9 @@ import com.fragtest.android.pa.R;
 
 public class AnswerLayout extends AppCompatActivity {
 
-    LinearLayout layoutAnswer;
-    ScrollView scrollContent;
-    private Context mContext;
+    final LinearLayout layoutAnswer;
+    final ScrollView scrollContent;
+    private final Context mContext;
 
     public AnswerLayout(Context context) {
         mContext = context;

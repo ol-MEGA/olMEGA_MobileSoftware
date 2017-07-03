@@ -14,12 +14,12 @@ import java.util.TimeZone;
 
 public class AnswerTypeDate extends AppCompatActivity {
 
+    private final int mQuestionId;
+    private final Questionnaire mQuestionnaire;
+    private final Context mContext;
+    private final SimpleDateFormat DATE_FORMAT;
     private String LOG_STRING = "AnswerTypeDate";
-    private int mQuestionId;
-    private Questionnaire mQuestionnaire;
-    private Context mContext;
     private String mString = "";
-    private SimpleDateFormat DATE_FORMAT;
 
     public AnswerTypeDate(Context context, Questionnaire questionnaire, int questionId) {
 
@@ -30,11 +30,11 @@ public class AnswerTypeDate extends AppCompatActivity {
     }
 
     public boolean addAnswer(String sAnswer) {
-        switch (sAnswer){
-            case "$utcnow" :
+        switch (sAnswer) {
+            case "$utcnow":
                 mString = generateTimeNowUTC();
                 break;
-            case "$now" :
+            case "$now":
                 mString = generateTimeNow();
                 break;
         }

@@ -13,9 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
 import com.fragtest.android.pa.R;
-import com.fragtest.android.pa.Core.Units;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,17 +27,21 @@ import java.util.List;
 public class AnswerTypeSliderFix extends AppCompatActivity {
 
     public static String LOG_STRING = "AnswerTypeSliderFix";
+    public final AnswerLayout parent;
     private final List<Integer> mListOfIds = new ArrayList<>();
-    public AnswerLayout parent;
-    private Context mContext;
-    private List<StringAndInteger> mListOfAnswers;
-    private LinearLayout mHorizontalContainer, mAnswerListContainer;
-    private View mResizeView, mRemainView;
-    private RelativeLayout mSliderContainer;
+    private final Context mContext;
+    private final List<StringAndInteger> mListOfAnswers;
+    private final LinearLayout mHorizontalContainer;
+    private final LinearLayout mAnswerListContainer;
+    private final View mResizeView;
+    private final View mRemainView;
+    private final RelativeLayout mSliderContainer;
+    private final int width;
+    private final int mUsableHeight;
+    private final int mQuestionId;
+    private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
-    private int width, mUsableHeight;
-    private int nTextViewHeight, mQuestionId;
-    private Questionnaire mQuestionnaire;
+    private int nTextViewHeight;
 
     public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
@@ -60,23 +64,17 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
         mUsableHeight = (new Units(mContext)).getUsableSliderHeight();
 
-        /**
-         *
-         *  |           mHorizontalContainer          |
-         *  | mSliderContainer | mAnswerListContainer |
-         *
-         * **/
-
+        //  |           mHorizontalContainer          |
+        //  | mSliderContainer | mAnswerListContainer |
         // mHorizontalContainer is parent to both slider and answer option containers
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
-
 
         // ACHTUNG _ MAGIC NUMBER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight-140,
+                mUsableHeight - 140,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(
@@ -96,7 +94,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(
                 mContext, R.color.BackgroundColor));
         mAnswerListContainer.setLayoutParams(new LinearLayout.LayoutParams(
-                width-100,
+                width - 100,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 1.f
         ));
@@ -104,7 +102,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mResizeView = mHorizontalContainer.findViewById(R.id.ResizeView);
         mRemainView = mHorizontalContainer.findViewById(R.id.RemainView);
 
-        mResizeView.setBackgroundColor(ContextCompat.getColor(mContext,R.color.JadeRed));
+        mResizeView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.JadeRed));
     }
 
     public boolean buildView() {
@@ -133,10 +131,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
             // Adaptive size and lightness of font of in-between tick marks
             if (mListOfAnswers.size() > 6) {
-                int textSize = (int) (mContext.getResources().getDimension(R.dimen.textSizeAnswer)) * 7 /mListOfAnswers.size();
-                if (iAnswer%2 == 1){
+                int textSize = (int) (mContext.getResources().getDimension(R.dimen.textSizeAnswer)) * 7 / mListOfAnswers.size();
+                if (iAnswer % 2 == 1) {
                     textSize -= 2;
-                    textMark.setTextColor(ContextCompat.getColor(mContext,R.color.TextColor_Light));
+                    textMark.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor_Light));
                 }
                 textMark.setTextSize(textSize);
             } else {
@@ -145,7 +143,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
             textMark.setGravity(Gravity.CENTER_VERTICAL);
             textMark.setLayoutParams(textParams);
-            textMark.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+            textMark.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
 
             mAnswerListContainer.addView(textMark);
         }
@@ -154,7 +152,7 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     }
 
     public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer,nAnswerId));
+        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
         // index of default answer if present
         if (isDefault) {
             // If default present, this element is the one
@@ -170,14 +168,13 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     public boolean addClickListener() {
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
-        tvTemp.post(new Runnable()
-        {
+        tvTemp.post(new Runnable() {
             @Override
             public void run() {
                 nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
-                    setProgressItem((int) ((mListOfAnswers.size()-1)/2.0f));
+                    setProgressItem((int) ((mListOfAnswers.size() - 1) / 2.0f));
                     mQuestionnaire.addIdToEvaluationList(mQuestionId,
                             mListOfAnswers.get(mListOfAnswers.size() / 2).getId());
                 } else {
@@ -209,20 +206,20 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
 
-                switch(action) {
-                    case (MotionEvent.ACTION_DOWN) :
+                switch (action) {
+                    case (MotionEvent.ACTION_DOWN):
                         return true;
-                    case (MotionEvent.ACTION_MOVE) :
+                    case (MotionEvent.ACTION_MOVE):
                         return rescaleSliderOnline(event);
-                    case (MotionEvent.ACTION_UP) :
+                    case (MotionEvent.ACTION_UP):
                         return rescaleSliderFinal(event);
-                    case (MotionEvent.ACTION_CANCEL) :
+                    case (MotionEvent.ACTION_CANCEL):
                         return true;
-                    case (MotionEvent.ACTION_OUTSIDE) :
-                        Log.d("Motion","Movement occurred outside bounds " +
+                    case (MotionEvent.ACTION_OUTSIDE):
+                        Log.d("Motion", "Movement occurred outside bounds " +
                                 "of current screen element");
                         return true;
-                    default :
+                    default:
                         break;
                 }
                 return true;
@@ -235,20 +232,20 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 int action = MotionEventCompat.getActionMasked(event);
 
-                switch(action) {
-                    case (MotionEvent.ACTION_DOWN) :
+                switch (action) {
+                    case (MotionEvent.ACTION_DOWN):
                         return true;
-                    case (MotionEvent.ACTION_MOVE) :
+                    case (MotionEvent.ACTION_MOVE):
                         return rescaleSliderOnline(event);
-                    case (MotionEvent.ACTION_UP) :
+                    case (MotionEvent.ACTION_UP):
                         return rescaleSliderFinal(event);
-                    case (MotionEvent.ACTION_CANCEL) :
+                    case (MotionEvent.ACTION_CANCEL):
                         return true;
-                    case (MotionEvent.ACTION_OUTSIDE) :
-                        Log.d("Motion","Movement occurred outside bounds " +
+                    case (MotionEvent.ACTION_OUTSIDE):
+                        Log.d("Motion", "Movement occurred outside bounds " +
                                 "of current screen element");
                         return true;
-                    default :
+                    default:
                         break;
                 }
                 return true;
@@ -289,18 +286,18 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     // Ensure values inside slider boundaries
     private float clipValuesToRange(float inVal) {
         int nPad = (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom);
-        if (inVal < Units.getScreenHeight()-mUsableHeight-nPad) {
-            inVal =  Units.getScreenHeight()-mUsableHeight-nPad;
-        } else if (inVal > Units.getScreenHeight()-nPad) {
-            inVal = Units.getScreenHeight()-nPad;
+        if (inVal < Units.getScreenHeight() - mUsableHeight - nPad) {
+            inVal = Units.getScreenHeight() - mUsableHeight - nPad;
+        } else if (inVal > Units.getScreenHeight() - nPad) {
+            inVal = Units.getScreenHeight() - nPad;
         }
         return inVal;
     }
 
     // Ensure valid item numbers
     private int clipItemsToRange(int item) {
-        if (item > mListOfAnswers.size()-1) {
-            item = mListOfAnswers.size()-1;
+        if (item > mListOfAnswers.size() - 1) {
+            item = mListOfAnswers.size() - 1;
         } else if (item < 0) {
             item = 0;
         }
@@ -311,13 +308,13 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private int mapValuesToItems(float inVal) {
         return (int) ((inVal - (Units.getScreenHeight() -
                 mUsableHeight - (int) mContext.getResources().getDimension(
-                        R.dimen.answerLayoutPadding_Bottom)))/(nTextViewHeight));
+                R.dimen.answerLayoutPadding_Bottom))) / (nTextViewHeight));
     }
 
     // Set progress/slider according to number of selected item (counting from 0)
     public void setProgressItem(int numItem) {
         mResizeView.getLayoutParams().height =
-                (int) ((2*(mListOfAnswers.size()-numItem)-1)/2.0f*nTextViewHeight);
+                (int) ((2 * (mListOfAnswers.size() - numItem) - 1) / 2.0f * nTextViewHeight);
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
     }
 }

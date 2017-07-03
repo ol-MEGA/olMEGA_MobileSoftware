@@ -28,24 +28,34 @@ import static android.content.Context.VIBRATOR_SERVICE;
 
 public class QuestionnairePagerAdapter extends PagerAdapter {
 
-    private String LOG_STRING = "Quest..PagerAdapter";
+    final ViewPager mViewPager;
+    private final MainActivity MainActivity;
+    private final Context mContext;
+    private final Handler timerHandler = new Handler();
+    private final int mUpdateRate = 1000;
+    private final int mDurVibrationMilliseconds = 200;
     // Stores all active Views
     ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
     ArrayList<QuestionViewActive> mListOfViewsStorage;
-    final ViewPager mViewPager;
+    private String LOG_STRING = "Quest..PagerAdapter";
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
-    private final MainActivity MainActivity;
     private MenuPage mMenuPage;
-    private final Context mContext;
-
-    private final Handler timerHandler = new Handler();
     private boolean runTimer = true;
     private int mSecondsDelay = 30;
     private int mSecondsRemaining = 120;
-    private final int mUpdateRate = 1000;
-    private final int mDurVibrationMilliseconds = 200;
+    private final Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (runTimer) {
+                // float needed here (possibly)
+                mSecondsRemaining -= mUpdateRate / 1000;
+                updateTime(mSecondsRemaining);
+                timerHandler.postDelayed(this, mUpdateRate);
+            }
+        }
+    };
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
 
@@ -95,7 +105,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     public void setQuestionnaireProgressBar(int position) {
-    // Set the horizontal Indicator at the Top to follow Page Position
+        // Set the horizontal Indicator at the Top to follow Page Position
         int nAccuracy = 100;
 
         View progress = MainActivity.mProgress;
@@ -165,9 +175,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
         MainActivity.mRevert.setVisibility(View.INVISIBLE);
         MainActivity.mProgress.setBackgroundColor(
-                ContextCompat.getColor(mContext,R.color.JadeGray));
+                ContextCompat.getColor(mContext, R.color.JadeGray));
         MainActivity.mRegress.setBackgroundColor(
-                ContextCompat.getColor(mContext,R.color.JadeGray));
+                ContextCompat.getColor(mContext, R.color.JadeGray));
         MainActivity.mLogo.setEnabled(false);
     }
 
@@ -176,9 +186,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mArrowBack.setVisibility(View.VISIBLE);
         MainActivity.mRevert.setVisibility(View.VISIBLE);
         MainActivity.mProgress.setBackgroundColor(
-                ContextCompat.getColor(mContext,R.color.JadeRed));
+                ContextCompat.getColor(mContext, R.color.JadeRed));
         MainActivity.mRegress.setBackgroundColor(
-                ContextCompat.getColor(mContext,R.color.JadeGray));
+                ContextCompat.getColor(mContext, R.color.JadeGray));
         MainActivity.mLogo.setEnabled(true);
     }
 
@@ -188,7 +198,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Extracts Question Details from Questionnaire and creates Question
             Question question = mQuestionnaire.createQuestion(iQuestion);
             // Inflates Question Layout based on Question Details
-            LinearLayout layout= mQuestionnaire.generateView(question);
+            LinearLayout layout = mQuestionnaire.generateView(question);
             // Sets Layout Id to Question Id
             layout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
@@ -201,7 +211,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     }
 
-    private void handleControls(){
+    private void handleControls() {
 
         MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -239,14 +249,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         if (seconds > 0) {
             mMenuPage.updateTime(seconds);
         } else {
-            ((Vibrator)mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMilliseconds);
+            ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMilliseconds);
             createQuestionnaire();
         }
     }
 
     private void setTimer(int secondsMean, int secondsDeviation) {
         mSecondsDelay = ThreadLocalRandom.current().nextInt(
-                secondsMean-secondsDeviation, secondsMean+secondsDeviation+1);
+                secondsMean - secondsDeviation, secondsMean + secondsDeviation + 1);
     }
 
     private void startTimer() {
@@ -262,18 +272,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private void stopTimer() {
         runTimer = false;
     }
-
-    private final Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            if (runTimer) {
-                // float needed here (possibly)
-                mSecondsRemaining -= mUpdateRate / 1000;
-                updateTime(mSecondsRemaining);
-                timerHandler.postDelayed(this, mUpdateRate);
-            }
-        }
-    };
 
     int removeView(int position) {
 
@@ -351,7 +349,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public void notifyDataSetChanged() {
         super.notifyDataSetChanged();
-
     }
 
     @Override
