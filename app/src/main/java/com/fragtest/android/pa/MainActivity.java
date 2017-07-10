@@ -41,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what) {
 
-                case 1:
+                case ControlService.MSG_ALARM_RECEIVED:
+                    mAdapter.createQuestionnaire();
                     break;
 
                 default:
@@ -100,8 +101,6 @@ public class MainActivity extends AppCompatActivity {
     public void handleNewPagerAdapter() {
 
         mViewPager = null;
-        // Explicitly call garbage collection -> might be critical
-        //System.gc();
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
         mViewPager.setAdapter(mAdapter);

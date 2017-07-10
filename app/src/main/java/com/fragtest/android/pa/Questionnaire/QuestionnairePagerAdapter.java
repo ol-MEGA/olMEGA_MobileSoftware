@@ -249,8 +249,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         if (seconds > 0) {
             mMenuPage.updateTime(seconds);
         } else {
-            ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMilliseconds);
-            createQuestionnaire();
+            //((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMilliseconds);
+            //createQuestionnaire();
         }
     }
 

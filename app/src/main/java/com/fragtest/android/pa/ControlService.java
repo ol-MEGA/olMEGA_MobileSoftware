@@ -13,6 +13,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.Core.EventTimer;
+
 /**
  * The brains of the operation.
  *
@@ -26,8 +28,12 @@ public class ControlService extends Service {
     static final int MSG_REGISTER_CLIENT = 1;
     static final int MSG_UNREGISTER_CLIENT = 2;
     static final int MSG_GET_STATUS = 3;
+    public static final int MSG_ALARM_RECEIVED = 4;
 
     private NotificationManager mNotificationManager;
+
+    // Q-Timer
+    EventTimer mEventTimer;
 
     // Messenger to clients
     private Messenger mClientMessenger;
@@ -50,10 +56,15 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null;
+                    startActivity();
                     break;
 
                 case MSG_GET_STATUS:
                     messageClient(1);
+                    break;
+
+                case MSG_ALARM_RECEIVED:
+                    messageClient(MSG_ALARM_RECEIVED);
                     break;
 
                 default:
@@ -65,8 +76,11 @@ public class ControlService extends Service {
 
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
+
     @Override
     public void onCreate() {
+        mEventTimer = new EventTimer(this, mMessengerHandler, 10, 0);
+        mEventTimer.setTimer();
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
@@ -104,6 +118,15 @@ public class ControlService extends Service {
             Log.d(LOG, "mClientMessenger is null.");
         }
     }
+
+    public void startActivity() {
+//        Intent intent = new Intent();
+//        intent.setClass(getBaseContext(), MainActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
 
     private void showNotification() {
 

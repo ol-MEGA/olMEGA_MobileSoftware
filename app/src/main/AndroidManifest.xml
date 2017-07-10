@@ -20,7 +20,9 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".ControlService" />
+        <receiver android:name=".Core.EventReceiver" />
+        <service android:name=".ControlService"
+                 android:process=":remote" />
 
     </application>
 
