@@ -5,8 +5,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -17,20 +21,49 @@ import android.widget.Toast;
 
 public class ControlService extends Service {
 
+    static final String LOG = "ControlService";
+
+    static final int MSG_REGISTER_CLIENT = 1;
+    static final int MSG_UNREGISTER_CLIENT = 2;
+    static final int MSG_GET_STATUS = 3;
+
     private NotificationManager mNotificationManager;
+
+    // Messenger to clients
+    private Messenger mClientMessenger;
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
 
-    private final IBinder mBinder = new LocalBinder();
+    class MessageHandler extends Handler {
 
+        @Override
+        public void handleMessage(Message msg) {
 
-    public class LocalBinder extends Binder {
-        ControlService getService() {
-            return ControlService.this;
+            Log.d(LOG, "Received Message: " + msg.what);
+
+            switch (msg.what) {
+
+                case MSG_REGISTER_CLIENT:
+                    mClientMessenger = msg.replyTo;
+                    break;
+
+                case MSG_UNREGISTER_CLIENT:
+                    mClientMessenger = null;
+                    break;
+
+                case MSG_GET_STATUS:
+                    messageClient(1);
+                    break;
+
+                default:
+                    super.handleMessage(msg);
+
+            }
         }
     }
 
+    final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
     @Override
     public void onCreate() {
@@ -55,9 +88,22 @@ public class ControlService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        return mMessengerHandler.getBinder();
     }
 
+    // Send message to connected client
+    private void messageClient(int what) {
+
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null.");
+        }
+    }
 
     private void showNotification() {
 
