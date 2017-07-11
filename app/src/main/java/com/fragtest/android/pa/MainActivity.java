@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -83,7 +84,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Is ControlService already running?
+    private boolean isServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service :
+                manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (ControlService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void doBindService() {
+        if (!isServiceRunning()) {
+            startService(new Intent(this, ControlService.class));
+        }
         bindService(new Intent(this, ControlService.class),
                 mConnection, Context.BIND_AUTO_CREATE);
         mServiceIsBound = true;
@@ -92,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
 
     void doUnbindService() {
         if (mServiceIsBound) {
+            messageService(ControlService.MSG_UNREGISTER_CLIENT);
             unbindService(mConnection);
             mServiceIsBound = false;
         }

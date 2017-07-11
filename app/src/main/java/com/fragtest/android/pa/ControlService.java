@@ -30,6 +30,7 @@ public class ControlService extends Service {
     static final int MSG_GET_STATUS = 3;
     public static final int MSG_ALARM_RECEIVED = 4;
 
+    private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
     // Q-Timer
@@ -56,7 +57,10 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null;
-                    startActivity();
+
+                    if (restartActivity) {
+                        startActivity();
+                    }
                     break;
 
                 case MSG_GET_STATUS:
@@ -79,7 +83,8 @@ public class ControlService extends Service {
 
     @Override
     public void onCreate() {
-        mEventTimer = new EventTimer(this, mMessengerHandler, 10, 0);
+        Log.d(LOG, "onCreate");
+        mEventTimer = new EventTimer(this, mMessengerHandler, 600, 0);
         mEventTimer.setTimer();
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
@@ -89,12 +94,14 @@ public class ControlService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
+        Log.d(LOG, "onStartCommand");
         return START_STICKY;
     }
 
 
     @Override
     public void onDestroy() {
+        Log.d(LOG, "onDestroy");
         mNotificationManager.cancel(NOTIFICATION_ID);
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
     }
@@ -102,6 +109,7 @@ public class ControlService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.d(LOG, "onBind");
         return mMessengerHandler.getBinder();
     }
 
@@ -120,9 +128,6 @@ public class ControlService extends Service {
     }
 
     public void startActivity() {
-//        Intent intent = new Intent();
-//        intent.setClass(getBaseContext(), MainActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
