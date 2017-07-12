@@ -26,7 +26,6 @@ public class FileIO {
     private static final String FILE_NAME = "hoersituation-v0.xml";
     private static final String LOG_STRING = "FileIO";
 
-
     public FileIO() {
     }
 

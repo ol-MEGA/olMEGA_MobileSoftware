@@ -27,9 +27,10 @@ public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
     public TextView mLogo;
-    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress;
+    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
+    private boolean showPreferences = true;
     private Messenger mServiceMessenger;
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
 
@@ -174,6 +175,17 @@ public class MainActivity extends AppCompatActivity {
         mRevert = findViewById(R.id.Action_Revert);
         mProgress = findViewById(R.id.progress);
         mRegress = findViewById(R.id.regress);
+        mConfig = findViewById(R.id.Action_Config);
+
+        if (showPreferences) {
+            mConfig.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+                }
+            });
+        }
+
 
         handleNewPagerAdapter();
         mAdapter.createMenu();
@@ -187,26 +199,4 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         doUnbindService();
     }
-
-    /*public int getNewTimerInterval() {
-        return mAdapter.getNewTimerInterval();
-    }*/
-
-    /*public void startNewTimer() {
-
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences(
-                "com.fragtest.android.pa", Context.MODE_PRIVATE);
-        String keyInterval = "timerInterval";
-
-        // Generate new timer interval and write it to SharedPreferences
-        int timerInterval = getNewTimerInterval();
-        prefs.edit().putInt(keyInterval, timerInterval).apply();
-
-        Log.e(LOG, "New timer interval: "+timerInterval+"s");
-
-        // Send message to initialise new functional timer
-        messageService(ControlService.MSG_NEW_TIMER);
-        // Start visible countdown
-        mAdapter.startTimer();
-    }*/
 }

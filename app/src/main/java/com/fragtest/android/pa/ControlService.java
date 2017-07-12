@@ -128,6 +128,7 @@ public class ControlService extends Service {
         return mMessengerHandler.getBinder();
     }
 
+
     // Send message to connected client with additional data
     private void messageClient(int what, Bundle data) {
 
@@ -142,6 +143,7 @@ public class ControlService extends Service {
             Log.d(LOG, "mClientMessenger is null.");
         }
     }
+
 
     // Send message to connected client
     private void messageClient(int what) {
@@ -193,20 +195,4 @@ public class ControlService extends Service {
         messageClient(ControlService.MSG_START_COUNTDOWN, data);
         Log.e(LOG,"Timer set to "+timerInterval+"s");
     }
-
-    /*
-    public void startEventTimer() {
-
-        // Read preferences
-        String keyInterval = "timerInterval";
-        SharedPreferences prefs = getApplicationContext().getSharedPreferences(
-                "com.fragtest.android.pa", Context.MODE_PRIVATE);
-
-        int timerInterval = prefs.getInt(keyInterval, 300);
-        mEventTimer = new EventTimer(this, mMessengerHandler, timerInterval);
-        mEventTimer.setTimer();
-
-        Log.e(LOG, "New timer interval read from SharedPreferences: "+timerInterval+"s");
-    }
-*/
 }
