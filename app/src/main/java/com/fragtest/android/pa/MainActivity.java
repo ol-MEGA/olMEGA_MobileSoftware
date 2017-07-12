@@ -20,6 +20,8 @@ import android.widget.TextView;
 
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_START_COUNTDOWN:
                     Bundle data = msg.getData();
                     int timerInterval = (int) data.get("timerInterval");
+                    mAdapter.createMenu();
                     mAdapter.setCountDownInterval(timerInterval);
                     mAdapter.startCountDown();
                     if (BuildConfig.DEBUG) {
@@ -62,7 +65,9 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
                     // Necessary states are set for questionnaire
-                    mAdapter.createQuestionnaire();
+                    Bundle dataQuest = msg.getData();
+                    ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
+                    mAdapter.createQuestionnaire(questionList);
                     break;
 
                 default:
@@ -84,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = null;
         }
     };
-
 
     // Send message to connected client
     public void messageService(int what) {
@@ -120,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
         mServiceIsBound = true;
     }
 
-
     void doUnbindService() {
         if (mServiceIsBound) {
             messageService(ControlService.MSG_UNREGISTER_CLIENT);
@@ -128,7 +131,6 @@ public class MainActivity extends AppCompatActivity {
             mServiceIsBound = false;
         }
     }
-
 
     public void handleNewPagerAdapter() {
 
@@ -138,8 +140,8 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
-    }
 
+    }
 
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
             new ViewPager.OnPageChangeListener() {
@@ -158,13 +160,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-
-
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
@@ -186,10 +185,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-
         handleNewPagerAdapter();
-        mAdapter.createMenu();
-
         doBindService();
     }
 

@@ -1,8 +1,11 @@
 package com.fragtest.android.pa;
 
 import android.content.Intent;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.VideoView;
 
 /**
  * Created by ulrikkowalk on 23.03.17.
@@ -10,12 +13,12 @@ import android.support.v7.app.AppCompatActivity;
 
 public class IntroLogo extends AppCompatActivity {
 
-    private int REQUEST_EXIT = 0;
+    //private int REQUEST_EXIT = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-/*
+
         setContentView(R.layout.intro);
         VideoView videoView = (VideoView) findViewById(R.id.introVideo);
         // Set the URI to local Video File
@@ -26,15 +29,15 @@ public class IntroLogo extends AppCompatActivity {
         videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-            */
+
                 Intent mainIntent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(mainIntent);
 
-        finish();
-        /*
+        //finish();
+
             }
         });
-        */
+
     }
 
 

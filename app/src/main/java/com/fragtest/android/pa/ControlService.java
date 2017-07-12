@@ -15,6 +15,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.XMLReader;
+
+import java.util.ArrayList;
 
 /**
  * The brains of the operation.
@@ -40,7 +43,7 @@ public class ControlService extends Service {
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
-    // Q-Timer
+    // Questionnaire timer
     EventTimer mEventTimer;
 
     // Messenger to clients
@@ -84,12 +87,17 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_ARE_WE_RUNNING:
-                    // Check if necessary states are set for questionnaire, then go
-                    messageClient(MSG_START_QUESTIONNAIRE);
+                    // Check if necessary states are set for questionnaire [TO DO],
+                    //
+                    // then go
+                    Bundle data = new Bundle();
+                    ArrayList<String> questionList = mXmlReader.getQuestionList();
+                    data.putStringArrayList("questionList",questionList);
+                    messageClient(MSG_START_QUESTIONNAIRE, data);
+                    break;
 
                 default:
                     super.handleMessage(msg);
-
             }
         }
     }
