@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -29,6 +30,12 @@ public class ControlService extends Service {
     static final int MSG_UNREGISTER_CLIENT = 2;
     static final int MSG_GET_STATUS = 3;
     public static final int MSG_ALARM_RECEIVED = 4;
+    public static final int MSG_START_COUNTDOWN = 5;
+    public static final int MSG_NEW_ALARM = 6;
+    public static final int MSG_ARE_WE_RUNNING = 7;
+    public static final int MSG_START_QUESTIONNAIRE = 8;
+
+    private XMLReader mXmlReader;
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
@@ -53,6 +60,7 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
                     mClientMessenger = msg.replyTo;
+                    setAlarmAndCountdown();
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -71,6 +79,14 @@ public class ControlService extends Service {
                     messageClient(MSG_ALARM_RECEIVED);
                     break;
 
+                case MSG_NEW_ALARM:
+                    setAlarmAndCountdown();
+                    break;
+
+                case MSG_ARE_WE_RUNNING:
+                    // Check if necessary states are set for questionnaire, then go
+                    messageClient(MSG_START_QUESTIONNAIRE);
+
                 default:
                     super.handleMessage(msg);
 
@@ -80,24 +96,24 @@ public class ControlService extends Service {
 
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
-
     @Override
     public void onCreate() {
+
         Log.d(LOG, "onCreate");
-        mEventTimer = new EventTimer(this, mMessengerHandler, 600, 0);
-        mEventTimer.setTimer();
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
-    }
 
+        mXmlReader = new XMLReader(this);
+        mEventTimer = new EventTimer(this, mMessengerHandler);
+
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
         return START_STICKY;
     }
-
 
     @Override
     public void onDestroy() {
@@ -106,11 +122,25 @@ public class ControlService extends Service {
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
     }
 
-
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(LOG, "onBind");
         return mMessengerHandler.getBinder();
+    }
+
+    // Send message to connected client with additional data
+    private void messageClient(int what, Bundle data) {
+
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.setData(data);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null.");
+        }
     }
 
     // Send message to connected client
@@ -130,8 +160,8 @@ public class ControlService extends Service {
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
-    }
 
+    }
 
     private void showNotification() {
 
@@ -152,4 +182,31 @@ public class ControlService extends Service {
         // Post notification to status bar
         mNotificationManager.notify(NOTIFICATION_ID, notification);
     }
+
+    private void setAlarmAndCountdown() {
+        int timerInterval = mXmlReader.getNewTimerInterval();
+        mEventTimer.setTimer(timerInterval);
+
+        Bundle data = new Bundle();
+        data.putInt("timerInterval", timerInterval);
+        // Send message to initialise new functional timer
+        messageClient(ControlService.MSG_START_COUNTDOWN, data);
+        Log.e(LOG,"Timer set to "+timerInterval+"s");
+    }
+
+    /*
+    public void startEventTimer() {
+
+        // Read preferences
+        String keyInterval = "timerInterval";
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences(
+                "com.fragtest.android.pa", Context.MODE_PRIVATE);
+
+        int timerInterval = prefs.getInt(keyInterval, 300);
+        mEventTimer = new EventTimer(this, mMessengerHandler, timerInterval);
+        mEventTimer.setTimer();
+
+        Log.e(LOG, "New timer interval read from SharedPreferences: "+timerInterval+"s");
+    }
+*/
 }

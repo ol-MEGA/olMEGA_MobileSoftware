@@ -24,7 +24,7 @@ public class FileIO {
     private static final String MAIN_FOLDER = "IHAB";
     private static final String DATA_FOLDER = "data";
     private static final String FILE_NAME = "hoersituation-v0.xml";
-    private static final String FILE_IO = "FileIO";
+    private static final String LOG_STRING = "FileIO";
 
 
     public FileIO() {
@@ -34,7 +34,7 @@ public class FileIO {
     private static String getFolderPath() {
         File baseDirectory = Environment.getExternalStoragePublicDirectory(MAIN_FOLDER);
         if (!baseDirectory.exists()) {
-            Log.e(FILE_IO, "Directory does not exist ->create");
+            Log.e(LOG_STRING, "Directory does not exist ->create");
             baseDirectory.mkdir();
         }
         return baseDirectory.getAbsolutePath();
@@ -61,7 +61,7 @@ public class FileIO {
                     text.append('\n');
                 } else {
                     if (BuildConfig.DEBUG) {
-                        Log.i(FILE_IO, "Dropping line: " + line.trim());
+                        Log.i(LOG_STRING, "Dropping line: " + line.trim());
                     }
                 }
 
@@ -103,7 +103,7 @@ public class FileIO {
                         text.append('\n');
                     } else {
                         if (BuildConfig.DEBUG) {
-                            Log.i(FILE_IO, "Dropping line: " + line.trim());
+                            Log.i(LOG_STRING, "Dropping line: " + line.trim());
                         }
                     }
 
@@ -141,14 +141,14 @@ public class FileIO {
         if (!dir.exists()) {
             dir.mkdirs();
             if (BuildConfig.DEBUG) {
-                Log.i(FILE_IO, "Directory created: " + dir);
+                Log.i(LOG_STRING, "Directory created: " + dir);
             }
         }
 
         String stringToSave = data;
 
         if (BuildConfig.DEBUG) {
-            Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+            Log.i(LOG_STRING, "writing to File: " + file.getAbsolutePath());
         }
 
         try {
@@ -168,7 +168,7 @@ public class FileIO {
             new SingleMediaScanner(context, file);
 
             if (BuildConfig.DEBUG) {
-                Log.i(FILE_IO, "Data successfully written.");
+                Log.i(LOG_STRING, "Data successfully written.");
             }
             return true;
         } catch (IOException e) {
@@ -189,19 +189,19 @@ public class FileIO {
         // Address Basis File in working Directory
         File file = new File(dir, sFileName);
 
-        Log.i(FILE_IO,file.getAbsolutePath());
+        Log.i(LOG_STRING,file.getAbsolutePath());
 
         // Make sure the path directory exists.
         if (!dir.exists()) {
             if (dir.mkdirs()) {
                 if (BuildConfig.DEBUG) {
-                    Log.i(FILE_IO, "Directory created: " + dir);
+                    Log.i(LOG_STRING, "Directory created: " + dir);
                 }
 
                 String stringToSave = data;
 
                 if (BuildConfig.DEBUG) {
-                    Log.i(FILE_IO, "writing to File: " + file.getAbsolutePath());
+                    Log.i(LOG_STRING, "writing to File: " + file.getAbsolutePath());
                 }
 
                 try {
@@ -220,7 +220,7 @@ public class FileIO {
                     new SingleMediaScanner(context, file);
 
                     if (BuildConfig.DEBUG) {
-                        Log.i(FILE_IO, "Data successfully written.");
+                        Log.i(LOG_STRING, "Data successfully written.");
                     }
                     return true;
                 } catch (IOException e) {
@@ -230,7 +230,7 @@ public class FileIO {
                 }
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.e(FILE_IO, "Unable to create directory. Shutting down.");
+                    Log.e(LOG_STRING, "Unable to create directory. Shutting down.");
                 }
             }
         }

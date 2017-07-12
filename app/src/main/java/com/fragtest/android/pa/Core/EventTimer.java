@@ -5,9 +5,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Messenger;
+import android.util.Log;
 
-
-import java.util.concurrent.ThreadLocalRandom;
+import com.fragtest.android.pa.BuildConfig;
 
 /**
  * Timer to trigger questionnaire and display remaining time.
@@ -15,38 +15,35 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class EventTimer {
 
-    static final String LOG = "EventTimer";
+    private static final String LOG = "EventTimer";
+    private Context context;
+    private Messenger messenger;
 
-    int mTimerMean, mTimerDeviation;
-    Context context;
-    Messenger messenger;
-
-    public EventTimer(Context ctx, Messenger msg, int timerMean, int timerDeviation) {
+    public EventTimer(Context ctx, Messenger msg) {
 
         context = ctx;
         messenger = msg;
-        mTimerMean = timerMean;
-        mTimerDeviation = timerDeviation;
+
+        if (BuildConfig.DEBUG) {
+            Log.d(LOG,"EventTimer created.");
+        }
     }
 
-    public void setTimer() {
-
-        int msDelay;
-
-        // time to next alarm in ms
-        msDelay = ThreadLocalRandom.current().nextInt(
-                mTimerMean - mTimerDeviation, mTimerMean + mTimerDeviation + 1) * 1000;
+    public void setTimer(int interval) {
 
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+        // Alarm will call EventReceiver class by sending broadcast along with messenger context
         Intent intent = new Intent(context, EventReceiver.class);
-        intent.putExtra("Hint", "It's a Trap!");
         intent.putExtra("Messenger", messenger);
         PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + msDelay, alarmIntent);
+        // Schedules the initialisation of new questionnaire
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + (interval-1)*1000, alarmIntent);
+
+        if (BuildConfig.DEBUG){
+            Log.d(LOG,"New timer interval set to "+interval+"s");
+        }
     }
-
-
-
 }

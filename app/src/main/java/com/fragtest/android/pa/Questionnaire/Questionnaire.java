@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.BuildConfig;
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.EvaluationList;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.MandatoryInfo;
@@ -300,7 +301,6 @@ public class Questionnaire {
         mMetaData.finalise(mEvaluationList);
         mFileIO.saveDataToFile(mContext, mMetaData.getFileName(), mMetaData.getData());
         Toast.makeText(mContext, R.string.infoTextSave, Toast.LENGTH_SHORT).show();
-        //((Activity) mContext).finish();
         returnToMenu();
         return true;
     }
@@ -446,152 +446,6 @@ public class Questionnaire {
 
     private void returnToMenu() {
         mContextQPA.createMenu();
+        mContextQPA.sendMessage(ControlService.MSG_NEW_ALARM);
     }
-
 }
-
-    /*
-    public boolean addIdListToEvaluationList(int questionId, List<Integer> listOfIds) {
-        mEvaluationList.add(questionId, listOfIds);
-        return true;
-    }*/
-    /*
-    public boolean clearAnswerIds() {
-        mEvaluationList.removeAllOfType("id");
-        checkVisibility();
-        return true;
-    }
-
-    public boolean clearAnswerTexts() {
-        // Clears all entered answer Texts in mEvaluationList
-        mEvaluationList.removeAllOfType("text");
-        return true;
-    }
-*/
-/*
-    public boolean checkVisibility() {
-        // Function checks all available pages on whether their filtering condition has been met and
-        // toggles visibility by destroying or creating the views and adding them to the list of
-        // views which is handled by QuestionnairePagerAdapter
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Checking visibility");
-        }
-
-        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
-
-            QuestionInfo qI = mQuestionInfo.get(iPos);
-
-            if (qI.existsFilterId()                                    // Specific Filter Id
-                    && qI.getCondition()                                    // which MUST exist
-                    && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
-                    && !qI.isActive())                                      // on an INACTIVE Layout
-            {
-                addQuestion(iPos);
-            }
-
-            if (qI.existsFilterId()                                   // Specific Filter Id
-                    && qI.getCondition()                                    // which MUST exist
-                    && !mEvaluationList.containsAnswerId(qI.getFilterId())  // does NOT exist
-                    && qI.isActive())                                       // on an ACTIVE Layout
-            {
-                removeQuestion(iPos);
-            }
-
-            if (qI.existsFilterId()                                 // Specific Filter Id
-                    && !qI.getCondition()                                   // which MUST NOT exist
-                    && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
-                    && !qI.isActive())                                      // on an INACTIVE Layout
-            {
-                addQuestion(iPos);
-            }
-
-            if (qI.existsFilterId()                                 // Specific Filter Id
-                    && (!qI.getCondition())                                 // which MUST NOT exist
-                    && mEvaluationList.containsAnswerId(qI.getFilterId())   // DOES exist
-                    && qI.isActive())                                       // on an ACTIVE Layout
-            {
-                removeQuestion(iPos);
-            }
-
-            if (qI.existsFilterId()                                   // Specific Filter Id
-                    && !qI.getCondition()                                   // which MUST NOT exist
-                    && !mEvaluationList.containsAnswerId(qI.getFilterId())  // DOES NOT exist
-                    && !qI.isActive())                                      // on an INACTIVE Layout
-            {
-                addQuestion(iPos);
-            }
-
-            if (qI.isHidden() && qI.isActive()) {
-                qI.setInactive();
-                removeQuestion(iPos);
-            }
-        }
-        return true;
-    }
-    */
-
-
-
-/*
-
-
-    public boolean checkVisibility() {
-        // Function checks all available pages on whether their filtering condition has been met and
-        // toggles visibility by destroying or creating the views and adding them to the list of
-        // views which is handled by QuestionnairePagerAdapter
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Checking visibility");
-        }
-
-        for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
-
-            QuestionInfo qI = mQuestionInfo.get(iPos);
-
-            int iAdd =
-
-
-
-            if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && mEvaluationList.containsAnswerId(qI.getFilterIdPositive())   // that MUST exist DOES exist
-                    && !qI.isActive())                                              // on an INACTIVE Layout
-                    {
-                    Log.e(LOG_STRING, "Condition 1");
-                    addQuestion(iPos);
-                    }
-
-                    if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && !mEvaluationList.containsAnswerId(qI.getFilterIdNegative())  // that must NOT exist DOES NOT exist
-                    && !qI.isActive())                                              // on an INACTIVE Layout
-                    {
-                    Log.e(LOG_STRING, "Condition 5");
-                    addQuestion(iPos);
-                    }
-
-                    if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && !mEvaluationList.containsAnswerId(qI.getFilterIdPositive())      // that MUST exist does NOT exist
-                    && qI.isActive())                                                   // on an ACTIVE Layout
-                    {
-                    Log.e(LOG_STRING, "Condition 2");
-                    removeQuestion(iPos);
-                    }
-
-                    if (qI.existsFilterId()                                                 // Specific Filter Id
-                    && mEvaluationList.containsAnswerId(qI.getFilterIdNegative())   // that must NOT exist DOES exist
-                    && qI.isActive())                                               // on an ACTIVE Layout
-                    {
-                    Log.e(LOG_STRING, "Condition 4");
-                    removeQuestion(iPos);
-                    }
-
-                    if (qI.isHidden() && qI.isActive()) {
-                    qI.setInactive();
-                    removeQuestion(iPos);
-                    Log.e(LOG_STRING, "Condition 6");
-                    }
-                    }
-                    return true;
-                    }
-
- */

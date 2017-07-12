@@ -1,17 +1,14 @@
 package com.fragtest.android.pa.Menu;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.Units;
-import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
@@ -22,76 +19,45 @@ import com.fragtest.android.pa.R;
 public class MenuPage extends AppCompatActivity {
 
     private String LOG_STRING = "MenuPage";
-    private String timeString;
+    private String mCountDownString;
     private Context mContext;
-    private MainActivity mMainActivity;
     private QuestionnairePagerAdapter mContextQPA;
-    private FileIO mFileIO;
-    private Resources mResources;
     private String questFileName;
-    private TextView mTimeRemaining;
-    private String[] tempTimeRemaining;
-    private int mTimerMean, mTimerDeviation;
+    private TextView mCountDownRemaining;
+    private String[] mTempTextCountDownRemaining;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
+
         mContext = context;
-        mMainActivity = (MainActivity) context;
         mContextQPA = contextQPA;
-        mFileIO = new FileIO();
-        //questFileName = mResources.getResourceName(mContext,R.raw.question_short_eng);
         questFileName = "Start Questionnaire";
-        timeString = mContext.getResources().getString(R.string.timeRemaining);
-        tempTimeRemaining = timeString.split("%");
-        mTimeRemaining = new TextView(mContext);
-    }
+        mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
+        mTempTextCountDownRemaining = mCountDownString.split("%");
+        mCountDownRemaining = new TextView(mContext);
 
-    public void setUp() {
-        //mRawInput = mFileIO.readRawTextFile();
-        // offline version
-        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
-        String[] timerTemp = mRawInput.split("<timer|</timer>");
-
-        if(timerTemp[1].split("mean").length > 1) {
-            try {
-                mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
-                Log.e(LOG_STRING, "Timer mean set to "+mTimerMean+" Seconds.");
-            } catch (Exception e) {
-                mTimerMean = 30*60;
-                Log.e(LOG_STRING, "Invalid entry. Timer mean set to 1800 Seconds.");
-            }
-        }
-
-        if(timerTemp[1].split("deviation").length > 1) {
-            try {
-                mTimerDeviation = Integer.parseInt(timerTemp[1].split("\"")[3]);
-                Log.e(LOG_STRING, "Timer deviation set to "+mTimerDeviation+" Seconds.");
-            } catch (Exception e) {
-                mTimerDeviation = 5*60;
-                Log.e(LOG_STRING, "Invalid entry. Timer mean set to 300 Seconds.");
-            }
-        }
     }
 
     public LinearLayout generateView() {
+
         LinearLayout menuLayout = new LinearLayout(mContext);
 
-        mTimeRemaining = new TextView(mContext);
+        mCountDownRemaining = new TextView(mContext);
         LinearLayout.LayoutParams tempTopParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0,1f);
-        mTimeRemaining.setText(timeString);
-        mTimeRemaining.setGravity(View.TEXT_ALIGNMENT_CENTER);
-        mTimeRemaining.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                0, 1f);
+        mCountDownRemaining.setText(mCountDownString);
+        mCountDownRemaining.setGravity(View.TEXT_ALIGNMENT_CENTER);
+        mCountDownRemaining.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
         View tempViewBottom = new View(mContext);
 
         TextView textViewTitle = new TextView(mContext);
         textViewTitle.setText(questFileName);
         textViewTitle.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
-        textViewTitle.setTextColor(ContextCompat.getColor(mContext,R.color.JadeRed));
+        textViewTitle.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0,1f
+                0, 1f
         );
         textViewTitle.setGravity(View.TEXT_ALIGNMENT_CENTER);
         textViewTitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -99,11 +65,11 @@ public class MenuPage extends AppCompatActivity {
         textViewTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mContextQPA.createQuestionnaire();
+                mContextQPA.sendMessage(ControlService.MSG_ARE_WE_RUNNING);
             }
         });
 
-        menuLayout.addView(mTimeRemaining, tempTopParams);
+        menuLayout.addView(mCountDownRemaining, tempTopParams);
         menuLayout.addView(textViewTitle, textParams);
         menuLayout.addView(tempViewBottom, tempTopParams);
 
@@ -113,25 +79,17 @@ public class MenuPage extends AppCompatActivity {
 
         int height = (new Units(mContext)).getUsableSliderHeight();
         // Roughly okay, refine later
-        mTimeRemaining.setPadding(0,height/5,0,height/6);
-        textViewTitle.setPadding(0,height/6,0,height/6);
+        mCountDownRemaining.setPadding(0, height / 5, 0, height / 6);
+        textViewTitle.setPadding(0, height / 6, 0, height / 6);
 
         return menuLayout;
     }
 
-    public void updateTime(int seconds) {
-
-        int minutesRemaining = seconds/60;
-        int secondsRemaining = seconds - minutesRemaining*60;
-        mTimeRemaining.setText(""+tempTimeRemaining[0]+minutesRemaining+tempTimeRemaining[1]+
-            secondsRemaining+tempTimeRemaining[2]);
-    }
-
-    public int getTimerMean() {
-        return mTimerMean;
-    }
-
-    public int getTimerDeviation() {
-        return mTimerDeviation;
+    public void updateCountdownText(int seconds) {
+        // Handles update of visible text countdown
+        int minutesRemaining = seconds / 60;
+        int secondsRemaining = seconds - minutesRemaining * 60;
+        mCountDownRemaining.setText("" + mTempTextCountDownRemaining[0] + minutesRemaining +
+                mTempTextCountDownRemaining[1] + secondsRemaining + mTempTextCountDownRemaining[2]);
     }
 }

@@ -3,7 +3,7 @@
 
     /*This is where the timer values are modified. Mean and Deviation create an interval in which
     random times are generated.*/
-    <timer mean="300" deviation="60"></timer>
+    <timer mean="20" deviation="10"></timer>
 
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
         <title>

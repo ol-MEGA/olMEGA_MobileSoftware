@@ -31,18 +31,36 @@ public class MainActivity extends AppCompatActivity {
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
     private Messenger mServiceMessenger;
-
+    final Messenger mMessageHandler = new Messenger(new MessageHandler());
 
     class MessageHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
 
-            Log.d(LOG, "Received Message: " + msg.what);
+            if (BuildConfig.DEBUG) {
+                Log.d(LOG, "Message received: " + msg.what);
+            }
 
             switch (msg.what) {
 
                 case ControlService.MSG_ALARM_RECEIVED:
+                    // check if necessary states are set for questionnaire
+                    messageService(ControlService.MSG_ARE_WE_RUNNING);
+                    break;
+
+                case ControlService.MSG_START_COUNTDOWN:
+                    Bundle data = msg.getData();
+                    int timerInterval = (int) data.get("timerInterval");
+                    mAdapter.setCountDownInterval(timerInterval);
+                    mAdapter.startCountDown();
+                    if (BuildConfig.DEBUG) {
+                        Log.d(LOG, "Beginning countdown: " + timerInterval + "s.");
+                    }
+                    break;
+
+                case ControlService.MSG_START_QUESTIONNAIRE:
+                    // Necessary states are set for questionnaire
                     mAdapter.createQuestionnaire();
                     break;
 
@@ -51,10 +69,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-    final Messenger mMessageHandler = new Messenger(new MessageHandler());
-
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -72,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Send message to connected client
-    private void messageService(int what) {
+    public void messageService(int what) {
 
         if (mServiceMessenger != null) {
             try {
@@ -149,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        doBindService();
+
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
@@ -162,9 +176,9 @@ public class MainActivity extends AppCompatActivity {
         mRegress = findViewById(R.id.regress);
 
         handleNewPagerAdapter();
-        //mAdapter.createQuestionnaire();
         mAdapter.createMenu();
-        //mAdapter.startTimer();
+
+        doBindService();
     }
 
     @Override
@@ -174,10 +188,25 @@ public class MainActivity extends AppCompatActivity {
         doUnbindService();
     }
 
-
-    /*public int getCurrentItem() {
-        return mViewPager.getCurrentItem();
+    /*public int getNewTimerInterval() {
+        return mAdapter.getNewTimerInterval();
     }*/
 
+    /*public void startNewTimer() {
 
+        SharedPreferences prefs = getApplicationContext().getSharedPreferences(
+                "com.fragtest.android.pa", Context.MODE_PRIVATE);
+        String keyInterval = "timerInterval";
+
+        // Generate new timer interval and write it to SharedPreferences
+        int timerInterval = getNewTimerInterval();
+        prefs.edit().putInt(keyInterval, timerInterval).apply();
+
+        Log.e(LOG, "New timer interval: "+timerInterval+"s");
+
+        // Send message to initialise new functional timer
+        messageService(ControlService.MSG_NEW_TIMER);
+        // Start visible countdown
+        mAdapter.startTimer();
+    }*/
 }

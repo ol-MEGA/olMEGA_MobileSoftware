@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Menu.MenuPage;
 import com.fragtest.android.pa.R;
@@ -18,7 +19,6 @@ import com.fragtest.android.pa.R;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static android.content.Context.VIBRATOR_SERVICE;
 
@@ -33,7 +33,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private final Context mContext;
     private final Handler timerHandler = new Handler();
     private final int mUpdateRate = 1000;
-    private final int mDurVibrationMilliseconds = 200;
+    private final int mDurVibrationMs = 0 * 200;
     // Stores all active Views
     ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
@@ -42,16 +42,16 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
-    private boolean runTimer = true;
-    private int mSecondsDelay = 30;
+    private boolean runCountDown = true;
+    private int mCountDownInterval = 30;
     private int mSecondsRemaining = 120;
+
     private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
-            if (runTimer) {
-                // float needed here (possibly)
+            if (runCountDown) {
                 mSecondsRemaining -= mUpdateRate / 1000;
-                updateTime(mSecondsRemaining);
+                updateCountDown(mSecondsRemaining);
                 timerHandler.postDelayed(this, mUpdateRate);
             }
         }
@@ -68,7 +68,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void createMenu() {
         // Instantiates a MenuPage Object based on Contents of raw XML File
         mMenuPage = new MenuPage(MainActivity, this);
-        mMenuPage.setUp();
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
@@ -77,13 +76,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         createMenuLayout();
         setControlsMenu();
-        setTimer(mMenuPage.getTimerMean(), mMenuPage.getTimerDeviation());
-        startTimer();
     }
 
     public void createQuestionnaire() {
 
-        stopTimer();
+        stopCountDown();
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(MainActivity, this);
         mQuestionnaire.setUp();
@@ -123,6 +120,57 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
+    }
+
+    // Set the horizontal Indicator at the Top to follow Page Position
+    void setQuestionnaireProgressBar() {
+
+        int nAccuracy = 100;
+
+        View progress = MainActivity.mProgress;
+        View regress = MainActivity.mRegress;
+
+        float nProgress = (float) (mViewPager.getCurrentItem() + 1) /
+                mViewPager.getAdapter().getCount() * nAccuracy;
+        float nRegress = (nAccuracy - nProgress);
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
+    }
+
+    // Set the horizontal Indicator at the Top to follow Page Position
+    private void setQuestionnaireProgressBar(float fraction) {
+
+        View progress = MainActivity.mProgress;
+        View regress = MainActivity.mRegress;
+
+        float nProgress = fraction;
+        float nRegress = 1f - nProgress;
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
         );
 
         progress.setLayoutParams(progParams);
@@ -175,7 +223,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
         MainActivity.mRevert.setVisibility(View.INVISIBLE);
         MainActivity.mProgress.setBackgroundColor(
-                ContextCompat.getColor(mContext, R.color.JadeGray));
+                ContextCompat.getColor(mContext, R.color.JadeRed));
         MainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeGray));
         MainActivity.mLogo.setEnabled(false);
@@ -216,8 +264,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //mViewPager.setCurrentItem(getCount());
                 createMenu();
+                sendMessage(ControlService.MSG_NEW_ALARM);
             }
         });
         MainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
@@ -245,32 +293,32 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         });
     }
 
-    private void updateTime(int seconds) {
+    private void updateCountDown(int seconds) {
         if (seconds > 0) {
-            mMenuPage.updateTime(seconds);
+            mMenuPage.updateCountdownText(seconds);
+            setQuestionnaireProgressBar((float) seconds / mCountDownInterval);
         } else {
-            //((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMilliseconds);
-            //createQuestionnaire();
+            ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mDurVibrationMs);
+            stopCountDown();
         }
     }
 
-    private void setTimer(int secondsMean, int secondsDeviation) {
-        mSecondsDelay = ThreadLocalRandom.current().nextInt(
-                secondsMean - secondsDeviation, secondsMean + secondsDeviation + 1);
+    public void setCountDownInterval(int interval) {
+        mCountDownInterval = interval;
     }
 
-    private void startTimer() {
-        runTimer = true;
-        resetTimer();
+    public void startCountDown() {
+        runCountDown = true;
+        resetCountDown();
         timerHandler.postDelayed(runnable, 0);
     }
 
-    private void resetTimer() {
-        mSecondsRemaining = mSecondsDelay;
+    private void resetCountDown() {
+        mSecondsRemaining = mCountDownInterval;
     }
 
-    private void stopTimer() {
-        runTimer = false;
+    private void stopCountDown() {
+        runCountDown = false;
     }
 
     int removeView(int position) {
@@ -290,33 +338,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             }
         }
         return -1;
-    }
-
-    // Set the horizontal Indicator at the Top to follow Page Position
-    void setQuestionnaireProgressBar() {
-
-        int nAccuracy = 100;
-
-        View progress = MainActivity.mProgress;
-        View regress = MainActivity.mRegress;
-
-        float nProgress = (float) (mViewPager.getCurrentItem() + 1) /
-                mViewPager.getAdapter().getCount() * nAccuracy;
-        float nRegress = (nAccuracy - nProgress);
-
-        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nRegress
-        );
-        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                nProgress
-        );
-
-        progress.setLayoutParams(progParams);
-        regress.setLayoutParams(regParams);
     }
 
     @Override
@@ -365,4 +386,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public CharSequence getPageTitle(int position) {
         return "";
     }
+
+    public void sendMessage(int what) {
+        MainActivity.messageService(what);
+    }
+
 }
