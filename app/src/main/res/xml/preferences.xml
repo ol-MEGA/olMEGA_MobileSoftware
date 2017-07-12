@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" >
+
+    <PreferenceCategory android:title="Recording"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="48000"
+            android:entries="@array/samplingrateEntries"
+            android:entryValues="@array/samplingrateValues"
+            android:key="samplinrate"
+            android:summary="Recording sampling rate in Hz"
+            android:title="Sampling Rate" />
+
+        <CheckBoxPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="saveFile"
+            android:title="Keep cached audio data" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Processing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <MultiSelectListPreference
+            android:defaultValue="@array/features"
+            android:dialogTitle="Select active features"
+            android:entries="@array/features"
+            android:entryValues="@array/features"
+            android:key="features"
+            android:title="Features"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="filterHighPass"
+            android:title="Highpass filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <EditTextPreference
+            android:dependency="filterHighPass"
+            android:defaultValue="100"
+            android:key="filterHighPassFreq"
+            android:title="Cutoff frequency in Hz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

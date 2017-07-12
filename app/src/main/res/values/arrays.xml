@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- put the name of your feature here -->
+    <string-array name="features">
+        <item>RMS</item>
+        <item>ZCR</item>
+        <item>PSD</item>
+    </string-array>
+
+    <string-array name="samplingrateEntries">
+        <item>48000 Hz</item>
+        <item>44100 Hz</item>
+        <item>16000 Hz</item>
+    </string-array>
+
+    <string-array name="samplingrateValues">
+        <item>48000</item>
+        <item>44100</item>
+        <item>16000</item>
+    </string-array>
+    
+</resources>

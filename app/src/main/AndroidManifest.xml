@@ -20,7 +20,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".PreferencesActivity"
+            android:screenOrientation="portrait" >
+        </activity>
+
         <receiver android:name=".Core.EventReceiver" />
+
         <service android:name=".ControlService"
                  android:process=":remote" />
 
