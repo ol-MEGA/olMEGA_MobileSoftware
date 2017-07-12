@@ -27,9 +27,10 @@ public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
     public TextView mLogo;
-    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress;
+    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
+    private boolean showPreferences = true;
     private Messenger mServiceMessenger;
 
 
@@ -160,6 +161,17 @@ public class MainActivity extends AppCompatActivity {
         mRevert = findViewById(R.id.Action_Revert);
         mProgress = findViewById(R.id.progress);
         mRegress = findViewById(R.id.regress);
+        mConfig = findViewById(R.id.Action_Config);
+
+        if (showPreferences) {
+            mConfig.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+                }
+            });
+        }
+
 
         handleNewPagerAdapter();
         //mAdapter.createQuestionnaire();
@@ -173,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         doUnbindService();
     }
-
 
     /*public int getCurrentItem() {
         return mViewPager.getCurrentItem();

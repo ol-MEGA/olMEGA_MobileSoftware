@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -64,11 +65,11 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_GET_STATUS:
-                    messageClient(1);
+                    messageClient(1, null);
                     break;
 
                 case MSG_ALARM_RECEIVED:
-                    messageClient(MSG_ALARM_RECEIVED);
+                    messageClient(MSG_ALARM_RECEIVED, null);
                     break;
 
                 default:
@@ -113,12 +114,14 @@ public class ControlService extends Service {
         return mMessengerHandler.getBinder();
     }
 
+
     // Send message to connected client
-    private void messageClient(int what) {
+    private void messageClient(int what, Bundle data) {
 
         if (mClientMessenger != null) {
             try {
                 Message msg = Message.obtain(null, what);
+                msg.setData(data);
                 mClientMessenger.send(msg);
             } catch (RemoteException e) {
             }
