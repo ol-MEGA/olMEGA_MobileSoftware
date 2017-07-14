@@ -32,22 +32,27 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
 
-    static final int MSG_REGISTER_CLIENT = 1;
-    static final int MSG_UNREGISTER_CLIENT = 2;
-    static final int MSG_GET_STATUS = 3;
+    public static final int MSG_REGISTER_CLIENT = 1;
+    public static final int MSG_UNREGISTER_CLIENT = 2;
+    public static final int MSG_GET_STATUS = 3;
     public static final int MSG_ALARM_RECEIVED = 4;
     public static final int MSG_START_COUNTDOWN = 5;
     public static final int MSG_NEW_ALARM = 6;
     public static final int MSG_ARE_WE_RUNNING = 7;
     public static final int MSG_START_QUESTIONNAIRE = 8;
-    public static final int MSG_PROPOSE_QUESTIONNAIRE = 9;
-    public static final int MSG_PROPOSITION_ACCEPTED = 10;
-    public static final int MSG_MANUAL_QUESTIONNAIRE = 11;
-    public static final int MSG_QUESTIONNAIRE_ACTIVE = 12;
-    public static final int MSG_QUESTIONNAIRE_INACTIVE = 13;
-    public static final int MSG_GET_FINAL_COUNTDOWN = 14;
-    public static final int MSG_SET_FINAL_COUNTDOWN = 15;
+    public static final int MSG_START_RECORDING = 9;
+    public static final int MSG_STOP_RECORDING = 10;
+    public static final int MSG_STATUS = 11;
+    public static final int MSG_BLOCK_RECORDED = 12;
+    public static final int MSG_PROPOSE_QUESTIONNAIRE = 13;
+    public static final int MSG_PROPOSITION_ACCEPTED = 14;
+    public static final int MSG_MANUAL_QUESTIONNAIRE = 15;
+    public static final int MSG_QUESTIONNAIRE_ACTIVE = 16;
+    public static final int MSG_QUESTIONNAIRE_INACTIVE = 17;
+    public static final int MSG_GET_FINAL_COUNTDOWN = 18;
+    public static final int MSG_SET_FINAL_COUNTDOWN = 19;
 
+    static boolean isRecording = false;
     private XMLReader mXmlReader;
     private Vibration mVibration;
 
@@ -58,11 +63,19 @@ public class ControlService extends Service {
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
-    // Questionnaire timer
+    protected static final Object lock = new Object();
+
+    // Questionnaire-Timer
     EventTimer mEventTimer;
 
     // Messenger to clients
     private Messenger mClientMessenger;
+
+    // Messenger to pass to threads
+    final Messenger serviceMessenger = new Messenger(new MessageHandler());
+
+    // Audio recording
+    private AudioRecorder audioRecorder;
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
@@ -73,6 +86,8 @@ public class ControlService extends Service {
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
+            Log.d(LOG, "TID: " + android.os.Process.myTid());
+            Log.d(LOG, "TID: " + android.os.Process.myPid());
 
             switch (msg.what) {
 
@@ -90,7 +105,9 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_GET_STATUS:
-                    messageClient(1);
+                    Bundle status = new Bundle();
+                    status.putBoolean("isRecording", isRecording);
+                    messageClient(MSG_STATUS, status);
                     break;
 
                 case MSG_ALARM_RECEIVED:
@@ -147,6 +164,24 @@ public class ControlService extends Service {
                     Bundle dataCountDown = new Bundle();
                     dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
                     messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
+
+                case MSG_START_RECORDING:
+                    Log.d(LOG, "Start Recording.");
+                    audioRecorder = new AudioRecorder(serviceMessenger, 16000);
+                    audioRecorder.start();
+                    isRecording = true;
+                    messageClient(MSG_START_RECORDING);
+                    break;
+
+                case MSG_STOP_RECORDING:
+                    Log.d(LOG, "Stop Recording.");
+                    audioRecorder.stop();
+                    audioRecorder.close();
+                    isRecording = false;
+                    messageClient(MSG_STOP_RECORDING);
+                    break;
+
+                case MSG_BLOCK_RECORDED:
                     break;
 
                 default:
@@ -163,6 +198,7 @@ public class ControlService extends Service {
         Log.d(LOG, "onCreate");
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
+        Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
 
         mXmlReader = new XMLReader(this);
         mEventTimer = new EventTimer(this, mMessengerHandler);
@@ -269,8 +305,10 @@ public class ControlService extends Service {
                 .setContentIntent(intent)
                 .build();
 
-        // Post notification to status bar
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
+        // Post notification to status bar, use startForeground() instead of
+        // NotificationManager.notify() to prevent service from being killed
+        // by ActivityManager when the Activity gets shut down.
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     private void setAlarmAndCountdown() {

@@ -5,21 +5,26 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
+import static android.R.color.darker_gray;
+import static android.R.color.holo_green_dark;
 import java.util.ArrayList;
 
 
@@ -29,9 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
     public ViewPager mViewPager = null;
     public TextView mLogo;
-    public View mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
+    public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
+    private boolean mServiceIsRecording;
     private boolean showPreferences = true;
     private Messenger mServiceMessenger;
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
@@ -79,6 +85,20 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_SET_FINAL_COUNTDOWN:
                     int finalCountDown = msg.getData().getInt("finalCountDown");
                     mAdapter.setFinalCountDown(finalCountDown);
+
+                case ControlService.MSG_STATUS:
+                    // Set ui to match ControlService's state
+                    Bundle status = msg.getData();
+                    mServiceIsRecording = status.getBoolean("isRecording");
+                    Log.d(LOG, "Received " + status.getBoolean("isRecording"));
+                    break;
+
+                case ControlService.MSG_START_RECORDING:
+                    break;
+
+                case ControlService.MSG_STOP_RECORDING:
+                    break;
+
 
                 default:
                     super.handleMessage(msg);
@@ -179,12 +199,38 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mLogo = (TextView) findViewById(R.id.Action_Logo);
+        mRecord = findViewById(R.id.Action_Record);
         mArrowBack = findViewById(R.id.Action_Back);
         mArrowForward = findViewById(R.id.Action_Forward);
         mRevert = findViewById(R.id.Action_Revert);
         mProgress = findViewById(R.id.progress);
         mRegress = findViewById(R.id.regress);
         mConfig = findViewById(R.id.Action_Config);
+
+        mRecord.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mServiceIsBound) {
+                    if (mServiceIsRecording) {
+                        messageService(ControlService.MSG_STOP_RECORDING);
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        holo_green_dark, null)));
+                    } else {
+                        messageService(ControlService.MSG_START_RECORDING);
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        darker_gray, null)));
+                    }
+                    messageService(ControlService.MSG_GET_STATUS);
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "Not connected to service.",
+                            Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
 
         if (showPreferences) {
             mConfig.setOnClickListener(new View.OnClickListener() {

@@ -21,13 +21,11 @@ import java.io.OutputStreamWriter;
 
 public class FileIO {
 
-    private static final String MAIN_FOLDER = "IHAB";
-    private static final String DATA_FOLDER = "data";
+    public static final String MAIN_FOLDER = "IHAB";
+    public static final String DATA_FOLDER = "data";
     private static final String FILE_NAME = "hoersituation-v0.xml";
     private static final String LOG_STRING = "FileIO";
 
-    public FileIO() {
-    }
 
     // Create / Find main Folder
     private static String getFolderPath() {
