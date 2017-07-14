@@ -31,8 +31,8 @@ public class Questionnaire {
     private final EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
     private int mNumPages;
-    // List containing all questions (including all attached information)
-    private List<String> mQuestionList;
+    // ArrayList containing all questions (including all attached information)
+    private ArrayList<String> mQuestionList;
     // Context of QuestionnairePageAdapter for visibility
     private final QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
@@ -50,6 +50,7 @@ public class Questionnaire {
         mContext = context;
         mContextQPA = contextQPA;
         mEvaluationList = new EvaluationList();
+        mQuestionList = new ArrayList<>();
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
@@ -59,7 +60,7 @@ public class Questionnaire {
         }
     }
 
-    public void setUp() {
+    public void setUp(ArrayList<String> questionList) {
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
         String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
@@ -68,9 +69,12 @@ public class Questionnaire {
         mMetaData.initialise();
 
         // Split basis data into question segments
-        String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
-        mQuestionList = stringArrayToListString(questionnaire);
-        mQuestionList = thinOutList(mQuestionList);
+        //String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
+        //mQuestionList = stringArrayToListString(questionnaire);
+        //mQuestionList = thinOutList(mQuestionList);
+
+        Log.e(LOG_STRING,"questionList: "+questionList);
+        mQuestionList = questionList;
         mNumPages = mQuestionList.size();
 
         if (BuildConfig.DEBUG) {

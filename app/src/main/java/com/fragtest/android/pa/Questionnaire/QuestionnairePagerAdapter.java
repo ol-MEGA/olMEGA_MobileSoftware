@@ -45,6 +45,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean runCountDown = true;
     private int mCountDownInterval = 30;
     private int mSecondsRemaining = 120;
+    private ArrayList<String> mQuestionList;
 
     private final Runnable runnable = new Runnable() {
         @Override
@@ -78,12 +79,37 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setControlsMenu();
     }
 
-    public void createQuestionnaire() {
+    public void createQuestionnaire(ArrayList<String> questionList) {
+
+        mQuestionList = questionList;
 
         stopCountDown();
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(MainActivity, this);
-        mQuestionnaire.setUp();
+        mQuestionnaire.setUp(questionList);
+        mNUM_PAGES = mQuestionnaire.getNumPages();
+        mViewPager.setOffscreenPageLimit(1);
+
+        mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
+
+        createQuestionnaireLayout();
+        setControlsQuestionnaire();
+        // Creates and destroys views based on filter id settings
+        mQuestionnaire.checkVisibility();
+
+        notifyDataSetChanged();
+        mViewPager.setCurrentItem(0);
+        setArrows(0);
+        setQuestionnaireProgressBar();
+    }
+
+    private void createQuestionnaire() {
+
+        stopCountDown();
+        // Instantiates a Questionnaire Object based on Contents of raw XML File
+        mQuestionnaire = new Questionnaire(MainActivity, this);
+        mQuestionnaire.setUp(mQuestionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
 
@@ -264,7 +290,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createMenu();
+                //createMenu();
                 sendMessage(ControlService.MSG_NEW_ALARM);
             }
         });

@@ -15,6 +15,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.XMLReader;
+
+import java.util.ArrayList;
 
 /**
  * The brains of the operation.
@@ -103,10 +106,14 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_ARE_WE_RUNNING:
-                    // Check if necessary states are set for questionnaire, then go
-                    messageClient(MSG_START_QUESTIONNAIRE);
-                    break;
-
+                    // Check if necessary states are set for questionnaire [TO DO],
+                    //
+                    // then go
+                    Bundle data = new Bundle();
+                    ArrayList<String> questionList = mXmlReader.getQuestionList();
+                    data.putStringArrayList("questionList",questionList);
+                    messageClient(MSG_START_QUESTIONNAIRE, data);
+                    
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
                     audioRecorder = new AudioRecorder(serviceMessenger, 16000);
@@ -128,7 +135,6 @@ public class ControlService extends Service {
 
                 default:
                     super.handleMessage(msg);
-
             }
         }
     }
