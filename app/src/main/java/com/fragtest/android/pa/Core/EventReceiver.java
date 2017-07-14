@@ -16,7 +16,7 @@ import com.fragtest.android.pa.ControlService;
 
 public class EventReceiver extends BroadcastReceiver {
 
-    static final String LOG = "EventReceiver";
+    private static final String LOG = "EventReceiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {

@@ -15,8 +15,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
@@ -37,9 +40,21 @@ public class ControlService extends Service {
     public static final int MSG_NEW_ALARM = 6;
     public static final int MSG_ARE_WE_RUNNING = 7;
     public static final int MSG_START_QUESTIONNAIRE = 8;
+    public static final int MSG_PROPOSE_QUESTIONNAIRE = 9;
+    public static final int MSG_PROPOSITION_ACCEPTED = 10;
+    public static final int MSG_MANUAL_QUESTIONNAIRE = 11;
+    public static final int MSG_QUESTIONNAIRE_ACTIVE = 12;
+    public static final int MSG_QUESTIONNAIRE_INACTIVE = 13;
+    public static final int MSG_GET_FINAL_COUNTDOWN = 14;
+    public static final int MSG_SET_FINAL_COUNTDOWN = 15;
 
     private XMLReader mXmlReader;
+    private Vibration mVibration;
 
+    private int mFinalCountDown;
+
+    // Shows whether questionnaire is active - tackles lifecycle jazz
+    private boolean isActiveQuestionnaire = false;
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
@@ -88,12 +103,50 @@ public class ControlService extends Service {
 
                 case MSG_ARE_WE_RUNNING:
                     // Check if necessary states are set for questionnaire [TO DO],
-                    //
-                    // then go
+                    // ... perform checks
+                    if (true) {
+                        // Increases text size on Menu item "Start Questionnaire"
+                        messageClient(MSG_PROPOSE_QUESTIONNAIRE);
+                        // Set off repeating vibration bursts to inform user that questionnaire is
+                        // imminent
+                        mVibration.repeatingBurstOn();
+                    }
+                    break;
+
+                case MSG_MANUAL_QUESTIONNAIRE:
+                    // Check if necessary states are set for questionnaire [TO DO]
+                    // ... perform checks
+                    if (true) {
+                        Bundle data = new Bundle();
+                        ArrayList<String> questionList = mXmlReader.getQuestionList();
+                        data.putStringArrayList("questionList",questionList);
+                        messageClient(MSG_START_QUESTIONNAIRE, data);
+                    }
+                    break;
+
+                case MSG_PROPOSITION_ACCEPTED:
+                    // User has accepted proposition to start a new questionnaire by selecting
+                    // "Start Questionnaire" item in User Menu
+                    mVibration.repeatingBurstOff();
+                    // Send questionnaire data to questionnaire class to create a new ... tadaa ...
+                    // questionnaire
                     Bundle data = new Bundle();
                     ArrayList<String> questionList = mXmlReader.getQuestionList();
                     data.putStringArrayList("questionList",questionList);
                     messageClient(MSG_START_QUESTIONNAIRE, data);
+                    break;
+
+                case MSG_QUESTIONNAIRE_ACTIVE:
+                    isActiveQuestionnaire = true;
+                    break;
+
+                case MSG_QUESTIONNAIRE_INACTIVE:
+                    isActiveQuestionnaire = false;
+
+                case MSG_GET_FINAL_COUNTDOWN:
+                    Bundle dataCountDown = new Bundle();
+                    dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
+                    messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
                     break;
 
                 default:
@@ -110,10 +163,13 @@ public class ControlService extends Service {
         Log.d(LOG, "onCreate");
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
-        Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
 
         mXmlReader = new XMLReader(this);
         mEventTimer = new EventTimer(this, mMessengerHandler);
+        mVibration = new Vibration(this);
+
+        Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
+        Log.e(LOG,"ControlService started");
 
     }
 
@@ -128,6 +184,7 @@ public class ControlService extends Service {
         Log.d(LOG, "onDestroy");
         mNotificationManager.cancel(NOTIFICATION_ID);
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
+        Log.e(LOG,"ControlService stopped");
     }
 
     @Override
@@ -136,6 +193,29 @@ public class ControlService extends Service {
         return mMessengerHandler.getBinder();
     }
 
+    @Override
+    public void onRebind(Intent intent) {
+        Log.e(LOG,"onRebind");
+        super.onRebind(intent);
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        Log.e(LOG,"onUnbind");
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.e(LOG,"onTaskRemoved");
+        super.onTaskRemoved(rootIntent);
+    }
+
+    @Override
+    protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+        Log.e(LOG,"onDump");
+        super.dump(fd, writer, args);
+    }
 
     // Send message to connected client with additional data
     private void messageClient(int what, Bundle data) {

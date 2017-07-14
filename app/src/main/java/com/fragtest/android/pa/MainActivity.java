@@ -64,11 +64,21 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
+                    mAdapter.stopCountDown();
                     // Necessary states are set for questionnaire
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
                     mAdapter.createQuestionnaire(questionList);
+                    messageService(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
                     break;
+
+                case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
+                    mAdapter.proposeQuestionnaire();
+                    break;
+
+                case ControlService.MSG_SET_FINAL_COUNTDOWN:
+                    int finalCountDown = msg.getData().getInt("finalCountDown");
+                    mAdapter.setFinalCountDown(finalCountDown);
 
                 default:
                     super.handleMessage(msg);
@@ -191,8 +201,37 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-
+        Log.e(LOG,"onDestroy");
+        mAdapter.onDestroy();
         super.onDestroy();
         doUnbindService();
+    }
+
+    @Override
+    protected void onStart() {
+        Log.e(LOG,"onStart");
+        mAdapter.onStart();
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        Log.e(LOG,"onStop");
+        mAdapter.onStop();
+        super.onStop();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.e(LOG,"onPause");
+        mAdapter.onPause();
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.e(LOG,"onResume");
+        mAdapter.onResume();
+        super.onResume();
     }
 }

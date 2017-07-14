@@ -18,12 +18,12 @@ import com.fragtest.android.pa.R;
 
 public class MenuPage extends AppCompatActivity {
 
-    private String LOG_STRING = "MenuPage";
+    private final static String LOG_STRING = "MenuPage";
     private String mCountDownString;
     private Context mContext;
     private QuestionnairePagerAdapter mContextQPA;
     private String questFileName;
-    private TextView mCountDownRemaining;
+    private TextView mCountDownRemaining, mStartQuestionnaire;
     private String[] mTempTextCountDownRemaining;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
@@ -51,26 +51,26 @@ public class MenuPage extends AppCompatActivity {
 
         View tempViewBottom = new View(mContext);
 
-        TextView textViewTitle = new TextView(mContext);
-        textViewTitle.setText(questFileName);
-        textViewTitle.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
-        textViewTitle.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
+        mStartQuestionnaire = new TextView(mContext);
+        mStartQuestionnaire.setText(questFileName);
+        mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
+        mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0, 1f
         );
-        textViewTitle.setGravity(View.TEXT_ALIGNMENT_CENTER);
-        textViewTitle.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mStartQuestionnaire.setGravity(View.TEXT_ALIGNMENT_CENTER);
+        mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
-        textViewTitle.setOnClickListener(new View.OnClickListener() {
+        mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mContextQPA.sendMessage(ControlService.MSG_ARE_WE_RUNNING);
+                mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
 
         menuLayout.addView(mCountDownRemaining, tempTopParams);
-        menuLayout.addView(textViewTitle, textParams);
+        menuLayout.addView(mStartQuestionnaire, textParams);
         menuLayout.addView(tempViewBottom, tempTopParams);
 
         menuLayout.setOrientation(LinearLayout.VERTICAL);
@@ -80,9 +80,22 @@ public class MenuPage extends AppCompatActivity {
         int height = (new Units(mContext)).getUsableSliderHeight();
         // Roughly okay, refine later
         mCountDownRemaining.setPadding(0, height / 5, 0, height / 6);
-        textViewTitle.setPadding(0, height / 6, 0, height / 6);
+        mStartQuestionnaire.setPadding(0, height / 6, 0, height / 6);
 
         return menuLayout;
+    }
+
+    // Sinply increases text size of "Start Questionnaire" item in user menu
+    public void increaseStartTextSize() {
+        mStartQuestionnaire.setPadding(0,0,0,0);
+        mStartQuestionnaire.setTextSize(mContext.getResources().
+                getDimension(R.dimen.textSizeProposed));
+        mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mContextQPA.sendMessage(ControlService.MSG_PROPOSITION_ACCEPTED);
+            }
+        });
     }
 
     public void updateCountdownText(int seconds) {

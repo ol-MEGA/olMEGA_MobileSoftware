@@ -449,7 +449,6 @@ public class Questionnaire {
     }
 
     private void returnToMenu() {
-        mContextQPA.createMenu();
         mContextQPA.sendMessage(ControlService.MSG_NEW_ALARM);
     }
 }

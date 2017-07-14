@@ -18,6 +18,7 @@ public class EventTimer {
     private static final String LOG = "EventTimer";
     private Context context;
     private Messenger messenger;
+    private int mFinalCountDown;
 
     public EventTimer(Context ctx, Messenger msg) {
 
@@ -42,8 +43,15 @@ public class EventTimer {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP,
                 System.currentTimeMillis() + (interval-1)*1000, alarmIntent);
 
+        // Final alarm time for visual count down;
+        mFinalCountDown = (int) (System.currentTimeMillis()/1000) + (interval);
+
         if (BuildConfig.DEBUG){
             Log.d(LOG,"New timer interval set to "+interval+"s");
         }
+    }
+
+    public int getFinalCountDown() {
+        return mFinalCountDown;
     }
 }
