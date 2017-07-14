@@ -26,25 +26,40 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
 
-    static final int MSG_REGISTER_CLIENT = 1;
-    static final int MSG_UNREGISTER_CLIENT = 2;
-    static final int MSG_GET_STATUS = 3;
+    public static final int MSG_REGISTER_CLIENT = 1;
+    public static final int MSG_UNREGISTER_CLIENT = 2;
+    public static final int MSG_GET_STATUS = 3;
     public static final int MSG_ALARM_RECEIVED = 4;
     public static final int MSG_START_COUNTDOWN = 5;
     public static final int MSG_NEW_ALARM = 6;
     public static final int MSG_ARE_WE_RUNNING = 7;
     public static final int MSG_START_QUESTIONNAIRE = 8;
+    public static final int MSG_START_RECORDING = 9;
+    public static final int MSG_STOP_RECORDING = 10;
+    public static final int MSG_STATUS = 11;
+    public static final int MSG_BLOCK_RECORDED = 12;
+
+
+    static boolean isRecording = false;
 
     private XMLReader mXmlReader;
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
-    // Q-Timer
+    protected static final Object lock= new Object();
+
+    // Questionnaire-Timer
     EventTimer mEventTimer;
 
     // Messenger to clients
     private Messenger mClientMessenger;
+
+    // Messenger to pass to threads
+    final Messenger serviceMessenger = new Messenger(new MessageHandler());
+
+    // Audio recording
+    private AudioRecorder audioRecorder;
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
@@ -55,6 +70,8 @@ public class ControlService extends Service {
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
+            Log.d(LOG, "TID: " + android.os.Process.myTid());
+            Log.d(LOG, "TID: " + android.os.Process.myPid());
 
             switch (msg.what) {
 
@@ -72,7 +89,9 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_GET_STATUS:
-                    messageClient(1);
+                    Bundle status = new Bundle();
+                    status.putBoolean("isRecording", isRecording);
+                    messageClient(MSG_STATUS, status);
                     break;
 
                 case MSG_ALARM_RECEIVED:
@@ -86,6 +105,26 @@ public class ControlService extends Service {
                 case MSG_ARE_WE_RUNNING:
                     // Check if necessary states are set for questionnaire, then go
                     messageClient(MSG_START_QUESTIONNAIRE);
+                    break;
+
+                case MSG_START_RECORDING:
+                    Log.d(LOG, "Start Recording.");
+                    audioRecorder = new AudioRecorder(serviceMessenger, 16000);
+                    audioRecorder.start();
+                    isRecording = true;
+                    messageClient(MSG_START_RECORDING);
+                    break;
+
+                case MSG_STOP_RECORDING:
+                    Log.d(LOG, "Stop Recording.");
+                    audioRecorder.stop();
+                    audioRecorder.close();
+                    isRecording = false;
+                    messageClient(MSG_STOP_RECORDING);
+                    break;
+
+                case MSG_BLOCK_RECORDED:
+                    break;
 
                 default:
                     super.handleMessage(msg);
@@ -181,8 +220,10 @@ public class ControlService extends Service {
                 .setContentIntent(intent)
                 .build();
 
-        // Post notification to status bar
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
+        // Post notification to status bar, use startForeground() instead of
+        // NotificationManager.notify() to prevent service from being killed
+        // by ActivityManager when the Activity gets shut down.
+        startForeground(NOTIFICATION_ID, notification);
     }
 
     private void setAlarmAndCountdown() {
@@ -195,4 +236,5 @@ public class ControlService extends Service {
         messageClient(ControlService.MSG_START_COUNTDOWN, data);
         Log.e(LOG,"Timer set to "+timerInterval+"s");
     }
+
 }

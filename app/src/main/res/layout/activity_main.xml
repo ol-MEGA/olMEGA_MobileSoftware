@@ -19,22 +19,35 @@
             android:id="@+id/Action_Logo"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
-            android:text="@string/app_name"
-            android:fontFamily="sans-serif"
-            android:textColor="@android:color/black"
-            android:textSize="24sp"
-            android:layout_weight="1"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
+            android:layout_weight="0.18"
+            android:fontFamily="sans-serif"
+            android:text="@string/app_name"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
 
             />
 
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.18" />
+
         <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+            android:id="@+id/Action_Record"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_weight="0"
+            android:background="@android:drawable/ic_btn_speak_now"
+            android:backgroundTint="@android:color/holo_green_dark">
 
         </View>
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.18" />
 
         <View
             android:id="@+id/Action_Back"
