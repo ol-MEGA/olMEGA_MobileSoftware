@@ -3,12 +3,12 @@ package com.fragtest.android.pa;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
-
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -96,7 +96,8 @@ public class AudioRecorder {
                     audioRecord.getSampleRate(),
                     audioRecord.getChannelCount(),
                     audioRecord.getAudioFormat(),
-                    false);
+                    false
+            );
 
             // write remaining data from last block
             if (bytesRemaining > 0) {
@@ -133,17 +134,20 @@ public class AudioRecorder {
                 bytesWritten += bytesToWrite;
             }
 
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            String filename = fileIO.filename;
+            fileIO.closeDataOutStream();
 
+            // report back to service
             Message msg = Message.obtain(null, ControlService.MSG_BLOCK_RECORDED);
-            try {
-                messenger.send(msg);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            if (msg != null) {
+                Bundle data = new Bundle();
+                data.putString("filename", filename);
+                msg.setData(data);
+                try {
+                    messenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
 
         }

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import android.os.Environment;
+import android.util.Log;
 
 public class AudioFileIO {
 
@@ -18,7 +19,7 @@ public class AudioFileIO {
     public static final String MAIN_FOLDER = FileIO.MAIN_FOLDER;
     public static final String CACHE_FOLDER = MAIN_FOLDER + "/cache";
 
-    String filename;
+    public String filename;
 
     int samplerate   = 0;
     int channels     = 0;
@@ -38,42 +39,22 @@ public class AudioFileIO {
     }
 
     // build filename
-    public String getFilename( boolean wavHeader ) {
-
-        String ext;
-
-        if ( wavHeader ) {
-            ext = ".wav";
-        } else {
-            ext = ".raw";
-        }
+    public String getFilename(boolean wavHeader) {
 
         String _filename = new StringBuilder()
-                .append( getFolderPath() )
-                .append( File.separator )
-                .append( Timestamp.getTimestamp(3) )
-                .append( ext )
+                .append(getFolderPath())
+                .append(File.separator)
+                .append(Timestamp.getTimestamp(3))
+                .append(getExtension(wavHeader))
                 .toString();
 
         return _filename;
     }
 
-    // open output stream w/ filename
-    public DataOutputStream openDataOutStream( String _filename, int _samplerate, int _channels, int _format, boolean _isWave ){
+    // file extension depending on format
+    public String getExtension(Boolean isWave) {
 
-        samplerate  = _samplerate;
-        channels    = _channels;
-        format      = _format;
-        isWave      = _isWave;
-
-        filename = new StringBuilder()
-                .append( getFolderPath() )
-                .append( File.separator )
-                .append( _filename )
-                .toString();
-        file = new File( filename );
-
-        return openFileStream();
+        return isWave ? ".wav" : ".raw";
     }
 
     // open output stream w/o filename
@@ -154,23 +135,19 @@ public class AudioFileIO {
     }
 
     // delete a file
-    public boolean deleteFile( String filename ){
+    public boolean deleteFile(String filename){
 
         boolean success;
 
-        File file2delete = new File( filename );
+        File file = new File(filename);
 
-        if ( file2delete.exists() ) {
-
-            success = file2delete.delete();
-            if( success ){
-//				Log.d( LOG, "Deleted " + filename );
-            }else{
-//				Log.d( LOG, "Could not delete " + filename );
+        if (file.exists()) {
+            success = file.delete();
+            if(!success){
+				Log.d( LOG, "Failed to delete " + filename );
             }
-
         } else  {
-//			Log.d( LOG, "Could not delete " + filename + " (File does not exist)" );
+			Log.d( LOG, "Failed to delete " + filename + ": File does not exist" );
             success = false;
         }
 

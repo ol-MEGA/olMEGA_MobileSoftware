@@ -182,6 +182,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_BLOCK_RECORDED:
+                    String filename = msg.getData().getString("filename");
+                    Log.d(LOG, "Recorded: " + filename);
                     break;
 
                 default:
