@@ -41,7 +41,7 @@ public class EventTimer {
 
         // Schedules the initialisation of new questionnaire
         alarmManager.setExact(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + (interval-1)*1000, alarmIntent);
+                System.currentTimeMillis() + interval*1000, alarmIntent);
 
         // Final alarm time for visual count down;
         mFinalCountDown = (int) (System.currentTimeMillis()/1000) + (interval);

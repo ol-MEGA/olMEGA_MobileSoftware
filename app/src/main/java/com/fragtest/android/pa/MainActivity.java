@@ -17,15 +17,17 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
+import java.util.ArrayList;
+
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
-import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
     private Messenger mServiceMessenger;
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
 
+    private Window mWindow;
+
+
     class MessageHandler extends Handler {
 
         @Override
@@ -52,21 +57,23 @@ public class MainActivity extends AppCompatActivity {
             }
 
             switch (msg.what) {
-
                 case ControlService.MSG_ALARM_RECEIVED:
                     // check if necessary states are set for questionnaire
-                    messageService(ControlService.MSG_ARE_WE_RUNNING);
+                    //messageService(ControlService.MSG_ARE_WE_RUNNING);
+                    mAdapter.proposeQuestionnaire();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
-                    Bundle data = msg.getData();
-                    int timerInterval = (int) data.get("timerInterval");
+                    //Bundle data = msg.getData();
+                    //int timerInterval = (int) data.get("timerInterval");
                     mAdapter.createMenu();
-                    mAdapter.setCountDownInterval(timerInterval);
-                    mAdapter.startCountDown();
-                    if (BuildConfig.DEBUG) {
-                        Log.d(LOG, "Beginning countdown: " + timerInterval + "s.");
-                    }
+                    //mAdapter.setCountDownInterval(timerInterval);
+                    //mAdapter.startCountDown();
+                    // Prepares countdown in terms of setting final schedule
+                    mAdapter.prepareCountDown();
+                    //if (BuildConfig.DEBUG) {
+                    //    Log.d(LOG, "Beginning countdown: " + timerInterval + "s.");
+                    //}
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
@@ -75,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
                     mAdapter.createQuestionnaire(questionList);
-                    messageService(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
+                    //messageService(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
                     break;
 
                 case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
@@ -83,8 +90,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_SET_FINAL_COUNTDOWN:
+                    Log.e(LOG,"Trying to set FCD");
                     int finalCountDown = msg.getData().getInt("finalCountDown");
-                    mAdapter.setFinalCountDown(finalCountDown);
+                    int countDownInterval = msg.getData().getInt("countDownInterval");
+                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
+                    Log.e(LOG,"FCD set: "+finalCountDown+", interval: "+countDownInterval);
 
                 case ControlService.MSG_STATUS:
                     // Set ui to match ControlService's state
@@ -99,9 +109,19 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_STOP_RECORDING:
                     break;
 
+                case ControlService.MSG_FINAL_COUNTDOWN_SET:
+                    Log.e(LOG,"FINAL COUNTDOWN MSG SET");
+                    mAdapter.startCountDown();
+                    break;
+
+                //case ControlService.MSG_FINAL_COUNTDOWN_SET:
+                //    mAdapter.startCountDown();
+                //    break;
+
 
                 default:
                     super.handleMessage(msg);
+                    break;
             }
         }
     }
@@ -119,6 +139,12 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = null;
         }
     };
+
+
+    @Override
+    public void onBackPressed() {
+        Log.i(LOG,"You like pressed the back button but i like don't like wanna do it...");
+    }
 
     // Send message to connected client
     public void messageService(int what) {
@@ -192,6 +218,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.e(LOG,"OnCreate");
 
         super.onCreate(savedInstanceState);
 
@@ -243,12 +270,19 @@ public class MainActivity extends AppCompatActivity {
 
         handleNewPagerAdapter();
         doBindService();
+        mAdapter.createMenu();
+        //messageService(ControlService.MSG_START_COUNTDOWN);
+
+        mWindow = this.getWindow();
+        mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
     }
 
     @Override
     protected void onDestroy() {
         Log.e(LOG,"onDestroy");
-        mAdapter.onDestroy();
+        //mAdapter.onDestroy();
         super.onDestroy();
         doUnbindService();
     }
@@ -256,14 +290,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         Log.e(LOG,"onStart");
-        mAdapter.onStart();
+        //mAdapter.onStart();
         super.onStart();
+    }
+
+    @Override
+    protected void onRestart() {
+        Log.e(LOG,"onRestart");
+        //mAdapter.onRestart();
+        super.onRestart();
     }
 
     @Override
     protected void onStop() {
         Log.e(LOG,"onStop");
-        mAdapter.onStop();
+        //mAdapter.onStop();
         super.onStop();
     }
 
@@ -280,4 +321,5 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.onResume();
         super.onResume();
     }
+
 }

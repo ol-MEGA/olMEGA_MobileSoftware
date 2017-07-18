@@ -51,12 +51,15 @@ public class ControlService extends Service {
     public static final int MSG_QUESTIONNAIRE_INACTIVE = 17;
     public static final int MSG_GET_FINAL_COUNTDOWN = 18;
     public static final int MSG_SET_FINAL_COUNTDOWN = 19;
+    public static final int MSG_FINAL_COUNTDOWN_SET = 20;
 
     static boolean isRecording = false;
+    private boolean isCountDownRunning = false;
     private XMLReader mXmlReader;
     private Vibration mVibration;
 
-    private int mFinalCountDown;
+    private int mFinalCountDown = -255;
+    private int mTimerInterval = -255;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -87,7 +90,7 @@ public class ControlService extends Service {
 
             Log.d(LOG, "Received Message: " + msg.what);
             Log.d(LOG, "TID: " + android.os.Process.myTid());
-            Log.d(LOG, "TID: " + android.os.Process.myPid());
+            Log.d(LOG, "PID: " + android.os.Process.myPid());
 
             switch (msg.what) {
 
@@ -112,23 +115,21 @@ public class ControlService extends Service {
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
+                    isCountDownRunning = false;
+
+                    if (true) {
+                        // perform checks whether running a questionnaire is valid
+                        messageClient(MSG_PROPOSE_QUESTIONNAIRE);
+                        mVibration.repeatingBurstOn();
+                    }
+
                     break;
 
                 case MSG_NEW_ALARM:
+                    isCountDownRunning = false;
                     setAlarmAndCountdown();
                     break;
 
-                case MSG_ARE_WE_RUNNING:
-                    // Check if necessary states are set for questionnaire [TO DO],
-                    // ... perform checks
-                    if (true) {
-                        // Increases text size on Menu item "Start Questionnaire"
-                        messageClient(MSG_PROPOSE_QUESTIONNAIRE);
-                        // Set off repeating vibration bursts to inform user that questionnaire is
-                        // imminent
-                        mVibration.repeatingBurstOn();
-                    }
-                    break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // Check if necessary states are set for questionnaire [TO DO]
@@ -155,15 +156,21 @@ public class ControlService extends Service {
 
                 case MSG_QUESTIONNAIRE_ACTIVE:
                     isActiveQuestionnaire = true;
+                    mVibration.repeatingBurstOff();
+                    Log.i(LOG,"Questionnaire active - alarm shut off.");
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
                     isActiveQuestionnaire = false;
+                    Log.i(LOG,"Questionnaire inactive");
+                    break;
 
                 case MSG_GET_FINAL_COUNTDOWN:
                     Bundle dataCountDown = new Bundle();
                     dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
+                    dataCountDown.putInt("countDownInterval",mTimerInterval);
                     messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
+                    Log.e(LOG,"Sending FCD");
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
@@ -186,6 +193,7 @@ public class ControlService extends Service {
 
                 default:
                     super.handleMessage(msg);
+                    break;
             }
         }
     }
@@ -312,13 +320,23 @@ public class ControlService extends Service {
     }
 
     private void setAlarmAndCountdown() {
-        int timerInterval = mXmlReader.getNewTimerInterval();
-        mEventTimer.setTimer(timerInterval);
+        if (!isCountDownRunning || !isActiveQuestionnaire) {
+            mTimerInterval = mXmlReader.getNewTimerInterval();
+            mEventTimer.setTimer(mTimerInterval);
+            mFinalCountDown = mEventTimer.getFinalCountDown();
 
-        Bundle data = new Bundle();
-        data.putInt("timerInterval", timerInterval);
-        // Send message to initialise new functional timer
-        messageClient(ControlService.MSG_START_COUNTDOWN, data);
-        Log.e(LOG,"Timer set to "+timerInterval+"s");
+            Bundle data = new Bundle();
+            data.putInt("timerInterval", mFinalCountDown);
+            // Send message to initialise new functional timer
+            messageClient(ControlService.MSG_START_COUNTDOWN, data);
+            Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+
+            isCountDownRunning = true;
+        } else {
+            Bundle data = new Bundle();
+            data.putInt("timerInterval", mFinalCountDown);
+            // Send message to initialise new functional timer
+            messageClient(ControlService.MSG_START_COUNTDOWN, data);
+        }
     }
 }

@@ -35,21 +35,23 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
     ArrayList<QuestionViewActive> mListOfViewsStorage;
-    private String LOG_STRING = "Quest..PagerAdapter";
+    private static String LOG_STRING = "Quest..PagerAdapter";
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
     private boolean runCountDown = false;
     private int mCountDownInterval = 30;
     private int mSecondsRemaining = 120;
-    private int mFinalCountdown;
+    private int mFinalCountdown = -255;
     private ArrayList<String> mQuestionList;
+    private boolean isInForeGround = false;
+    private boolean needsIncreasing = false;
 
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
         public void run() {
             if (runCountDown) {
-                mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis()/1000);
+                mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateRate);
             }
@@ -63,6 +65,69 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager = viewPager;
         handleControls();
 
+    }
+    public void onResume() {
+        Log.e(LOG_STRING, "Resuming, rcd: "+runCountDown);
+        startCountDown();
+        if (needsIncreasing) {
+            mMenuPage.increaseStartTextSize();
+            mMenuPage.updateCountdownText(0);
+            setQuestionnaireProgressBar(0f);
+            needsIncreasing = false;
+        }
+        isInForeGround = true;
+    }
+
+    public void onPause() {
+        Log.e(LOG_STRING,"mFinalCountDown: "+mFinalCountdown);
+        isInForeGround = false;
+        stopCountDown();
+    }
+
+    private void updateCountDown() {
+
+        if (mSecondsRemaining >= 0) {
+            mMenuPage.updateCountdownText(mSecondsRemaining);
+            Log.e(LOG_STRING,"remaining: "+mSecondsRemaining);
+            setQuestionnaireProgressBar((float) mSecondsRemaining / mCountDownInterval);
+        } else {
+            stopCountDown();
+        }
+    }
+
+    public void setFinalCountDown(int finalCountdown, int countDownInterval) {
+        mFinalCountdown = finalCountdown;
+        mCountDownInterval = countDownInterval;
+        Log.e(LOG_STRING,"Final Countdown set: "+finalCountdown);
+        startCountDown();
+    }
+
+    public void prepareCountDown() {
+        Log.e(LOG_STRING,"Preparing.");
+        sendMessage(ControlService.MSG_GET_FINAL_COUNTDOWN);
+    }
+
+    public void startCountDown() {
+        runCountDown = true;
+
+        Log.e(LOG_STRING,"mFinalCountDown: "+mFinalCountdown);
+        Log.e(LOG_STRING,"SystemCurrentTime: "+System.currentTimeMillis()/1000);
+
+        Log.e(LOG_STRING,"Runnable: "+mCountDownRunnable);
+
+        if (mFinalCountdown - System.currentTimeMillis()/1000 >= 0) {
+            mCountDownHandler.postDelayed(mCountDownRunnable, 0);
+            Log.e(LOG_STRING, "OnResume: Callbacks reinstated: timer handler");
+        } else {
+            setQuestionnaireProgressBar(1f);
+            Log.e(LOG_STRING,"OnResume: Countdown has run out.");
+        }
+    }
+
+    public void stopCountDown() {
+        runCountDown = false;
+        mCountDownHandler.removeCallbacks(mCountDownRunnable);
+        Log.e(LOG_STRING,"CountDown stopped.");
     }
 
     public void createMenu() {
@@ -82,9 +147,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void createQuestionnaire(ArrayList<String> questionList) {
 
+        sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         mQuestionList = questionList;
 
-        //stopCountDown();
+        stopCountDown();
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(MainActivity, this);
         mQuestionnaire.setUp(questionList);
@@ -128,9 +194,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setQuestionnaireProgressBar();
     }
 
-    // Sinply increases text size of "Start Questionnaire" item in user menu
+    // Simply increases text size of "Start Questionnaire" item in user menu
     public void proposeQuestionnaire() {
-        mMenuPage.increaseStartTextSize();
+        if (isInForeGround) {
+            mMenuPage.increaseStartTextSize();
+        } else {
+            needsIncreasing = true;
+        }
     }
 
     public void setQuestionnaireProgressBar(int position) {
@@ -297,6 +367,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             @Override
             public void onClick(View v) {
                 sendMessage(ControlService.MSG_NEW_ALARM);
+                createMenu();
             }
         });
         MainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
@@ -324,37 +395,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         });
     }
 
-    private void updateCountDown() {
-        Log.e(LOG_STRING,"remaining: "+mSecondsRemaining);
-        if (mSecondsRemaining >= 0) {
-            mMenuPage.updateCountdownText(mSecondsRemaining);
-            setQuestionnaireProgressBar((float) mSecondsRemaining / mCountDownInterval);
-        }
-    }
-
-    public void setCountDownInterval(int interval) {
-        mCountDownInterval = interval;
-    }
-
-    public void setFinalCountDown(int finalCountdown) {
-        mFinalCountdown = finalCountdown;
-        Log.e(LOG_STRING,"Final Countdown set: "+finalCountdown);
-    }
-
-    public void startCountDown() {
-        runCountDown = true;
-        sendMessage(ControlService.MSG_GET_FINAL_COUNTDOWN);
-        //mFinalCountdown = (int) (System.currentTimeMillis()/1000) + mCountDownInterval;
-      //  resetCountDown();
-        mCountDownHandler.postDelayed(mCountDownRunnable, 0);
-        Log.e(LOG_STRING,"CountDown started.");
-    }
-
-    public void stopCountDown() {
-        runCountDown = false;
-        mCountDownHandler.removeCallbacks(mCountDownRunnable);
-    }
-
     int removeView(int position) {
 
         int nCurrentItem = mViewPager.getCurrentItem();
@@ -372,35 +412,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             }
         }
         return -1;
-    }
-
-    public void onStart() {
-        sendMessage(ControlService.MSG_GET_FINAL_COUNTDOWN);
-    }
-
-    public void onResume() {
-        runCountDown = true;
-        sendMessage(ControlService.MSG_GET_FINAL_COUNTDOWN);
-        mCountDownHandler.postDelayed(mCountDownRunnable, 0);
-        Log.e(LOG_STRING,"OnResume: Callbacks reinstated: timer handler");
-    }
-
-    public void onPause() {
-        runCountDown = false;
-        mCountDownHandler.removeCallbacks(mCountDownRunnable, 0);
-        Log.e(LOG_STRING,"OnPause: Callbacks removed from timer handler");
-    }
-
-    public void onStop() {
-        runCountDown = false;
-        mCountDownHandler.removeCallbacks(mCountDownRunnable, 0);
-        Log.e(LOG_STRING,"OnStop: Callbacks removed from timer handler");
-    }
-
-    public void onDestroy() {
-        runCountDown = false;
-        mCountDownHandler.removeCallbacks(mCountDownRunnable, 0);
-        Log.e(LOG_STRING,"OnStop: Callbacks removed from timer handler");
     }
 
     @Override
@@ -453,5 +464,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void sendMessage(int what) {
         MainActivity.messageService(what);
     }
+
 
 }

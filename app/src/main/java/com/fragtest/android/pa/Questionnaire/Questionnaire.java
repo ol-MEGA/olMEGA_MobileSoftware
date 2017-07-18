@@ -73,7 +73,6 @@ public class Questionnaire {
         //mQuestionList = stringArrayToListString(questionnaire);
         //mQuestionList = thinOutList(mQuestionList);
 
-        Log.e(LOG_STRING,"questionList: "+questionList);
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
 
@@ -450,5 +449,6 @@ public class Questionnaire {
 
     private void returnToMenu() {
         mContextQPA.sendMessage(ControlService.MSG_NEW_ALARM);
+        mContextQPA.createMenu();
     }
 }
