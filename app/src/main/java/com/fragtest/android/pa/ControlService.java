@@ -15,12 +15,18 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
+import org.pmw.tinylog.Logger;
+import org.pmw.tinylog.writers.FileWriter;
 
 /**
  * The brains of the operation.
@@ -204,6 +210,15 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.d(LOG, "onCreate");
+
+        Configurator.currentConfig()
+                .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
+                .level(Level.INFO)
+                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS} {message}")
+                .activate();
+
+        Logger.info("Service onCreate");
+
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();

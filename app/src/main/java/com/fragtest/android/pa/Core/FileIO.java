@@ -28,7 +28,7 @@ public class FileIO {
 
 
     // Create / Find main Folder
-    private static String getFolderPath() {
+    public static String getFolderPath() {
         File baseDirectory = Environment.getExternalStoragePublicDirectory(MAIN_FOLDER);
         if (!baseDirectory.exists()) {
             Log.e(LOG_STRING, "Directory does not exist ->create");
