@@ -85,12 +85,25 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_SET_FINAL_COUNTDOWN:
                     int finalCountDown = msg.getData().getInt("finalCountDown");
                     mAdapter.setFinalCountDown(finalCountDown);
+                    break;
 
                 case ControlService.MSG_STATUS:
                     // Set ui to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
-                    Log.d(LOG, "Received " + status.getBoolean("isRecording"));
+
+                    Log.d(LOG, "recording state: " + mServiceIsRecording);
+
+                    if (mServiceIsRecording) {
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        holo_green_dark, null)));
+                    } else {
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        darker_gray, null)));
+                    }
+
                     break;
 
                 case ControlService.MSG_START_RECORDING:
@@ -213,14 +226,8 @@ public class MainActivity extends AppCompatActivity {
                 if (mServiceIsBound) {
                     if (mServiceIsRecording) {
                         messageService(ControlService.MSG_STOP_RECORDING);
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        holo_green_dark, null)));
                     } else {
                         messageService(ControlService.MSG_START_RECORDING);
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        darker_gray, null)));
                     }
                     messageService(ControlService.MSG_GET_STATUS);
                 } else {

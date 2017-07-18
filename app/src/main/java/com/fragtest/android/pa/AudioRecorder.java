@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
@@ -116,22 +117,25 @@ public class AudioRecorder {
 
                 int bytesRead = audioRecord.read(buffer, 0, bufferSize);
 
-                // check for
-                if (((bytesWritten + bytesRead) > blocklengthInBytes)) {
-                    bytesToWrite = blocklengthInBytes - bytesWritten;
-                    bytesRemaining = bytesWritten - blocklengthInBytes;
-                } else {
-                    bytesToWrite = bytesRead;
-                }
+                if (bytesRead > 0) {
 
-                try {
-                    outputStream.write(buffer, 0, bytesToWrite);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    // check for
+                    if (((bytesWritten + bytesRead) > blocklengthInBytes)) {
+                        bytesToWrite = blocklengthInBytes - bytesWritten;
+                        bytesRemaining = bytesWritten - blocklengthInBytes;
+                    } else {
+                        bytesToWrite = bytesRead;
+                    }
 
-                // total bytes written in this block
-                bytesWritten += bytesToWrite;
+                    try {
+                        outputStream.write(buffer, 0, bytesToWrite);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    // total bytes written in this block
+                    bytesWritten += bytesToWrite;
+                }
             }
 
             String filename = fileIO.filename;
@@ -153,7 +157,12 @@ public class AudioRecorder {
         }
 
         audioRecord.stop();
-
+        Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
 }

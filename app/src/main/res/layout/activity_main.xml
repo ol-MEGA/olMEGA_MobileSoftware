@@ -40,7 +40,7 @@
             android:layout_height="32dp"
             android:layout_weight="0"
             android:background="@android:drawable/ic_btn_speak_now"
-            android:backgroundTint="@android:color/holo_green_dark">
+            android:backgroundTint="@android:color/darker_gray">
 
         </View>
 

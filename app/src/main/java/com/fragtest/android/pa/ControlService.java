@@ -42,6 +42,7 @@ public class ControlService extends Service {
     public static final int MSG_START_QUESTIONNAIRE = 8;
     public static final int MSG_START_RECORDING = 9;
     public static final int MSG_STOP_RECORDING = 10;
+    public static final int MSG_RECORDING_STOPPED = 20;
     public static final int MSG_STATUS = 11;
     public static final int MSG_BLOCK_RECORDED = 12;
     public static final int MSG_PROPOSE_QUESTIONNAIRE = 13;
@@ -159,11 +160,13 @@ public class ControlService extends Service {
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
                     isActiveQuestionnaire = false;
+                    break;
 
                 case MSG_GET_FINAL_COUNTDOWN:
                     Bundle dataCountDown = new Bundle();
                     dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
                     messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
+                    break;
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
@@ -176,6 +179,9 @@ public class ControlService extends Service {
                 case MSG_STOP_RECORDING:
                     Log.d(LOG, "Stop Recording.");
                     audioRecorder.stop();
+                    break;
+
+                case MSG_RECORDING_STOPPED:
                     audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_STOP_RECORDING);
