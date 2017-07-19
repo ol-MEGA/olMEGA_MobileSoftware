@@ -23,6 +23,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
@@ -95,6 +96,8 @@ public class ControlService extends Service {
             Log.d(LOG, "Received Message: " + msg.what);
             Log.d(LOG, "TID: " + android.os.Process.myTid());
             Log.d(LOG, "TID: " + android.os.Process.myPid());
+
+            Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
 
@@ -196,6 +199,7 @@ public class ControlService extends Service {
                 case MSG_BLOCK_RECORDED:
                     String filename = msg.getData().getString("filename");
                     Log.d(LOG, "Recorded: " + filename);
+                    Logger.info("New cache:\t{}", filename);
                     break;
 
                 default:
@@ -214,7 +218,7 @@ public class ControlService extends Service {
         Configurator.currentConfig()
                 .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
                 .level(Level.INFO)
-                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS} {message}")
+                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();
 
         Logger.info("Service onCreate");
@@ -344,4 +348,5 @@ public class ControlService extends Service {
         messageClient(ControlService.MSG_START_COUNTDOWN, data);
         Log.e(LOG,"Timer set to "+timerInterval+"s");
     }
+
 }
