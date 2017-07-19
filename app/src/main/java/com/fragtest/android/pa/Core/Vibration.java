@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.util.Log;
 
 import static android.content.Context.VIBRATOR_SERVICE;
 
@@ -41,8 +42,9 @@ public class Vibration {
     }
 
     public void repeatingBurstOn() {
+        Log.i(LOG_STRING,"rrringgrrrrinngggg!");
         isActive = true;
-        mTimerHandler.postDelayed(loop, 0);
+        mTimerHandler.post(loop);
         PowerManager pm = (PowerManager) mContext.getSystemService(
                 Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
@@ -53,6 +55,7 @@ public class Vibration {
 
     public void repeatingBurstOff() {
         isActive = false;
+        mTimerHandler.removeCallbacks(loop);
         KeyguardManager keyguardManager = (KeyguardManager) mContext.getSystemService(
                 Context.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock keyguardLock = keyguardManager.newKeyguardLock("TAG");

@@ -54,7 +54,7 @@ public class ControlService extends Service {
     public static final int MSG_FINAL_COUNTDOWN_SET = 20;
 
     static boolean isRecording = false;
-    private boolean isCountDownRunning = false;
+    private boolean isTimerRunning = false;
     private XMLReader mXmlReader;
     private Vibration mVibration;
 
@@ -100,7 +100,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
-                    mClientMessenger = null;
+                    //mClientMessenger = null; TODO: Evaluate whether this is good
 
                     if (restartActivity) {
                         startActivity();
@@ -115,62 +115,72 @@ public class ControlService extends Service {
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
-                    isCountDownRunning = false;
-
-                    if (true) {
-                        // perform checks whether running a questionnaire is valid
+                    Log.i(LOG,"isRecording: "+isRecording);
+                    // perform checks whether running a questionnaire is valid
+                    if (true && !isActiveQuestionnaire) {
                         messageClient(MSG_PROPOSE_QUESTIONNAIRE);
                         mVibration.repeatingBurstOn();
+                    } else {
+                        // React to when questionnaire is active but another one is due
+                        Log.i(LOG,"Waiting for new questionnaire.");
                     }
-
+                    isTimerRunning = false;
                     break;
 
-                case MSG_NEW_ALARM:
+                /*case MSG_NEW_ALARM:
                     isCountDownRunning = false;
                     setAlarmAndCountdown();
-                    break;
+                    break;*/
 
 
                 case MSG_MANUAL_QUESTIONNAIRE:
-                    // Check if necessary states are set for questionnaire [TO DO]
-                    // ... perform checks
-                    if (true) {
+                    // Check if necessary states are set for questionnaire
+                    //TODO: perform checks
+                    if (true && !isActiveQuestionnaire) {
                         Bundle data = new Bundle();
                         ArrayList<String> questionList = mXmlReader.getQuestionList();
                         data.putStringArrayList("questionList",questionList);
                         messageClient(MSG_START_QUESTIONNAIRE, data);
+                        Log.i(LOG,"Manual questionnaire initiated.");
                     }
                     break;
 
                 case MSG_PROPOSITION_ACCEPTED:
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
-                    mVibration.repeatingBurstOff();
-                    // Send questionnaire data to questionnaire class to create a new ... tadaa ...
-                    // questionnaire
-                    Bundle data = new Bundle();
-                    ArrayList<String> questionList = mXmlReader.getQuestionList();
-                    data.putStringArrayList("questionList",questionList);
-                    messageClient(MSG_START_QUESTIONNAIRE, data);
+                    //TODO: perform checks
+                    if (true && !isActiveQuestionnaire) {
+                        mVibration.repeatingBurstOff();
+                        // Send questionnaire data to questionnaire class to create a new ... tadaa ...
+                        // questionnaire
+                        Bundle data = new Bundle();
+                        ArrayList<String> questionList = mXmlReader.getQuestionList();
+                        data.putStringArrayList("questionList", questionList);
+                        messageClient(MSG_START_QUESTIONNAIRE, data);
+                        Log.i(LOG, "Recurring questionnaire initiated.");
+                    }
                     break;
 
                 case MSG_QUESTIONNAIRE_ACTIVE:
                     isActiveQuestionnaire = true;
-                    mVibration.repeatingBurstOff();
-                    Log.i(LOG,"Questionnaire active - alarm shut off.");
+                    mEventTimer.stopTimer();
+                    isTimerRunning = false;
+                    //mVibration.repeatingBurstOff();
+                    Log.i(LOG,"Questionnaire active");
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
                     isActiveQuestionnaire = false;
+                    setAlarmAndCountdown();
                     Log.i(LOG,"Questionnaire inactive");
                     break;
 
-                case MSG_GET_FINAL_COUNTDOWN:
+                /*case MSG_GET_FINAL_COUNTDOWN:
                     Bundle dataCountDown = new Bundle();
                     dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
                     dataCountDown.putInt("countDownInterval",mTimerInterval);
                     messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
-                    Log.e(LOG,"Sending FCD");
+                    Log.e(LOG,"Sending FCD");*/
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
@@ -226,6 +236,8 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
+        mEventTimer.stopTimer();
+        mVibration.repeatingBurstOff();
         mNotificationManager.cancel(NOTIFICATION_ID);
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
@@ -294,7 +306,6 @@ public class ControlService extends Service {
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
-
     }
 
     private void showNotification() {
@@ -320,23 +331,28 @@ public class ControlService extends Service {
     }
 
     private void setAlarmAndCountdown() {
-        if (!isCountDownRunning || !isActiveQuestionnaire) {
+        if (!isTimerRunning) {
             mTimerInterval = mXmlReader.getNewTimerInterval();
             mEventTimer.setTimer(mTimerInterval);
             mFinalCountDown = mEventTimer.getFinalCountDown();
 
-            Bundle data = new Bundle();
-            data.putInt("timerInterval", mFinalCountDown);
             // Send message to initialise new functional timer
+            Bundle data = new Bundle();
+            data.putInt("finalCountDown", mFinalCountDown);
+            data.putInt("countDownInterval", mTimerInterval);
             messageClient(ControlService.MSG_START_COUNTDOWN, data);
             Log.e(LOG, "Timer set to " + mTimerInterval + "s");
 
-            isCountDownRunning = true;
+            isTimerRunning = true;
         } else {
-            Bundle data = new Bundle();
-            data.putInt("timerInterval", mFinalCountDown);
+            // Usually when app is restarted
+            Log.i(LOG, "Timer already set. Reinstating countdown");
             // Send message to initialise new functional timer
+            Bundle data = new Bundle();
+            data.putInt("finalCountDown", mFinalCountDown);
+            data.putInt("countDownInterval", mTimerInterval);
             messageClient(ControlService.MSG_START_COUNTDOWN, data);
+            Log.e(LOG, "Timer set to " + mTimerInterval + "s");
         }
     }
 }

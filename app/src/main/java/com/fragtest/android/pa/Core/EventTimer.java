@@ -18,6 +18,8 @@ public class EventTimer {
     private static final String LOG = "EventTimer";
     private Context context;
     private Messenger messenger;
+    private AlarmManager mAlarmManager;
+    private PendingIntent mAlarmIntent;
     private int mFinalCountDown;
 
     public EventTimer(Context ctx, Messenger msg) {
@@ -32,22 +34,30 @@ public class EventTimer {
 
     public void setTimer(int interval) {
 
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // Alarm will call EventReceiver class by sending broadcast along with messenger context
         Intent intent = new Intent(context, EventReceiver.class);
         intent.putExtra("Messenger", messenger);
-        PendingIntent alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        mAlarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
         // Schedules the initialisation of new questionnaire
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP,
-                System.currentTimeMillis() + interval*1000, alarmIntent);
+        mAlarmManager.setExact(AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + interval*1000, mAlarmIntent);
 
         // Final alarm time for visual count down;
-        mFinalCountDown = (int) (System.currentTimeMillis()/1000) + (interval);
+        mFinalCountDown = (int) (System.currentTimeMillis()/1000) + interval;
 
         if (BuildConfig.DEBUG){
             Log.d(LOG,"New timer interval set to "+interval+"s");
+        }
+    }
+
+    public void stopTimer() {
+        mAlarmManager.cancel(mAlarmIntent);
+
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG,"Timer canceled.");
         }
     }
 

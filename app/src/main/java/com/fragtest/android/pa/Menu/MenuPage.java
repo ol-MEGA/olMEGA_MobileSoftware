@@ -85,7 +85,7 @@ public class MenuPage extends AppCompatActivity {
         return menuLayout;
     }
 
-    // Sinply increases text size of "Start Questionnaire" item in user menu
+    // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
         mStartQuestionnaire.setPadding(0,0,0,0);
         mStartQuestionnaire.setTextSize(mContext.getResources().

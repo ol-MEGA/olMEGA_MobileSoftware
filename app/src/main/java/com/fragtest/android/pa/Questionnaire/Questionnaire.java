@@ -8,7 +8,6 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.BuildConfig;
-import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.EvaluationList;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.MandatoryInfo;
@@ -448,7 +447,6 @@ public class Questionnaire {
     }
 
     private void returnToMenu() {
-        mContextQPA.sendMessage(ControlService.MSG_NEW_ALARM);
         mContextQPA.createMenu();
     }
 }
