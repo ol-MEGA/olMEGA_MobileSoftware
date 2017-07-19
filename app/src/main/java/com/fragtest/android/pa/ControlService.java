@@ -100,7 +100,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
-                    //mClientMessenger = null; TODO: Evaluate whether this is good
+                    mClientMessenger = null; //TODO: Evaluate whether this is good
 
                     if (restartActivity) {
                         startActivity();
