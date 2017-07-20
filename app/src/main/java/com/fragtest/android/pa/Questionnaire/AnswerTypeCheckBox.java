@@ -81,6 +81,11 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             checkBox.setMinHeight((int) mContext.getResources().getDimension(R.dimen.textSizeAnswer));
 
+            if (mListOfAnswers.get(iAnswer).getId() == 66666) {
+                checkBox.setEnabled(false);
+                checkBox.setVisibility(View.INVISIBLE);
+            }
+
             mParent.layoutAnswer.addView(checkBox, answerParams);
         }
     }

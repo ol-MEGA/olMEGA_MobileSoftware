@@ -6,6 +6,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -23,13 +24,13 @@ import java.util.List;
 
 public class AnswerTypeRadio extends AppCompatActivity {
 
+    private static String LOG_STRING = "AnswerTypeRadio";
     private final RadioGroup mRadioGroup;
     private final AnswerLayout mParent;
     private final Context mContext;
     private final Questionnaire mQuestionnaire;
     private final int mQuestionId;
     private final List<StringAndInteger> mListOfAnswers;
-    private String LOG_STRING = "AnswerTypeRadio";
     private int mDefault = -1;
 
 
@@ -58,6 +59,7 @@ public class AnswerTypeRadio extends AppCompatActivity {
     public boolean buildView() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+
             RadioButton button = new RadioButton(mContext);
             button.setId(mListOfAnswers.get(iAnswer).getId());
             button.setText(mListOfAnswers.get(iAnswer).getText());
@@ -83,7 +85,12 @@ public class AnswerTypeRadio extends AppCompatActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
 
-            mRadioGroup.addView(button, answerParams);
+                if (mListOfAnswers.get(iAnswer).getId() == 66666) {
+                    button.setEnabled(false);
+                    button.setVisibility(View.INVISIBLE);
+                }
+
+                mRadioGroup.addView(button, answerParams);
         }
         mParent.layoutAnswer.addView(mRadioGroup);
         return true;

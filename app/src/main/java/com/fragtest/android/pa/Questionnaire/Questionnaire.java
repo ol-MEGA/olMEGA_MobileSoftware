@@ -57,9 +57,6 @@ public class Questionnaire {
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
 
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Constructor successful.");
-        }
     }
 
     public void setUp(ArrayList<String> questionList) {
@@ -84,7 +81,7 @@ public class Questionnaire {
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
-    public Question createQuestion(int position) {
+    Question createQuestion(int position) {
 
         if (BuildConfig.DEBUG) {
             Log.e(LOG_STRING, "========================================================");
@@ -111,7 +108,7 @@ public class Questionnaire {
     }
 
     // Builds the Layout of each Stage Question
-    public LinearLayout generateView(Question question) {
+    LinearLayout generateView(Question question) {
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
@@ -277,32 +274,32 @@ public class Questionnaire {
         return answerContainer;
     }
 
-    public boolean addValueToEvaluationList(int questionId, float value) {
+    boolean addValueToEvaluationList(int questionId, float value) {
         mEvaluationList.add(questionId, value);
         return true;
     }
 
-    public boolean addTextToEvaluationLst(int questionId, String text) {
+    boolean addTextToEvaluationLst(int questionId, String text) {
         mEvaluationList.add(questionId, text);
         return true;
     }
 
-    public boolean addIdToEvaluationList(int questionId, int id) {
+    boolean addIdToEvaluationList(int questionId, int id) {
         mEvaluationList.add(questionId, id);
         return true;
     }
 
-    public boolean removeIdFromEvaluationList(int id) {
+    boolean removeIdFromEvaluationList(int id) {
         mEvaluationList.removeAnswerId(id);
         return true;
     }
 
-    public boolean removeQuestionIdFromEvaluationList(int questionId) {
+    boolean removeQuestionIdFromEvaluationList(int questionId) {
         mEvaluationList.removeQuestionId(questionId);
         return true;
     }
 
-    public boolean finaliseEvaluation() {
+    boolean finaliseEvaluation() {
         mMetaData.finalise(mEvaluationList);
         mFileIO.saveDataToFile(mContext, mMetaData.getFileName(), mMetaData.getData());
         Toast.makeText(mContext, R.string.infoTextSave, Toast.LENGTH_SHORT).show();
@@ -310,7 +307,7 @@ public class Questionnaire {
         return true;
     }
 
-    public int getNumPages() {
+    int getNumPages() {
         return mNumPages;
     }
 
@@ -318,7 +315,7 @@ public class Questionnaire {
         return question.getQuestionId();
     }
 
-    public boolean checkVisibility() {
+    boolean checkVisibility() {
         // Function checks all available pages on whether their filtering condition has been met and
         // toggles visibility by destroying or creating the views and adding them to the list of
         // views which is handled by QuestionnairePagerAdapter
@@ -404,7 +401,7 @@ public class Questionnaire {
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
 
             for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
-                if (sType.equals("checkbox")) {
+                if (sType.equals("checkbox") && mListOfAnswerIds.get(iAnswer) != 66666) {
                     CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
                             mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
                     if (checkBox != null) {

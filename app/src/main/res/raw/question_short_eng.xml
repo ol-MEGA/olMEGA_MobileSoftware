@@ -52,7 +52,7 @@
             <label>
                 <text>Please describe your situation.</text>
             </label>
-            <option id="66666">
+            <option id="66666"> // id of 66666 creates a forced blank space
                 <text></text>
             </option>
             <option id="21430">
