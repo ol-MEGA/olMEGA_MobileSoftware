@@ -27,8 +27,8 @@ import java.util.List;
 
 public class AnswerTypeSliderFree extends AppCompatActivity {
 
-    private static final int mMinProgress = 10;
     public static String LOG_STRING = "AnswerTypeSliderFree";
+    private static final int mMinProgress = 10;
     public final AnswerLayout parent;
     private final Context mContext;
     private final List<StringAndInteger> mListOfAnswers;
@@ -43,8 +43,14 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
 
+    // These serve to normalise pixel/value for now
+    private int mMagicNumber1 = 140;
+    private int mMagicNumber2 = 151;
+
     public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
                                 AnswerLayout qParent, int nQuestionId) {
+
+        //TODO: Resolve magic numbers
 
         mContext = context;
         parent = qParent;
@@ -76,11 +82,10 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
 
-        // ACHTUNG _ MAGIC NUMBER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight - 140,
+                mUsableHeight - mMagicNumber2,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(
@@ -153,6 +158,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             mAnswerListContainer.addView(textMark);
         }
         parent.layoutAnswer.addView(mHorizontalContainer);
+
         return true;
     }
 
@@ -163,7 +169,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             // If default present, this element is the one
             mDefaultAnswer = mListOfAnswers.size() - 1;
             // Handles default id if existent
-            //setProgressItem(mDefaultAnswer);
+            setProgressItem(mDefaultAnswer);
         }
         return true;
     }
@@ -253,6 +259,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 return true;
             }
         });
+
         return true;
     }
 
@@ -293,10 +300,15 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
 
     // Set progress/slider according to number of selected item (counting from 0)
     private int setProgressItem(int numItem) {
+
+        int nHeightView = (mUsableHeight - mMagicNumber1)/(mListOfAnswers.size());
         int nPixProgress = (int) ((2 * (mListOfAnswers.size() - numItem) - 1) /
-                2.0f * nTextViewHeight);
+                2.0f * nHeightView);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
+        Log.e(LOG_STRING,"nTextViewHeight: "+nHeightView);
+        Log.e(LOG_STRING, "height should be: "+nPixProgress);
+        Log.e(LOG_STRING, "height is: "+mResizeView.getLayoutParams().height);
         return nPixProgress;
     }
 
@@ -313,7 +325,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     // Returns a floating point number between 0.0 and 1.0 according to progress
     private float getFractionFromProgress() {
         return (float) (mResizeView.getLayoutParams().height - mMinProgress) /
-                (mUsableHeight - mMinProgress);
+                (mUsableHeight - mMagicNumber2 - mMinProgress);
     }
 }
 

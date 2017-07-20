@@ -256,9 +256,9 @@
             <option id="41466">
                 <text>Loud</text>
             </option>
-            <option id="41467">
+            <default id="41467">
                 <text>Medium</text>
-            </option>
+            </default>
             <option id="41468">
                 <text>Quiet</text>
             </option>

@@ -43,6 +43,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
 
+    // These serve to normalise pixel/value for now
+    private int mMagicNumber1 = 140;
+    private int mMagicNumber2 = 151;
+
     public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
         mContext = context;
@@ -159,7 +163,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
             mDefaultAnswer = mListOfAnswers.size() - 1;
             // Handles default id if existent
             setProgressItem(mDefaultAnswer);
-
         }
         mListOfIds.add(nAnswerId);
         return true;
@@ -306,16 +309,21 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
 
     // Enables quantisation of values (fixed choice options), counting from 0 (lowest)
     private int mapValuesToItems(float inVal) {
-        return (int) ((inVal - (Units.getScreenHeight() -
+        return (int) ((inVal - mMagicNumber2 - (Units.getScreenHeight() -
                 mUsableHeight - (int) mContext.getResources().getDimension(
-                R.dimen.answerLayoutPadding_Bottom))) / (nTextViewHeight));
+                R.dimen.answerLayoutPadding_Bottom))) / (mMagicNumber2));
     }
 
     // Set progress/slider according to number of selected item (counting from 0)
     public void setProgressItem(int numItem) {
-        mResizeView.getLayoutParams().height =
-                (int) ((2 * (mListOfAnswers.size() - numItem) - 1) / 2.0f * nTextViewHeight);
+
+        int nHeightView = (mUsableHeight - mMagicNumber1)/(mListOfAnswers.size());
+        int nPixProgress = (int) ((2 * (mListOfAnswers.size() - numItem) - 1) /
+                2.0f * nHeightView);
+        mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
+
+        Log.e(LOG_STRING,"item number: "+numItem);
     }
 }
 
