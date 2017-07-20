@@ -53,6 +53,8 @@ public class ControlService extends Service {
     public static final int MSG_SET_FINAL_COUNTDOWN = 19;
     public static final int MSG_FINAL_COUNTDOWN_SET = 20;
 
+    // Shows whether questionnaire is active - tackles lifecycle jazz
+    private boolean isActiveQuestionnaire = false;
     static boolean isRecording = false;
     private boolean isTimerRunning = false;
     private XMLReader mXmlReader;
@@ -61,8 +63,6 @@ public class ControlService extends Service {
     private int mFinalCountDown = -255;
     private int mTimerInterval = -255;
 
-    // Shows whether questionnaire is active - tackles lifecycle jazz
-    private boolean isActiveQuestionnaire = false;
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
@@ -257,6 +257,8 @@ public class ControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e(LOG,"onTaskRemoved");
+        mEventTimer.stopTimer();
+        mVibration.repeatingBurstOff();
         super.onTaskRemoved(rootIntent);
     }
 
