@@ -18,6 +18,7 @@ public class XMLReader {
     private static String LOG_STRING = "XMLReader";
     private Context mContext;
     private FileIO mFileIO;
+    private String mHead;
     private int mTimerMean, mTimerDeviation, mTimerInterval;
     // List containing all questions (including all attached information)
     private ArrayList<String> mQuestionList;
@@ -28,10 +29,10 @@ public class XMLReader {
         mFileIO = new FileIO();
         mQuestionList = new ArrayList<>();
 
-        //mRawInput = mFileIO.readRawTextFile();
+        //rawInput = mFileIO.readRawTextFile();
         // offline version
-        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
-        String[] timerTemp = mRawInput.split("<timer|</timer>");
+        String rawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
+        String[] timerTemp = rawInput.split("<timer|</timer>");
 
         if (timerTemp[1].split("mean").length > 1) {
             try {
@@ -54,7 +55,8 @@ public class XMLReader {
         }
 
         // Split basis data into question segments
-        String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
+        String[] questionnaire = rawInput.split("<question|</question>|<finish>|</finish>");
+        mHead = extractHead(rawInput);
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
     }
@@ -65,6 +67,10 @@ public class XMLReader {
                 mTimerMean + mTimerDeviation + 1);
 
         return mTimerInterval;
+    }
+
+    public String getHead() {
+        return mHead;
     }
 
     public ArrayList<String> getQuestionList() {
@@ -85,5 +91,18 @@ public class XMLReader {
         ArrayList<String> listString = new ArrayList<>();
         Collections.addAll(listString, stringArray);
         return listString;
+    }
+
+    private String extractHead(String rawInput) {
+        String head = "";
+        String[] tempHead = rawInput.split("<|>");
+
+        head += "<";
+        head += tempHead[1];
+        head +="><";
+        head += tempHead[3];
+        head += ">";
+
+        return head;
     }
 }

@@ -58,44 +58,29 @@ public class MainActivity extends AppCompatActivity {
             }
 
             switch (msg.what) {
-                /*case ControlService.MSG_ALARM_RECEIVED:
-                    // check if necessary states are set for questionnaire
-                    mAdapter.proposeQuestionnaire();
-                    break;*/
 
                 case ControlService.MSG_START_COUNTDOWN:
                     Log.e(LOG,"Trying to set FCD");
                     int finalCountDown = msg.getData().getInt("finalCountDown");
                     int countDownInterval = msg.getData().getInt("countDownInterval");
                     mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
-                    //mAdapter.createMenu();
-                    // Prepares countdown in terms of setting final schedule
-                    //mAdapter.prepareCountDown();
                     mAdapter.startCountDown();
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
-                    //mAdapter.stopCountDown();
-                    // Necessary states are set for questionnaire
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
-                    mAdapter.createQuestionnaire(questionList);
-                    //messageService(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
+                    String head = dataQuest.getString("head");
+                    String motivation = dataQuest.getString("motivation");
+                    mAdapter.createQuestionnaire(questionList, head, motivation);
                     break;
 
                 case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
                     mAdapter.proposeQuestionnaire();
                     break;
 
-                /*case ControlService.MSG_SET_FINAL_COUNTDOWN:
-                    Log.e(LOG,"Trying to set FCD");
-                    int finalCountDown = msg.getData().getInt("finalCountDown");
-                    int countDownInterval = msg.getData().getInt("countDownInterval");
-                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
-                    Log.e(LOG,"FCD set: "+finalCountDown+", interval: "+countDownInterval);*/
-
                 case ControlService.MSG_STATUS:
-                    // Set ui to match ControlService's state
+                    // Set UI to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
                     Log.d(LOG, "Received " + status.getBoolean("isRecording"));
@@ -106,11 +91,6 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STOP_RECORDING:
                     break;
-
-                /*case ControlService.MSG_FINAL_COUNTDOWN_SET:
-                    Log.e(LOG,"FINAL COUNTDOWN MSG SET");
-                    mAdapter.startCountDown();
-                    break;*/
 
                 default:
                     super.handleMessage(msg);

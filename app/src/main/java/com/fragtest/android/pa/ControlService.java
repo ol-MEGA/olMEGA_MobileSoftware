@@ -127,12 +127,6 @@ public class ControlService extends Service {
                     isTimerRunning = false;
                     break;
 
-                /*case MSG_NEW_ALARM:
-                    isCountDownRunning = false;
-                    setAlarmAndCountdown();
-                    break;*/
-
-
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // Check if necessary states are set for questionnaire
                     //TODO: perform checks
@@ -140,6 +134,9 @@ public class ControlService extends Service {
                         Bundle data = new Bundle();
                         ArrayList<String> questionList = mXmlReader.getQuestionList();
                         data.putStringArrayList("questionList",questionList);
+                        String head = mXmlReader.getHead();
+                        data.putString("head", head);
+                        data.putString("motivation", "<motivation='manual'>");
                         messageClient(MSG_START_QUESTIONNAIRE, data);
                         Log.i(LOG,"Manual questionnaire initiated.");
                     }
@@ -156,6 +153,9 @@ public class ControlService extends Service {
                         Bundle data = new Bundle();
                         ArrayList<String> questionList = mXmlReader.getQuestionList();
                         data.putStringArrayList("questionList", questionList);
+                        String head = mXmlReader.getHead();
+                        data.putString("head", head);
+                        data.putString("motivation","<motivation='auto'>");
                         messageClient(MSG_START_QUESTIONNAIRE, data);
                         Log.i(LOG, "Recurring questionnaire initiated.");
                     }
@@ -174,13 +174,6 @@ public class ControlService extends Service {
                     setAlarmAndCountdown();
                     Log.i(LOG,"Questionnaire inactive");
                     break;
-
-                /*case MSG_GET_FINAL_COUNTDOWN:
-                    Bundle dataCountDown = new Bundle();
-                    dataCountDown.putInt("finalCountDown",mEventTimer.getFinalCountDown());
-                    dataCountDown.putInt("countDownInterval",mTimerInterval);
-                    messageClient(MSG_SET_FINAL_COUNTDOWN, dataCountDown);
-                    Log.e(LOG,"Sending FCD");*/
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");

@@ -41,13 +41,16 @@ public class Questionnaire {
     private final MandatoryInfo mMandatoryInfo;
     private MetaData mMetaData;
     private final FileIO mFileIO;
+    private String mHead, mMotivation;
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
 
-    public Questionnaire(Context context, QuestionnairePagerAdapter contextQPA) {
+    public Questionnaire(Context context, String head, String motivation, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
         mContextQPA = contextQPA;
+        mHead = head;
+        mMotivation = motivation;
         mEvaluationList = new EvaluationList();
         mQuestionList = new ArrayList<>();
         mFileIO = new FileIO();
@@ -64,7 +67,7 @@ public class Questionnaire {
         // offline version
         String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
-        mMetaData = new MetaData(mContext, mRawInput);
+        mMetaData = new MetaData(mContext, mRawInput, mHead, mMotivation);
         mMetaData.initialise();
 
         // Split basis data into question segments

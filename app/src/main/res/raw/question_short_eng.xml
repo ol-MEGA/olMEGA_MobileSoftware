@@ -217,7 +217,7 @@
             </label>
         </question>
 
-// Only shown if you're NOT home
+// Only shown if you're NOT home AND: on foot on a train driving a car
         <question id="10819" type="emoji" filter="!10813_21430">
             <label>
                 <text>How are you feeling?</text>
@@ -271,7 +271,7 @@
         </question>
 
 
-
+// only shown if it's too loud
         <question id="10821" type="radio" filter="10820_41464">
             <label>
                 <text>How happy are you?</text>

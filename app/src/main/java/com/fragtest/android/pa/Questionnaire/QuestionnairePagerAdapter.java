@@ -36,6 +36,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Stores all Views
     ArrayList<QuestionViewActive> mListOfViewsStorage;
     private static String LOG_STRING = "Quest..PagerAdapter";
+    private String mHead;
     private int mNUM_PAGES;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
@@ -47,6 +48,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean isInForeGround = false;
     private boolean needsIncreasing = false;
     private boolean isQuestionnaireActive = false;
+    private String mMotivation = "";
 
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
@@ -142,15 +144,17 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isQuestionnaireActive = false;
     }
 
-    public void createQuestionnaire(ArrayList<String> questionList) {
+    public void createQuestionnaire(ArrayList<String> questionList, String head, String motivation) {
 
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         isQuestionnaireActive = true;
         mQuestionList = questionList;
+        mHead = head;
+        mMotivation = motivation;
 
         stopCountDown();
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, this);
+        mQuestionnaire = new Questionnaire(MainActivity, mHead, mMotivation, this);
         mQuestionnaire.setUp(questionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -174,7 +178,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, this);
+        mQuestionnaire = new Questionnaire(MainActivity, mHead, mMotivation, this);
         mQuestionnaire.setUp(mQuestionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);

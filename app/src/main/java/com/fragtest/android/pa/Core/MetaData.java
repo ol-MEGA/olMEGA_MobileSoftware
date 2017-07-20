@@ -25,7 +25,7 @@ public class MetaData extends AppCompatActivity {
     private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
             KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
-            KEY_QUESTID, mRawInput, FILE_NAME;
+            KEY_QUESTID, mRawInput, FILE_NAME, KEY_MOTIVATION;
 
     private SimpleDateFormat DATE_FORMAT;
 
@@ -38,9 +38,11 @@ public class MetaData extends AppCompatActivity {
 
     private EvaluationList mEvaluationList;
 
-    public MetaData(Context context, String rawInput) {
+    public MetaData(Context context, String rawInput, String head, String motivation) {
         mContext = context;
         mRawInput = rawInput;
+        KEY_HEAD = head;
+        KEY_MOTIVATION = motivation;
         mQuestionList = new ArrayList<>();
         DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
 
@@ -61,7 +63,10 @@ public class MetaData extends AppCompatActivity {
 
         String[] mRawInputLines = mRawInput.split("\n");
 
-        KEY_HEAD = mRawInputLines[0] + mRawInputLines[1];
+        //if (mRawInputLines[0])
+        //String tempHeadCode =
+
+        //KEY_HEAD = mRawInputLines[0].split("// || /*")[0] + mRawInputLines[1].split("// || /*")[0];
 
         KEY_SURVEY_URI = mRawInput.split("<survey uri=\"")[1].split("\">")[0];
         KEY_FOOT = mRawInputLines[mRawInputLines.length - 1];
@@ -99,6 +104,7 @@ public class MetaData extends AppCompatActivity {
         int questionId = -255;
 
         KEY_DATA = KEY_HEAD;
+        KEY_DATA += KEY_MOTIVATION;
         KEY_DATA += KEY_RECORD_OPEN;
         KEY_DATA += " uri=\"";
         KEY_DATA += KEY_SURVEY_URI.substring(0, KEY_SURVEY_URI.length() - 4);        // loose ".xml"
@@ -136,16 +142,20 @@ public class MetaData extends AppCompatActivity {
                     case "id":
                         ArrayList<String> listOfIds =
                                 mEvaluationList.getCheckedAnswerIdsFromQuestionId(questionId);
+                        Log.e(LOG_STRING,"id: "+questionId+" num: "+listOfIds.size());
                         ANSWER_DATA += "option_ids=\"";
                         ANSWER_DATA += listOfIds.get(0);
-                        for (int iId = 0; iId < listOfIds.size(); iId++) {
-                            ANSWER_DATA += ";";
-                            ANSWER_DATA += listOfIds.get(iId);
+                        if (listOfIds.size() > 1) {
+                            for (int iId = 1; iId < listOfIds.size(); iId++) {
+                                ANSWER_DATA += ";";
+                                ANSWER_DATA += listOfIds.get(iId);
+                            }
                         }
                         ANSWER_DATA += "\" />";
                         break;
                     case "value":
-                        //Log.i(LOG_STRING,"value");
+                        ANSWER_DATA += mEvaluationList.getValueFromQuestionId(questionId);
+                        ANSWER_DATA += KEY_VALUE_CLOSE;
                         break;
                     default:
                         Log.e(LOG_STRING, "Unknown element found during evaluation: " +
