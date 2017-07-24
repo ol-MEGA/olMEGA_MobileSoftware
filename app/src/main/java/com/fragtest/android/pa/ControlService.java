@@ -179,7 +179,16 @@ public class ControlService extends Service {
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
-                    audioRecorder = new AudioRecorder(serviceMessenger, 16000);
+
+                    int blocklengthInMs = 5000;
+                    int samplerate = 16000;
+                    boolean isWave = false;
+
+                    audioRecorder = new AudioRecorder(
+                            serviceMessenger,
+                            blocklengthInMs,
+                            samplerate,
+                            isWave);
                     audioRecorder.start();
                     isRecording = true;
                     messageClient(MSG_START_RECORDING);
