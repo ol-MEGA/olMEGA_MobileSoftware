@@ -15,12 +15,19 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+
+
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
+import org.pmw.tinylog.Logger;
+import org.pmw.tinylog.writers.FileWriter;
 
 /**
  * The brains of the operation.
@@ -42,6 +49,7 @@ public class ControlService extends Service {
     public static final int MSG_START_QUESTIONNAIRE = 8;
     public static final int MSG_START_RECORDING = 9;
     public static final int MSG_STOP_RECORDING = 10;
+    public static final int MSG_RECORDING_STOPPED = 20;
     public static final int MSG_STATUS = 11;
     public static final int MSG_BLOCK_RECORDED = 12;
     public static final int MSG_PROPOSE_QUESTIONNAIRE = 13;
@@ -91,6 +99,8 @@ public class ControlService extends Service {
             Log.d(LOG, "Received Message: " + msg.what);
             Log.d(LOG, "TID: " + android.os.Process.myTid());
             Log.d(LOG, "PID: " + android.os.Process.myPid());
+
+            Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
 
@@ -177,7 +187,16 @@ public class ControlService extends Service {
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
-                    audioRecorder = new AudioRecorder(serviceMessenger, 16000);
+
+                    int blocklengthInMs = 5000;
+                    int samplerate = 16000;
+                    boolean isWave = false;
+
+                    audioRecorder = new AudioRecorder(
+                            serviceMessenger,
+                            blocklengthInMs,
+                            samplerate,
+                            isWave);
                     audioRecorder.start();
                     isRecording = true;
                     messageClient(MSG_START_RECORDING);
@@ -186,12 +205,18 @@ public class ControlService extends Service {
                 case MSG_STOP_RECORDING:
                     Log.d(LOG, "Stop Recording.");
                     audioRecorder.stop();
+                    break;
+
+                case MSG_RECORDING_STOPPED:
                     audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_STOP_RECORDING);
                     break;
 
                 case MSG_BLOCK_RECORDED:
+                    String filename = msg.getData().getString("filename");
+                    Log.d(LOG, "Recorded: " + filename);
+                    Logger.info("New cache:\t{}", filename);
                     break;
 
                 default:
@@ -207,6 +232,15 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.d(LOG, "onCreate");
+
+        Configurator.currentConfig()
+                .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
+                .level(Level.INFO)
+                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
+                .activate();
+
+        Logger.info("Service onCreate");
+
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
@@ -350,4 +384,5 @@ public class ControlService extends Service {
             Log.e(LOG, "Timer set to " + mTimerInterval + "s");
         }
     }
+
 }
