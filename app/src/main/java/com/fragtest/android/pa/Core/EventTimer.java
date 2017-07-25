@@ -21,6 +21,7 @@ public class EventTimer {
     private AlarmManager mAlarmManager;
     private PendingIntent mAlarmIntent;
     private int mFinalCountDown;
+    private boolean isSet;
 
     public EventTimer(Context ctx, Messenger msg) {
 
@@ -48,13 +49,18 @@ public class EventTimer {
         // Final alarm time for visual count down;
         mFinalCountDown = (int) (System.currentTimeMillis()/1000) + interval;
 
+        isSet = true;
+
         if (BuildConfig.DEBUG){
             Log.d(LOG,"New timer interval set to "+interval+"s");
         }
     }
 
     public void stopTimer() {
-        mAlarmManager.cancel(mAlarmIntent);
+
+        if (isSet) {
+            mAlarmManager.cancel(mAlarmIntent);
+        }
 
         if (BuildConfig.DEBUG) {
             Log.i(LOG,"Timer canceled.");

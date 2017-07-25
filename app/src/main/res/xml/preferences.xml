@@ -3,6 +3,18 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
+    <PreferenceCategory android:title="Questionnaire">
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:key="isTimer"
+            android:title="Activate timer"
+            android:summary="Start questionnaire at defined intervals" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="Recording"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
@@ -13,11 +25,11 @@
             android:defaultValue="48000"
             android:entries="@array/samplingrateEntries"
             android:entryValues="@array/samplingrateValues"
-            android:key="samplinrate"
+            android:key="samplingrate"
             android:summary="Recording sampling rate in Hz"
             android:title="Sampling Rate" />
 
-        <CheckBoxPreference
+        <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
@@ -40,7 +52,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <CheckBoxPreference
+        <SwitchPreference
             android:defaultValue="true"
             android:key="filterHighPass"
             android:title="Highpass filter"
