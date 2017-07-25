@@ -62,6 +62,8 @@ public class EventTimer {
             mAlarmManager.cancel(mAlarmIntent);
         }
 
+        isSet = false;
+
         if (BuildConfig.DEBUG) {
             Log.i(LOG,"Timer canceled.");
         }

@@ -84,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
 
+                    if (status.getBoolean("isQuestionnairePending", false)) {
+                        mAdapter.proposeQuestionnaire();
+                    }
+
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
                     if (mServiceIsRecording) {
