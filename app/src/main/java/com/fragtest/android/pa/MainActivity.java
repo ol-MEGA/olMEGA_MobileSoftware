@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     mAdapter.proposeQuestionnaire();
                     break;
 
-                case ControlService.MSG_STATUS:
+                case ControlService.MSG_GET_STATUS:
                     // Set UI to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");

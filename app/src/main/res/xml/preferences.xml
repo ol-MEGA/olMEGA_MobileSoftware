@@ -25,16 +25,31 @@
             android:defaultValue="48000"
             android:entries="@array/samplingrateEntries"
             android:entryValues="@array/samplingrateValues"
-            android:key="samplingrate"
+            android:key="samplerate"
             android:summary="Recording sampling rate in Hz"
             android:title="Sampling Rate" />
+
+        <EditTextPreference
+            android:defaultValue="60"
+            android:key="blocklengthInS"
+            android:title="Cache size in seconds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
-            android:key="saveFile"
+            android:key="keepAudioCache"
             android:title="Keep cached audio data" />
+
+        <SwitchPreference
+            android:dependency="keepAudioCache"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="isWave"
+            android:title="Cache in WAVE format" />
 
     </PreferenceCategory>
 
@@ -54,16 +69,24 @@
 
         <SwitchPreference
             android:defaultValue="true"
-            android:key="filterHighPass"
+            android:key="filterHp"
             android:title="Highpass filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <EditTextPreference
-            android:dependency="filterHighPass"
+            android:dependency="filterHp"
             android:defaultValue="100"
-            android:key="filterHighPassFreq"
+            android:key="filterHpFrequency"
             android:title="Cutoff frequency in Hz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="downsample"
+            android:title="Downsampling"
+            android:summary="Downsample audio (fixed factor 2) "
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 

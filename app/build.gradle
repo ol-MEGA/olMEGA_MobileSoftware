@@ -28,5 +28,5 @@ dependencies {
     //25.1.0
     compile 'com.android.support:appcompat-v7:25.1.0'
     compile 'org.tinylog:tinylog:1.2'
-    testCompile 'junit:junit:4.12'
+    compile 'com.github.wendykierp:JTransforms:3.1'
 }

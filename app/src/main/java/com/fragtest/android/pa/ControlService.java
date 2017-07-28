@@ -4,10 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,7 +13,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,10 +20,12 @@ import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
+import com.fragtest.android.pa.Processing.MainProcessingThread;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 import org.pmw.tinylog.Configurator;
@@ -45,36 +43,57 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
 
-    public static final int MSG_REGISTER_CLIENT = 1;
-    public static final int MSG_UNREGISTER_CLIENT = 2;
-    public static final int MSG_GET_STATUS = 3;
-    public static final int MSG_ALARM_RECEIVED = 4;
-    public static final int MSG_START_COUNTDOWN = 5;
-    public static final int MSG_NEW_ALARM = 6;
-    public static final int MSG_ARE_WE_RUNNING = 7;
-    public static final int MSG_START_QUESTIONNAIRE = 8;
-    public static final int MSG_START_RECORDING = 9;
-    public static final int MSG_STOP_RECORDING = 10;
-    public static final int MSG_RECORDING_STOPPED = 20;
-    public static final int MSG_STATUS = 11;
-    public static final int MSG_BLOCK_RECORDED = 12;
-    public static final int MSG_PROPOSE_QUESTIONNAIRE = 13;
-    public static final int MSG_PROPOSITION_ACCEPTED = 14;
-    public static final int MSG_MANUAL_QUESTIONNAIRE = 15;
-    public static final int MSG_QUESTIONNAIRE_ACTIVE = 16;
-    public static final int MSG_QUESTIONNAIRE_INACTIVE = 17;
-    public static final int MSG_GET_FINAL_COUNTDOWN = 18;
-    public static final int MSG_SET_FINAL_COUNTDOWN = 19;
-    public static final int MSG_FINAL_COUNTDOWN_SET = 20;
+    /**
+     * Constants for messaging. Should(!) be self-explanatory.
+     */
+
+    // 1* - general
+    public static final int MSG_REGISTER_CLIENT = 11;
+    public static final int MSG_UNREGISTER_CLIENT = 12;
+    public static final int MSG_GET_STATUS = 13;
+
+    // 2* - alarm
+    public static final int MSG_ALARM_RECEIVED = 21;
+    public static final int MSG_START_COUNTDOWN = 22;
+    public static final int MSG_GET_FINAL_COUNTDOWN = 23;
+    public static final int MSG_SET_FINAL_COUNTDOWN = 24;
+    public static final int MSG_FINAL_COUNTDOWN_SET = 25;
+    public static final int MSG_NEW_ALARM = 26;
+
+    // 3* - questionnaire
+    public static final int MSG_ARE_WE_RUNNING = 31;
+    public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
+    public static final int MSG_START_QUESTIONNAIRE = 33;
+    public static final int MSG_PROPOSE_QUESTIONNAIRE = 34;
+    public static final int MSG_PROPOSITION_ACCEPTED = 35;
+    public static final int MSG_MANUAL_QUESTIONNAIRE = 36;
+    public static final int MSG_QUESTIONNAIRE_ACTIVE = 37;
+
+    // 4* - recording
+    public static final int MSG_START_RECORDING = 41;
+    public static final int MSG_STOP_RECORDING = 42;
+    public static final int MSG_RECORDING_STOPPED = 43;
+    public static final int MSG_BLOCK_RECORDED = 44;
+
+    // 5* - processing
+    public static final int MSG_BLOCK_PROCESSED = 51;
+
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
     static boolean isRecording = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
-    private boolean isTimer;
     private XMLReader mXmlReader;
     private Vibration mVibration;
+
+    int processingBufferSize = 100;
+    ProcessingBuffer processingBuffer = new ProcessingBuffer(processingBufferSize);
+
+    // preferences
+    private boolean isTimer, isWave, keepAudioCache;
+    private int samplerate, blocklengthInS;
+
 
     private int mFinalCountDown = -255;
     private int mTimerInterval = -255;
@@ -131,7 +150,7 @@ public class ControlService extends Service {
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", isRecording);
                     status.putBoolean("isQuestionnairePending", isQuestionnairePending);
-                    messageClient(MSG_STATUS, status);
+                    messageClient(MSG_GET_STATUS, status);
                     break;
 
                 case MSG_ALARM_RECEIVED:
@@ -185,13 +204,9 @@ public class ControlService extends Service {
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
 
-                    int blocklengthInMs = 5000;
-                    int samplerate = 16000;
-                    boolean isWave = false;
-
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
-                            blocklengthInMs,
+                            blocklengthInS,
                             samplerate,
                             isWave);
                     audioRecorder.start();
@@ -212,8 +227,13 @@ public class ControlService extends Service {
 
                 case MSG_BLOCK_RECORDED:
                     String filename = msg.getData().getString("filename");
+                    processingBuffer.add(0, filename);
                     Log.d(LOG, "Recorded: " + filename);
                     Logger.info("New cache:\t{}", filename);
+                    break;
+
+                case MSG_BLOCK_PROCESSED:
+                    processingBuffer.delete();
                     break;
 
                 default:
@@ -395,10 +415,97 @@ public class ControlService extends Service {
 
     }
 
-    private void getPreferences() {
+    private Bundle getPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // timer and questionnaire
         isTimer = sharedPreferences.getBoolean("isTimer", true);
+
+        // recording
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
+        blocklengthInS = Integer.parseInt(sharedPreferences.getString("blocklengthInS", "60"));
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
+        isWave = sharedPreferences.getBoolean("isWave", false);
+
+        // processing
+        HashSet<String> activeFeatures =
+                (HashSet<String>) sharedPreferences.getStringSet("features", null);
+        Boolean filterHp = sharedPreferences.getBoolean("filterHp", true);
+        int filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
+        Boolean downsample = sharedPreferences.getBoolean("downsample", false);
+
+        // TODO: bundle up everything for initial adaptation of processing stack.
+        // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
+        Bundle processingSettings = new Bundle();
+        // processingSettings.putBoolean("isTimer", isTimer);
+        processingSettings.putInt("samplerate", samplerate);
+        processingSettings.putInt("blocklengthInS", blocklengthInS);
+        // processingSettings.putBoolean("isWave", isWave);
+        processingSettings.putSerializable("activeFeatures", activeFeatures);
+        processingSettings.putBoolean("filterHp", filterHp);
+        processingSettings.putInt("filterHpFrequency", filterHpFrequency);
+        processingSettings.putBoolean("downsample", downsample);
+
+        return processingSettings;
     }
 
+    private class ProcessingBuffer {
+
+        String[] buffer;
+        int length, idxProcessing = 0, idxRecording = 0;
+        boolean isProcessing = false;
+
+        ProcessingBuffer(int _length) {
+            length = _length;
+            buffer = new String[length];
+        }
+
+        synchronized void add(int nFrames, String filename) {
+
+            Log.d(LOG, "idxRecording: " + idxRecording);
+            Log.d(LOG, "filename: " + filename);
+            Log.d(LOG, "Buffer:" + buffer.length);
+
+            buffer[idxRecording] = filename;
+
+            // next index
+            idxRecording = (idxRecording + 1) % length;
+
+            process();
+        }
+
+        synchronized void delete() {
+
+            buffer[idxProcessing] = null;
+
+            // next index
+            idxProcessing = (idxProcessing + 1) % length;
+
+            isProcessing = false;
+            process();
+        }
+
+        synchronized void process() {
+
+            if ((!isProcessing) && (buffer[idxProcessing] != null)) {
+                Bundle settings = getPreferences();
+                settings.putString("filename", buffer[idxProcessing]);
+                startProcessing(settings);
+                Log.d(LOG, "Processing #" + idxProcessing);
+                isProcessing = true;
+            } else {
+                Log.d(LOG, "Processing finished.");
+                isProcessing = false;
+            }
+        }
+
+        private void startProcessing(Bundle settings) {
+
+            MainProcessingThread processingThread =
+                    new MainProcessingThread(serviceMessenger, settings);
+		    processingThread.start();
+        }
+
+    }
 
 }

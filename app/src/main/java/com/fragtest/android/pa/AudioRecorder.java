@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
@@ -32,12 +33,12 @@ public class AudioRecorder {
     private Messenger messenger;
 
 
-    AudioRecorder(Messenger _messenger, int _blocklengthInMs, int _samplerate, boolean _isWave) {
+    AudioRecorder(Messenger _messenger, int _blocklengthInS, int _samplerate, boolean _isWave) {
 
         messenger = _messenger;
         isWave = _isWave;
 
-        blocklengthInBytes = (int) (_blocklengthInMs / 1000.0 * _samplerate * CHANNELS * BITS / 8);
+        blocklengthInBytes = (_blocklengthInS * _samplerate * CHANNELS * BITS / 8);
 
         bufferSize = AudioRecord.getMinBufferSize(_samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
@@ -97,7 +98,7 @@ public class AudioRecorder {
                     audioRecord.getSampleRate(),
                     audioRecord.getChannelCount(),
                     audioRecord.getAudioFormat(),
-                    false
+                    isWave
             );
 
             // write remaining data from last block

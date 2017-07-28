@@ -18,6 +18,9 @@ public class AudioFileIO {
     protected static final String LOG = "IOClass";
     public static final String MAIN_FOLDER = FileIO.MAIN_FOLDER;
     public static final String CACHE_FOLDER = MAIN_FOLDER + "/cache";
+    public static final String FEATURE_FOLDER = MAIN_FOLDER + "/features";
+    public static final String CACHE_WAVE = "wav";
+    public static final String CACHE_RAW = "raw";
 
     public String filename;
 
@@ -45,6 +48,7 @@ public class AudioFileIO {
                 .append(getFolderPath())
                 .append(File.separator)
                 .append(Timestamp.getTimestamp(3))
+                .append(".")
                 .append(getExtension(wavHeader))
                 .toString();
 
@@ -54,7 +58,7 @@ public class AudioFileIO {
     // file extension depending on format
     public String getExtension(Boolean isWave) {
 
-        return isWave ? ".wav" : ".raw";
+        return isWave ? CACHE_WAVE : CACHE_RAW;
     }
 
     // open output stream w/o filename
@@ -114,15 +118,16 @@ public class AudioFileIO {
     }
 
     // open input stream
-    public BufferedInputStream openInStream( String filepath ){
-        BufferedInputStream stream = null;
+    public FileInputStream openInputStream(String filepath){
+        FileInputStream inputStream = null;
+
         try {
-            FileInputStream is = new FileInputStream( filepath );
-            stream = new BufferedInputStream( is );
+            inputStream = new FileInputStream(filepath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        return stream;
+
+        return inputStream;
     }
 
     // close the input stream
