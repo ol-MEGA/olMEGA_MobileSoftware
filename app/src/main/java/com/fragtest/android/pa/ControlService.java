@@ -124,9 +124,6 @@ public class ControlService extends Service {
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
-            Log.d(LOG, "TID: " + android.os.Process.myTid());
-            Log.d(LOG, "PID: " + android.os.Process.myPid());
-
             Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
@@ -222,12 +219,12 @@ public class ControlService extends Service {
                 case MSG_RECORDING_STOPPED:
                     audioRecorder.close();
                     isRecording = false;
-                    messageClient(MSG_STOP_RECORDING);
+                    messageClient(MSG_GET_STATUS);
                     break;
 
                 case MSG_BLOCK_RECORDED:
                     String filename = msg.getData().getString("filename");
-                    processingBuffer.add(0, filename);
+                    processingBuffer.add(filename);
                     Log.d(LOG, "Recorded: " + filename);
                     Logger.info("New cache:\t{}", filename);
                     break;
@@ -460,11 +457,9 @@ public class ControlService extends Service {
             buffer = new String[length];
         }
 
-        synchronized void add(int nFrames, String filename) {
+        synchronized void add(String filename) {
 
             Log.d(LOG, "idxRecording: " + idxRecording);
-            Log.d(LOG, "filename: " + filename);
-            Log.d(LOG, "Buffer:" + buffer.length);
 
             buffer[idxRecording] = filename;
 
@@ -491,10 +486,9 @@ public class ControlService extends Service {
                 Bundle settings = getPreferences();
                 settings.putString("filename", buffer[idxProcessing]);
                 startProcessing(settings);
-                Log.d(LOG, "Processing #" + idxProcessing);
+                Log.d(LOG, "idxProcessing: " + idxProcessing);
                 isProcessing = true;
             } else {
-                Log.d(LOG, "Processing finished.");
                 isProcessing = false;
             }
         }

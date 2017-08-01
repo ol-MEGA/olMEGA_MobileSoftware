@@ -6,6 +6,7 @@ import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
@@ -22,7 +23,7 @@ import java.io.RandomAccessFile;
 
 public class BasicProcessRunnable implements Runnable {
 
-	protected static final String LOG = "HALLO:Processing";
+	protected static final String LOG = "Processing";
 	private static final String EXTENSION = ".feat";
 	private static String feature = "basicProcess";// name of the output file (will be overwritten by children)
 
@@ -31,8 +32,9 @@ public class BasicProcessRunnable implements Runnable {
 	protected Messenger messenger = null;           // instance of processHandler
 
 	private AudioFileIO ioClass = null;
-	private RandomAccessFile featureFile = null;    // data output stream
-	private String timestamp;                // time of recording
+	private RandomAccessFile featureRAF = null;
+    private File featureFile = null;
+	private String timestamp;
 	private int procFrameSize;
 	private int procHopSize;
 	private int nProcFrames;
@@ -82,13 +84,11 @@ public class BasicProcessRunnable implements Runnable {
 	@Override
 	public void run() {
 
-		String featFile = null;
-
 		if (audioData[0].length >= procFrameSize) {
 
 			// we need a global flag to indicate a new recording session started.. new: why?
 
-			openFeatureFile(featFile);
+			openFeatureFile();
 
 			// calling processing runnables for each frame..
 
@@ -109,7 +109,7 @@ public class BasicProcessRunnable implements Runnable {
 		// tell processThread we're finished
 		Message msg = Message.obtain(null, BasicProcessingThread.DONE);
 		Bundle b = new Bundle();
-		b.putString("featFile", featFile);
+		b.putString("featureFile", featureFile.getAbsolutePath());
 		msg.setData(b);
 		msg.obj = feature;
 		try {
@@ -127,7 +127,7 @@ public class BasicProcessRunnable implements Runnable {
 
 	// feature file handling
 	// TODO - separate class, overload appendFeature() 
-	private void openFeatureFile(String filename) {
+	private void openFeatureFile() {
 
         File directory = Environment.getExternalStoragePublicDirectory(AudioFileIO.FEATURE_FOLDER);
         if( !directory.exists() ){
@@ -136,28 +136,29 @@ public class BasicProcessRunnable implements Runnable {
 
 		try {
 
-			featureFile = new RandomAccessFile(directory +
-                    "/" + feature + "_" + timestamp + EXTENSION,
+            featureFile = new File(directory +
+                    "/" + feature + "_" + timestamp + EXTENSION);
+			featureRAF = new RandomAccessFile(featureFile,
                     "rw");
 
-			posFrames = featureFile.length();  	// starting position (frame count for each block)
-			featureFile.seek(posFrames);        // skip to starting position
+			posFrames = featureRAF.length();  	// starting position (frame count for each block)
+			featureRAF.seek(posFrames);        // skip to starting position
 
 			// TODO: consider writing the header only once (minus timestamp)  
 
-			featureFile.writeInt(0);                        // frame count will be written on close
-			featureFile.writeInt(nFeatures + 2);            // feature dimension count + timestamps (relative)
+			featureRAF.writeInt(0);                        // frame count will be written on close
+			featureRAF.writeInt(nFeatures + 2);            // feature dimension count + timestamps (relative)
 			if (procFrameSize == procOutFrameSize) {
-				featureFile.writeInt(procFrameSize);        // [samples]
-				featureFile.writeInt(procHopSize);          // [samples]
+				featureRAF.writeInt(procFrameSize);        // [samples]
+				featureRAF.writeInt(procHopSize);          // [samples]
 			}
 			if (procFrameSize > procOutFrameSize) {
-				featureFile.writeInt(procOutFrameSize);     // [samples]
-				featureFile.writeInt(procOutFrameSize);     // [samples]
+				featureRAF.writeInt(procOutFrameSize);     // [samples]
+				featureRAF.writeInt(procOutFrameSize);     // [samples]
 			}
-			featureFile.writeInt(samplingrate);
+			featureRAF.writeInt(samplingrate);
 
-			featureFile.writeBytes(timestamp);    // HHMMssSSS, 9 bytes (absolute timestamp)
+			featureRAF.writeBytes(timestamp);    // HHMMssSSS, 9 bytes (absolute timestamp)
 
 			procFrameCount = 0;
 			procTimestamp[0] = 0;
@@ -180,11 +181,11 @@ public class BasicProcessRunnable implements Runnable {
 
 		try {
 
-			featureFile.writeFloat(procTimestamp[0]);
-			featureFile.writeFloat(procTimestamp[1]);
+			featureRAF.writeFloat(procTimestamp[0]);
+			featureRAF.writeFloat(procTimestamp[1]);
 
 			for (int i = 0; i < data.length; i++) {
-				featureFile.writeFloat(data[i]);
+				featureRAF.writeFloat(data[i]);
 			}
 
 			procTimestamp[0] += procHopDuration;
@@ -203,10 +204,10 @@ public class BasicProcessRunnable implements Runnable {
 			procOutDuration = (float) procOutFrameSize / samplingrate;
 
 			for (int i = 0; i < data.length; i++) {
-				featureFile.writeFloat(procTimestamp[0]);
-				featureFile.writeFloat(procTimestamp[1]);
+				featureRAF.writeFloat(procTimestamp[0]);
+				featureRAF.writeFloat(procTimestamp[1]);
 				for (int j = 0; j < data[0].length; j++) {
-					featureFile.writeFloat(data[i][j]);
+					featureRAF.writeFloat(data[i][j]);
 				}
 				procTimestamp[0] += procOutDuration;
 				procTimestamp[1] += procOutDuration;
@@ -222,9 +223,9 @@ public class BasicProcessRunnable implements Runnable {
 	private void closeFeatureFile() {
 		try {
 
-			featureFile.seek(posFrames);
-			featureFile.writeInt(procFrameCount);
-			featureFile.close();
+			featureRAF.seek(posFrames);
+			featureRAF.writeInt(procFrameCount);
+			featureRAF.close();
 
 		} catch (IOException e) {
 			e.printStackTrace();

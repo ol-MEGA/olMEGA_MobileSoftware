@@ -6,12 +6,13 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Processing.Preprocessing.CResampling;
 import com.fragtest.android.pa.Processing.Preprocessing.FilterHP;
+
+import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -43,7 +44,7 @@ public class BasicProcessingThread extends Thread {
 
     private Set<String> activeFeatures;
     private int processedFeatures = 0;
-	private ArrayList<String> featFilenames		= new ArrayList<String>();
+	private ArrayList<String> featureFiles = new ArrayList<String>();
 	
 	
 	// constructor
@@ -62,8 +63,6 @@ public class BasicProcessingThread extends Thread {
         // extract timestamp from filename
         timestamp = filename.substring(filename.lastIndexOf("/")+1);
         timestamp = timestamp.substring(0, timestamp.lastIndexOf("."));
-
-        Log.d(LOG, "Timestamp: " + timestamp);
 	}
 
 
@@ -156,7 +155,7 @@ public class BasicProcessingThread extends Thread {
     		
     		// attach filenames to message so we can notify MediaScanner. 
     		Bundle b = new Bundle();
-    		b.putStringArrayList("featFilenames", featFilenames);
+    		b.putStringArrayList("featureFiles", featureFiles);
     		msg.setData(b);
     		
     		try {
@@ -189,7 +188,9 @@ public class BasicProcessingThread extends Thread {
             switch (msg.what) {
             case DONE:
             	Bundle b = msg.getData();
-            	featFilenames.add(b.getString("featFile") );
+				String featureFile = b.getString("featureFile");
+            	featureFiles.add(featureFile);
+				Logger.info("New feature:\t{}", featureFile);
             	isFinished();
             	break;
             default:
