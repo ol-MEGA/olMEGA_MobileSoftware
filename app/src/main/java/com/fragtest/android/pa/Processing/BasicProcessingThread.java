@@ -128,6 +128,8 @@ public class BasicProcessingThread extends Thread {
         // downsample audio data
 		if (downsample) {
 
+            samplerate /= 2;
+
 			float[][] audioData_ds = new float[2][frames/2];
 			
 			CResampling cr = new CResampling();
