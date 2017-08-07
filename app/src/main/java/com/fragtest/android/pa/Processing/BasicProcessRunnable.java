@@ -84,6 +84,7 @@ public class BasicProcessRunnable implements Runnable {
 	@Override
 	public void run() {
 
+
 		if (audioData[0].length >= procFrameSize) {
 
 			// we need a global flag to indicate a new recording session started.. new: why?
@@ -107,6 +108,7 @@ public class BasicProcessRunnable implements Runnable {
 		}
 
 		// tell processThread we're finished
+        Log.d(LOG, "Feature file: " + featureFile.toString());
 		Message msg = Message.obtain(null, BasicProcessingThread.DONE);
 		Bundle b = new Bundle();
 		b.putString("featureFile", featureFile.getAbsolutePath());

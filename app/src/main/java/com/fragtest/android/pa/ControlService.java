@@ -16,6 +16,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.Vibration;
@@ -81,14 +82,10 @@ public class ControlService extends Service {
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
-    static boolean isRecording = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
     private XMLReader mXmlReader;
     private Vibration mVibration;
-
-    int processingBufferSize = 100;
-    ProcessingBuffer processingBuffer = new ProcessingBuffer(processingBufferSize);
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache;
@@ -100,8 +97,6 @@ public class ControlService extends Service {
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
-
-    protected static final Object lock = new Object();
 
     // Questionnaire-Timer
     EventTimer mEventTimer;
@@ -117,6 +112,18 @@ public class ControlService extends Service {
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
+
+    // recording/processing buffer
+    int idxRecording = 0;
+    int idxProcessing = 0;
+    int processingBufferSize = 100;
+    String[] processingBuffer = new String[processingBufferSize];
+
+    // thread-safety
+    static boolean isRecording = false;
+    static boolean isProcessing = false;
+    static final Object recordingLock = new Object();
+    static final Object processingLock = new Object();
 
     class MessageHandler extends Handler {
 
@@ -224,13 +231,46 @@ public class ControlService extends Service {
 
                 case MSG_BLOCK_RECORDED:
                     String filename = msg.getData().getString("filename");
-                    processingBuffer.add(filename);
+
+                    addProccessingBuffer(idxRecording, filename);
+                    idxRecording = (idxRecording + 1) % processingBufferSize;
+
+                    if (!getIsProcessing()) {
+                        Bundle settings = getPreferences();
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(serviceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    }
+
                     Log.d(LOG, "Recorded: " + filename);
                     Logger.info("New cache:\t{}", filename);
                     break;
 
                 case MSG_BLOCK_PROCESSED:
-                    processingBuffer.delete();
+
+                    if (!keepAudioCache) {
+                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+                    }
+
+                    deleteProccessingBuffer(idxProcessing);
+                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
+
+                    if (processingBuffer[idxProcessing] != null) {
+                        Bundle settings = getPreferences();
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        Log.d(LOG, "idxProcessing: " + idxProcessing);
+                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(serviceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    } else {
+                        setIsProcessing(false);
+                    }
+
                     break;
 
                 default:
@@ -446,60 +486,45 @@ public class ControlService extends Service {
         return processingSettings;
     }
 
-    private class ProcessingBuffer {
 
-        String[] buffer;
-        int length, idxProcessing = 0, idxRecording = 0;
-        boolean isProcessing = false;
+    /**
+     * Thread-safe status variables
+     */
 
-        ProcessingBuffer(int _length) {
-            length = _length;
-            buffer = new String[length];
+    static void setIsRecording(boolean status) {
+        synchronized (recordingLock) {
+            isRecording = status;
         }
+    }
 
-        synchronized void add(String filename) {
-
-            Log.d(LOG, "idxRecording: " + idxRecording);
-
-            buffer[idxRecording] = filename;
-
-            // next index
-            idxRecording = (idxRecording + 1) % length;
-
-            process();
+    static boolean getIsRecording() {
+        synchronized (recordingLock) {
+            return isRecording;
         }
+    }
 
-        synchronized void delete() {
-
-            buffer[idxProcessing] = null;
-
-            // next index
-            idxProcessing = (idxProcessing + 1) % length;
-
-            isProcessing = false;
-            process();
+    static void setIsProcessing(boolean status) {
+        synchronized (processingLock) {
+            isProcessing = status;
         }
+    }
 
-        synchronized void process() {
-
-            if ((!isProcessing) && (buffer[idxProcessing] != null)) {
-                Bundle settings = getPreferences();
-                settings.putString("filename", buffer[idxProcessing]);
-                startProcessing(settings);
-                Log.d(LOG, "idxProcessing: " + idxProcessing);
-                isProcessing = true;
-            } else {
-                isProcessing = false;
-            }
+    static boolean getIsProcessing() {
+        synchronized (processingLock) {
+            return isProcessing;
         }
+    }
 
-        private void startProcessing(Bundle settings) {
-
-            MainProcessingThread processingThread =
-                    new MainProcessingThread(serviceMessenger, settings);
-		    processingThread.start();
+    void addProccessingBuffer(int idx, String filename) {
+        synchronized (processingLock) {
+            processingBuffer[idx] = filename;
         }
+    }
 
+    void deleteProccessingBuffer(int idx) {
+        synchronized (processingLock) {
+            processingBuffer[idx] = null;
+        }
     }
 
 }

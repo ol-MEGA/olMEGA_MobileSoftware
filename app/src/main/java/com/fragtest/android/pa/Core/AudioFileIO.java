@@ -140,7 +140,7 @@ public class AudioFileIO {
     }
 
     // delete a file
-    public boolean deleteFile(String filename){
+    public static boolean deleteFile(String filename){
 
         boolean success;
 

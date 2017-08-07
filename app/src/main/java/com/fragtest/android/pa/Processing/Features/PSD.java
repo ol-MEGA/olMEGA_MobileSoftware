@@ -1,6 +1,7 @@
 package com.fragtest.android.pa.Processing.Features;
 
 import android.os.Messenger;
+import android.util.Log;
 
 import com.fragtest.android.pa.Processing.BasicProcessRunnable;
 
@@ -30,7 +31,10 @@ public class PSD extends BasicProcessRunnable {
 		 * Result is the same as with Matlab's cpsd() */
 
 		// implement some sort of arg checking here (x.length == y.length, x.length%2==0 etc.)
-		
+
+
+		Log.d(LOG, "framesize:" + frameSize);
+
 		/* compute hann window */
 		float[] hannIndex 	= new float[frameSize];
 		float[] hannWin 	= new float[frameSize];
@@ -45,6 +49,7 @@ public class PSD extends BasicProcessRunnable {
 		
 		/* compute cross power spectrum, starting with block indices */
 		int NFFT 		= 1 << (32 - Integer.numberOfLeadingZeros(frameSize - 1));			// next power of 2 of framesize
+		Log.d(LOG, "FFT-Length: " + NFFT);
 		int L 			= x.length;															// length of complete signal(s)
 		int overlap 	= frameSize / 2;													// overlap of 50% in samples
 		int nBlocks		= (int) Math.floor(((float) L - overlap) / (frameSize - overlap));	// number of overlapping blocks
@@ -72,7 +77,9 @@ public class PSD extends BasicProcessRunnable {
 		float[][] Sxy = new float[3][2*NFFT];				// temp matrix, first row holds cross power spectrum of x and y, 2nd and 3rd rows hold auto power spectra of x/x and y/y
 				
 		int iAvgCount = 0;
-		
+
+		FloatFFT_1D fft = new FloatFFT_1D(NFFT);
+
 		for (int block = 0; block < nBlocks; block++) {
 			
 			/* get current block and window the data */
@@ -84,12 +91,11 @@ public class PSD extends BasicProcessRunnable {
 				yBlock[i] = y[i + blockStartIdx[block]] * hannWin[i];
 			}
 			
-			/* compute raw STFT of both channels */
-			FloatFFT_1D fft = new FloatFFT_1D(NFFT);
-			
 			float[] Xx = Arrays.copyOf(xBlock, 2*NFFT);
 			float[] Yy = Arrays.copyOf(yBlock, 2*NFFT);
-			
+
+			/* compute raw STFT of both channels */
+
 			fft.realForwardFull(Xx);
 			fft.realForwardFull(Yy);
 			
