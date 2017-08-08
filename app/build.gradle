@@ -27,7 +27,6 @@ dependencies {
     })
     //25.1.0
     compile 'com.android.support:appcompat-v7:25.1.0'
-    testCompile 'junit:junit:4.12'
-    //compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
-    //compile 'com.github.lawloretienne:discreteslider:0.0.9'
+    compile 'org.tinylog:tinylog:1.2'
+    compile 'com.github.wendykierp:JTransforms:3.1'
 }

@@ -5,22 +5,34 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventTimer;
+import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
+import com.fragtest.android.pa.Processing.MainProcessingThread;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
+
+
+import org.pmw.tinylog.Configurator;
+import org.pmw.tinylog.Level;
+import org.pmw.tinylog.Logger;
+import org.pmw.tinylog.writers.FileWriter;
 
 /**
  * The brains of the operation.
@@ -32,41 +44,59 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
 
-    public static final int MSG_REGISTER_CLIENT = 1;
-    public static final int MSG_UNREGISTER_CLIENT = 2;
-    public static final int MSG_GET_STATUS = 3;
-    public static final int MSG_ALARM_RECEIVED = 4;
-    public static final int MSG_START_COUNTDOWN = 5;
-    public static final int MSG_NEW_ALARM = 6;
-    public static final int MSG_ARE_WE_RUNNING = 7;
-    public static final int MSG_START_QUESTIONNAIRE = 8;
-    public static final int MSG_START_RECORDING = 9;
-    public static final int MSG_STOP_RECORDING = 10;
-    public static final int MSG_STATUS = 11;
-    public static final int MSG_BLOCK_RECORDED = 12;
-    public static final int MSG_PROPOSE_QUESTIONNAIRE = 13;
-    public static final int MSG_PROPOSITION_ACCEPTED = 14;
-    public static final int MSG_MANUAL_QUESTIONNAIRE = 15;
-    public static final int MSG_QUESTIONNAIRE_ACTIVE = 16;
-    public static final int MSG_QUESTIONNAIRE_INACTIVE = 17;
-    public static final int MSG_GET_FINAL_COUNTDOWN = 18;
-    public static final int MSG_SET_FINAL_COUNTDOWN = 19;
-    public static final int MSG_FINAL_COUNTDOWN_SET = 20;
+    /**
+     * Constants for messaging. Should(!) be self-explanatory.
+     */
+
+    // 1* - general
+    public static final int MSG_REGISTER_CLIENT = 11;
+    public static final int MSG_UNREGISTER_CLIENT = 12;
+    public static final int MSG_GET_STATUS = 13;
+
+    // 2* - alarm
+    public static final int MSG_ALARM_RECEIVED = 21;
+    public static final int MSG_START_COUNTDOWN = 22;
+    public static final int MSG_GET_FINAL_COUNTDOWN = 23;
+    public static final int MSG_SET_FINAL_COUNTDOWN = 24;
+    public static final int MSG_FINAL_COUNTDOWN_SET = 25;
+    public static final int MSG_NEW_ALARM = 26;
+
+    // 3* - questionnaire
+    public static final int MSG_ARE_WE_RUNNING = 31;
+    public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
+    public static final int MSG_START_QUESTIONNAIRE = 33;
+    public static final int MSG_PROPOSE_QUESTIONNAIRE = 34;
+    public static final int MSG_PROPOSITION_ACCEPTED = 35;
+    public static final int MSG_MANUAL_QUESTIONNAIRE = 36;
+    public static final int MSG_QUESTIONNAIRE_ACTIVE = 37;
+
+    // 4* - recording
+    public static final int MSG_START_RECORDING = 41;
+    public static final int MSG_STOP_RECORDING = 42;
+    public static final int MSG_RECORDING_STOPPED = 43;
+    public static final int MSG_BLOCK_RECORDED = 44;
+
+    // 5* - processing
+    public static final int MSG_BLOCK_PROCESSED = 51;
+
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
-    static boolean isRecording = false;
     private boolean isTimerRunning = false;
+    private boolean isQuestionnairePending = false;
     private XMLReader mXmlReader;
     private Vibration mVibration;
+
+    // preferences
+    private boolean isTimer, isWave, keepAudioCache;
+    private int samplerate, blocklengthInS;
+
 
     private int mFinalCountDown = -255;
     private int mTimerInterval = -255;
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
-
-    protected static final Object lock = new Object();
 
     // Questionnaire-Timer
     EventTimer mEventTimer;
@@ -83,20 +113,33 @@ public class ControlService extends Service {
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
 
+    // recording/processing buffer
+    int idxRecording = 0;
+    int idxProcessing = 0;
+    int processingBufferSize = 100;
+    String[] processingBuffer = new String[processingBufferSize];
+
+    // thread-safety
+    static boolean isRecording = false;
+    static boolean isProcessing = false;
+    static final Object recordingLock = new Object();
+    static final Object processingLock = new Object();
+
     class MessageHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
-            Log.d(LOG, "TID: " + android.os.Process.myTid());
-            Log.d(LOG, "PID: " + android.os.Process.myPid());
+            Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
 
                 case MSG_REGISTER_CLIENT:
                     mClientMessenger = msg.replyTo;
-                    setAlarmAndCountdown();
+                    if (isTimer && !isQuestionnairePending) {
+                        setAlarmAndCountdown();
+                    }
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -110,14 +153,14 @@ public class ControlService extends Service {
                 case MSG_GET_STATUS:
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", isRecording);
-                    messageClient(MSG_STATUS, status);
+                    status.putBoolean("isQuestionnairePending", isQuestionnairePending);
+                    messageClient(MSG_GET_STATUS, status);
                     break;
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
-                    Log.i(LOG,"isRecording: "+isRecording);
                     // perform checks whether running a questionnaire is valid
-                    if (true && !isActiveQuestionnaire) {
+                    if (!isActiveQuestionnaire) {
                         messageClient(MSG_PROPOSE_QUESTIONNAIRE);
                         mVibration.repeatingBurstOn();
                     } else {
@@ -125,20 +168,14 @@ public class ControlService extends Service {
                         Log.i(LOG,"Waiting for new questionnaire.");
                     }
                     isTimerRunning = false;
+                    isQuestionnairePending = true;
                     break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // Check if necessary states are set for questionnaire
                     //TODO: perform checks
-                    if (true && !isActiveQuestionnaire) {
-                        Bundle data = new Bundle();
-                        ArrayList<String> questionList = mXmlReader.getQuestionList();
-                        data.putStringArrayList("questionList",questionList);
-                        String head = mXmlReader.getHead();
-                        data.putString("head", head);
-                        data.putString("motivation", "<motivation='manual'>");
-                        messageClient(MSG_START_QUESTIONNAIRE, data);
-                        Log.i(LOG,"Manual questionnaire initiated.");
+                    if (!isActiveQuestionnaire) {
+                        startQuestionnaire("manual");
                     }
                     break;
 
@@ -146,18 +183,9 @@ public class ControlService extends Service {
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
                     //TODO: perform checks
-                    if (true && !isActiveQuestionnaire) {
-                        mVibration.repeatingBurstOff();
-                        // Send questionnaire data to questionnaire class to create a new ... tadaa ...
-                        // questionnaire
-                        Bundle data = new Bundle();
-                        ArrayList<String> questionList = mXmlReader.getQuestionList();
-                        data.putStringArrayList("questionList", questionList);
-                        String head = mXmlReader.getHead();
-                        data.putString("head", head);
-                        data.putString("motivation","<motivation='auto'>");
-                        messageClient(MSG_START_QUESTIONNAIRE, data);
-                        Log.i(LOG, "Recurring questionnaire initiated.");
+                    mVibration.repeatingBurstOff();
+                    if (!isActiveQuestionnaire) {
+                        startQuestionnaire("auto");
                     }
                     break;
 
@@ -171,13 +199,20 @@ public class ControlService extends Service {
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
                     isActiveQuestionnaire = false;
-                    setAlarmAndCountdown();
+                    if (isTimer) {
+                        setAlarmAndCountdown();
+                    }
                     Log.i(LOG,"Questionnaire inactive");
                     break;
 
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start Recording.");
-                    audioRecorder = new AudioRecorder(serviceMessenger, 16000);
+
+                    audioRecorder = new AudioRecorder(
+                            serviceMessenger,
+                            blocklengthInS,
+                            samplerate,
+                            isWave);
                     audioRecorder.start();
                     isRecording = true;
                     messageClient(MSG_START_RECORDING);
@@ -186,12 +221,56 @@ public class ControlService extends Service {
                 case MSG_STOP_RECORDING:
                     Log.d(LOG, "Stop Recording.");
                     audioRecorder.stop();
+                    break;
+
+                case MSG_RECORDING_STOPPED:
                     audioRecorder.close();
                     isRecording = false;
-                    messageClient(MSG_STOP_RECORDING);
+                    messageClient(MSG_GET_STATUS);
                     break;
 
                 case MSG_BLOCK_RECORDED:
+                    String filename = msg.getData().getString("filename");
+
+                    addProccessingBuffer(idxRecording, filename);
+                    idxRecording = (idxRecording + 1) % processingBufferSize;
+
+                    if (!getIsProcessing()) {
+                        Bundle settings = getPreferences();
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(serviceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    }
+
+                    Log.d(LOG, "Recorded: " + filename);
+                    Logger.info("New cache:\t{}", filename);
+                    break;
+
+                case MSG_BLOCK_PROCESSED:
+
+                    if (!keepAudioCache) {
+                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+                    }
+
+                    deleteProccessingBuffer(idxProcessing);
+                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
+
+                    if (processingBuffer[idxProcessing] != null) {
+                        Bundle settings = getPreferences();
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        Log.d(LOG, "idxProcessing: " + idxProcessing);
+                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(serviceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    } else {
+                        setIsProcessing(false);
+                    }
+
                     break;
 
                 default:
@@ -207,6 +286,18 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.d(LOG, "onCreate");
+
+        // log-file
+        Configurator.currentConfig()
+                .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
+                .level(Level.INFO)
+                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
+                .activate();
+
+        getPreferences();
+
+        Logger.info("Service onCreate");
+
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
@@ -232,6 +323,7 @@ public class ControlService extends Service {
         mEventTimer.stopTimer();
         mVibration.repeatingBurstOff();
         mNotificationManager.cancel(NOTIFICATION_ID);
+
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
     }
@@ -326,28 +418,113 @@ public class ControlService extends Service {
     }
 
     private void setAlarmAndCountdown() {
+
         if (!isTimerRunning) {
             mTimerInterval = mXmlReader.getNewTimerInterval();
             mEventTimer.setTimer(mTimerInterval);
             mFinalCountDown = mEventTimer.getFinalCountDown();
-
-            // Send message to initialise new functional timer
-            Bundle data = new Bundle();
-            data.putInt("finalCountDown", mFinalCountDown);
-            data.putInt("countDownInterval", mTimerInterval);
-            messageClient(ControlService.MSG_START_COUNTDOWN, data);
-            Log.e(LOG, "Timer set to " + mTimerInterval + "s");
-
             isTimerRunning = true;
         } else {
             // Usually when app is restarted
             Log.i(LOG, "Timer already set. Reinstating countdown");
-            // Send message to initialise new functional timer
-            Bundle data = new Bundle();
-            data.putInt("finalCountDown", mFinalCountDown);
-            data.putInt("countDownInterval", mTimerInterval);
-            messageClient(ControlService.MSG_START_COUNTDOWN, data);
-            Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+        }
+
+        // Send message to initialise / update timer
+        Bundle data = new Bundle();
+        data.putInt("finalCountDown", mFinalCountDown);
+        data.putInt("countDownInterval", mTimerInterval);
+        messageClient(MSG_START_COUNTDOWN, data);
+        Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+    }
+
+    private void startQuestionnaire(String motivation) {
+
+        Bundle data = new Bundle();
+        ArrayList<String> questionList = mXmlReader.getQuestionList();
+        data.putStringArrayList("questionList",questionList);
+        String head = mXmlReader.getHead();
+        data.putString("head", head);
+        data.putString("motivation", "<motivation='"+ motivation +"'>");
+        messageClient(MSG_START_QUESTIONNAIRE, data);
+        Log.i(LOG,"Questionnaire initiated: " + motivation);
+
+        isQuestionnairePending = false;
+
+    }
+
+    private Bundle getPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // timer and questionnaire
+        isTimer = sharedPreferences.getBoolean("isTimer", true);
+
+        // recording
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
+        blocklengthInS = Integer.parseInt(sharedPreferences.getString("blocklengthInS", "60"));
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
+        isWave = sharedPreferences.getBoolean("isWave", false);
+
+        // processing
+        HashSet<String> activeFeatures =
+                (HashSet<String>) sharedPreferences.getStringSet("features", null);
+        Boolean filterHp = sharedPreferences.getBoolean("filterHp", true);
+        int filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
+        Boolean downsample = sharedPreferences.getBoolean("downsample", false);
+
+        // TODO: bundle up everything for initial adaptation of processing stack.
+        // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
+        Bundle processingSettings = new Bundle();
+        // processingSettings.putBoolean("isTimer", isTimer);
+        processingSettings.putInt("samplerate", samplerate);
+        processingSettings.putInt("blocklengthInS", blocklengthInS);
+        // processingSettings.putBoolean("isWave", isWave);
+        processingSettings.putSerializable("activeFeatures", activeFeatures);
+        processingSettings.putBoolean("filterHp", filterHp);
+        processingSettings.putInt("filterHpFrequency", filterHpFrequency);
+        processingSettings.putBoolean("downsample", downsample);
+
+        return processingSettings;
+    }
+
+
+    /**
+     * Thread-safe status variables
+     */
+
+    static void setIsRecording(boolean status) {
+        synchronized (recordingLock) {
+            isRecording = status;
         }
     }
+
+    static boolean getIsRecording() {
+        synchronized (recordingLock) {
+            return isRecording;
+        }
+    }
+
+    static void setIsProcessing(boolean status) {
+        synchronized (processingLock) {
+            isProcessing = status;
+        }
+    }
+
+    static boolean getIsProcessing() {
+        synchronized (processingLock) {
+            return isProcessing;
+        }
+    }
+
+    void addProccessingBuffer(int idx, String filename) {
+        synchronized (processingLock) {
+            processingBuffer[idx] = filename;
+        }
+    }
+
+    void deleteProccessingBuffer(int idx) {
+        synchronized (processingLock) {
+            processingBuffer[idx] = null;
+        }
+    }
+
 }

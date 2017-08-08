@@ -43,22 +43,28 @@ public class Vibration {
 
     public void repeatingBurstOn() {
         Log.i(LOG_STRING,"rrringgrrrrinngggg!");
+
+        if (!isActive) { // ensure that only one alarm is annoying us at any given time
+            mTimerHandler.post(loop);
+            PowerManager pm = (PowerManager) mContext.getSystemService(
+                    Context.POWER_SERVICE);
+            PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                    PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
+            wakeLock.acquire();
+        }
+
         isActive = true;
-        mTimerHandler.post(loop);
-        PowerManager pm = (PowerManager) mContext.getSystemService(
-                Context.POWER_SERVICE);
-        PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-        wakeLock.acquire();
 
     }
 
     public void repeatingBurstOff() {
-        isActive = false;
+
         mTimerHandler.removeCallbacks(loop);
         KeyguardManager keyguardManager = (KeyguardManager) mContext.getSystemService(
                 Context.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock keyguardLock = keyguardManager.newKeyguardLock("TAG");
         keyguardLock.disableKeyguard();
+
+        isActive = false;
     }
 }

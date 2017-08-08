@@ -55,9 +55,10 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setText(questFileName);
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
+        // TODO: Properly center text.
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0, 1f
+                LinearLayout.LayoutParams.MATCH_PARENT, 1f
         );
         mStartQuestionnaire.setGravity(View.TEXT_ALIGNMENT_CENTER);
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
