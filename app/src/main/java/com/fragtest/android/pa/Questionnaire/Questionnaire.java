@@ -66,12 +66,6 @@ public class Questionnaire {
 
         mMetaData = new MetaData(mContext, mRawInput, mHead, mMotivation);
         mMetaData.initialise();
-
-        // Split basis data into question segments
-        //String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
-        //mQuestionList = stringArrayToListString(questionnaire);
-        //mQuestionList = thinOutList(mQuestionList);
-
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
 
@@ -103,7 +97,6 @@ public class Questionnaire {
                 Log.i(LOG_STRING, "FilterId: " + question.getFilterId().get(iId));
             }
         }
-
         return question;
     }
 
@@ -118,6 +111,7 @@ public class Questionnaire {
         boolean isEmoji = false;
         boolean isText = false;
         boolean isFinish = false;
+        boolean isPhotograph = false;
 
         LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -166,6 +160,9 @@ public class Questionnaire {
 
         final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
                 mContext, this, question.getQuestionId());
+
+        final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
+                mContext, answerLayout);
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -225,6 +222,11 @@ public class Questionnaire {
                         answerTypeEmoji.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
+                    case "photograph": {
+                        isPhotograph = true;
+                        answerTypePhotograph.addAnswer(sAnswer, nAnswerId);
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
@@ -269,6 +271,11 @@ public class Questionnaire {
 
         if (isFinish) {
             answerTypeFinish.addClickListener();
+        }
+
+        if (isPhotograph) {
+            answerTypePhotograph.buildView();
+            answerTypePhotograph.addClickListener();
         }
 
         return answerContainer;

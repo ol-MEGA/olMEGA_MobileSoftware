@@ -17,9 +17,9 @@ import com.fragtest.android.pa.R;
 
 public class AnswerTypeFinish extends AppCompatActivity {
 
-    public Button mAnswerButton;
-    public LinearLayout.LayoutParams answerParams;
-    public AnswerLayout parent;
+    private Button mAnswerButton;
+    private LinearLayout.LayoutParams answerParams;
+    private AnswerLayout parent;
     private Context mContext;
     private Questionnaire mQuestionnaire;
 

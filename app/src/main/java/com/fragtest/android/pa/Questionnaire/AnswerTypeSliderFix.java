@@ -74,11 +74,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
 
-        // ACHTUNG _ MAGIC NUMBER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight - 140,
+                mUsableHeight - mMagicNumber1,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(

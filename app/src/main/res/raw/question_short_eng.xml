@@ -297,6 +297,19 @@
         </question>
 
         <question
+            id="12345"
+            type="photograph">
+            <label>
+                <text>Would you like to attach a photograph?</text>
+            </label>
+            <option id="00001">
+                <text>
+                    Add photograph
+                </text>
+            </option>
+        </question>
+
+        <question
             hidden="true"
             id="10823"
             mandatory="true"
