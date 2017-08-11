@@ -10,9 +10,13 @@ import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 /**
  * BasicProcessRunnable.java
@@ -143,7 +147,7 @@ public class BasicProcessRunnable implements Runnable {
 			featureRAF = new RandomAccessFile(featureFile,
                     "rw");
 
-			posFrames = featureRAF.length();  	// starting position (frame count for each block)
+			posFrames = featureRAF.length();   // starting position (frame count for each block)
 			featureRAF.seek(posFrames);        // skip to starting position
 
 			// TODO: consider writing the header only once (minus timestamp)  
@@ -181,19 +185,19 @@ public class BasicProcessRunnable implements Runnable {
 
 	protected void appendFeature(float[] data) {
 
-		try {
+        FileChannel channel = featureRAF.getChannel();
 
-			featureRAF.writeFloat(procTimestamp[0]);
-			featureRAF.writeFloat(procTimestamp[1]);
+        ByteBuffer buffer = ByteBuffer.allocate(4 * (data.length + 2));
 
-			for (int i = 0; i < data.length; i++) {
-				featureRAF.writeFloat(data[i]);
-			}
+        buffer.asFloatBuffer().put(procTimestamp);
+        buffer.asFloatBuffer().put(data);
 
-			procTimestamp[0] += procHopDuration;
-			procTimestamp[1] += procHopDuration;
-			procFrameCount += 1;
+        procTimestamp[0] += procHopDuration;
+        procTimestamp[1] += procHopDuration;
+        procFrameCount += 1;
 
+        try {
+            channel.write(buffer);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -202,24 +206,26 @@ public class BasicProcessRunnable implements Runnable {
 	// For cases where InFramesize != OutFramesize
 	protected void appendFeature(float[][] data) {
 
-		try {
-			procOutDuration = (float) procOutFrameSize / samplingrate;
+        procOutDuration = (float) procOutFrameSize / samplingrate;
+        FileChannel channel = featureRAF.getChannel();
 
-			for (int i = 0; i < data.length; i++) {
-				featureRAF.writeFloat(procTimestamp[0]);
-				featureRAF.writeFloat(procTimestamp[1]);
-				for (int j = 0; j < data[0].length; j++) {
-					featureRAF.writeFloat(data[i][j]);
-				}
-				procTimestamp[0] += procOutDuration;
-				procTimestamp[1] += procOutDuration;
-				procFrameCount += 1;
-			}
+        ByteBuffer buffer = ByteBuffer.allocate(4 * (data[0].length + 2) * data.length);
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+        for (float[] aData : data) {
+            buffer.asFloatBuffer().put(procTimestamp);
+            buffer.asFloatBuffer().put(aData);
+
+            procTimestamp[0] += procOutDuration;
+            procTimestamp[1] += procOutDuration;
+            procFrameCount += 1;
+        }
+
+        try {
+            channel.write(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
 	private void closeFeatureFile() {

@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
@@ -128,6 +129,8 @@ public class BasicProcessingThread extends Thread {
         // downsample audio data
 		if (downsample) {
 
+			long start = System.currentTimeMillis();
+
             samplerate /= 2;
 
 			float[][] audioData_ds = new float[2][frames/2];
@@ -138,6 +141,8 @@ public class BasicProcessingThread extends Thread {
 				audioData_ds[kk] = cr.Downsample2f(audioData[kk], audioData_ds[kk].length);
 				cr.reset();
 			}
+
+			Log.d(LOG, "Resampling took " + (System.currentTimeMillis() - start) + " ms");
 
 			return audioData_ds;
 		} else {

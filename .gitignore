@@ -3,7 +3,9 @@
 /local.properties
 /.idea/workspace.xml
 /.idea/libraries
+/.idea/qaplug_profiles.xml
 .DS_Store
 /build
 /captures
 .externalNativeBuild
+/app/app-release.apk
