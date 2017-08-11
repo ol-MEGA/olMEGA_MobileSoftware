@@ -13,6 +13,7 @@ import com.fragtest.android.pa.R;
 
 public class Units extends AppCompatActivity {
 
+    private static String LOG = "Units";
     private static int SCREEN_SIZE_HEIGHT;
     private static int SCREEN_SIZE_WIDTH;
     private Resources mResources;
@@ -35,13 +36,12 @@ public class Units extends AppCompatActivity {
 
     public int getUsableSliderHeight() {
         return getScreenHeight() -
-                (int) mContext.getResources().getDimension(R.dimen.questionTextHeight) -
-                convertDpToPixels(32) -
-                convertDpToPixels(6) -
-                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Top) -
-                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom) -
                 getStatusBarHeight() -
-                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Top);
+                (int) mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) -
+                (int) mContext.getResources().getDimension(R.dimen.progressBarHeight) -
+                (int) mContext.getResources().getDimension(R.dimen.questionTextHeight) -
+                (int) mContext.getResources().getDimension(R.dimen.preferencesButtonHeight) -
+                (int) mContext.getResources().getDimension(R.dimen.actionBarHeight);
     }
 
     public int getStatusBarHeight() {

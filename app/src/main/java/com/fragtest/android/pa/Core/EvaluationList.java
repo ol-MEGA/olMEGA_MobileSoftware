@@ -2,7 +2,6 @@ package com.fragtest.android.pa.Core;
 
 import android.util.Log;
 
-import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.DataTypes.QuestionIdTypeAndValue;
 
 import java.util.ArrayList;
@@ -17,6 +16,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
 
     private String LOG_STRING = "EvaluationList";
     private List<QuestionIdTypeAndValue> mEvaluationList;
+    private boolean isVerbose = false;
 
     public EvaluationList() {
         mEvaluationList = new ArrayList<>();
@@ -26,7 +26,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
     public boolean add(int nQuestionId, int nAnswerId) {
         mEvaluationList.add(new QuestionIdTypeAndValue(
                 nQuestionId, "id", Integer.toString(nAnswerId)));
-        if (BuildConfig.DEBUG) {
+        if (isVerbose) {
             Log.i(LOG_STRING, "Entry added: " + nAnswerId);
         }
         return true;
@@ -68,7 +68,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
                 }
             }
         }
-        if (BuildConfig.DEBUG) {
+        if (isVerbose) {
             Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         }
         return true;
@@ -79,15 +79,12 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
         int nRemoved = 0;
         for (int iAnswer = mEvaluationList.size() - 1; iAnswer >= 0; iAnswer--) {
             if (mEvaluationList.get(iAnswer).getQuestionId() == QuestionId) {
-                Log.i(LOG_STRING, "removing: " + mEvaluationList.get(iAnswer).getQuestionId() + " " +
-                        mEvaluationList.get(iAnswer).getAnswerType() + " " +
-                        mEvaluationList.get(iAnswer).getValue());
                 mEvaluationList.remove(iAnswer);
                 nRemoved++;
             }
         }
 
-        if (BuildConfig.DEBUG) {
+        if (isVerbose) {
             Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         }
 
@@ -104,7 +101,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (BuildConfig.DEBUG) {
+        if (isVerbose) {
             Log.i(LOG_STRING, "Entries removed of Type " + sType + ":" + nRemoved);
         }
         return true;
@@ -121,7 +118,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (BuildConfig.DEBUG) {
+        if (isVerbose) {
             Log.i(LOG_STRING, "Entries removed: " + nRemoved);
         }
         return true;

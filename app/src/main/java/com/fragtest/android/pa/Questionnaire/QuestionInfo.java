@@ -1,9 +1,5 @@
 package com.fragtest.android.pa.Questionnaire;
 
-import android.util.Log;
-
-import com.fragtest.android.pa.BuildConfig;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +7,7 @@ import java.util.List;
  * Created by ulrikkowalk on 06.03.17.
  */
 
-public class QuestionInfo {
+class QuestionInfo {
 
     private final String LOG_STRING = "QuestionInfo";
     private final int mId;
@@ -23,21 +19,19 @@ public class QuestionInfo {
     private boolean mActive;
     private int mPositionInPager;
 
-    public QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
-                        int position, boolean hidden, boolean mandatory,
-                        List<Integer> answerIds) {
+    QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
+                 int position, boolean hidden, boolean mandatory,
+                 List<Integer> answerIds) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
-        //mCondition = condition;
         mActive = true;
         mPositionInPager = position;
         mHidden = hidden;
-        //mMandatory = mandatory;
         mListOfAnswerIds = answerIds;
     }
 
-    public boolean isActive() {
+    boolean isActive() {
         return mActive;
     }
 
@@ -45,7 +39,7 @@ public class QuestionInfo {
         return mId;
     }
 
-    public ArrayList<Integer> getFilterIdPositive() {
+    ArrayList<Integer> getFilterIdPositive() {
         // Function returns all positive Filter IDs which represent the MUST EXIST cases
         ArrayList<Integer> listOfPositiveIds = new ArrayList<>();
         for (int iElement = 0; iElement < mFilterId.size(); iElement++) {
@@ -56,7 +50,7 @@ public class QuestionInfo {
         return listOfPositiveIds;
     }
 
-    public ArrayList<Integer> getFilterIdNegative() {
+    ArrayList<Integer> getFilterIdNegative() {
         // Function returns all negative IDs (only absolute values), which represent the MUST NOT
         // EXIST case.
         ArrayList<Integer> listOfNegativeIds = new ArrayList<>();
@@ -68,25 +62,19 @@ public class QuestionInfo {
         return listOfNegativeIds;
     }
 
-    public void setInactive() {
+    void setInactive() {
         mActive = false;
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "View set inactive");
-        }
     }
 
-    public void setActive() {
+    void setActive() {
         mActive = true;
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "View set active");
-        }
     }
 
-    public int getPositionInPager() {
+    int getPositionInPager() {
         return mPositionInPager;
     }
 
-    public void setPositionInPager(int position) {
+    void setPositionInPager(int position) {
         mPositionInPager = position;
     }
 
@@ -94,30 +82,12 @@ public class QuestionInfo {
         return mQuestion;
     }
 
-    public boolean isHidden() {
+    boolean isHidden() {
         return mHidden;
     }
 
-    public List<Integer> getAnswerIds() {
+    List<Integer> getAnswerIds() {
         return mListOfAnswerIds;
     }
 
 }
-
-/*
-    public ArrayList<Integer> getFilterId() {
-        return mFilterId;
-    }
-
-    public boolean existsFilterId() {
-        if (mFilterId.size() > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean isMandatory() {
-        return mMandatory;
-    }
- */

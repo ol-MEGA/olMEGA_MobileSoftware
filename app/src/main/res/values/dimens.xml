@@ -33,10 +33,10 @@
     <dimen name="answerTextMargin_Right">24px</dimen>
     <dimen name="answerTextMargin_Bottom">32px</dimen>
 
-    <dimen name="answerLayoutPadding_Left">48px</dimen>
-    <dimen name="answerLayoutPadding_Top">48px</dimen>
-    <dimen name="answerLayoutPadding_Right">48px</dimen>
-    <dimen name="answerLayoutPadding_Bottom">48px</dimen>
+    <dimen name="answerLayoutPadding_Left">16dp</dimen>
+    <dimen name="answerLayoutPadding_Top">16dp</dimen>
+    <dimen name="answerLayoutPadding_Right">16dp</dimen>
+    <dimen name="answerLayoutPadding_Bottom">16dp</dimen>
 
     <dimen name="textSizeQuestion">10sp</dimen>
     <dimen name="textSizeAnswer">8sp</dimen>
@@ -52,6 +52,15 @@
 
     <dimen name="radioMinHeight">96px</dimen>
     <dimen name="checkBoxMinHeight">96dp</dimen>
-    <dimen name="questionTextHeight">165px</dimen>
+    <dimen name="questionTextHeight">55dp</dimen>
+
+    <dimen name="preferencesButtonHeight">48dp</dimen>
+    <dimen name="preferencesButtonWidth">48dp</dimen>
+
+    <dimen name="toolbarHeight">32dp</dimen>
+    <dimen name="toolBarPadding">8dp</dimen>
+    <dimen name="toolBarHeightWithPadding">48dp</dimen>
+    <dimen name="progressBarHeight">6dp</dimen>
+    <dimen name="actionBarHeight">32dp</dimen>
 
 </resources>

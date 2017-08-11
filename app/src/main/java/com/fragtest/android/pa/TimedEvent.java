@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by ul1021 on 29.05.2017.
+ * Created by ul1021 on 29.05.2017. PROBABLY NOT NEEDED ANYMORE
  */
 
 public class TimedEvent {
@@ -163,13 +163,13 @@ public class TimedEvent {
     }
 
     private void horizontalRule() {
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             Log.d(LOG_STRING, "==================================================");
         }
     }
 
     private void showDebugInfo(ArrayList<Integer> time, String type) {
-        if (isDebug) {
+        if (BuildConfig.DEBUG) {
             if (time.size() > 1) {
                 String resultString = "";
                 for (int iEntry = 0; iEntry < time.size(); iEntry++) {

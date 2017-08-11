@@ -2,10 +2,10 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.os.Bundle;
+import android.content.pm.PackageManager;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +32,7 @@ public class AnswerTypePhotograph extends AppCompatActivity{
     private Units mUnits;
     private int mId, mUsableHeight;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    PackageManager pm;
 
     //TODO:  check camera availability up front
 
@@ -76,6 +77,8 @@ public class AnswerTypePhotograph extends AppCompatActivity{
         mButton2.setTypeface(null, Typeface.NORMAL);
         */
 
+        pm = mContext.getPackageManager();
+
     }
 
     public void addAnswer(String sAnswer, int id) {
@@ -100,20 +103,37 @@ public class AnswerTypePhotograph extends AppCompatActivity{
             @Override
             public void onClick(View v) {
 
+                Log.e(LOG_STRING,"Click1");
+
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(pm) != null) {
+                    Log.e(LOG_STRING,"tpi: "+takePictureIntent.resolveActivity(pm));
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
 
 
+/*
                     Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                     if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
                         startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                     }
-
+*/
 
 
             }
         });
 
+        mButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(LOG_STRING,"Click2");
+            }
+        });
+
     }
 
+
+/*
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -122,6 +142,6 @@ public class AnswerTypePhotograph extends AppCompatActivity{
             mPreview.setImageBitmap(imageBitmap);
         }
     }
-
+*/
 
 }
