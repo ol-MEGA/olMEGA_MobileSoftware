@@ -1,9 +1,6 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-
-import com.fragtest.android.pa.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,10 +31,6 @@ public class Question extends AppCompatActivity {
 
         mQuestionBlueprint = sQuestionBlueprint;
         mFilterId = new ArrayList<>();
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "=====================================================");
-        }
 
         if (isFinish()) {
             mQuestionId = 99999;
@@ -111,27 +104,6 @@ public class Question extends AppCompatActivity {
         }
         return listOfFilterIds;
     }
-
-
-
-
-
-/*
-    private int extractFilterId() {
-        if (mQuestionBlueprint.split("filter=\"").length > 1) {
-            return Integer.parseInt(
-                    mQuestionBlueprint.split("filter=\"")[1].split("_|\"")[1]);
-        }
-        return -255;
-    }
-*/
-/*
-    private boolean extractFilterCondition() {
-
-        return mQuestionBlueprint.split("filter=\"!").length <= 1;
-    }
-*/
-
 
     private boolean extractMandatory() {
         return mQuestionBlueprint.contains("mandatory=\"true\"");
@@ -230,10 +202,6 @@ public class Question extends AppCompatActivity {
     public ArrayList<Integer> getFilterId() {
         return mFilterId;
     }
-
-    //public boolean getFilterCondition() {
-    //    return mFilterCondition;
-    //}
 
     public String getTypeAnswer() {
         return mTypeAnswer;

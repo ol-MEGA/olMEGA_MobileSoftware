@@ -41,7 +41,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
     private final int mQuestionId;
     private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
-    private int nTextViewHeight;
 
     // These serve to normalise pixel/value for now
     private int mMagicNumber1 = 140;
@@ -58,7 +57,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
         width = Units.getScreenWidth();
-        //answerLayoutPadding = Units.getAnswerLayoutPadding();
 
         parent.scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -74,11 +72,10 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         mHorizontalContainer = (LinearLayout) inflater.inflate(
                 R.layout.answer_type_slider, parent.scrollContent, false);
 
-        // ACHTUNG _ MAGIC NUMBER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width,
-                mUsableHeight - 140,
+                mUsableHeight - mMagicNumber1,
                 1.f
         ));
         mHorizontalContainer.setBackgroundColor(
@@ -174,7 +171,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
         tvTemp.post(new Runnable() {
             @Override
             public void run() {
-                nTextViewHeight = tvTemp.getHeight();
                 // Handles default id if existent
                 if (mDefaultAnswer == -1) {
                     setProgressItem((int) ((mListOfAnswers.size() - 1) / 2.0f));
@@ -322,8 +318,6 @@ public class AnswerTypeSliderFix extends AppCompatActivity {
                 2.0f * nHeightView);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-
-        Log.e(LOG_STRING,"item number: "+numItem);
     }
 }
 

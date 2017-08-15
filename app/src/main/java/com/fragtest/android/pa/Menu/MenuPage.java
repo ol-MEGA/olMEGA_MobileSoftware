@@ -1,14 +1,16 @@
 package com.fragtest.android.pa.Menu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.fragtest.android.pa.ControlService;
-import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
@@ -33,62 +35,63 @@ public class MenuPage extends AppCompatActivity {
         questFileName = "Start Questionnaire";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
-        mCountDownRemaining = new TextView(mContext);
 
     }
 
     public LinearLayout generateView() {
 
+        // Parent Layout of the menu
         LinearLayout menuLayout = new LinearLayout(mContext);
+        menuLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        menuLayout.setOrientation(LinearLayout.VERTICAL);
 
+        // Top View carrying countdown
         mCountDownRemaining = new TextView(mContext);
         LinearLayout.LayoutParams tempTopParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0, 1f);
+                0, 0.3f);
         mCountDownRemaining.setText(mCountDownString);
         mCountDownRemaining.setGravity(View.TEXT_ALIGNMENT_CENTER);
         mCountDownRemaining.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mCountDownRemaining.setTextColor(ContextCompat.getColor(mContext,R.color.TextColor_Light));
+        mCountDownRemaining.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
-        View tempViewBottom = new View(mContext);
+        // Layout patch carrying "Start Questionnaire" Text/Button
+        LinearLayout centerLayout = new LinearLayout(mContext);
+        centerLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        LinearLayout.LayoutParams centerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0, 0.4f
+        );
+        centerLayout.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
+        // The actual Text/Button "Start Questionnaire"
         mStartQuestionnaire = new TextView(mContext);
         mStartQuestionnaire.setText(questFileName);
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
-        // TODO: Properly center text.
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT, 1f
-        );
-        mStartQuestionnaire.setGravity(View.TEXT_ALIGNMENT_CENTER);
-        mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-
+        mStartQuestionnaire.setBackgroundColor(Color.WHITE);
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.e(LOG_STRING,"Start button clicked.");
                 mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
 
+        // Bottom View (blank)
+        View tempViewBottom = new View(mContext);
+
+        centerLayout.addView(mStartQuestionnaire);
         menuLayout.addView(mCountDownRemaining, tempTopParams);
-        menuLayout.addView(mStartQuestionnaire, textParams);
+        menuLayout.addView(centerLayout, centerParams);
         menuLayout.addView(tempViewBottom, tempTopParams);
-
-        menuLayout.setOrientation(LinearLayout.VERTICAL);
-        menuLayout.setHorizontalGravity(View.TEXT_ALIGNMENT_CENTER);
-        menuLayout.setGravity(View.TEXT_ALIGNMENT_CENTER);
-
-        int height = (new Units(mContext)).getUsableSliderHeight();
-        // Roughly okay, refine later
-        mCountDownRemaining.setPadding(0, height / 5, 0, height / 6);
-        mStartQuestionnaire.setPadding(0, height / 6, 0, height / 6);
 
         return menuLayout;
     }
-
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
-        mStartQuestionnaire.setPadding(0,0,0,0);
+        mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeProposed));
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
@@ -98,9 +101,8 @@ public class MenuPage extends AppCompatActivity {
             }
         });
     }
-
+    // Handles update of visible text countdown
     public void updateCountdownText(int seconds) {
-        // Handles update of visible text countdown
         int minutesRemaining = seconds / 60;
         int secondsRemaining = seconds - minutesRemaining * 60;
         mCountDownRemaining.setText("" + mTempTextCountDownRemaining[0] + minutesRemaining +

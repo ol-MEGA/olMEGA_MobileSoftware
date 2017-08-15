@@ -1,8 +1,5 @@
 package com.fragtest.android.pa.Core;
 
-import android.util.Log;
-
-import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.DataTypes.IntegerBooleanAndBoolean;
 
 import java.util.ArrayList;
@@ -22,11 +19,6 @@ public class MandatoryInfo extends ArrayList<IntegerBooleanAndBoolean> {
 
     public boolean add(int id, boolean mandatory, boolean hidden) {
         mMandatoryInfo.add(new IntegerBooleanAndBoolean(id, mandatory, hidden));
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "added QId: " + id + ", mandatory: " +
-                    mandatory + ", hidden: " + hidden);
-        }
         return true;
     }
 

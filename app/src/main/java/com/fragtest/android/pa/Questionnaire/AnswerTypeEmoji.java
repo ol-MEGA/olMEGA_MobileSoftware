@@ -30,6 +30,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
     private final int mQuestionId;
     private String LOG_STRING = "AnswerTypeEmoji";
     private int mDefault = -1;
+    private int mViewPagerHeight = 0;
 
     public AnswerTypeEmoji(Context context, Questionnaire questionnaire,
                            AnswerLayout qParent, int questionId) {
@@ -124,8 +125,13 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                     (int) (0.2 * emojiSize),
                     1.0f
             ));
-            mParent.layoutAnswer.addView(placeHolder);
+
+            // The lowest placeholder is unnecessary
+            if (iAnswer<mListOfAnswers.size()-1) {
+                mParent.layoutAnswer.addView(placeHolder);
+            }
         }
+
         return true;
     }
 

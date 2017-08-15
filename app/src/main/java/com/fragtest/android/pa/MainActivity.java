@@ -34,7 +34,7 @@ import static android.R.color.holo_green_dark;
 public class MainActivity extends AppCompatActivity {
 
     static final String LOG = "MainActivity";
-
+    final Messenger mMessageHandler = new Messenger(new MessageHandler());
     public ViewPager mViewPager = null;
     public TextView mLogo;
     public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
@@ -43,78 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mServiceIsRecording;
     private boolean showPreferences = true;
     private Messenger mServiceMessenger;
-    final Messenger mMessageHandler = new Messenger(new MessageHandler());
-
     private Window mWindow;
-
-
-    class MessageHandler extends Handler {
-
-        @Override
-        public void handleMessage(Message msg) {
-
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG, "Message received: " + msg.what);
-            }
-
-            switch (msg.what) {
-
-                case ControlService.MSG_START_COUNTDOWN:
-                    Log.e(LOG,"Trying to set FCD");
-                    int finalCountDown = msg.getData().getInt("finalCountDown");
-                    int countDownInterval = msg.getData().getInt("countDownInterval");
-                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
-                    mAdapter.startCountDown();
-                    break;
-
-                case ControlService.MSG_START_QUESTIONNAIRE:
-                    Bundle dataQuest = msg.getData();
-                    ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
-                    String head = dataQuest.getString("head");
-                    String motivation = dataQuest.getString("motivation");
-                    mAdapter.createQuestionnaire(questionList, head, motivation);
-                    break;
-
-                case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
-                    mAdapter.proposeQuestionnaire();
-                    break;
-
-                case ControlService.MSG_GET_STATUS:
-                    // Set UI to match ControlService's state
-                    Bundle status = msg.getData();
-                    mServiceIsRecording = status.getBoolean("isRecording");
-
-                    if (status.getBoolean("isQuestionnairePending", false)) {
-                        mAdapter.proposeQuestionnaire();
-                    }
-
-                    Log.d(LOG, "recording state: " + mServiceIsRecording);
-
-                    if (mServiceIsRecording) {
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        holo_green_dark, null)));
-                    } else {
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        darker_gray, null)));
-                    }
-
-                    break;
-
-                case ControlService.MSG_START_RECORDING:
-                    break;
-
-                case ControlService.MSG_STOP_RECORDING:
-                    break;
-
-                default:
-                    super.handleMessage(msg);
-                    break;
-            }
-        }
-    }
-
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -128,15 +57,44 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = null;
         }
     };
+    private ViewPager.OnPageChangeListener myOnPageChangeListener =
+            new ViewPager.OnPageChangeListener() {
 
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                }
 
+                @Override
+                public void onPageScrolled(int position,
+                                           float positionOffset, int positionOffsetPixels) {
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    mAdapter.setQuestionnaireProgressBar(position);
+                    mAdapter.setArrows(position);
+                }
+            };
+
+    // When back button is pressed, questionnaire navigates one page backwards, menu does nothing
     @Override
     public void onBackPressed() {
-        Log.i(LOG,"You like pressed the back button but i like don't like wanna do it...");
+        if (!mAdapter.isMenu()) {
+            if (mViewPager.getCurrentItem() != 0) {
+                mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+            } else {
+                // Might be too unsafe for elderly people
+                //mAdapter.createMenu();
+            }
+        }
     }
 
     // Send message to connected client
     public void messageService(int what) {
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "Sending Message: " + what);
+        }
 
         if (mServiceMessenger != null) {
             try {
@@ -185,29 +143,18 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
-
     }
 
-    private ViewPager.OnPageChangeListener myOnPageChangeListener =
-            new ViewPager.OnPageChangeListener() {
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                }
-                @Override
-                public void onPageScrolled(int position,
-                                           float positionOffset, int positionOffsetPixels) {
-                }
-                @Override
-                public void onPageSelected(int position) {
-                    mAdapter.setQuestionnaireProgressBar(position);
-                    mAdapter.setArrows(position);
-                }
-            };
+    /**
+     * Lifecycle methods
+     **/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.e(LOG,"OnCreate");
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "OnCreate");
+        }
 
         super.onCreate(savedInstanceState);
 
@@ -262,45 +209,130 @@ public class MainActivity extends AppCompatActivity {
         mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        mAdapter.onCreate();
     }
 
     @Override
     protected void onDestroy() {
-        Log.e(LOG,"onDestroy");
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onDestroy");
+        }
         super.onDestroy();
         doUnbindService();
     }
 
     @Override
     protected void onStart() {
-        Log.e(LOG,"onStart");
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onStart");
+        }
         super.onStart();
+        mAdapter.onStart();
     }
 
     @Override
     protected void onRestart() {
-        Log.e(LOG,"onRestart");
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onRestart");
+        }
         super.onRestart();
     }
 
     @Override
     protected void onStop() {
-        Log.e(LOG,"onStop");
         super.onStop();
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onStop");
+        }
+        mAdapter.onStop();
     }
 
     @Override
     protected void onPause() {
-        Log.e(LOG,"onPause");
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onPause");
+        }
         mAdapter.onPause();
         super.onPause();
     }
 
     @Override
     protected void onResume() {
-        Log.e(LOG,"onResume");
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "onResume");
+        }
         mAdapter.onResume();
         super.onResume();
+    }
+
+    class MessageHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            if (BuildConfig.DEBUG) {
+                Log.d(LOG, "Message received: " + msg.what);
+            }
+
+            switch (msg.what) {
+
+                case ControlService.MSG_START_COUNTDOWN:
+                    if (mAdapter.isInForeGround()) {
+                        Log.e(LOG, "Trying to set FCD");
+                        int finalCountDown = msg.getData().getInt("finalCountDown");
+                        int countDownInterval = msg.getData().getInt("countDownInterval");
+                        mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
+                        mAdapter.startCountDown();
+                    }
+                    break;
+
+                case ControlService.MSG_START_QUESTIONNAIRE:
+                    Bundle dataQuest = msg.getData();
+                    ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
+                    String head = dataQuest.getString("head");
+                    String motivation = dataQuest.getString("motivation");
+                    mAdapter.createQuestionnaire(questionList, head, motivation);
+                    break;
+
+                case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
+                    mAdapter.proposeQuestionnaire();
+                    break;
+
+                case ControlService.MSG_GET_STATUS:
+                    // Set UI to match ControlService's state
+                    Bundle status = msg.getData();
+                    mServiceIsRecording = status.getBoolean("isRecording");
+
+                    if (status.getBoolean("isQuestionnairePending", false)) {
+                        mAdapter.proposeQuestionnaire();
+                    }
+
+                    Log.d(LOG, "recording state: " + mServiceIsRecording);
+
+                    if (mServiceIsRecording) {
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        holo_green_dark, null)));
+                    } else {
+                        mRecord.setBackgroundTintList(
+                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                        darker_gray, null)));
+                    }
+
+                    break;
+
+                case ControlService.MSG_START_RECORDING:
+                    break;
+
+                case ControlService.MSG_STOP_RECORDING:
+                    break;
+
+                default:
+                    super.handleMessage(msg);
+                    break;
+            }
+        }
     }
 
 }

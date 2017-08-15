@@ -15,7 +15,6 @@ import com.fragtest.android.pa.Core.MetaData;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -29,7 +28,7 @@ public class Questionnaire {
     // Accumulator for ids, values and texts gathered from user input
     private final EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
-    private int mNumPages;
+    private int mNumPages, mViewPagerHeight;
     // ArrayList containing all questions (including all attached information)
     private ArrayList<String> mQuestionList;
     // Context of QuestionnairePageAdapter for visibility
@@ -66,27 +65,12 @@ public class Questionnaire {
 
         mMetaData = new MetaData(mContext, mRawInput, mHead, mMotivation);
         mMetaData.initialise();
-
-        // Split basis data into question segments
-        //String[] questionnaire = mRawInput.split("<question|</question>|<finish>|</finish>");
-        //mQuestionList = stringArrayToListString(questionnaire);
-        //mQuestionList = thinOutList(mQuestionList);
-
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Setup was successful.");
-        }
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
     Question createQuestion(int position) {
-
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG_STRING, "========================================================");
-            Log.e(LOG_STRING, "Creating view for position " + position);
-        }
 
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint);
@@ -95,14 +79,6 @@ public class Questionnaire {
                 question.isHidden(), question.isMandatory(), question.getAnswerIds()));
         mMetaData.addQuestion(question);
         mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(), question.isHidden());
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "QuestionId: " + question.getQuestionId() + " mandatory: " +
-                    question.isMandatory());
-            for (int iId = 0; iId < question.getFilterId().size(); iId++) {
-                Log.i(LOG_STRING, "FilterId: " + question.getFilterId().get(iId));
-            }
-        }
 
         return question;
     }
@@ -118,6 +94,7 @@ public class Questionnaire {
         boolean isEmoji = false;
         boolean isText = false;
         boolean isFinish = false;
+        boolean isPhotograph = false;
 
         LinearLayout answerContainer = new LinearLayout(mContext);
         LinearLayout.LayoutParams linearContainerParams =
@@ -166,6 +143,9 @@ public class Questionnaire {
 
         final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
                 mContext, this, question.getQuestionId());
+
+        final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
+                mContext, answerLayout);
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -225,10 +205,15 @@ public class Questionnaire {
                         answerTypeEmoji.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
+                    case "photograph": {
+                        isPhotograph = true;
+                        answerTypePhotograph.addAnswer(sAnswer, nAnswerId);
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
-                            Log.i(LOG_STRING, "Weird object found. Id: " +
+                            Log.e(LOG_STRING, "Weird object found. Id: " +
                                     question.getQuestionId());
                         }
                         break;
@@ -269,6 +254,11 @@ public class Questionnaire {
 
         if (isFinish) {
             answerTypeFinish.addClickListener();
+        }
+
+        if (isPhotograph) {
+            answerTypePhotograph.buildView();
+            answerTypePhotograph.addClickListener();
         }
 
         return answerContainer;
@@ -319,10 +309,6 @@ public class Questionnaire {
         // Function checks all available pages on whether their filtering condition has been met and
         // toggles visibility by destroying or creating the views and adding them to the list of
         // views which is handled by QuestionnairePagerAdapter
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Checking visibility");
-        }
 
         boolean wasChanged = true;
 
@@ -381,18 +367,10 @@ public class Questionnaire {
         // If view is mandatory but declared hidden
         if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
                 mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
-
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Making invisible: " + mQuestionInfo.get(iPos).getId());
-            }
         }
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
-
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Removing: " + mQuestionInfo.get(iPos).getId());
-            }
 
             mQuestionInfo.get(iPos).setInactive();
             mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
@@ -428,22 +406,6 @@ public class Questionnaire {
             int iId = mQuestionInfo.get(iItem).getId();
             mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
         }
-    }
-
-    private List<String> thinOutList(List<String> mQuestionList) {
-        // Removes irrelevant data from question sheet
-
-        for (int iItem = mQuestionList.size() - 1; iItem >= 0; iItem = iItem - 2) {
-            mQuestionList.remove(iItem);
-        }
-        return mQuestionList;
-    }
-
-    private List<String> stringArrayToListString(String[] stringArray) {
-        // Turns an array of Strings into a List of Strings
-        List<String> listString = new ArrayList<>();
-        Collections.addAll(listString, stringArray);
-        return listString;
     }
 
     private void returnToMenu() {

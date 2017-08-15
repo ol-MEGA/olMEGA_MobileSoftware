@@ -23,16 +23,15 @@ import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-
-
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.FileWriter;
+
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * The brains of the operation.
@@ -56,13 +55,9 @@ public class ControlService extends Service {
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
     public static final int MSG_START_COUNTDOWN = 22;
-    public static final int MSG_GET_FINAL_COUNTDOWN = 23;
-    public static final int MSG_SET_FINAL_COUNTDOWN = 24;
-    public static final int MSG_FINAL_COUNTDOWN_SET = 25;
-    public static final int MSG_NEW_ALARM = 26;
 
     // 3* - questionnaire
-    public static final int MSG_ARE_WE_RUNNING = 31;
+    public static final int MSG_ISMENU = 31;
     public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
     public static final int MSG_START_QUESTIONNAIRE = 33;
     public static final int MSG_PROPOSE_QUESTIONNAIRE = 34;
@@ -84,6 +79,7 @@ public class ControlService extends Service {
     private boolean isActiveQuestionnaire = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
+    private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
 
@@ -136,6 +132,7 @@ public class ControlService extends Service {
             switch (msg.what) {
 
                 case MSG_REGISTER_CLIENT:
+                    Log.e(LOG,"msg: "+msg);
                     mClientMessenger = msg.replyTo;
                     if (isTimer && !isQuestionnairePending) {
                         setAlarmAndCountdown();
@@ -156,6 +153,15 @@ public class ControlService extends Service {
                     status.putBoolean("isQuestionnairePending", isQuestionnairePending);
                     messageClient(MSG_GET_STATUS, status);
                     break;
+
+
+
+
+
+                /** TIMER DISPLAY IS NOT SYNCHRONISED WHEN Quest -> Square -> Choose -> IHA **/
+
+
+
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
@@ -189,20 +195,31 @@ public class ControlService extends Service {
                     }
                     break;
 
+                case MSG_ISMENU:
+                    isMenu = true;
+                    break;
+
                 case MSG_QUESTIONNAIRE_ACTIVE:
-                    isActiveQuestionnaire = true;
-                    mEventTimer.stopTimer();
-                    isTimerRunning = false;
-                    //mVibration.repeatingBurstOff();
-                    Log.i(LOG,"Questionnaire active");
+
+                    isMenu = false;
+                    if (!isActiveQuestionnaire) {
+                        isActiveQuestionnaire = true;
+                        mEventTimer.stopTimer();
+                        isTimerRunning = false;
+                        Log.i(LOG, "Questionnaire active");
+                    }
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
-                    isActiveQuestionnaire = false;
-                    if (isTimer) {
-                        setAlarmAndCountdown();
+
+                    if (isMenu) {
+                        isActiveQuestionnaire = false;
+                        if (isTimer) {
+                            Log.e(LOG, "setAlarmAndCountdown()");
+                            setAlarmAndCountdown();
+                        }
+                        Log.i(LOG, "Questionnaire inactive");
                     }
-                    Log.i(LOG,"Questionnaire inactive");
                     break;
 
                 case MSG_START_RECORDING:

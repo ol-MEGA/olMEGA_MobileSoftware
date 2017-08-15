@@ -61,7 +61,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
         width = Units.getScreenWidth();
-        //answerLayoutPadding = Units.getAnswerLayoutPadding();
 
         parent.scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -306,9 +305,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 2.0f * nHeightView);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-        Log.e(LOG_STRING,"nTextViewHeight: "+nHeightView);
-        Log.e(LOG_STRING, "height should be: "+nPixProgress);
-        Log.e(LOG_STRING, "height is: "+mResizeView.getLayoutParams().height);
         return nPixProgress;
     }
 
@@ -329,15 +325,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     }
 }
 
-/*
-    // Set progress/slider according to floating point input between 0.0 and 1.0
-    private int setProgressFraction(float nFraction) {
-        int nPixProgress = (int) (mUsableHeight * nFraction);
-        mResizeView.getLayoutParams().height = nPixProgress;
-        mResizeView.setLayoutParams(mResizeView.getLayoutParams());
-        return nPixProgress;
-    }
- */
 
 
 
