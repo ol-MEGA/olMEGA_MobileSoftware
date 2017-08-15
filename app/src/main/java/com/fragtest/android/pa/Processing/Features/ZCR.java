@@ -6,16 +6,17 @@ import com.fragtest.android.pa.Processing.BasicProcessRunnable;
 
 public class ZCR extends BasicProcessRunnable
 {
+	// TODO: check processBlock, value in RMS has different name
 	public ZCR(float[][] data, int processBlock, int nHop, int nProcOutSamples, int nFeatures, Messenger messenger)
 	{
 		super(data, processBlock, nHop, nProcOutSamples, nFeatures, messenger);
-		setFeature( "ZCR" );
+		setFeature("ZCR");
 	}
 
 	@Override
-	public void process(float[][] data, int iFrame) 
+	public void process(float[][] data)
 	{
-		super.process(data, iFrame);
+		super.process(data);
 		
 		float[] result = new float[nFeatures];
 

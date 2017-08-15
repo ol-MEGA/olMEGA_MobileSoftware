@@ -46,17 +46,17 @@ public class MainProcessingThread extends BasicProcessingThread{
 			// matrix where every row is one average after an nOutSeconds increment.
 			// one row contains the cross power spectral density (complex-valued)
 			// followed by the auto power spectral densities (real-valued)
-			nProcSeconds = blocklengthInS;
+			nProcSeconds = chunklengthInS;
 			nOutSeconds = 0.125; // must be a multiple of 0.025 s
 
-			int nFrameSize = (int) (0.025 * samplerate);
+			int nBlockSize = (int) (0.025 * samplerate);
 			
 			nProcSamples = (int) (nProcSeconds * samplerate);
 			nProcOutSamples = (int) (nOutSeconds * samplerate);
 			
 			nHop = nProcSamples;
             // next power of two;
-			int NFFT = 1 << (32 - Integer.numberOfLeadingZeros(nFrameSize - 1));
+			int NFFT = 1 << (32 - Integer.numberOfLeadingZeros(nBlockSize - 1));
 			nFeatures = 2 * (NFFT + 2); 			
 			PSD cpsdRunnable = new PSD(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);

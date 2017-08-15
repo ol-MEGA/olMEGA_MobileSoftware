@@ -9,15 +9,15 @@ import com.fragtest.android.pa.Processing.Preprocessing.CResampling;
 public class Loop extends BasicProcessRunnable {
 	protected static final String LOG = "Loop";
 	
-	public Loop(float[][] audioData, int procFrameSize, int nHop, int nOutFrameSize, int nFeatures, Messenger messenger) {
-		super(audioData, procFrameSize, nHop, nOutFrameSize, nFeatures, messenger);
+	public Loop(float[][] audioData, int procBlockSize, int nHop, int nOutBlockSize, int nFeatures, Messenger messenger) {
+		super(audioData, procBlockSize, nHop, nOutBlockSize, nFeatures, messenger);
 		setFeature("Loop");
 		Log.d(LOG, "Loop object created");
 	}
 
 	@Override
-	public void process(float[][] data, int iFrame) {
-		super.process(data, iFrame);
+	public void process(float[][] data) {
+		super.process(data);
 		
 		float[] out = new float[data.length * data[0].length];
 		

@@ -40,7 +40,7 @@ public class BasicProcessingThread extends Thread {
 	private boolean filterHp;
     private int filterHpFrequency;
     static int samplerate;
-	int blocklengthInS;					// in ms
+	int chunklengthInS;					// in ms
     private boolean downsample = false;
 
     private Set<String> activeFeatures;
@@ -54,7 +54,7 @@ public class BasicProcessingThread extends Thread {
         serviceMessenger = messenger;
 
         samplerate = settings.getInt("samplerate");
-        blocklengthInS = settings.getInt("blocklengthInS");
+        chunklengthInS = settings.getInt("chunklengthInS");
         activeFeatures = (Set) settings.getSerializable("activeFeatures");
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
@@ -105,14 +105,14 @@ public class BasicProcessingThread extends Thread {
             e.printStackTrace();
         }
 
-        int frames = buffer.length / 4;
+        int blocks = buffer.length / 4;
 
-		float[][] audioData = new float[2][frames];
+		float[][] audioData = new float[2][blocks];
 
 		float invMaxShort = 1.0f / Short.MAX_VALUE;
 
 		// convert bytes to short and split channels
-		for ( int kk = 0; kk < frames; kk++ ) {
+		for ( int kk = 0; kk < (buffer.length/4); kk++ ) {
 			audioData[0][kk] = ( (short) ((buffer[kk*4] & 0xFF) | (buffer[kk*4 + 1] << 8)) ) * invMaxShort;
 			audioData[1][kk] = ( (short) ((buffer[kk*4 + 2] & 0xFF) | (buffer[kk*4 + 3] << 8)) ) * invMaxShort;
 		}
@@ -133,11 +133,11 @@ public class BasicProcessingThread extends Thread {
 
             samplerate /= 2;
 
-			float[][] audioData_ds = new float[2][frames/2];
+			float[][] audioData_ds = new float[2][blocks/2];
 			
 			CResampling cr = new CResampling();
 			
-			for ( int kk = 0; kk < 2; kk++ ) {
+			for (int kk = 0; kk < 2; kk++) {
 				audioData_ds[kk] = cr.Downsample2f(audioData[kk], audioData_ds[kk].length);
 				cr.reset();
 			}
@@ -158,7 +158,7 @@ public class BasicProcessingThread extends Thread {
 
         if (activeFeatures.size() == processedFeatures) {
 
-    		Message msg = Message.obtain(null, ControlService.MSG_BLOCK_PROCESSED);
+    		Message msg = Message.obtain(null, ControlService.MSG_CHUNK_PROCESSED);
     		
     		// attach filenames to message so we can notify MediaScanner. 
     		Bundle b = new Bundle();

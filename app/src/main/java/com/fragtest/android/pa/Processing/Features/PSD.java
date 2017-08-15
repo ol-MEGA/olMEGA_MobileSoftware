@@ -11,36 +11,33 @@ import java.util.Arrays;
 
 public class PSD extends BasicProcessRunnable {
 	
-	public PSD(float[][] audioData, int procFrameSize, int nHop, int nOutFrameSize, int nFeatures, Messenger messenger) {
-		super(audioData, procFrameSize, nHop, nOutFrameSize, nFeatures, messenger);
+	public PSD(float[][] audioData, int procBlockSize, int nHop, int nOutBlockSize, int nFeatures, Messenger messenger) {
+		super(audioData, procBlockSize, nHop, nOutBlockSize, nFeatures, messenger);
 		setFeature("PSD");
 	}
 
 	@Override
-	public void process(float[][] data, int iFrame) {
-		super.process(data, iFrame);
+	public void process(float[][] data) {
+		super.process(data);
 		
-		double frameDuration = 0.025;
-		int frameSize = (int) (frameDuration * samplingrate);
+		double blockDuration = 0.025;
+		int blockSize = (int) (blockDuration * samplingrate);
 				
-		appendFeature(cpsd(data[0], data[1], frameSize, samplingrate));
+		appendFeature(cpsd(data[0], data[1], blockSize, samplingrate));
 	}
 	
-	public float[][] cpsd(float[] x, float[] y, int frameSize, int fs){
+	public float[][] cpsd(float[] x, float[] y, int blockSize, int fs){
 		/* One-sided cross power spectral density with hann windowing and 50% overlap. Inputs must be even.
 		 * Result is the same as with Matlab's cpsd() */
 
 		// implement some sort of arg checking here (x.length == y.length, x.length%2==0 etc.)
 
-
-		Log.d(LOG, "framesize:" + frameSize);
-
 		/* compute hann window */
-		float[] hannIndex 	= new float[frameSize];
-		float[] hannWin 	= new float[frameSize];
+		float[] hannIndex 	= new float[blockSize];
+		float[] hannWin 	= new float[blockSize];
 		
 		for (int i = 0; i < hannIndex.length; i++) {
-			hannIndex[i] = (float) i / (frameSize-1);
+			hannIndex[i] = (float) i / (blockSize-1);
 		}
 		
 		for (int i = 0; i < hannWin.length; i++) {
@@ -48,18 +45,18 @@ public class PSD extends BasicProcessRunnable {
 		}
 		
 		/* compute cross power spectrum, starting with block indices */
-		int NFFT 		= 1 << (32 - Integer.numberOfLeadingZeros(frameSize - 1));			// next power of 2 of framesize
+		int NFFT 		= 1 << (32 - Integer.numberOfLeadingZeros(blockSize - 1));			// next power of 2 of blocksize
 		Log.d(LOG, "FFT-Length: " + NFFT);
 		int L 			= x.length;															// length of complete signal(s)
-		int overlap 	= frameSize / 2;													// overlap of 50% in samples
-		int nBlocks		= (int) Math.floor(((float) L - overlap) / (frameSize - overlap));	// number of overlapping blocks
+		int overlap 	= blockSize / 2;													// overlap of 50% in samples
+		int nBlocks		= (int) Math.floor(((float) L - overlap) / (blockSize - overlap));	// number of overlapping blocks
 		int nPxyBlocks	= nBlocks / 10 + 1;													// number of 5 non-overlapping block segments (for later averaging)
 		float[][] mLastSxy = new float[3][2*NFFT];											// last power spectra, first row holds last cross power spectrum of x and y, 2nd and 3rd rows hold last auto power spectra of x/x and y/y
 		float[][][] mGlidingSxy = new float[nPxyBlocks][3][2*NFFT];							// temp matrix that will hold recursive power spectra in 5 (non-overlapping) block increments. second dimension is for cross and auto power spectras of the two channels
 
 		float alpha = (float) Math.exp(-overlap/(fs*0.125));
 		
-		int bsMinusOverlap 	= frameSize - overlap;
+		int bsMinusOverlap 	= blockSize - overlap;
 		int[] blockStartIdx = new int[nBlocks];
 		
 		for (int block = 0; block < nBlocks; block++) {
@@ -67,10 +64,10 @@ public class PSD extends BasicProcessRunnable {
 		}
 		
 		float winNorm = 0;									// Window normalization constant. 1/N omitted because it cancels below
-		for (int i = 0; i < frameSize; i++) {
+		for (int i = 0; i < blockSize; i++) {
 			winNorm += hannWin[i] * hannWin[i];
 		}
-		winNorm *= (float) frameSize / NFFT;				// when NFFT > blocksize, the energy from blocksize samples is spread over (NFFT/blocksize) * blocksize spectral coefficients,
+		winNorm *= (float) blockSize / NFFT;				// when NFFT > blocksize, the energy from blocksize samples is spread over (NFFT/blocksize) * blocksize spectral coefficients,
 															// so the normalization constant has to be scaled down by the inverse or too much energy is taken out of the spectrum.
 															// check with someone smart if this is correct! :-)
 		
@@ -83,10 +80,10 @@ public class PSD extends BasicProcessRunnable {
 		for (int block = 0; block < nBlocks; block++) {
 			
 			/* get current block and window the data */
-			float[] xBlock = new float[frameSize];
-			float[] yBlock = new float[frameSize];
+			float[] xBlock = new float[blockSize];
+			float[] yBlock = new float[blockSize];
 		
-			for (int i = 0; i < frameSize; i++) {
+			for (int i = 0; i < blockSize; i++) {
 				xBlock[i] = x[i + blockStartIdx[block]] * hannWin[i];
 				yBlock[i] = y[i + blockStartIdx[block]] * hannWin[i];
 			}

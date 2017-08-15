@@ -6,14 +6,14 @@ import com.fragtest.android.pa.Processing.BasicProcessRunnable;
 
 public class RMS extends BasicProcessRunnable {
 
-	public RMS(float[][] audioData, int procFrameSize, int nHop, int procOutFrameSize, int nFeatures, Messenger messenger) {
-		super(audioData, procFrameSize, nHop, procOutFrameSize, nFeatures, messenger);
-		setFeature( "RMS" );
+	public RMS(float[][] audioData, int procBlockSize, int nHop, int procOutBlockSize, int nFeatures, Messenger messenger) {
+		super(audioData, procBlockSize, nHop, procOutBlockSize, nFeatures, messenger);
+		setFeature("RMS");
 	}
 
 	@Override
-	public void process(float[][] data, int iFrame) {
-		super.process(data, iFrame);
+	public void process(float[][] data) {
+		super.process(data);
 		
 		float[] result = new float[ data.length ];
 
