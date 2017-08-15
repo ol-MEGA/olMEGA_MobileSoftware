@@ -6,17 +6,14 @@ import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.FloatBuffer;
 
 /**
  * BasicProcessRunnable.java
@@ -112,7 +109,6 @@ public class BasicProcessRunnable implements Runnable {
 		}
 
 		// tell processThread we're finished
-        Log.d(LOG, "Feature file: " + featureFile.toString());
 		Message msg = Message.obtain(null, BasicProcessingThread.DONE);
 		Bundle b = new Bundle();
 		b.putString("featureFile", featureFile.getAbsolutePath());
@@ -147,8 +143,8 @@ public class BasicProcessRunnable implements Runnable {
 			featureRAF = new RandomAccessFile(featureFile,
                     "rw");
 
-			posFrames = featureRAF.length();   // starting position (frame count for each block)
-			featureRAF.seek(posFrames);        // skip to starting position
+//			posFrames = featureRAF.length();   // starting position (frame count for each block)
+//			featureRAF.seek(posFrames);        // skip to starting position
 
 			// TODO: consider writing the header only once (minus timestamp)  
 
@@ -164,7 +160,7 @@ public class BasicProcessRunnable implements Runnable {
 			}
 			featureRAF.writeInt(samplingrate);
 
-			featureRAF.writeBytes(timestamp);    // HHMMssSSS, 9 bytes (absolute timestamp)
+			featureRAF.writeBytes(timestamp.substring(9));    // HHMMssSSS, 9 bytes (absolute timestamp)
 
 			procFrameCount = 0;
 			procTimestamp[0] = 0;
@@ -185,43 +181,42 @@ public class BasicProcessRunnable implements Runnable {
 
 	protected void appendFeature(float[] data) {
 
-        FileChannel channel = featureRAF.getChannel();
+        ByteBuffer bbuffer = ByteBuffer.allocate(4 * (data.length + 2));
+        FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 * (data.length + 2));
-
-        buffer.asFloatBuffer().put(procTimestamp);
-        buffer.asFloatBuffer().put(data);
+        fbuffer.put(procTimestamp);
+        fbuffer.put(data);
 
         procTimestamp[0] += procHopDuration;
         procTimestamp[1] += procHopDuration;
         procFrameCount += 1;
 
         try {
-            channel.write(buffer);
+            featureRAF.getChannel().write(bbuffer);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	// For cases where InFramesize != OutFramesize
+	// called by PSD as we calculate a complete block in one go
 	protected void appendFeature(float[][] data) {
 
+        procFrameCount = data.length;
         procOutDuration = (float) procOutFrameSize / samplingrate;
-        FileChannel channel = featureRAF.getChannel();
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 * (data[0].length + 2) * data.length);
+        ByteBuffer bbuffer = ByteBuffer.allocate(4 * (data[0].length + 2) * data.length);
+        FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
         for (float[] aData : data) {
-            buffer.asFloatBuffer().put(procTimestamp);
-            buffer.asFloatBuffer().put(aData);
+            fbuffer.put(procTimestamp);
+            fbuffer.put(aData);
 
             procTimestamp[0] += procOutDuration;
             procTimestamp[1] += procOutDuration;
-            procFrameCount += 1;
         }
 
         try {
-            channel.write(buffer);
+            featureRAF.getChannel().write(bbuffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -231,7 +226,7 @@ public class BasicProcessRunnable implements Runnable {
 	private void closeFeatureFile() {
 		try {
 
-			featureRAF.seek(posFrames);
+			featureRAF.seek(0);
 			featureRAF.writeInt(procFrameCount);
 			featureRAF.close();
 
