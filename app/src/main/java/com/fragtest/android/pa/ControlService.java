@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
@@ -28,6 +30,7 @@ import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.FileWriter;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -120,6 +123,8 @@ public class ControlService extends Service {
     static boolean isProcessing = false;
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
+
+    Context context = this;
 
     class MessageHandler extends Handler {
 
@@ -254,12 +259,15 @@ public class ControlService extends Service {
 
                     if (!getIsProcessing()) {
                         Bundle settings = getPreferences();
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        settings.putString("filename", processingBuffer[idxProcessing]);;
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
                         processingThread.start();
+                    }
+
+                    if (keepAudioCache) {
+                        new SingleMediaScanner(context, new File(filename));
                     }
 
                     Log.d(LOG, "Recorded: " + filename);
@@ -268,8 +276,15 @@ public class ControlService extends Service {
 
                 case MSG_BLOCK_PROCESSED:
 
+                    ArrayList<String> featureFiles = msg.getData().
+                            getStringArrayList("featureFiles");
+
                     if (!keepAudioCache) {
                         AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+                    }
+
+                    for (String file : featureFiles) {
+                        new SingleMediaScanner(context, new File(file));
                     }
 
                     deleteProccessingBuffer(idxProcessing);
@@ -278,8 +293,6 @@ public class ControlService extends Service {
                     if (processingBuffer[idxProcessing] != null) {
                         Bundle settings = getPreferences();
                         settings.putString("filename", processingBuffer[idxProcessing]);
-                        Log.d(LOG, "idxProcessing: " + idxProcessing);
-                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
