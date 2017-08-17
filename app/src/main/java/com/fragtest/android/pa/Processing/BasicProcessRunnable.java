@@ -85,6 +85,8 @@ public class BasicProcessRunnable implements Runnable {
 	@Override
 	public void run() {
 
+        Message msg = Message.obtain(null, BasicProcessingThread.DONE);
+        Bundle b = new Bundle();
 
 		if (audioData[0].length >= procBlockSize) {
 
@@ -106,24 +108,24 @@ public class BasicProcessRunnable implements Runnable {
 			}
 
 			closeFeatureFile();
-		}
 
-		// tell processThread we're finished
-		Message msg = Message.obtain(null, BasicProcessingThread.DONE);
-		Bundle b = new Bundle();
-		b.putString("featureFile", featureFile.getAbsolutePath());
-		msg.setData(b);
-		msg.obj = feature;
-		try {
-			messenger.send(msg);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+			b.putString("featureFile", featureFile.getAbsolutePath());
+			msg.setData(b);
+		} else {
+            b.putString("featureFile", null);
+        }
+
+        // tell processThread we're finished
+        msg.obj = feature;
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
 	}
 
 
 	// has to be implemented in each child process
-	// TODO: check how blocknr is used
 	public void process(float[][] blockData) {
 	}
 

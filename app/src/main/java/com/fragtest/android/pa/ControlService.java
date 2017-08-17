@@ -239,7 +239,7 @@ public class ControlService extends Service {
 
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
-                    Logger.info(LOG, "Stop caching audio");
+                    Logger.info("Stop caching audio");
                     audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_GET_STATUS);
@@ -278,7 +278,9 @@ public class ControlService extends Service {
                     }
 
                     for (String file : featureFiles) {
-                        new SingleMediaScanner(context, new File(file));
+                        if (file != null) {
+                            new SingleMediaScanner(context, new File(file));
+                        }
                     }
 
                     deleteProccessingBuffer(idxProcessing);

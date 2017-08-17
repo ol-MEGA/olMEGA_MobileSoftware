@@ -114,7 +114,7 @@ public class AudioRecorder {
             // block loop
             int bytesWritten = 0;
 
-            while (bytesWritten < chunklengthInBytes) {
+            while (bytesWritten < chunklengthInBytes && !stopRecording) {
 
                 int bytesRead = audioRecord.read(buffer, 0, bufferSize);
 

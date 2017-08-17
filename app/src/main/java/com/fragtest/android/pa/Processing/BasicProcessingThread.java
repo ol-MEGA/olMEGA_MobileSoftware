@@ -197,7 +197,9 @@ public class BasicProcessingThread extends Thread {
             	Bundle b = msg.getData();
 				String featureFile = b.getString("featureFile");
             	featureFiles.add(featureFile);
-				Logger.info("New feature:\t{}", featureFile);
+				if (featureFile != null) {
+					Logger.info("New feature:\t{}", featureFile);
+				}
             	isFinished();
             	break;
             default:
