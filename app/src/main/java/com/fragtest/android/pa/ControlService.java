@@ -132,12 +132,12 @@ public class ControlService extends Service {
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
-            Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
 
                 case MSG_REGISTER_CLIENT:
                     Log.e(LOG,"msg: "+msg);
+                    Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
                     if (isTimer && !isQuestionnairePending) {
                         setAlarmAndCountdown();
@@ -146,7 +146,7 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null; //TODO: Evaluate whether this is good
-
+                    Logger.info("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
                     }
@@ -158,15 +158,6 @@ public class ControlService extends Service {
                     status.putBoolean("isQuestionnairePending", isQuestionnairePending);
                     messageClient(MSG_GET_STATUS, status);
                     break;
-
-
-
-
-
-                /** TIMER DISPLAY IS NOT SYNCHRONISED WHEN Quest -> Square -> Choose -> IHA **/
-
-
-
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
@@ -228,8 +219,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_START_RECORDING:
-                    Log.d(LOG, "Start Recording.");
-
+                    Log.d(LOG, "Start caching audio");
+                    Logger.info("Start caching audio");
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
                             chunklengthInS,
@@ -241,11 +232,14 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_STOP_RECORDING:
-                    Log.d(LOG, "Stop Recording.");
+                    Log.d(LOG, "Requesting stop caching audio");
+                    Logger.info("Requesting stop caching audio");
                     audioRecorder.stop();
                     break;
 
                 case MSG_RECORDING_STOPPED:
+                    Log.d(LOG, "Stop caching audio");
+                    Logger.info(LOG, "Stop caching audio");
                     audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_GET_STATUS);
@@ -270,7 +264,7 @@ public class ControlService extends Service {
                         new SingleMediaScanner(context, new File(filename));
                     }
 
-                    Log.d(LOG, "Recorded: " + filename);
+                    Log.d(LOG, "New cache: " + filename);
                     Logger.info("New cache:\t{}", filename);
                     break;
 
@@ -344,6 +338,7 @@ public class ControlService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
+        Logger.info("Service started");
         return START_STICKY;
     }
 
@@ -356,6 +351,7 @@ public class ControlService extends Service {
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
+        Logger.info("Service stopped");
     }
 
     @Override
@@ -382,12 +378,6 @@ public class ControlService extends Service {
         mEventTimer.stopTimer();
         mVibration.repeatingBurstOff();
         super.onTaskRemoved(rootIntent);
-    }
-
-    @Override
-    protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
-        Log.e(LOG,"onDump");
-        super.dump(fd, writer, args);
     }
 
     // Send message to connected client with additional data
