@@ -29,16 +29,16 @@ public class AudioRecorder {
     private Thread recordingThread;
     private boolean stopRecording = true;
     private boolean isWave;
-    private int blocklengthInBytes, bufferSize;
+    private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
 
 
-    AudioRecorder(Messenger _messenger, int _blocklengthInS, int _samplerate, boolean _isWave) {
+    AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
 
         messenger = _messenger;
         isWave = _isWave;
 
-        blocklengthInBytes = (_blocklengthInS * _samplerate * CHANNELS * BITS / 8);
+        chunklengthInBytes = (_chunklengthInS * _samplerate * CHANNELS * BITS / 8);
 
         bufferSize = AudioRecord.getMinBufferSize(_samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
@@ -114,16 +114,16 @@ public class AudioRecorder {
             // block loop
             int bytesWritten = 0;
 
-            while (bytesWritten < blocklengthInBytes) {
+            while (bytesWritten < chunklengthInBytes && !stopRecording) {
 
                 int bytesRead = audioRecord.read(buffer, 0, bufferSize);
 
                 if (bytesRead > 0) {
 
                     // check for
-                    if (((bytesWritten + bytesRead) > blocklengthInBytes)) {
-                        bytesToWrite = blocklengthInBytes - bytesWritten;
-                        bytesRemaining = bytesWritten - blocklengthInBytes;
+                    if (((bytesWritten + bytesRead) > chunklengthInBytes)) {
+                        bytesToWrite = chunklengthInBytes - bytesWritten;
+                        bytesRemaining = bytesWritten - chunklengthInBytes;
                     } else {
                         bytesToWrite = bytesRead;
                     }
@@ -143,7 +143,7 @@ public class AudioRecorder {
             fileIO.closeDataOutStream();
 
             // report back to service
-            Message msg = Message.obtain(null, ControlService.MSG_BLOCK_RECORDED);
+            Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
                 Bundle data = new Bundle();
                 data.putString("filename", filename);

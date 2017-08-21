@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
@@ -29,6 +31,7 @@ import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
 import org.pmw.tinylog.writers.FileWriter;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -70,10 +73,10 @@ public class ControlService extends Service {
     public static final int MSG_START_RECORDING = 41;
     public static final int MSG_STOP_RECORDING = 42;
     public static final int MSG_RECORDING_STOPPED = 43;
-    public static final int MSG_BLOCK_RECORDED = 44;
+    public static final int MSG_CHUNK_RECORDED = 44;
 
     // 5* - processing
-    public static final int MSG_BLOCK_PROCESSED = 51;
+    public static final int MSG_CHUNK_PROCESSED = 51;
 
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
@@ -86,7 +89,7 @@ public class ControlService extends Service {
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache;
-    private int samplerate, blocklengthInS;
+    private int samplerate, chunklengthInS;
 
 
     private int mFinalCountDown = -255;
@@ -122,20 +125,20 @@ public class ControlService extends Service {
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
 
+    Context context = this;
+
     class MessageHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
 
-            Log.e(LOG,"Client Messenger: "+mClientMessenger);
-
             Log.d(LOG, "Received Message: " + msg.what);
-            Logger.info("Message received:\t{}", msg.what);
 
             switch (msg.what) {
 
                 case MSG_REGISTER_CLIENT:
                     Log.e(LOG,"msg: "+msg);
+                    Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
                     if (isTimer && !isQuestionnairePending) {
                         setAlarmAndCountdown();
@@ -144,7 +147,7 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null; //TODO: Evaluate whether this is good
-                    Log.e(LOG,"Messenger was unregistered.");
+                    Logger.info("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
                     }
@@ -156,6 +159,15 @@ public class ControlService extends Service {
                     status.putBoolean("isQuestionnairePending", isQuestionnairePending);
                     messageClient(MSG_GET_STATUS, status);
                     break;
+
+
+
+
+
+                /** TIMER DISPLAY IS NOT SYNCHRONISED WHEN Quest -> Square -> Choose -> IHA **/
+
+
+
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
@@ -218,11 +230,11 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_START_RECORDING:
-                    Log.d(LOG, "Start Recording.");
-
+                    Log.d(LOG, "Start caching audio");
+                    Logger.info("Start caching audio");
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
-                            blocklengthInS,
+                            chunklengthInS,
                             samplerate,
                             isWave);
                     audioRecorder.start();
@@ -231,17 +243,20 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_STOP_RECORDING:
-                    Log.d(LOG, "Stop Recording.");
+                    Log.d(LOG, "Requesting stop caching audio");
+                    Logger.info("Requesting stop caching audio");
                     audioRecorder.stop();
                     break;
 
                 case MSG_RECORDING_STOPPED:
+                    Log.d(LOG, "Stop caching audio");
+                    Logger.info("Stop caching audio");
                     audioRecorder.close();
                     isRecording = false;
                     messageClient(MSG_GET_STATUS);
                     break;
 
-                case MSG_BLOCK_RECORDED:
+                case MSG_CHUNK_RECORDED:
                     String filename = msg.getData().getString("filename");
 
                     addProccessingBuffer(idxRecording, filename);
@@ -249,22 +264,34 @@ public class ControlService extends Service {
 
                     if (!getIsProcessing()) {
                         Bundle settings = getPreferences();
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
+                        settings.putString("filename", processingBuffer[idxProcessing]);;
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
                         processingThread.start();
                     }
 
-                    Log.d(LOG, "Recorded: " + filename);
+                    if (keepAudioCache) {
+                        new SingleMediaScanner(context, new File(filename));
+                    }
+
+                    Log.d(LOG, "New cache: " + filename);
                     Logger.info("New cache:\t{}", filename);
                     break;
 
-                case MSG_BLOCK_PROCESSED:
+                case MSG_CHUNK_PROCESSED:
+
+                    ArrayList<String> featureFiles = msg.getData().
+                            getStringArrayList("featureFiles");
 
                     if (!keepAudioCache) {
                         AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+                    }
+
+                    for (String file : featureFiles) {
+                        if (file != null) {
+                            new SingleMediaScanner(context, new File(file));
+                        }
                     }
 
                     deleteProccessingBuffer(idxProcessing);
@@ -273,8 +300,6 @@ public class ControlService extends Service {
                     if (processingBuffer[idxProcessing] != null) {
                         Bundle settings = getPreferences();
                         settings.putString("filename", processingBuffer[idxProcessing]);
-                        Log.d(LOG, "idxProcessing: " + idxProcessing);
-                        Log.d(LOG, "Feature file: " + processingBuffer[idxProcessing]);
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
@@ -326,6 +351,7 @@ public class ControlService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
+        Logger.info("Service started");
         return START_STICKY;
     }
 
@@ -350,6 +376,7 @@ public class ControlService extends Service {
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
+        Logger.info("Service stopped");
     }
 
     @Override
@@ -484,7 +511,7 @@ public class ControlService extends Service {
 
         // recording
         samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
-        blocklengthInS = Integer.parseInt(sharedPreferences.getString("blocklengthInS", "60"));
+        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
         isWave = sharedPreferences.getBoolean("isWave", false);
 
@@ -500,7 +527,7 @@ public class ControlService extends Service {
         Bundle processingSettings = new Bundle();
         // processingSettings.putBoolean("isTimer", isTimer);
         processingSettings.putInt("samplerate", samplerate);
-        processingSettings.putInt("blocklengthInS", blocklengthInS);
+        processingSettings.putInt("chunklengthInS", chunklengthInS);
         // processingSettings.putBoolean("isWave", isWave);
         processingSettings.putSerializable("activeFeatures", activeFeatures);
         processingSettings.putBoolean("filterHp", filterHp);

@@ -6,17 +6,14 @@ import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.FloatBuffer;
 
 /**
  * BasicProcessRunnable.java
@@ -32,35 +29,35 @@ public class BasicProcessRunnable implements Runnable {
 	private static String feature = "basicProcess";// name of the output file (will be overwritten by children)
 
 	private float[][] audioData;
-	private float[][] frameData;
+	private float[][] blockData;
 	protected Messenger messenger = null;           // instance of processHandler
 
 	private AudioFileIO ioClass = null;
 	private RandomAccessFile featureRAF = null;
     private File featureFile = null;
 	private String timestamp;
-	private int procFrameSize;
+	private int procBlockSize;
 	private int procHopSize;
-	private int nProcFrames;
+	private int nProcBlocks;
 	protected int samplingrate;
 	protected int nFeatures;
 	private float procHopDuration;
 	private float[] procTimestamp;
-	private int procFrameCount;
-	private long posFrames;
+	private int procBlockCount;
+	private long posBlocks;
 
-	// added for when procFrameSize != procOutFrameSize,
-	// i.e. when one feature output represents a smaller time interval then one input frame
-	private int procOutFrameSize; // one feature output represents this many input samples
+	// added for when procBlockSize != procOutBlockSize,
+	// i.e. when one feature output represents a smaller time interval then one input block
+	private int procOutBlockSize; // one feature output represents this many input samples
 	private float procOutDuration;
 
-	public BasicProcessRunnable(float[][] audioData, int procFrameSize, int procHopSize,
-                                int procOutFrameSize, int nFeatures, Messenger messenger) {
+	public BasicProcessRunnable(float[][] audioData, int procBlockSize, int procHopSize,
+                                int procOutBlockSize, int nFeatures, Messenger messenger) {
 
 		// TODO how to handle this parameter-mess properly?
 
 		this.audioData = audioData;
-		this.procFrameSize = procFrameSize;
+		this.procBlockSize = procBlockSize;
 		this.procHopSize = procHopSize;
 		this.nFeatures = nFeatures;
 		this.messenger = messenger;
@@ -71,14 +68,14 @@ public class BasicProcessRunnable implements Runnable {
 
 		ioClass = new AudioFileIO();
 
-		nProcFrames = (int) Math.floor((audioData[0].length - procFrameSize) / procHopSize) + 1;
-		frameData = new float[2][procFrameSize];                                // processing frame
+		nProcBlocks = (int) Math.floor((audioData[0].length - procBlockSize) / procHopSize) + 1;
+		blockData = new float[2][procBlockSize];                          // processing block
 
 		procTimestamp = new float[2];
 
-		// some features return smaller frames then the input frame size (and therefore more than 1 per input frame; e.g. CPSD)
-		this.procOutFrameSize = procOutFrameSize;
-		this.procOutDuration = procOutFrameSize * samplingrate;
+		// some features return smaller blocks then the input block size (and therefore more than 1 per input block; e.g. CPSD)
+		this.procOutBlockSize = procOutBlockSize;
+		this.procOutDuration = procOutBlockSize * samplingrate;
 	}
 
 	protected void setFeature(String s) {
@@ -88,46 +85,48 @@ public class BasicProcessRunnable implements Runnable {
 	@Override
 	public void run() {
 
+        Message msg = Message.obtain(null, BasicProcessingThread.DONE);
+        Bundle b = new Bundle();
 
-		if (audioData[0].length >= procFrameSize) {
+		if (audioData[0].length >= procBlockSize) {
 
 			// we need a global flag to indicate a new recording session started.. new: why?
 
 			openFeatureFile();
 
-			// calling processing runnables for each frame..
+			// calling processing runnables for each block..
 
-			for (int iFrame = 1; iFrame <= nProcFrames; iFrame++) {
+			for (int iBlock = 1; iBlock <= nProcBlocks; iBlock++) {
 
-				for (int kk = 0; kk < procFrameSize; kk++) {
+				for (int kk = 0; kk < procBlockSize; kk++) {
 					for (int ii = 0; ii < 2; ii++) {
-						frameData[ii][kk] = audioData[ii][kk + (iFrame - 1) * procHopSize];
+						blockData[ii][kk] = audioData[ii][kk + (iBlock - 1) * procHopSize];
 					}
 				}
 
-				process(frameData, iFrame);
+				process(blockData);
 			}
 
 			closeFeatureFile();
-		}
 
-		// tell processThread we're finished
-        Log.d(LOG, "Feature file: " + featureFile.toString());
-		Message msg = Message.obtain(null, BasicProcessingThread.DONE);
-		Bundle b = new Bundle();
-		b.putString("featureFile", featureFile.getAbsolutePath());
-		msg.setData(b);
-		msg.obj = feature;
-		try {
-			messenger.send(msg);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+			b.putString("featureFile", featureFile.getAbsolutePath());
+			msg.setData(b);
+		} else {
+            b.putString("featureFile", null);
+        }
+
+        // tell processThread we're finished
+        msg.obj = feature;
+        try {
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
 	}
 
 
 	// has to be implemented in each child process
-	public void process(float[][] frameData, int blocknr) {
+	public void process(float[][] blockData) {
 	}
 
 
@@ -147,35 +146,32 @@ public class BasicProcessRunnable implements Runnable {
 			featureRAF = new RandomAccessFile(featureFile,
                     "rw");
 
-			posFrames = featureRAF.length();   // starting position (frame count for each block)
-			featureRAF.seek(posFrames);        // skip to starting position
-
 			// TODO: consider writing the header only once (minus timestamp)  
 
-			featureRAF.writeInt(0);                        // frame count will be written on close
+			featureRAF.writeInt(0);                        // block count will be written on close
 			featureRAF.writeInt(nFeatures + 2);            // feature dimension count + timestamps (relative)
-			if (procFrameSize == procOutFrameSize) {
-				featureRAF.writeInt(procFrameSize);        // [samples]
+			if (procBlockSize == procOutBlockSize) {
+				featureRAF.writeInt(procBlockSize);        // [samples]
 				featureRAF.writeInt(procHopSize);          // [samples]
 			}
-			if (procFrameSize > procOutFrameSize) {
-				featureRAF.writeInt(procOutFrameSize);     // [samples]
-				featureRAF.writeInt(procOutFrameSize);     // [samples]
+			if (procBlockSize > procOutBlockSize) {
+				featureRAF.writeInt(procOutBlockSize);     // [samples]
+				featureRAF.writeInt(procOutBlockSize);     // [samples]
 			}
 			featureRAF.writeInt(samplingrate);
 
-			featureRAF.writeBytes(timestamp);    // HHMMssSSS, 9 bytes (absolute timestamp)
+			featureRAF.writeBytes(timestamp.substring(9));    // HHMMssSSS, 9 bytes (absolute timestamp)
 
-			procFrameCount = 0;
+			procBlockCount = 0;
 			procTimestamp[0] = 0;
 
-			if (procFrameSize == procOutFrameSize) {
+			if (procBlockSize == procOutBlockSize) {
 				procHopDuration = (float) procHopSize / samplingrate;
-				procTimestamp[1] = (float) procFrameSize / samplingrate;
+				procTimestamp[1] = (float) procBlockSize / samplingrate;
 			}
-			if (procFrameSize > procOutFrameSize) {
-				procHopDuration = (float) procOutFrameSize / samplingrate;
-				procTimestamp[1] = (float) procOutFrameSize / samplingrate;
+			if (procBlockSize > procOutBlockSize) {
+				procHopDuration = (float) procOutBlockSize / samplingrate;
+				procTimestamp[1] = (float) procOutBlockSize / samplingrate;
 			}
 
 		} catch (IOException e) {
@@ -185,43 +181,42 @@ public class BasicProcessRunnable implements Runnable {
 
 	protected void appendFeature(float[] data) {
 
-        FileChannel channel = featureRAF.getChannel();
+        ByteBuffer bbuffer = ByteBuffer.allocate(4 * (data.length + 2));
+        FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 * (data.length + 2));
-
-        buffer.asFloatBuffer().put(procTimestamp);
-        buffer.asFloatBuffer().put(data);
+        fbuffer.put(procTimestamp);
+        fbuffer.put(data);
 
         procTimestamp[0] += procHopDuration;
         procTimestamp[1] += procHopDuration;
-        procFrameCount += 1;
+        procBlockCount += 1;
 
         try {
-            channel.write(buffer);
+            featureRAF.getChannel().write(bbuffer);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	// For cases where InFramesize != OutFramesize
+	// called by PSD as we calculate a complete chunk in one go
 	protected void appendFeature(float[][] data) {
 
-        procOutDuration = (float) procOutFrameSize / samplingrate;
-        FileChannel channel = featureRAF.getChannel();
+        procBlockCount = data.length;
+        procOutDuration = (float) procOutBlockSize / samplingrate;
 
-        ByteBuffer buffer = ByteBuffer.allocate(4 * (data[0].length + 2) * data.length);
+        ByteBuffer bbuffer = ByteBuffer.allocate(4 * (data[0].length + 2) * data.length);
+        FloatBuffer fbuffer = bbuffer.asFloatBuffer();
 
         for (float[] aData : data) {
-            buffer.asFloatBuffer().put(procTimestamp);
-            buffer.asFloatBuffer().put(aData);
+            fbuffer.put(procTimestamp);
+            fbuffer.put(aData);
 
             procTimestamp[0] += procOutDuration;
             procTimestamp[1] += procOutDuration;
-            procFrameCount += 1;
         }
 
         try {
-            channel.write(buffer);
+            featureRAF.getChannel().write(bbuffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -231,8 +226,8 @@ public class BasicProcessRunnable implements Runnable {
 	private void closeFeatureFile() {
 		try {
 
-			featureRAF.seek(posFrames);
-			featureRAF.writeInt(procFrameCount);
+			featureRAF.seek(0);
+			featureRAF.writeInt(procBlockCount);
 			featureRAF.close();
 
 		} catch (IOException e) {

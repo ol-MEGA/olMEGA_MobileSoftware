@@ -39,7 +39,7 @@
 
         <EditTextPreference
             android:defaultValue="60"
-            android:key="blocklengthInS"
+            android:key="chunklengthInS"
             android:title="Cache size in seconds"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
