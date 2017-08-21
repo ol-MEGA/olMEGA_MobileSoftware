@@ -6,4 +6,5 @@
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="buttonTextOkay">OK</string>
     <string name="timeRemaining">Next Questionnaire in %m %s</string>
+    <string name="menuText">Take Questionnaire</string>
 </resources>

@@ -24,7 +24,12 @@ public class EventReceiver extends BroadcastReceiver {
         Context ctx = context.getApplicationContext();
         Log.d(LOG, "Context:" + ctx.toString());
 
+
+
         Messenger messenger = intent.getParcelableExtra("Messenger");
+
+        Log.e(LOG,"messenger: "+messenger.toString());
+
         Log.d(LOG, messenger.toString());
         Message msg = Message.obtain(null, ControlService.MSG_ALARM_RECEIVED);
         try {

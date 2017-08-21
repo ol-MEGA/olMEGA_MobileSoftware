@@ -3,7 +3,7 @@
 
     /*This is where the timer values are modified. Mean and Deviation create an interval in which
     random times are generated.*/
-    <timer mean="10" deviation="0"></timer>
+    <timer mean="900" deviation="0"></timer>
 
     <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
         <title>
@@ -47,6 +47,20 @@
                 <text>$utcnow</text>
             </default>
         </question>
+/*
+        <question id="10713" type="radio">
+        <label>
+            <text>Is there speech?</text>
+        </label>
+        <default id="1430">
+        <text>Yes</text>
+    </default>
+    <option id="1431">
+    <text>No</text>
+</option>
+    </question>
+*/
+
 
         <question id="10813" type="radio">
             <label>
@@ -220,6 +234,7 @@
 // Only shown if you're NOT home AND: on foot on a train driving a car
         <question id="10819" type="emoji" filter="!10813_21430">
             <label>
+                // MUST BE SINGLE LINE
                 <text>How are you feeling?</text>
             </label>
             <option id="214311">
@@ -296,6 +311,31 @@
             </option>
         </question>
 
+        <question id="10833" type="radio">
+            <label>
+                <text>When did the described situation take place?</text>
+            </label>
+            <option id="66666">
+                <text></text>
+            </option>
+            <option id="21516">
+                <text>&lt; 1 minute ago</text>
+            </option>
+            <option id="21517">
+                <text>Max. 5 minutes ago</text>
+            </option>
+            <option id="21518">
+                <text>Max. 10 minutes ago</text>
+            </option>
+            <option id="21522">
+                <text>&gt; 30 minutes ago</text>
+            </option>
+        </question>
+
+
+
+
+/*
         <question
             id="12345"
             type="photograph">
@@ -308,7 +348,7 @@
                 </text>
             </option>
         </question>
-
+*/
         <question
             hidden="true"
             id="10823"

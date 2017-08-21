@@ -19,7 +19,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -158,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
 
         mLogo = (TextView) findViewById(R.id.Action_Logo);
@@ -169,6 +168,8 @@ public class MainActivity extends AppCompatActivity {
         mProgress = findViewById(R.id.progress);
         mRegress = findViewById(R.id.regress);
         mConfig = findViewById(R.id.Action_Config);
+
+        mConfig.setVisibility(View.INVISIBLE);
 
         mRecord.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -203,10 +204,10 @@ public class MainActivity extends AppCompatActivity {
 
         mAdapter.createMenu();
 
-        mWindow = this.getWindow();
-        mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-        mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-        mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        //mWindow = this.getWindow();
+        //mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        //mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        //mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 

@@ -6,4 +6,5 @@
     <string name="hintTextAnswer">Bitte hier Text eingeben.</string>
     <string name="buttonTextOkay">OK</string>
     <string name="timeRemaining">Nächster Fragebogen in %m %s</string>
+    <string name="menuText">Starte Fragebogen</string>
 </resources>

@@ -94,7 +94,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Start/restart countdown and determine validity
     public void startCountDown() {
 
-        if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {// && !isCountDownRunning) {
+        if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
             mCountDownHandler.post(mCountDownRunnable);
             isCountDownRunning = true;
             if (BuildConfig.DEBUG) {
@@ -503,12 +503,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
-        if (!isQuestionnaireActive) {
+        //if (!isQuestionnaireActive) {
+        if(isMenu) {
             isCountDownRunning = false;
             startCountDown();
         }
 
-        if (!isQuestionnaireActive && needsIncreasing) {
+        //if (!isQuestionnaireActive && needsIncreasing) {
+        if (isMenu && needsIncreasing) {
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);
@@ -524,9 +526,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isInForeGround = false;
     }
 
+    /** WENN BACKGROUND IM Q-MODUS -> NEUER TIMER **/
+
     public void onStop() {
         isCountDownRunning = false;
-        sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+        if (isMenu) {
+            sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+        } else {
+            sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
+        }
     }
 
 }

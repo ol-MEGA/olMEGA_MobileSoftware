@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -32,7 +31,7 @@ public class MenuPage extends AppCompatActivity {
 
         mContext = context;
         mContextQPA = contextQPA;
-        questFileName = "Start Questionnaire";
+        questFileName = mContext.getResources().getString(R.string.menuText);
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
 
@@ -56,7 +55,7 @@ public class MenuPage extends AppCompatActivity {
         mCountDownRemaining.setTextColor(ContextCompat.getColor(mContext,R.color.TextColor_Light));
         mCountDownRemaining.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
-        // Layout patch carrying "Start Questionnaire" Text/Button
+        // Layout patch carrying "Take Survey" Text/Button
         LinearLayout centerLayout = new LinearLayout(mContext);
         centerLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
         LinearLayout.LayoutParams centerParams = new LinearLayout.LayoutParams(
@@ -65,7 +64,7 @@ public class MenuPage extends AppCompatActivity {
         );
         centerLayout.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
-        // The actual Text/Button "Start Questionnaire"
+        // The actual Text/Button "Take Survey"
         mStartQuestionnaire = new TextView(mContext);
         mStartQuestionnaire.setText(questFileName);
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
@@ -74,7 +73,6 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(LOG_STRING,"Start button clicked.");
                 mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
@@ -91,6 +89,14 @@ public class MenuPage extends AppCompatActivity {
     }
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
+
+        String[] temp = questFileName.split(" ");
+        String tempText = "";
+        for (int iItem = 0; iItem < temp.length; iItem++) {
+            tempText += temp[iItem];
+            tempText += "\n";
+        }
+        mStartQuestionnaire.setText(tempText);
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeProposed));

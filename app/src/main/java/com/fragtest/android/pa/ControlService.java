@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -126,6 +127,8 @@ public class ControlService extends Service {
         @Override
         public void handleMessage(Message msg) {
 
+            Log.e(LOG,"Client Messenger: "+mClientMessenger);
+
             Log.d(LOG, "Received Message: " + msg.what);
             Logger.info("Message received:\t{}", msg.what);
 
@@ -141,7 +144,7 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null; //TODO: Evaluate whether this is good
-
+                    Log.e(LOG,"Messenger was unregistered.");
                     if (restartActivity) {
                         startActivity();
                     }
@@ -154,19 +157,10 @@ public class ControlService extends Service {
                     messageClient(MSG_GET_STATUS, status);
                     break;
 
-
-
-
-
-                /** TIMER DISPLAY IS NOT SYNCHRONISED WHEN Quest -> Square -> Choose -> IHA **/
-
-
-
-
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
                     // perform checks whether running a questionnaire is valid
-                    if (!isActiveQuestionnaire) {
+                    if (isMenu) { //!isActiveQuestionnaire
                         messageClient(MSG_PROPOSE_QUESTIONNAIRE);
                         mVibration.repeatingBurstOn();
                     } else {
@@ -200,22 +194,23 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_QUESTIONNAIRE_ACTIVE:
-
-                    isMenu = false;
-                    if (!isActiveQuestionnaire) {
+                        isMenu = false;
+                    //if (isMenu) { //!isActiveQuestionnaire
                         isActiveQuestionnaire = true;
                         mEventTimer.stopTimer();
                         isTimerRunning = false;
+                        isMenu = false;
                         Log.i(LOG, "Questionnaire active");
-                    }
+                    //}
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
 
+                    isMenu = true;
                     if (isMenu) {
                         isActiveQuestionnaire = false;
                         if (isTimer) {
-                            Log.e(LOG, "setAlarmAndCountdown()");
+                            Log.i(LOG, "setAlarmAndCountdown()");
                             setAlarmAndCountdown();
                         }
                         Log.i(LOG, "Questionnaire inactive");
@@ -332,6 +327,18 @@ public class ControlService extends Service {
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
         return START_STICKY;
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(LOG,"onConfigurationChanged");
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        Log.d(LOG,"onLowMemory");
     }
 
     @Override
