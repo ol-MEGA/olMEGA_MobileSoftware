@@ -73,7 +73,7 @@ public class Questionnaire {
     Question createQuestion(int position) {
 
         String sQuestionBlueprint = mQuestionList.get(position);
-        Question question = new Question(sQuestionBlueprint);
+        Question question = new Question(sQuestionBlueprint, mContext);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), position,
                 question.isHidden(), question.isMandatory(), question.getAnswerIds()));
@@ -159,6 +159,7 @@ public class Questionnaire {
             Answer currentAnswer = answerList.get(iAnswer);
             String sAnswer = currentAnswer.Text;
             int nAnswerId = currentAnswer.Id;
+            int nAnswerGroup = currentAnswer.Group;
             boolean isDefault = currentAnswer.isDefault();
 
             if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
@@ -175,7 +176,7 @@ public class Questionnaire {
                     }
                     case "checkbox": {
                         isCheckBox = true;
-                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, isDefault);
+                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, nAnswerGroup, isDefault);
                         break;
                     }
                     case "text": {

@@ -31,7 +31,7 @@ public class XMLReader {
 
         //rawInput = mFileIO.readRawTextFile();
         // offline version
-        String rawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
+        String rawInput = mFileIO.readRawTextFile(mContext, R.raw.questionnairecheckboxgroup); //question_short_eng
         String[] timerTemp = rawInput.split("<timer|</timer>");
 
         if (timerTemp[1].split("mean").length > 1) {

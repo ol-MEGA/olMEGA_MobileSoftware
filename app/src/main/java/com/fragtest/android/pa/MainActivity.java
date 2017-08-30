@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
         mRegress = findViewById(R.id.regress);
         mConfig = findViewById(R.id.Action_Config);
 
-        mConfig.setVisibility(View.INVISIBLE);
+        //mConfig.setVisibility(View.INVISIBLE);
 
         mRecord.setOnClickListener(new View.OnClickListener() {
             @Override

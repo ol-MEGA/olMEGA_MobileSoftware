@@ -10,7 +10,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
-import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.DataTypes.StringIntegerAndInteger;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     public final AnswerLayout mParent;
     private final Context mContext;
     private final int mQuestionId;
-    private final List<StringAndInteger> mListOfAnswers;
+    private final List<StringIntegerAndInteger> mListOfAnswers;
     private final List<Integer> mListOfDefaults;
     private final Questionnaire mQuestionnaire;
     public LinearLayout.LayoutParams answerParams;
@@ -41,8 +41,8 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
+    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault) {
+        mListOfAnswers.add(new StringIntegerAndInteger(sAnswer, nAnswerId, nGroup));
         if (isDefault) {
             mListOfDefaults.add(mListOfAnswers.size() - 1);
         }
@@ -94,6 +94,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
 
+            final int group = mListOfAnswers.get(iAnswer).getGroup();
             final int currentId = mListOfAnswers.get(iAnswer).getId();
             final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(currentId);
 
@@ -107,13 +108,33 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 public void onClick(View v) {
 
                     if (checkBox.isChecked()) {
+
+                        if (group != -1) {
+                            unCheckGroup(group);
+                        }
+                        checkBox.setChecked(true);
                         mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
+
+
+
                     } else {
                         mQuestionnaire.removeIdFromEvaluationList(currentId);
                     }
                     mQuestionnaire.checkVisibility();
                 }
             });
+        }
+        return true;
+    }
+
+    public boolean unCheckGroup(int nGroup) {
+        for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+            if (mListOfAnswers.get(iAnswer).getGroup() == nGroup) {
+                int currentId = mListOfAnswers.get(iAnswer).getId();
+                final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(currentId);
+                checkBox.setChecked(false);
+                mQuestionnaire.removeIdFromEvaluationList(currentId);
+            }
         }
         return true;
     }

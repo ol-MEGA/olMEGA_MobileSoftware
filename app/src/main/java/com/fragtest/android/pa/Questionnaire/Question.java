@@ -1,6 +1,10 @@
 package com.fragtest.android.pa.Questionnaire;
 
+import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+
+import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,12 +29,14 @@ public class Question extends AppCompatActivity {
     private final List<Integer> mListOfAnswerIds = new ArrayList<>();
     private List<Answer> mAnswers;
     private ArrayList<Integer> mFilterId;
+    private Context mContext;
 
     // Public Constructor
-    public Question(String sQuestionBlueprint) {
+    public Question(String sQuestionBlueprint, Context context) {
 
         mQuestionBlueprint = sQuestionBlueprint;
         mFilterId = new ArrayList<>();
+        mContext = context;
 
         if (isFinish()) {
             mQuestionId = 99999;
@@ -40,7 +46,8 @@ public class Question extends AppCompatActivity {
             mNumAnswers = 1;
             mHidden = false;
             mAnswers = new ArrayList<>();
-            mAnswers.add(new Answer("Abschließen", 99999));
+            mAnswers.add(new Answer(mContext.getResources().
+                    getString(R.string.buttonTextFinish), -1, 99999));
 
         } else {
             // Obtain Question Id
@@ -61,19 +68,24 @@ public class Question extends AppCompatActivity {
             // In case of real text input no answer text is given
             if (mAnswers.size() == 0) {
                 mAnswers = new ArrayList<>();
-                mAnswers.add(new Answer("", 33333, false));
+                mAnswers.add(new Answer("", 33333, -1, false));
             }
 
             // Obtain Number of Answers
             mNumAnswers = extractNumAnswers();
             // Determine whether Element is hidden
             mHidden = extractHidden();
+            Log.e(LOG_STRING, "----------------------");
+            Log.i(LOG_STRING, "Question id: "+getQuestionId());
+            for (int iId = 0; iId<mFilterId.size(); iId++) {
+                Log.e(LOG_STRING,"Filter id: "+mFilterId.get(iId));
+            }
         }
     }
 
     private int extractQuestionId() {
         // Obtain Question Id from Questionnaire
-        return Integer.parseInt(mQuestionBlueprint.split("id=\"")[1].split("\"")[0]);
+        return Integer.parseInt((mQuestionBlueprint.split("id=\"")[1].split("\"")[0]).replace("_",""));
     }
 
     private String extractQuestionText() {
@@ -90,7 +102,7 @@ public class Question extends AppCompatActivity {
         ArrayList<Integer> listOfFilterIds = new ArrayList<>();
 
         if (mQuestionBlueprint.split("filter=\"").length > 1) {
-            String[] arrayTmp = mQuestionBlueprint.split("filter=\"")[1].split(",");
+            String[] arrayTmp = mQuestionBlueprint.split("filter=\"")[1].split("\"")[0].split(",");
             for (int iId = 0; iId < arrayTmp.length; iId++) {
 
                 // Negative factor represents EXCLUSION filter
@@ -99,7 +111,7 @@ public class Question extends AppCompatActivity {
                     nFactor = -1;
                 }
                 listOfFilterIds.add(Integer.parseInt(
-                        arrayTmp[iId].split("_")[1].split("\"|>")[0]) * nFactor);
+                        arrayTmp[iId].replace("_","").replace("!","")) * nFactor);
             }
         }
         return listOfFilterIds;
@@ -129,16 +141,22 @@ public class Question extends AppCompatActivity {
         List<Answer> listAnswers = new ArrayList<>();
         String[] stringArray = mQuestionBlueprint.split("<option|<default");
 
-        String answerString = "";
-        int answerId = -1;
-        boolean isDefault = false;
-
         for (int iA = 1; iA < stringArray.length; iA++) {
+
+            String answerString = "";
+            int answerId = -1;
+            int answerGroup = -1;
+            String sGroupTmp;
+            boolean isDefault = false;
 
             if (stringArray[iA].contains("option")) {
                 isDefault = false;
                 if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
-                    answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
+                    answerId = Integer.parseInt((stringArray[iA].split("id=\"|\"")[1]).replace("_",""));
+                }
+                if (stringArray[iA].contains("group=") && stringArray[iA].split("group=\"|\"").length > 1){
+                    sGroupTmp = stringArray[iA].split("group=\"")[1].split("\"")[0];
+                    answerGroup = Integer.parseInt(sGroupTmp);
                 }
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
                     answerString = stringArray[iA].split("<text>|</text>")[1];
@@ -147,6 +165,7 @@ public class Question extends AppCompatActivity {
                 listAnswers.add(new Answer(
                         answerString,
                         answerId,
+                        answerGroup,
                         isDefault
                 ));
             }
@@ -154,7 +173,11 @@ public class Question extends AppCompatActivity {
             if (stringArray[iA].contains("default")) {
                 isDefault = true;
                 if (stringArray[iA].contains("id=") && stringArray[iA].split("id=\"|\"").length > 1) {
-                    answerId = Integer.parseInt(stringArray[iA].split("id=\"|\"")[1]);
+                    answerId = Integer.parseInt((stringArray[iA].split("id=\"|\"")[1]).replace("_",""));
+                }
+                if (stringArray[iA].contains("group=") && stringArray[iA].split("group=\"|\"").length > 1){
+                    sGroupTmp = stringArray[iA].split("group=\"")[1].split("\"")[0];
+                    answerGroup = Integer.parseInt(sGroupTmp);
                 }
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
                     answerString = stringArray[iA].split("<text>|</text>")[1];
@@ -162,6 +185,7 @@ public class Question extends AppCompatActivity {
                 listAnswers.add(new Answer(
                         answerString,
                         answerId,
+                        answerGroup,
                         isDefault
                 ));
             }
