@@ -346,7 +346,6 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.d(LOG, "onCreate");
-
         // log-file
         Configurator.currentConfig()
                 .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
@@ -354,35 +353,22 @@ public class ControlService extends Service {
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();
 
+        Logger.info("Service onCreate");
+
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
         showConfigButton = mFileIO.scanConfigMode();
-
-        Log.i(LOG, "Q present? "+isQuestionnairePresent);
-        Log.e(LOG, "show config "+ showConfigButton);
-
-        //getPreferences();
-
-        Logger.info("Service onCreate");
+        mEventTimer = new EventTimer(this, mMessengerHandler);
+        mVibration = new Vibration(this);
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
-        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
+
+        checkForPreferences();
 
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService started");
 
-        //messageClient(MSG_CHECK_FOR_PREFERENCES);
-        checkForPreferences();
-
-        //setAlarmAndCountdown();
-        //mSelectQuestionnaire = "questionnaire20170828frei.xml";
-        /*if (isQuestionnairePresent) {
-            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-            mEventTimer = new EventTimer(this, mMessengerHandler);
-            mVibration = new Vibration(this);
-            Log.i(LOG, "quest found.");
-        }*/
     }
 
     @Override
@@ -517,7 +503,7 @@ public class ControlService extends Service {
     }
 
     private void stopAlarmAndCountdown() {
-        if (isQuestionnairePresent) {
+        if (isTimerRunning) {
             mEventTimer.stopTimer();
             mVibration.repeatingBurstOff();
             Bundle data = new Bundle();
@@ -532,11 +518,9 @@ public class ControlService extends Service {
         isLocked = bundle.getBoolean("isLocked", false);
         isTimer = bundle.getBoolean("isTimer", false);
 
-        mTempQuestionnaire =bundle.getString(KEY_QUEST, "");
+        Log.i(LOG, "Locked: "+isLocked+", timing: "+isTimer+" quest: "+mTempQuestionnaire);
 
-        Log.i(LOG, "Locked: "+isLocked+", timing: "+isTimer);
-
-
+        //TODO: Transform this to a simple shared preference setting
         // deletes rules.ini
         if (isLocked) {
             showConfigButton = !isLocked;
@@ -548,29 +532,25 @@ public class ControlService extends Service {
             messageClient(MSG_SET_VISIBILITY, data);
         }
 
-        if (!Objects.equals(mSelectQuestionnaire,mTempQuestionnaire)) {
-            mSelectQuestionnaire = mTempQuestionnaire;
+
+        if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
+            Log.i(LOG, "timer - which it does, is timer: "+isTimer);
+            mTempQuestionnaire = mSelectQuestionnaire;
             Log.i(LOG, "shit that gets displayed: "+mSelectQuestionnaire);
             // Reads new XML file
             renewQuestionnaire();
+
+            //TODO: Needed?
             isTimerRunning = false;
-            setAlarmAndCountdown();
 
-            /*Bundle data = new Bundle();
-            data.putBoolean("showConfigButton", showConfigButton);
-            data.putBoolean("showRecordingButton", showRecordingButton);
-            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
-            messageClient(MSG_RESET_MENU, data);*/
-        } //else {
+            if (isTimer) {
+                setAlarmAndCountdown();
+            } else{
+                stopAlarmAndCountdown();
+            }
 
- //      }
-
-        if (isTimer) {
-            setAlarmAndCountdown();
-        } else {
-            stopAlarmAndCountdown();
         }
-        //TODO: Test if necessary
+
         Bundle data = new Bundle();
         data.putBoolean("showConfigButton", showConfigButton);
         data.putBoolean("showRecordingButton", showRecordingButton);
@@ -584,13 +564,16 @@ public class ControlService extends Service {
         Log.i(LOG, "is questionnaire present? "+isQuestionnairePresent);
         Log.i(LOG, "is timer: "+isTimer);
 
+
+
         if (isQuestionnairePresent && isTimer) {
+
+            mTimerInterval = mXmlReader.getNewTimerInterval();
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+
             if (!isTimerRunning) {
 
-                mEventTimer = new EventTimer(this, mMessengerHandler);
-                mVibration = new Vibration(this);
-                mTimerInterval = mXmlReader.getNewTimerInterval();
+
 
                 mEventTimer.stopTimer();
                 mVibration.repeatingBurstOff();
@@ -665,6 +648,7 @@ public class ControlService extends Service {
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
         isWave = sharedPreferences.getBoolean("isWave", false);
 
+        //TODO: For some reason this is only updated after relaunch -> maybe due to service/activity
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", false);
         Log.i(LOG, "timing: "+isTimer);
@@ -682,17 +666,27 @@ public class ControlService extends Service {
             //TODO: Implement reaction to unavailable questionnaires
             if (fileList.length == 0 || fileList == null) {
                 Log.e(LOG, "No Questionnaires availabe.");
+                messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
             } else {
-            }
-            // Load questionnaire if selected, otherwise load default
-            mSelectQuestionnaire = sharedPreferences.getString("whichQuest", "");
-            if (mSelectQuestionnaire.isEmpty() && fileList.length > 0) {
-                mSelectQuestionnaire = fileList[0];
-                Log.e(LOG, "Questionnaire not found, default: " + mSelectQuestionnaire);
+                // Load questionnaire if selected, otherwise load default
+                mSelectQuestionnaire = sharedPreferences.getString("whichQuest", "");
+
+                Log.i(LOG, "DISPLAY THIS SHIT!!!: "+mSelectQuestionnaire);
+
+                if (mTempQuestionnaire == null) {
+                    mTempQuestionnaire = fileList[0];
+                }
+
+                Log.i(LOG, "Questionnaire taken: "+mSelectQuestionnaire);
+
+                if (mSelectQuestionnaire.isEmpty() && fileList.length > 0) {
+                    mSelectQuestionnaire = fileList[0];
+                    Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
+                }
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("whichQuest", mSelectQuestionnaire).commit();
             }
 
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("whichQuest", mSelectQuestionnaire).commit();
         } else {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("whichQuest", "").commit();
@@ -716,6 +710,7 @@ public class ControlService extends Service {
         processingSettings.putBoolean("filterHp", filterHp);
         processingSettings.putInt("filterHpFrequency", filterHpFrequency);
         processingSettings.putBoolean("downsample", downsample);
+        processingSettings.putString("whichQuest", mSelectQuestionnaire);
 
         return processingSettings;
     }
