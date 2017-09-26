@@ -12,7 +12,7 @@ public class Answer {
     int Id, Group;
     private boolean isDefault = false;
     private String LOG_STRING = "Answer";
-    private boolean isDebug = true;
+    private boolean isDebug = false;
 
     public Answer(String sAnswer, int nAnswerId, int nGroup) {
         Text = sAnswer;

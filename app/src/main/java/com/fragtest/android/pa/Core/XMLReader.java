@@ -3,8 +3,6 @@ package com.fragtest.android.pa.Core;
 import android.content.Context;
 import android.util.Log;
 
-import com.fragtest.android.pa.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,20 +16,22 @@ public class XMLReader {
     private static String LOG_STRING = "XMLReader";
     private Context mContext;
     private FileIO mFileIO;
-    private String mHead;
+    private String mHead, mFoot, mSurveyURI;
     private int mTimerMean, mTimerDeviation, mTimerInterval;
     // List containing all questions (including all attached information)
     private ArrayList<String> mQuestionList;
 
-    public XMLReader(Context context) {
+    public XMLReader(Context context, String fileName) {
 
         mContext = context;
         mFileIO = new FileIO();
         mQuestionList = new ArrayList<>();
 
-        //rawInput = mFileIO.readRawTextFile();
+        String rawInput = mFileIO.readRawTextFile(fileName);
+
+        //Log.i(LOG_STRING,"rawInput: "+rawInput);
         // offline version
-        String rawInput = mFileIO.readRawTextFile(mContext, R.raw.questionnairecheckboxgroup); //question_short_eng
+        //String rawInput = mFileIO.readRawTextFile(mContext, R.raw.questionnairecheckboxgroup);
         String[] timerTemp = rawInput.split("<timer|</timer>");
 
         if (timerTemp[1].split("mean").length > 1) {
@@ -57,8 +57,32 @@ public class XMLReader {
         // Split basis data into question segments
         String[] questionnaire = rawInput.split("<question|</question>|<finish>|</finish>");
         mHead = extractHead(rawInput);
+        mFoot = extractFoot(rawInput);
+        mSurveyURI = extractSurveyURI(rawInput);
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
+    }
+
+    private String extractHead(String rawInput) {
+        String head = "";
+        String[] tempHead = rawInput.split("<|>");
+
+        head += "<";
+        head += tempHead[1];
+        head +="><";
+        head += tempHead[3];
+        head += ">";
+
+        return head;
+    }
+
+    private String extractSurveyURI(String rawInput) {
+        return rawInput.split("<survey uri=\"")[1].split("\">")[0];
+    }
+
+    private String extractFoot(String rawInput) {
+        String[] rawInputLines = rawInput.split("\n");
+        return rawInputLines[rawInputLines.length - 1];
     }
 
     public int getNewTimerInterval() {
@@ -71,6 +95,14 @@ public class XMLReader {
 
     public String getHead() {
         return mHead;
+    }
+
+    public String getFoot() {
+        return mFoot;
+    }
+
+    public String getSurveyURI() {
+        return mSurveyURI;
     }
 
     public ArrayList<String> getQuestionList() {
@@ -91,18 +123,5 @@ public class XMLReader {
         ArrayList<String> listString = new ArrayList<>();
         Collections.addAll(listString, stringArray);
         return listString;
-    }
-
-    private String extractHead(String rawInput) {
-        String head = "";
-        String[] tempHead = rawInput.split("<|>");
-
-        head += "<";
-        head += tempHead[1];
-        head +="><";
-        head += tempHead[3];
-        head += ">";
-
-        return head;
     }
 }

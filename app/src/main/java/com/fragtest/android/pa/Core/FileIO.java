@@ -1,7 +1,9 @@
 package com.fragtest.android.pa.Core;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.fragtest.android.pa.BuildConfig;
@@ -21,21 +23,101 @@ import java.io.OutputStreamWriter;
 
 public class FileIO {
 
-    public static final String MAIN_FOLDER = "IHAB";
-    public static final String DATA_FOLDER = "data";
+    public static final String FOLDER_MAIN = "IHAB";
+    public static final String FOLDER_DATA = "data";
+    private static final String FOLDER_QUEST = "quest";
     //private static final String FILE_NAME = "hoersituation-v0.xml";
-    private static final String FILE_NAME = "questionnaire20170828frei.xml";
-    private static final String LOG_STRING = "FileIO";
+    private static final String FILE_NAME = "questionnairecheckboxgroup.xml";
+    private static final String LOG = "FileIO";
+    // File the system looks for in order to show preferences, needs to be in main directory
+    private static final String FILE_CONFIG = "rules.ini";
+    private static final String FILE_FIRST = "ihab.ini";
     private boolean isVerbose = false;
+    private Context mContext;
 
     // Create / Find main Folder
     public static String getFolderPath() {
-        File baseDirectory = Environment.getExternalStoragePublicDirectory(MAIN_FOLDER);
+        final File baseDirectory = new File(Environment.getExternalStorageDirectory() +
+                File.separator + FOLDER_MAIN);
         if (!baseDirectory.exists()) {
-            Log.e(LOG_STRING, "Directory does not exist -> create");
             baseDirectory.mkdir();
         }
         return baseDirectory.getAbsolutePath();
+    }
+
+    public boolean setupFirstUse(Context context) {
+
+        mContext = context;
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+        boolean isFirst = sharedPreferences.getBoolean("isFirst", true);
+        Log.i(LOG, "First use detected: " + isFirst);
+
+        if (isFirst) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("isFirst", false);
+            editor.commit();
+            File fileConfig = saveDataToFile(context, FILE_CONFIG, "This file may remain empty.");
+            new SingleMediaScanner(mContext, fileConfig);
+        }
+
+        String[] string = scanQuestOptions();
+        if (string == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean lockPreferences() {
+        File file = new File(getFolderPath() + File.separator + FOLDER_DATA +
+                File.separator + FILE_CONFIG);
+        Log.i(LOG, "does file exist? "+file.exists());
+        boolean deleted = file.delete();
+        new SingleMediaScanner(mContext, file);
+        Log.e(LOG, "Bridge burnt: " + file.getAbsolutePath() + ", successful: "+ deleted);
+        return deleted;
+    }
+
+    // Check whether preferences unlock file is present in main directory
+    public boolean scanConfigMode() {
+
+        Log.i(LOG, "Scan config mode");
+        File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
+                File.separator + FILE_CONFIG);
+        if (fileConfig.exists()) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    // Scan "quest" directory for present questionnaires
+    public String[] scanQuestOptions() {
+
+        //TODO: Validate files
+        // Obtain working Directory
+        File dir = new File(getFolderPath() + "/" + FOLDER_QUEST);
+
+        // Scan for files
+        File[] files = dir.listFiles();
+        try {
+            String[] fileList = new String[files.length];
+
+            if (fileList.length == 0) {
+                return null;
+            }
+
+            for (int iFile = 0; iFile < files.length; iFile++) {
+                fileList[iFile] = files[iFile].getName();
+            }
+            return fileList;
+
+        } catch (Exception e) {
+            Log.i(LOG,""+e.toString());
+            return null;
+        }
     }
 
     // Offline version reads XML Basis Sheet from Raw Folder
@@ -59,7 +141,13 @@ public class FileIO {
                     text.append('\n');
                 } else {
                     if (isVerbose) {
-                        Log.i(LOG_STRING, "Dropping line: " + line.trim());
+                        Log.i(LOG, "Dropping line: " + line.trim());
+                    }
+                }
+                if (!line.trim().startsWith("//") && line.split(" //").length > 1) {
+                    text.append(line.split(" //")[0].trim());
+                    if (isVerbose) {
+                        Log.i(LOG, "Dropping part: " + line.split(" //")[1].trim());
                     }
                 }
 
@@ -74,13 +162,14 @@ public class FileIO {
         return text.toString();
     }
 
-    public String readRawTextFile() {
+    // Online with dynamic filename
+    public String readRawTextFile(String fileName) {
 
         try {
             // Obtain working Directory
-            File dir = new File(getFolderPath());
+            File dir = new File(getFolderPath() + "/" + FOLDER_QUEST);
             // Address Basis File in working Directory
-            File file = new File(dir, FILE_NAME);
+            File file = new File(dir, fileName);
 
             FileInputStream inputStream = new FileInputStream(file);
             InputStreamReader inputReader = new InputStreamReader(inputStream);
@@ -88,7 +177,6 @@ public class FileIO {
             String line;
             StringBuilder text = new StringBuilder();
             boolean isComment = false;
-
             try {
                 while ((line = buffReader.readLine()) != null) {
 
@@ -96,19 +184,24 @@ public class FileIO {
                         isComment = true;
                     }
 
-                    if (!line.trim().isEmpty() && !line.trim().startsWith("//") && isComment) {
+                    if (!line.trim().isEmpty() && !line.trim().startsWith("//") && !isComment) {
                         text.append(line);
                         text.append('\n');
                     } else {
-                        if (BuildConfig.DEBUG) {
-                            Log.i(LOG_STRING, "Dropping line: " + line.trim());
+                        if (isVerbose) {
+                            Log.i(LOG, "Dropping line: " + line.trim());
+                        }
+                    }
+                    if (!line.trim().startsWith("//") && line.split(" //").length > 1) {
+                        text.append(line.split(" //")[0].trim());
+                        if (isVerbose) {
+                            Log.i(LOG, "Dropping part: " + line.split(" //")[1].trim());
                         }
                     }
 
                     if (line.trim().endsWith("*/")) {
                         isComment = false;
                     }
-
                 }
             } catch (IOException e) {
                 return null;
@@ -123,7 +216,61 @@ public class FileIO {
         }
     }
 
-    public boolean saveDataToFile(Context context, String filename, String data) {
+    // Online with predefined filename
+    public String readRawTextFile() {
+
+        try {
+            // Obtain working Directory
+            File dir = new File(getFolderPath() + "/" + FOLDER_QUEST);
+            // Address Basis File in working Directory
+            File file = new File(dir, FILE_NAME);
+
+            FileInputStream inputStream = new FileInputStream(file);
+            InputStreamReader inputReader = new InputStreamReader(inputStream);
+            BufferedReader buffReader = new BufferedReader(inputReader);
+            String line;
+            StringBuilder text = new StringBuilder();
+            boolean isComment = false;
+            try {
+                while ((line = buffReader.readLine()) != null) {
+
+                    if (line.trim().startsWith("/*")) {
+                        isComment = true;
+                    }
+
+                    if (!line.trim().isEmpty() && !line.trim().startsWith("//") && !isComment) {
+                        text.append(line);
+                        text.append('\n');
+                    } else {
+                        if (isVerbose) {
+                            Log.i(LOG, "Dropping line: " + line.trim());
+                        }
+                    }
+                    if (!line.trim().startsWith("//") && line.split(" //").length > 1) {
+                        text.append(line.split(" //")[0].trim());
+                        if (isVerbose) {
+                            Log.i(LOG, "Dropping part: " + line.split(" //")[1].trim());
+                        }
+                    }
+
+                    if (line.trim().endsWith("*/")) {
+                        isComment = false;
+                    }
+                }
+            } catch (IOException e) {
+                return null;
+            }
+
+            inputStream.close();
+            return text.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public File saveDataToFile(Context context, String filename, String data) {
 
         //MediaScannerConnection mMs = new MediaScannerConnection(context, this);
         //mMs.connect();
@@ -131,22 +278,24 @@ public class FileIO {
         String sFileName = filename;
 
         // Obtain working Directory
-        File dir = new File(getFolderPath() + "/" + DATA_FOLDER + "/");
+        File dir = new File(getFolderPath() + "/" + FOLDER_DATA + "/");
         // Address Basis File in working Directory
         File file = new File(dir, sFileName);
+
+        Log.e(LOG, "" + dir);
 
         // Make sure the path directory exists.
         if (!dir.exists()) {
             dir.mkdirs();
             if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Directory created: " + dir);
+                Log.i(LOG, "Directory created: " + dir);
             }
         }
 
         String stringToSave = data;
 
         if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "writing to File: " + file.getAbsolutePath());
+            Log.e(LOG, "writing to File: " + file.getAbsolutePath());
         }
 
         try {
@@ -166,16 +315,16 @@ public class FileIO {
             new SingleMediaScanner(context, file);
 
             if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Data successfully written.");
+                Log.i(LOG, "Data successfully written.");
             }
-            return true;
+            return file;
         } catch (IOException e) {
 
             if (BuildConfig.DEBUG) {
                 Log.e("Exception", "File write failed: " + e.toString());
             }
         }
-        return false;
+        return null;
     }
 
     public boolean saveDataToFileOffline(Context context, String filename, String data) {
@@ -187,19 +336,19 @@ public class FileIO {
         // Address Basis File in working Directory
         File file = new File(dir, sFileName);
 
-        Log.i(LOG_STRING,file.getAbsolutePath());
+        Log.i(LOG, file.getAbsolutePath());
 
         // Make sure the path directory exists.
         if (!dir.exists()) {
             if (dir.mkdirs()) {
                 if (BuildConfig.DEBUG) {
-                    Log.i(LOG_STRING, "Directory created: " + dir);
+                    Log.i(LOG, "Directory created: " + dir);
                 }
 
                 String stringToSave = data;
 
                 if (BuildConfig.DEBUG) {
-                    Log.i(LOG_STRING, "writing to File: " + file.getAbsolutePath());
+                    Log.i(LOG, "writing to File: " + file.getAbsolutePath());
                 }
 
                 try {
@@ -218,7 +367,7 @@ public class FileIO {
                     new SingleMediaScanner(context, file);
 
                     if (BuildConfig.DEBUG) {
-                        Log.i(LOG_STRING, "Data successfully written.");
+                        Log.i(LOG, "Data successfully written.");
                     }
                     return true;
                 } catch (IOException e) {
@@ -228,7 +377,7 @@ public class FileIO {
                 }
             } else {
                 if (BuildConfig.DEBUG) {
-                    Log.e(LOG_STRING, "Unable to create directory. Shutting down.");
+                    Log.e(LOG, "Unable to create directory. Shutting down.");
                 }
             }
         }

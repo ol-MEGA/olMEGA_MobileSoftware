@@ -2,7 +2,6 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.fragtest.android.pa.R;
 
@@ -75,11 +74,11 @@ public class Question extends AppCompatActivity {
             mNumAnswers = extractNumAnswers();
             // Determine whether Element is hidden
             mHidden = extractHidden();
-            Log.e(LOG_STRING, "----------------------");
+            /*Log.e(LOG_STRING, "----------------------");
             Log.i(LOG_STRING, "Question id: "+getQuestionId());
             for (int iId = 0; iId<mFilterId.size(); iId++) {
                 Log.e(LOG_STRING,"Filter id: "+mFilterId.get(iId));
-            }
+            }*/
         }
     }
 

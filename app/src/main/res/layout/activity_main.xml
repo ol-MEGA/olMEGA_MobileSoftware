@@ -39,6 +39,7 @@
             android:layout_width="32dp"
             android:layout_height="@dimen/toolbarHeight"
             android:layout_weight="0"
+            android:visibility="invisible"
             android:background="@android:drawable/ic_btn_speak_now"
             android:backgroundTint="@android:color/darker_gray">
 
@@ -125,6 +126,7 @@
         android:layout_height="@dimen/preferencesButtonHeight"
         android:layout_gravity="right"
         android:layout_marginRight="16dp"
+        android:visibility="gone"
         android:background="@android:drawable/ic_menu_preferences"
         android:backgroundTint="@color/JadeRed">
 

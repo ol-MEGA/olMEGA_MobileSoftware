@@ -38,10 +38,11 @@ public class MetaData extends AppCompatActivity {
 
     private EvaluationList mEvaluationList;
 
-    public MetaData(Context context, String rawInput, String head, String motivation) {
+    public MetaData(Context context, String head, String foot, String surveyUri, String motivation) {
         mContext = context;
-        mRawInput = rawInput;
         KEY_HEAD = head;
+        KEY_FOOT = foot;
+        KEY_SURVEY_URI = surveyUri;
         KEY_MOTIVATION = motivation;
         mQuestionList = new ArrayList<>();
         DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
@@ -61,15 +62,6 @@ public class MetaData extends AppCompatActivity {
         // Obtain current UTC Time Stamp at the Beginning of Questionnaire
         START_DATE_UTC = generateTimeNowUTC();
 
-        String[] mRawInputLines = mRawInput.split("\n");
-
-        //if (mRawInputLines[0])
-        //String tempHeadCode =
-
-        //KEY_HEAD = mRawInputLines[0].split("// || /*")[0] + mRawInputLines[1].split("// || /*")[0];
-
-        KEY_SURVEY_URI = mRawInput.split("<survey uri=\"")[1].split("\">")[0];
-        KEY_FOOT = mRawInputLines[mRawInputLines.length - 1];
         KEY_QUESTID = generateQuestId();
         FILE_NAME = generateFileName();
 
@@ -143,7 +135,7 @@ public class MetaData extends AppCompatActivity {
                         ArrayList<String> listOfIds =
                                 mEvaluationList.getCheckedAnswerIdsFromQuestionId(questionId);
                         Log.e(LOG_STRING,"id: "+questionId+" num: "+listOfIds.size());
-                        ANSWER_DATA += "option_ids=\"";
+                        ANSWER_DATA += " option_ids=\"";
                         ANSWER_DATA += listOfIds.get(0);
                         if (listOfIds.size() > 1) {
                             for (int iId = 1; iId < listOfIds.size(); iId++) {
@@ -151,7 +143,7 @@ public class MetaData extends AppCompatActivity {
                                 ANSWER_DATA += listOfIds.get(iId);
                             }
                         }
-                        ANSWER_DATA += "\" />";
+                        ANSWER_DATA += "\"/>";
                         break;
                     case "value":
                         ANSWER_DATA += mEvaluationList.getValueFromQuestionId(questionId);

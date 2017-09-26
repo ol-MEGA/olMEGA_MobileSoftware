@@ -27,7 +27,7 @@ import java.util.List;
 
 public class QuestionnairePagerAdapter extends PagerAdapter {
 
-    private static String LOG_STRING = "Quest..PagerAdapter";
+    private static String LOG = "Quest..PagerAdapter";
     final ViewPager mViewPager;
     private final MainActivity MainActivity;
     private final Context mContext;
@@ -42,11 +42,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean isMenu = false;
     private boolean isQuestionnaireActive = false;
     private boolean needsIncreasing = false;
+    private boolean isPrefsInForeGround = false;
+    private boolean isQuestionnairePresent = false;
     private int mCountDownInterval = 30;
     private int mNUM_PAGES;
     private int mFinalCountdown = -255;
     private int mSecondsRemaining = 120;
-    private String mHead;
+    private String mHead, mFoot, mSurveyURI;
 
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
@@ -71,6 +73,16 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         handleControls();
     }
 
+    public void noQuestionnaires() {
+        isQuestionnairePresent = false;
+        mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
+        mMenuPage.updateCountDownText("");
+    }
+
+    public void questionnairePresent() {
+        isQuestionnairePresent = true;
+    }
+
     // Calculation of remaining time and visual update
     private void updateCountDown() {
 
@@ -87,22 +99,34 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mFinalCountdown = finalCountDown;
         mCountDownInterval = countDownInterval;
         if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "Final Countdown set: " + finalCountDown);
+            Log.i(LOG, "Final Countdown set: " + finalCountDown);
+        }
+    }
+
+    public void displayManualStart() {
+        if (isQuestionnairePresent) {
+            mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
+        } else {
+            mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
         }
     }
 
     // Start/restart countdown and determine validity
     public void startCountDown() {
 
+        mMenuPage.resetStartTextSize();
+        mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
+        Log.e(LOG, "Text set to: "+mContext.getResources().getString(R.string.menuText));
+
         if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
             mCountDownHandler.post(mCountDownRunnable);
             isCountDownRunning = true;
             if (BuildConfig.DEBUG) {
-                Log.i(LOG_STRING, "Countdown started.");
+                Log.i(LOG, "Countdown started.");
             }
         } else {
             if (BuildConfig.DEBUG) {
-                Log.e(LOG_STRING, "Countdown out of time.");
+                Log.e(LOG, "Countdown out of time.");
             }
             stopCountDown();
             setQuestionnaireProgressBar(0f);
@@ -114,7 +138,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isCountDownRunning = false;
         mCountDownHandler.removeCallbacks(mCountDownRunnable);
         if (BuildConfig.DEBUG) {
-            Log.i(LOG_STRING, "CountDown stopped.");
+            Log.i(LOG, "CountDown stopped.");
         }
     }
 
@@ -139,7 +163,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     // Initialise questionnaire based on new input parameters
-    public void createQuestionnaire(ArrayList<String> questionList, String head, String motivation) {
+    public void createQuestionnaire(ArrayList<String> questionList, String head, String foot,
+                                    String surveyUri, String motivation) {
 
         isMenu = false;
         stopCountDown();
@@ -147,10 +172,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isQuestionnaireActive = true;
         mQuestionList = questionList;
         mHead = head;
+        mFoot = foot;
+        mSurveyURI = surveyUri;
         mMotivation = motivation;
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, mHead, mMotivation, this);
+        mQuestionnaire = new Questionnaire(MainActivity, mHead, mFoot,
+                mSurveyURI, mMotivation, this);
         mQuestionnaire.setUp(questionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -176,7 +204,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, mHead, mMotivation, this);
+        mQuestionnaire = new Questionnaire(MainActivity, mHead, mFoot, mSurveyURI,
+                mMotivation, this);
         mQuestionnaire.setUp(mQuestionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -201,6 +230,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mMenuPage.increaseStartTextSize();
         } else {
             needsIncreasing = true;
+
+            /*
+            final Intent notificationIntent = new Intent(mContext, MainActivity.class);
+            notificationIntent.setAction(Intent.ACTION_MAIN);
+            notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            */
         }
     }
 
@@ -311,6 +347,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private void createMenuLayout() {
 
         LinearLayout layout = mMenuPage.generateView();
+        mMenuPage.updateCountDownText("");
+        mMenuPage.setText("");
 
         layout.setId(0);
         // Adds the Layout to List carrying all ACTIVE Views
@@ -322,6 +360,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
+    }
+
+    public void resetMenu() {
+        mMenuPage.resetStartTextSize();
     }
 
     // Sets up visible control elements for menu i.e. status bar
@@ -503,13 +545,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
-        //if (!isQuestionnaireActive) {
         if(isMenu) {
             isCountDownRunning = false;
-            startCountDown();
+            if (isQuestionnairePresent) {
+                startCountDown();
+            }
         }
 
-        //if (!isQuestionnaireActive && needsIncreasing) {
         if (isMenu && needsIncreasing) {
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
@@ -526,15 +568,18 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isInForeGround = false;
     }
 
-    /** WENN BACKGROUND IM Q-MODUS -> NEUER TIMER **/
-
     public void onStop() {
         isCountDownRunning = false;
-        if (isMenu) {
-            sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        } else {
+        if (isMenu && !isPrefsInForeGround) {
+            //sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+        }
+        if (!isMenu && !isPrefsInForeGround) {
             sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         }
+    }
+
+    public void setPrefsInForeGround(boolean state) {
+        isPrefsInForeGround = state;
     }
 
 }

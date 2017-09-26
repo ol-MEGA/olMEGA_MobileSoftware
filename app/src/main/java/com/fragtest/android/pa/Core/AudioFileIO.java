@@ -1,5 +1,8 @@
 package com.fragtest.android.pa.Core;
 
+import android.os.Environment;
+import android.util.Log;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -10,13 +13,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import android.os.Environment;
-import android.util.Log;
-
 public class AudioFileIO {
 
     protected static final String LOG = "IOClass";
-    public static final String MAIN_FOLDER = FileIO.MAIN_FOLDER;
+    public static final String MAIN_FOLDER = FileIO.FOLDER_MAIN;
     public static final String CACHE_FOLDER = MAIN_FOLDER + "/cache";
     public static final String FEATURE_FOLDER = MAIN_FOLDER + "/features";
     public static final String CACHE_WAVE = "wav";

@@ -23,7 +23,7 @@ public class MenuPage extends AppCompatActivity {
     private String mCountDownString;
     private Context mContext;
     private QuestionnairePagerAdapter mContextQPA;
-    private String questFileName;
+    private String StartText;
     private TextView mCountDownRemaining, mStartQuestionnaire;
     private String[] mTempTextCountDownRemaining;
 
@@ -31,7 +31,8 @@ public class MenuPage extends AppCompatActivity {
 
         mContext = context;
         mContextQPA = contextQPA;
-        questFileName = mContext.getResources().getString(R.string.menuText);
+        //questFileName = mContext.getResources().getString(R.string.menuText);
+        StartText = "";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
 
@@ -66,8 +67,9 @@ public class MenuPage extends AppCompatActivity {
 
         // The actual Text/Button "Take Survey"
         mStartQuestionnaire = new TextView(mContext);
-        mStartQuestionnaire.setText(questFileName);
+        mStartQuestionnaire.setText("");
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
+        mStartQuestionnaire.setMaxWidth(700);
         mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
         mStartQuestionnaire.setBackgroundColor(Color.WHITE);
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
@@ -90,7 +92,7 @@ public class MenuPage extends AppCompatActivity {
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
 
-        String[] temp = questFileName.split(" ");
+        String[] temp = StartText.split(" ");
         String tempText = "";
         for (int iItem = 0; iItem < temp.length; iItem++) {
             tempText += temp[iItem];
@@ -107,11 +109,26 @@ public class MenuPage extends AppCompatActivity {
             }
         });
     }
+
+    public void setText(String text) {
+        StartText = text;
+        mStartQuestionnaire.setText(text);
+        mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+    }
+
+    public void resetStartTextSize() {
+        mStartQuestionnaire.setTextSize(mContext.getResources().
+                getDimension(R.dimen.textSizeAnswer));
+    }
     // Handles update of visible text countdown
     public void updateCountdownText(int seconds) {
         int minutesRemaining = seconds / 60;
         int secondsRemaining = seconds - minutesRemaining * 60;
         mCountDownRemaining.setText("" + mTempTextCountDownRemaining[0] + minutesRemaining +
                 mTempTextCountDownRemaining[1] + secondsRemaining + mTempTextCountDownRemaining[2]);
+    }
+
+    public void updateCountDownText(String text) {
+        mCountDownRemaining.setText(text);
     }
 }

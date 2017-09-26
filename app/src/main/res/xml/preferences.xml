@@ -3,6 +3,32 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
+    <PreferenceCategory android:title="Questionnaire">
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="whichQuest"
+            android:title="Select questionnaire"
+            android:dialogTitle="Select questionnaire"
+            android:summary="%s"/>
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory android:title="Lock Preferences">
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:checked="false"
+            android:key="isLocked"
+            android:title="Lock Preferences"
+            android:summary="Hide preferences menu" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="General">
 
         <SwitchPreference

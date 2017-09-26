@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
@@ -22,6 +23,7 @@ import java.util.List;
 
 public class AnswerTypeCheckBox extends AppCompatActivity {
 
+    private static final String LOG = "AnswerTypeCheckbox";
     public final AnswerLayout mParent;
     private final Context mContext;
     private final int mQuestionId;
@@ -103,6 +105,8 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
             }
 
+            Log.i(LOG, "Checkbox: "+checkBox.getId());
+
             checkBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -114,8 +118,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                         }
                         checkBox.setChecked(true);
                         mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
-
-
 
                     } else {
                         mQuestionnaire.removeIdFromEvaluationList(currentId);

@@ -21,12 +21,13 @@ public class EventTimer {
     private AlarmManager mAlarmManager;
     private PendingIntent mAlarmIntent;
     private int mFinalCountDown;
-    private boolean isSet;
+    private boolean isSet = false;
 
     public EventTimer(Context ctx, Messenger msg) {
 
         context = ctx;
         messenger = msg;
+        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         if (BuildConfig.DEBUG) {
             Log.d(LOG,"EventTimer created.");
@@ -34,8 +35,6 @@ public class EventTimer {
     }
 
     public void setTimer(int interval) {
-
-        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // Alarm will call EventReceiver class by sending broadcast along with messenger context
         Intent intent = new Intent(context, EventReceiver.class);
@@ -57,6 +56,12 @@ public class EventTimer {
     }
 
     public void stopTimer() {
+
+        if (mAlarmManager == null) {
+            Log.e(LOG, "AlarmManager is null.");
+        } else {
+            Log.i(LOG, "AlarmManager: "+mAlarmManager);
+        }
 
         if (isSet) {
             mAlarmManager.cancel(mAlarmIntent);

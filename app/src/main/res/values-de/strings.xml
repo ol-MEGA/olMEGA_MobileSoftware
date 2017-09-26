@@ -7,4 +7,5 @@
     <string name="buttonTextOkay">OK</string>
     <string name="timeRemaining">Nächster Fragebogen in %m %s</string>
     <string name="menuText">Starte Fragebogen</string>
+    <string name="noQuestionnaires">Fragebogen konnte nicht geladen werden.</string>
 </resources>

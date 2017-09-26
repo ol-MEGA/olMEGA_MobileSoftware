@@ -116,6 +116,23 @@ public class MainProcessingThread extends BasicProcessingThread{
 
 			Log.d(LOG, "Looping took " + (System.currentTimeMillis() - start) + " ms");
 		}
+/*
+		if (isActiveFeature("SRMR")) {
 
+			long start = System.currentTimeMillis();
+
+
+			nProcSamples = (int) (0.025f * samplerate); // 25ms
+			nHop = nProcSamples / 2;
+			nProcOutSamples = 1;
+			nFeatures = 2; // [left right]
+			SRMR rmsRunnable = new SRMR(audioData, nProcSamples, nHop, nProcOutSamples,
+					nFeatures, processMessenger, samplerate);
+
+			rmsRunnable.run();
+
+			Log.e(LOG, "SRMR took " + (System.currentTimeMillis() - start) + " ms");
+		}
+*/
 	}
 }

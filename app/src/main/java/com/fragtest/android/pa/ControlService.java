@@ -25,6 +25,7 @@ import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
+import com.fragtest.android.pa.Questionnaire.PermissionActivity;
 
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -36,6 +37,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * The brains of the operation.
@@ -55,12 +57,15 @@ public class ControlService extends Service {
     public static final int MSG_REGISTER_CLIENT = 11;
     public static final int MSG_UNREGISTER_CLIENT = 12;
     public static final int MSG_GET_STATUS = 13;
+    public static final int MSG_SET_VISIBILITY = 14;
+    public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
     public static final int MSG_START_COUNTDOWN = 22;
 
     // 3* - questionnaire
+    public static final int MSG_RESET_MENU = 30;
     public static final int MSG_ISMENU = 31;
     public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
     public static final int MSG_START_QUESTIONNAIRE = 33;
@@ -68,6 +73,8 @@ public class ControlService extends Service {
     public static final int MSG_PROPOSITION_ACCEPTED = 35;
     public static final int MSG_MANUAL_QUESTIONNAIRE = 36;
     public static final int MSG_QUESTIONNAIRE_ACTIVE = 37;
+    public static final int MSG_CHECK_FOR_PREFERENCES = 38;
+    public static final int MSG_PREFS_IN_FOREGROUND = 39;
 
     // 4* - recording
     public static final int MSG_START_RECORDING = 41;
@@ -78,19 +85,21 @@ public class ControlService extends Service {
     // 5* - processing
     public static final int MSG_CHUNK_PROCESSED = 51;
 
-
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
+    private boolean isQuestionnairePresent = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
+    private String mSelectQuestionnaire, mTempQuestionnaire;
+    private static final String KEY_QUEST = "whichQuest";
+    private static final String KEY_LOCKED = "isLocked";
 
     // preferences
-    private boolean isTimer, isWave, keepAudioCache;
+    private boolean isTimer, isWave, keepAudioCache, isLocked;
     private int samplerate, chunklengthInS;
-
 
     private int mFinalCountDown = -255;
     private int mTimerInterval = -255;
@@ -100,6 +109,8 @@ public class ControlService extends Service {
 
     // Questionnaire-Timer
     EventTimer mEventTimer;
+
+    private FileIO mFileIO;
 
     // Messenger to clients
     private Messenger mClientMessenger;
@@ -122,6 +133,8 @@ public class ControlService extends Service {
     // thread-safety
     static boolean isRecording = false;
     static boolean isProcessing = false;
+    private boolean showConfigButton = false;
+    private boolean showRecordingButton = false;
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
 
@@ -138,11 +151,24 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
                     Log.e(LOG,"msg: "+msg);
+                    Log.i(LOG, "Client registered to service");
                     Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
-                    if (isTimer && !isQuestionnairePending) {
+
+                    if (isQuestionnairePresent) {
                         setAlarmAndCountdown();
+                    } else{
+                        messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
                     }
+                    Bundle show = new Bundle();
+                    show.putBoolean("showConfigButton", showConfigButton);
+                    show.putBoolean("showRecordingButton", showRecordingButton);
+                    show.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+
+                    Log.e(LOG, "Visibility Config: "+showConfigButton);
+                    Log.e(LOG, "Visibility Recording: "+showRecordingButton);
+                    Log.e(LOG, "isQuestionnairePresent: "+isQuestionnairePresent);
+                    messageClient(MSG_SET_VISIBILITY, show);
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -157,17 +183,12 @@ public class ControlService extends Service {
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", isRecording);
                     status.putBoolean("isQuestionnairePending", isQuestionnairePending);
+                    status.putBoolean("showConfigButton", showConfigButton);
+                    status.putBoolean("showRecordingButton", showRecordingButton);
+                    status.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+                    status.putBoolean("isTimer", isTimer);
                     messageClient(MSG_GET_STATUS, status);
                     break;
-
-
-
-
-
-                /** TIMER DISPLAY IS NOT SYNCHRONISED WHEN Quest -> Square -> Choose -> IHA **/
-
-
-
 
                 case MSG_ALARM_RECEIVED:
                     messageClient(MSG_ALARM_RECEIVED);
@@ -207,13 +228,11 @@ public class ControlService extends Service {
 
                 case MSG_QUESTIONNAIRE_ACTIVE:
                         isMenu = false;
-                    //if (isMenu) { //!isActiveQuestionnaire
                         isActiveQuestionnaire = true;
                         mEventTimer.stopTimer();
                         isTimerRunning = false;
                         isMenu = false;
                         Log.i(LOG, "Questionnaire active");
-                    //}
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
@@ -227,6 +246,10 @@ public class ControlService extends Service {
                         }
                         Log.i(LOG, "Questionnaire inactive");
                     }
+                    break;
+
+                case MSG_CHECK_FOR_PREFERENCES:
+                    checkForPreferences();
                     break;
 
                 case MSG_START_RECORDING:
@@ -331,21 +354,35 @@ public class ControlService extends Service {
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();
 
-        getPreferences();
+        mFileIO = new FileIO();
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+        showConfigButton = mFileIO.scanConfigMode();
+
+        Log.i(LOG, "Q present? "+isQuestionnairePresent);
+        Log.e(LOG, "show config "+ showConfigButton);
+
+        //getPreferences();
 
         Logger.info("Service onCreate");
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
-        Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
-
-        mXmlReader = new XMLReader(this);
-        mEventTimer = new EventTimer(this, mMessengerHandler);
-        mVibration = new Vibration(this);
+        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
 
         Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService started");
 
+        //messageClient(MSG_CHECK_FOR_PREFERENCES);
+        checkForPreferences();
+
+        //setAlarmAndCountdown();
+        //mSelectQuestionnaire = "questionnaire20170828frei.xml";
+        /*if (isQuestionnairePresent) {
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+            mEventTimer = new EventTimer(this, mMessengerHandler);
+            mVibration = new Vibration(this);
+            Log.i(LOG, "quest found.");
+        }*/
     }
 
     @Override
@@ -370,8 +407,10 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
-        mEventTimer.stopTimer();
-        mVibration.repeatingBurstOff();
+        if (isQuestionnairePresent) {
+            mEventTimer.stopTimer();
+            mVibration.repeatingBurstOff();
+        }
         mNotificationManager.cancel(NOTIFICATION_ID);
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
@@ -400,8 +439,10 @@ public class ControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e(LOG,"onTaskRemoved");
-        mEventTimer.stopTimer();
-        mVibration.repeatingBurstOff();
+        if (isQuestionnairePresent) {
+            mEventTimer.stopTimer();
+            mVibration.repeatingBurstOff();
+        }
         super.onTaskRemoved(rootIntent);
     }
 
@@ -426,7 +467,6 @@ public class ControlService extends Service {
         }
     }
 
-
     // Send message to connected client
     private void messageClient(int what) {
 
@@ -441,8 +481,16 @@ public class ControlService extends Service {
         }
     }
 
+    public void requestPermissions() {
+        Intent intent = new Intent(this, PermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
+        //intent.putExtra("showConfigButton",showConfigButton);
+        //Log.e(LOG, "shw Config: "+showConfigButton);
         startActivity(intent);
     }
 
@@ -468,52 +516,187 @@ public class ControlService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private void setAlarmAndCountdown() {
+    private void stopAlarmAndCountdown() {
+        if (isQuestionnairePresent) {
+            mEventTimer.stopTimer();
+            mVibration.repeatingBurstOff();
+            Bundle data = new Bundle();
+            data.putBoolean("isTimer", isTimer);
+            messageClient(MSG_GET_STATUS, data);
+        }
+    }
 
-        if (!isTimerRunning) {
-            mTimerInterval = mXmlReader.getNewTimerInterval();
-            mEventTimer.setTimer(mTimerInterval);
-            mFinalCountDown = mEventTimer.getFinalCountDown();
-            isTimerRunning = true;
-        } else {
-            // Usually when app is restarted
-            Log.i(LOG, "Timer already set. Reinstating countdown");
+    private void checkForPreferences() {
+
+        Bundle bundle = getPreferences();
+        isLocked = bundle.getBoolean("isLocked", false);
+        isTimer = bundle.getBoolean("isTimer", false);
+
+        mTempQuestionnaire =bundle.getString(KEY_QUEST, "");
+
+        Log.i(LOG, "Locked: "+isLocked+", timing: "+isTimer);
+
+
+        // deletes rules.ini
+        if (isLocked) {
+            showConfigButton = !isLocked;
+            mFileIO.lockPreferences();
+            Bundle data = new Bundle();
+            data.putBoolean("showConfigButton", showConfigButton);
+            data.putBoolean("showRecordingButton", showRecordingButton);
+            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+            messageClient(MSG_SET_VISIBILITY, data);
         }
 
-        // Send message to initialise / update timer
+        if (!Objects.equals(mSelectQuestionnaire,mTempQuestionnaire)) {
+            mSelectQuestionnaire = mTempQuestionnaire;
+            Log.i(LOG, "shit that gets displayed: "+mSelectQuestionnaire);
+            // Reads new XML file
+            renewQuestionnaire();
+            isTimerRunning = false;
+            setAlarmAndCountdown();
+
+            /*Bundle data = new Bundle();
+            data.putBoolean("showConfigButton", showConfigButton);
+            data.putBoolean("showRecordingButton", showRecordingButton);
+            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+            messageClient(MSG_RESET_MENU, data);*/
+        } //else {
+
+ //      }
+
+        if (isTimer) {
+            setAlarmAndCountdown();
+        } else {
+            stopAlarmAndCountdown();
+        }
+        //TODO: Test if necessary
         Bundle data = new Bundle();
-        data.putInt("finalCountDown", mFinalCountDown);
-        data.putInt("countDownInterval", mTimerInterval);
-        messageClient(MSG_START_COUNTDOWN, data);
-        Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+        data.putBoolean("showConfigButton", showConfigButton);
+        data.putBoolean("showRecordingButton", showRecordingButton);
+        data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+        messageClient(MSG_RESET_MENU, data);
+    }
+
+    private void setAlarmAndCountdown() {
+
+        Log.i(LOG, "is timer running: "+isTimerRunning);
+        Log.i(LOG, "is questionnaire present? "+isQuestionnairePresent);
+        Log.i(LOG, "is timer: "+isTimer);
+
+        if (isQuestionnairePresent && isTimer) {
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+            if (!isTimerRunning) {
+
+                mEventTimer = new EventTimer(this, mMessengerHandler);
+                mVibration = new Vibration(this);
+                mTimerInterval = mXmlReader.getNewTimerInterval();
+
+                mEventTimer.stopTimer();
+                mVibration.repeatingBurstOff();
+                mEventTimer.setTimer(mTimerInterval);
+                mFinalCountDown = mEventTimer.getFinalCountDown();
+                isTimerRunning = true;
+                Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+            } else {
+                // Usually when app is restarted
+                Log.i(LOG, "Timer already set. Reinstating countdown");
+            }
+
+            // Send message to initialise / update timer
+            Bundle data = new Bundle();
+            data.putInt("finalCountDown", mFinalCountDown);
+            data.putInt("countDownInterval", mTimerInterval);
+            data.putBoolean("showConfigButton", showConfigButton);
+            data.putBoolean("showRecordingButton", showRecordingButton);
+            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+            messageClient(MSG_START_COUNTDOWN, data);
+            Log.i(LOG, "Countdown set.");
+        }
+    }
+
+    // Load new questionnaire (initiated after quest change in preferences)
+    public void renewQuestionnaire() {
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+        Log.i(LOG, "is this shit present??" + isQuestionnairePresent);
+        if (isQuestionnairePresent) {
+            String[] questList = mFileIO.scanQuestOptions();
+
+            Log.i(LOG, "length of this shit: "+questList.length);
+            Log.i(LOG, "empty: "+mSelectQuestionnaire.isEmpty());
+
+            if (mSelectQuestionnaire.isEmpty() && questList.length > 0) {
+                mSelectQuestionnaire = questList[0];
+                Log.e(LOG, "Questionnaire not found, default: " + mSelectQuestionnaire);
+            }
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+        }
     }
 
     private void startQuestionnaire(String motivation) {
 
-        Bundle data = new Bundle();
-        ArrayList<String> questionList = mXmlReader.getQuestionList();
-        data.putStringArrayList("questionList",questionList);
-        String head = mXmlReader.getHead();
-        data.putString("head", head);
-        data.putString("motivation", "<motivation='"+ motivation +"'>");
-        messageClient(MSG_START_QUESTIONNAIRE, data);
-        Log.i(LOG,"Questionnaire initiated: " + motivation);
+        if (isQuestionnairePresent) {
+            Bundle data = new Bundle();
+            ArrayList<String> questionList = mXmlReader.getQuestionList();
+            String head = mXmlReader.getHead();
+            String foot = mXmlReader.getFoot();
+            String surveyUri = mXmlReader.getSurveyURI();
 
-        isQuestionnairePending = false;
+            data.putStringArrayList("questionList", questionList);
+            data.putString("head", head);
+            data.putString("foot", foot);
+            data.putString("surveyUri", surveyUri);
+            data.putString("motivation", "<motivation='" + motivation + "'>");
 
+            messageClient(MSG_START_QUESTIONNAIRE, data);
+
+            Log.i(LOG, "Questionnaire initiated: " + motivation);
+
+            isQuestionnairePending = false;
+        }
     }
 
     private Bundle getPreferences() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // timer and questionnaire
-        isTimer = sharedPreferences.getBoolean("isTimer", true);
 
         // recording
         samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
         chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
         isWave = sharedPreferences.getBoolean("isWave", false);
+
+        // Use automatic timer
+        isTimer = sharedPreferences.getBoolean("isTimer", false);
+        Log.i(LOG, "timing: "+isTimer);
+        // Show preferences button
+        isLocked = sharedPreferences.getBoolean("isLocked", false);
+
+        // Scan file system for questionnaires
+        if (isQuestionnairePresent) {
+            String[] fileList = mFileIO.scanQuestOptions();
+
+            for (int iE = 0; iE < fileList.length; iE++) {
+                Log.e(LOG, "files found: " + fileList[iE]);
+            }
+
+            //TODO: Implement reaction to unavailable questionnaires
+            if (fileList.length == 0 || fileList == null) {
+                Log.e(LOG, "No Questionnaires availabe.");
+            } else {
+            }
+            // Load questionnaire if selected, otherwise load default
+            mSelectQuestionnaire = sharedPreferences.getString("whichQuest", "");
+            if (mSelectQuestionnaire.isEmpty() && fileList.length > 0) {
+                mSelectQuestionnaire = fileList[0];
+                Log.e(LOG, "Questionnaire not found, default: " + mSelectQuestionnaire);
+            }
+
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("whichQuest", mSelectQuestionnaire).commit();
+        } else {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("whichQuest", "").commit();
+        }
 
         // processing
         HashSet<String> activeFeatures =
@@ -525,7 +708,7 @@ public class ControlService extends Service {
         // TODO: bundle up everything for initial adaptation of processing stack.
         // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
         Bundle processingSettings = new Bundle();
-        // processingSettings.putBoolean("isTimer", isTimer);
+        processingSettings.putBoolean("isTimer", isTimer);
         processingSettings.putInt("samplerate", samplerate);
         processingSettings.putInt("chunklengthInS", chunklengthInS);
         // processingSettings.putBoolean("isWave", isWave);

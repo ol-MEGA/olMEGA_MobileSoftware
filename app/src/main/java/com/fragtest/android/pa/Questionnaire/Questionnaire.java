@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.BuildConfig;
@@ -40,15 +41,18 @@ public class Questionnaire {
     private final MandatoryInfo mMandatoryInfo;
     private MetaData mMetaData;
     private final FileIO mFileIO;
-    private String mHead, mMotivation;
+    private String mHead, mFoot, mSurveyURI, mMotivation;
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
 
-    public Questionnaire(Context context, String head, String motivation, QuestionnairePagerAdapter contextQPA) {
+    public Questionnaire(Context context, String head, String foot, String surveyUri,
+                         String motivation, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
         mContextQPA = contextQPA;
         mHead = head;
+        mFoot = foot;
+        mSurveyURI = surveyUri;
         mMotivation = motivation;
         mEvaluationList = new EvaluationList();
         mQuestionList = new ArrayList<>();
@@ -61,9 +65,9 @@ public class Questionnaire {
     public void setUp(ArrayList<String> questionList) {
         //mRawInput = mFileIO.readRawTextFile();
         // offline version
-        String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
+        //String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
-        mMetaData = new MetaData(mContext, mRawInput, mHead, mMotivation);
+        mMetaData = new MetaData(mContext, mHead, mFoot, mSurveyURI, mMotivation);
         mMetaData.initialise();
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
@@ -365,10 +369,12 @@ public class Questionnaire {
     private boolean removeQuestion(int iPos) {
         // Removes the question from the displayed list
 
+        /*
         // If view is mandatory but declared hidden
         if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
                 mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
         }
+        */
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
@@ -379,12 +385,19 @@ public class Questionnaire {
             String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
 
+            // Visually un-check checkboxes and radio buttons
             for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
                 if (sType.equals("checkbox") && mListOfAnswerIds.get(iAnswer) != 66666) {
                     CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
                             mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
                     if (checkBox != null) {
                         checkBox.setChecked(false);
+                    }
+                } else if(sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
+                    RadioButton radioButton = (RadioButton) mContextQPA.mViewPager.findViewById(
+                            mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
+                    if ( radioButton != null) {
+                        radioButton.setChecked(false);
                     }
                 }
             }
