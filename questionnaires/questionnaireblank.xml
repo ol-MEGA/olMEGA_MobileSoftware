@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="100000" deviation="0"></timer>
+
+    <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <title>
+            <text>Hörsituation_frei</text>
+        </title>
+
+        //1)
+        <question
+            id="10101"
+            type="checkbox">
+            <label>
+                <text>Bitte testen Sie die Gruppenzuweisung.</text>
+            </label>
+            <option id="10101_01" group="1">
+                <text>Group 1</text>
+            </option>
+            <option id="10101_02" group="1">
+                <text>Group 1</text>
+            </option>
+            <option id="10101_03">
+                <text>Free</text>
+            </option>
+            <option id="10101_04" group="1">
+                <text>Group 1</text>
+            </option>
+            <option id="10101_05" group="2">
+                <text>Group 2</text>
+            </option>
+            <option id="10101_06">
+                <text>Free</text>
+            </option>
+            <option id="10101_07" group="2">
+                <text>Group 2</text>
+            </option>
+        </question>
+
+        <finish>
+            <text>Thank you very much for participating.</text>
+        </finish>
+    </survey>
+</mobiquest>

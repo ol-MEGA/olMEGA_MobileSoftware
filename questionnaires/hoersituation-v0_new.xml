@@ -1,0 +1,456 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>
+
+	/*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="3600" deviation="0"></timer>
+
+    <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <title>
+            <text>Hörsituation</text>
+        </title>
+		
+        <question id="10816" type="text" hidden="true" mandatory="true">
+            <label>
+                <text>Device ID</text>
+            </label>
+            <default>
+                <text>$device.id</text>
+            </default>
+        </question>
+		
+        <question id="10817" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>Start Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+		
+        <question id="10818" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>Start Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+		
+        <question id="10819" type="radio">
+            <label>
+                <text>In welcher Situation befinden Sie sich gerade?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21430">
+                <text>Zu Hause</text>
+            </option>
+            <option id="21431">
+                <text>Unterwegs</text>
+            </option>
+            <option id="21432">
+                <text>Gesellschaft und Erledigungen</text>
+            </option>
+            <option id="21433">
+                <text>Beruf</text>
+            </option>
+            <option id="21434">
+                <text>Keine Situation trifft zu</text>
+            </option>
+        </question>
+		
+        <question id="10820" type="checkbox" filter="21430">
+            <label>
+                <text>Zu Hause - und zwar:</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21436">
+                <text>Ausruhen</text>
+            </option>
+            <option id="21437">
+                <text>Essen</text>
+            </option>
+            <option id="21438">
+                <text>Küchenarbeit</text>
+            </option>
+            <option id="21439">
+                <text>Lesen/Computer</text>
+            </option>
+            <option id="21440">
+                <text>Musik hören</text>
+            </option>
+            <option id="21441">
+                <text>Hausarbeit sonst</text>
+            </option>
+            <option id="21442">
+                <text>Draußen: Garten/Balkon</text>
+            </option>
+            <option id="21443">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+		
+        <question id="10821" type="checkbox" filter="21431">
+            <label>
+                <text>Unterwegs - und zwar:</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21445">
+                <text>Auto selbst fahren</text>
+            </option>
+            <option id="21446">
+                <text>Auto mitfahren</text>
+            </option>
+            <option id="21447">
+                <text>Bus</text>
+            </option>
+            <option id="21448">
+                <text>Bahn</text>
+            </option>
+            <option id="21449">
+                <text>Zu Fuß</text>
+            </option>
+            <option id="21450">
+                <text>Fahrrad</text>
+            </option>
+            <option id="21451">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+		
+        <question id="10822" type="checkbox" filter="21432">
+            <label>
+                <text>Gesellschaft und Erledigungen - und zwar:</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21453">
+                <text>Jemanden besuchen</text>
+            </option>
+            <option id="21454">
+                <text>Feier</text>
+            </option>
+            <option id="21455">
+                <text>Restaurant/Café</text>
+            </option>
+            <option id="21456">
+                <text>Theater/Kirche/Vortrag</text>
+            </option>
+            <option id="21457">
+                <text>Versammlung</text>
+            </option>
+            <option id="21458">
+                <text>Behörde/Praxis</text>
+            </option>
+            <option id="21459">
+                <text>Geschäft-Einkaufen</text>
+            </option>
+            <option id="214590000">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+		
+        <question id="10823" type="checkbox" filter="21433">
+            <label>
+                <text>Beruf - und zwar:</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21464">
+                <text>Büro</text>
+            </option>
+            <option id="21465">
+                <text>Werkstatt</text>
+            </option>
+            <option id="21466">
+                <text>Schalter/Tresen</text>
+            </option>
+            <option id="21467">
+                <text>Besprechungsraum</text>
+            </option>
+            <option id="21468">
+                <text>Draußen</text>
+            </option>
+            <option id="21469">
+                <text>Kantine/Teeküche</text>
+            </option>
+            <option id="21470">
+                <text>Sonstiges</text>
+            </option>
+        </question>
+		
+        <question id="10824" type="text" filter="21434">
+            <label>
+                <text>Beschreiben Sie bitte die Situation:</text>
+            </label>
+        </question>
+		
+        <question id="10825" type="radio">
+            <label>
+                <text>Wie laut ist es?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21488">
+                <text>Zu laut</text>
+            </option>
+            <option id="21489">
+                <text>Sehr laut</text>
+            </option>
+            <option id="21490">
+                <text>Laut</text>
+            </option>
+            <option id="21491">
+                <text>Mittel</text>
+            </option>
+            <option id="21492">
+                <text>Leise</text>
+            </option>
+            <option id="21493">
+                <text>Sehr leise</text>
+            </option>
+            <option id="21494">
+                <text>Zu leise</text>
+            </option>
+        </question>
+		
+        <question id="10826" type="radio">
+            <label>
+                <text>Wie anstrengend ist das Hören?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21495">
+                <text>Extrem anstrengend</text>
+            </option>
+            <option id="21496">
+                <text>Sehr anstrengend</text>
+            </option>
+            <option id="21497">
+                <text>Deutlich anstrengend</text>
+            </option>
+            <option id="21498">
+                <text>Mittelgradig anstrengend</text>
+            </option>
+            <option id="21499">
+                <text>Wenig anstrengend</text>
+            </option>
+            <option id="21500">
+                <text>Sehr wenig anstrengend</text>
+            </option>
+            <option id="21501">
+                <text>Mühelos</text>
+            </option>
+        </question>
+        <question id="10827" type="radio">
+            <label>
+                <text>Wie angenehm sind die Geräusche/Klänge?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21502">
+                <text>Sehr angenehm</text>
+            </option>
+            <option id="21503">
+                <text>Angenehm</text>
+            </option>
+            <option id="21504">
+                <text>Eher angenehm</text>
+            </option>
+            <option id="21505">
+                <text>Neutral</text>
+            </option>
+            <option id="21506">
+                <text>Eher unangenehm</text>
+            </option>
+            <option id="21507">
+                <text>Unangenehm</text>
+            </option>
+            <option id="21508">
+                <text>Sehr unangenehm</text>
+            </option>
+        </question>
+		
+        <question id="10828" type="radio">
+            <label>
+                <text>Wie wichtig ist es, in der Situation gut zu hören?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21509">
+                <text>Sehr wichtig</text>
+            </option>
+            <option id="21510">
+                <text>Wichtig</text>
+            </option>
+            <option id="21511">
+                <text>Eher wichtig</text>
+            </option>
+            <option id="21512">
+                <text>Teils-teils</text>
+            </option>
+            <option id="21513">
+                <text>Eher unwichtig</text>
+            </option>
+            <option id="21514">
+                <text>Unwichtig</text>
+            </option>
+            <option id="21515">
+                <text>Völlig unwichtig</text>
+            </option>
+        </question>
+		
+        <question id="10829" type="radio">
+            <label>
+                <text>Wie viel verstehen Sie?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21473">
+                <text>Alles</text>
+            </option>
+            <option id="21474">
+                <text>Fast alles</text>
+            </option>
+            <option id="21475">
+                <text>Viel</text>
+            </option>
+            <option id="21476">
+                <text>Die Hälfte</text>
+            </option>
+            <option id="21477">
+                <text>Wenig</text>
+            </option>
+            <option id="21478">
+                <text>Sehr wenig</text>
+            </option>
+            <option id="21479">
+                <text>Gar nichts</text>
+            </option>
+			<option id="66666">
+				<text></text>
+			</option>            
+            <option id="21480">
+                <text>Keine Sprache</text>
+            </option>
+        </question>
+		
+        <question id="10830" type="radio" filter ="!21480">
+            <label>
+                <text>Sind Ihnen die Stimmen vertraut?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>
+            <option id="21481">
+                <text>Vertraut</text>
+            </option>
+            <option id="21482">
+                <text>Nicht vertraut</text>
+            </option>
+            <option id="21483">
+                <text>Beides</text>
+            </option>
+        </question>
+		
+        <question id="10836" type="checkbox" filter ="!21480">
+            <label>
+                <text>Wem oder was hören Sie zu?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>			
+            <default id="10835" group="1">
+                <text>0</text>
+            </default>
+            <option id="10836" group="1">
+                <text>1 Person</text>
+            </option>
+            <option id="10837" group="1">
+                <text>2-3 Personen</text>
+            </option>
+            <option id="10838" group="1">
+                <text>4 und mehr Personen</text>
+            </option>
+            <option id="10839">
+                <text>Telefon</text>
+            </option>
+            <option id="10840">
+                <text>Handy</text>
+            </option>
+            <option id="10841">
+                <text>Lautsprecher</text>
+            </option>
+            <option id="10842">
+                <text>TV</text>
+            </option>
+            <option id="10843">
+                <text>Radio</text>
+            </option>
+        </question>
+		
+        <question id="10833" type="radio">
+            <label>
+                <text>Um wie viele Minuten liegt das bewertete Ereignis zurück?</text>
+            </label>
+			<option id="66666">
+				<text></text>
+			</option>			
+            <option id="21516">
+                <text>&lt; 1 Minute</text>
+            </option>
+            <option id="21517">
+                <text>Max. 5 Minuten</text>
+            </option>
+            <option id="21518">
+                <text>Max. 10 Minuten</text>
+            </option>
+            <option id="21519">
+                <text>Max. 15 Minuten</text>
+            </option>
+            <option id="21520">
+                <text>Max. 20 Minuten</text>
+            </option>
+            <option id="21521">
+                <text>Max. 30 Minuten</text>
+            </option>
+            <option id="21522">
+                <text>&gt; 30 Minuten</text>
+            </option>
+        </question>
+		
+        <question id="10834" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>End Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+		
+        <question id="10835" type="date" hidden="true" mandatory="true">
+            <label>
+                <text>End Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+        <finish>
+            <text>Vielen Dank für die Beschreibung der aktuellen Situation!</text>
+        </finish>
+    </survey>
+</mobiquest>

@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="100" deviation="0"></timer>
+
+    <survey uri="https://oss.oberon.ch:8080/hallo_20140822/hoersituation-v0.xml">
+        <title>
+            <text>Hörsituation_frei</text>
+        </title>
+		
+		//Intro
+        <question
+            hidden="true"
+            id="20001"
+            mandatory="true"
+            type="text">
+            <label>
+                <text>Device ID</text>
+            </label>
+            <default>
+                <text>$device.id</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="20002"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+
+        <question
+            hidden="true"
+            id="20003"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>Start Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+
+		//1)
+		<question
+			id="20101"
+			type="radio">
+			<label>
+				<text>Wie viele Minuten liegt das Ereignis zurück?</text>
+			</label>
+			<option id="20101_01">
+				<text>Jetzt</text>
+			</option>
+			<option id="20101_02">
+				<text>&lt;2-3</text>
+			</option>
+			<option id="20101_03">
+				<text>&lt;5</text>
+			</option>
+			<option id="20101_04">
+				<text>&lt;10</text>
+			</option>
+			<option id="20101_05">
+				<text>&lt;15</text>
+			</option>
+			<option id="20101_06">
+				<text>&lt;20</text>
+			</option>
+			<option id="20101_07">
+				<text>&lt;30</text>
+			</option>
+		</question>
+
+		//2)
+		<question
+			id="20102"
+			type="emoji">
+			<label>
+				<text>Wie ist Ihre momentane Stimmung?</text>
+			</label>
+			<option id="20102_01">
+                <text>emoji_happy2</text>
+            </option>
+            <option id="20102_02">
+                <text>emoji_happy1</text>
+            </option>
+            <default id="20102_03">
+                <text>emoji_neutral</text>
+            </default>
+            <option id="20102_04">
+                <text>emoji_sad1</text>
+            </option>
+            <option id="20102_05">
+                <text>emoji_sad2</text>
+            </option>
+		</question>
+
+		//3)
+		<question id="20103" type="radio">
+            <label>
+                <text>Wie anstrengend ist es zuzuhören?</text>
+            </label>
+            <option id="20103_01">
+                <text>Extrem anstrengend</text>
+            </option>
+            <option id="20103_02">
+                <text>Sehr anstrengend</text>
+            </option>
+            <option id="20103_03">
+                <text>Deutlich anstrengend</text>
+            </option>
+            <option id="20103_04">
+                <text>Mittelgradig</text>
+            </option>
+			<option id="20103_05">
+                <text>Wenig anstrengend</text>
+            </option>
+			<option id="20103_06">
+                <text>Sehr wenig anstrengend</text>
+            </option>
+			<option id="20103_07">
+                <text>Mühelos</text>
+            </option>
+        </question>
+		
+		//4)
+		<question id="20104" type="radio">
+            <label>
+                <text>Wie laut ist es?</text>
+            </label>
+            <option id="20104_01">
+                <text>Zu laut</text>
+            </option>
+            <option id="20104_02">
+                <text>Sehr laut</text>
+            </option>
+            <option id="20104_03">
+                <text>Laut</text>
+            </option>
+            <option id="20104_04">
+                <text>Mittel</text>
+            </option>
+			<option id="20104_05">
+                <text>Leise</text>
+            </option>
+			<option id="20104_06">
+                <text>Sehr leise</text>
+            </option>
+			<option id="20104_07">
+                <text>Zu leise</text>
+            </option>
+        </question>
+		
+		//5)
+		<question id="20105" type="radio">
+            <label>
+                <text>Wie angenehm sind die Geräusche/Klänge?</text>
+            </label>
+            <option id="20105_01">
+                <text>Sehr angenehm</text>
+            </option>
+            <option id="20105_02">
+                <text>Angenehm</text>
+            </option>
+            <option id="20105_03">
+                <text>Eher angenehm</text>
+            </option>
+            <option id="20105_04">
+                <text>Neutral</text>
+            </option>
+			<option id="20105_05">
+                <text>Eher unangenehm</text>
+            </option>
+			<option id="20105_06">
+                <text>Unangenehm</text>
+            </option>
+			<option id="20105_07">
+                <text>Sehr unangenehm</text>
+            </option>
+        </question>
+		
+		//6)
+		<question id="20106" type="radio">
+            <label>
+                <text>Wie gut oder schlecht verstehen Sie?</text>
+            </label>
+            <option id="20106_01">
+                <text>Perfekt</text>
+            </option>
+            <option id="20106_02">
+                <text>Sehr gut</text>
+            </option>
+            <option id="20106_03">
+                <text>Eher gut</text>
+            </option>
+            <option id="20106_04">
+                <text>Mittel</text>
+            </option>
+			<option id="20106_05">
+                <text>Eher schlecht</text>
+            </option>
+			<option id="20106_06">
+                <text>Sehr schlecht</text>
+            </option>
+			<option id="20106_07">
+                <text>Gar nichts</text>
+            </option>
+            <option id="20106_08">
+                <text>Keine Sprache</text>
+            </option>
+        </question>
+
+		//7)
+		<question id="20107" type="radio">
+            <label>
+                <text>Fühlen Sie sich mitten in dieser Gesprächssituation?</text>
+            </label>
+            <option id="20107_01">
+                <text>Bin mittendrin</text>
+            </option>
+            <option id="20107_02">
+                <text>Bin eher mittendrin</text>
+            </option>
+            <option id="20107_03">
+                <text>Bin mal mittendrin, mal außen vor</text>
+            </option>
+            <option id="20107_04">
+                <text>Bin eher außen vor</text>
+            </option>
+			<option id="20107_05">
+                <text>Bin außen vor</text>
+            </option>
+        </question>
+		
+		//8)
+		<question id="20108" type="radio">
+            <label>
+                <text>Wie beurteilen Sie Ihre Beteiligung bei dem Gespräch?</text>
+            </label>
+            <option id="20108_01">
+                <text>Sehr aktiv</text>
+            </option>
+            <option id="20108_02">
+                <text>Eher aktiv</text>
+            </option>
+            <option id="20108_03">
+                <text>Mittel</text>
+            </option>
+            <option id="20108_04">
+                <text>Eher passiv</text>
+            </option>
+			<option id="20108_05">
+                <text>Sehr passiv</text>
+            </option>
+        </question>
+
+		//9)
+		<question id="20109" type="radio">
+            <label>
+                <text>Wie sehr fühlen Sie sich beeinträchtigt?</text>
+            </label>
+            <option id="20109_01">
+                <text>Extrem beeinträchtigt</text>
+            </option>
+            <option id="20109_02">
+                <text>Sehr</text>
+            </option>
+            <option id="20109_03">
+                <text>Ziemlich</text>
+            </option>
+            <option id="20109_04">
+                <text>Mittel</text>
+            </option>
+			<option id="20109_05">
+                <text>Wenig</text>
+            </option>
+			<option id="20109_06">
+                <text>Sehr wenig</text>
+            </option>
+			<option id="20109_07">
+                <text>Gar nicht beeinträchtigt</text>
+            </option>
+        </question>
+
+        //10)
+        <question id="20110" type="radio">
+            <label>
+                <text>Wie gut können Sie hören, woher einzelne Umgebungsgeräusche kommen?</text>
+            </label>
+            <option id="20110_01">
+                <text>Perfekt</text>
+            </option>
+            <option id="20110_02">
+                <text>Sehr gut</text>
+            </option>
+            <option id="20110_03">
+                <text>Eher gut</text>
+            </option>
+            <option id="20110_04">
+                <text>Mittel</text>
+            </option>
+            <option id="20110_05">
+                <text>Eher schlecht</text>
+            </option>
+            <option id="20110_06">
+                <text>Sehr schlecht</text>
+            </option>
+            <option id="20110_07">
+                <text>Gar nicht</text>
+            </option>
+        </question>
+
+		//Outro
+        <question
+            hidden="true"
+            id="21001"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date</text>
+            </label>
+            <default>
+                <text>$now</text>
+            </default>
+        </question>
+        <question
+            hidden="true"
+            id="21002"
+            mandatory="true"
+            type="date">
+            <label>
+                <text>End Date (UTC)</text>
+            </label>
+            <default>
+                <text>$utcnow</text>
+            </default>
+        </question>
+        <finish>
+            <text>Thank you very much for participating.</text>
+        </finish>
+    </survey>
+</mobiquest>
