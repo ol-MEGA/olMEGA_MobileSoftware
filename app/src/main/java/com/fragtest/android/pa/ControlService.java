@@ -345,6 +345,10 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
 
+
+        Log.i(LOG, "GETAPPLICATIONCONTEXT: "+getApplicationContext());
+
+
         Log.d(LOG, "onCreate");
         // log-file
         Configurator.currentConfig()
@@ -663,6 +667,14 @@ public class ControlService extends Service {
                 Log.e(LOG, "files found: " + fileList[iE]);
             }
 
+
+
+
+
+
+
+
+
             //TODO: Implement reaction to unavailable questionnaires
             if (fileList.length == 0 || fileList == null) {
                 Log.e(LOG, "No Questionnaires availabe.");
@@ -677,14 +689,12 @@ public class ControlService extends Service {
                     mTempQuestionnaire = fileList[0];
                 }
 
-                Log.i(LOG, "Questionnaire taken: "+mSelectQuestionnaire);
-
                 if (mSelectQuestionnaire.isEmpty() && fileList.length > 0) {
                     mSelectQuestionnaire = fileList[0];
                     Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
                 }
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("whichQuest", mSelectQuestionnaire).commit();
+                //SharedPreferences.Editor editor = sharedPreferences.edit();
+                //editor.putString("whichQuest", mSelectQuestionnaire).commit();
             }
 
         } else {

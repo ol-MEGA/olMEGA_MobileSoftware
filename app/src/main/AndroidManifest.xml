@@ -54,8 +54,9 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".ControlService"
-                 android:process=":remote" />
+        <!-- DOES THIS NEED TO BE REMOTE???  Because that creates several obstacles-->
+        <service android:name=".ControlService"/>
+                <!-- android:process=":remote"-->
 
     </application>
 
