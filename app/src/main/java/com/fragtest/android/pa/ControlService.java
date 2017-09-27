@@ -107,6 +107,7 @@ public class ControlService extends Service {
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
 
+    private SharedPreferences sharedPreferences;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -572,12 +573,10 @@ public class ControlService extends Service {
 
         if (isQuestionnairePresent && isTimer) {
 
-            mTimerInterval = mXmlReader.getNewTimerInterval();
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+            mTimerInterval = mXmlReader.getNewTimerInterval();
 
             if (!isTimerRunning) {
-
-
 
                 mEventTimer.stopTimer();
                 mVibration.repeatingBurstOff();
@@ -651,6 +650,8 @@ public class ControlService extends Service {
         chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
         isWave = sharedPreferences.getBoolean("isWave", false);
+
+        Log.i(LOG, "THIS SHIT IS FS: "+samplerate);
 
         //TODO: For some reason this is only updated after relaunch -> maybe due to service/activity
         // Use automatic timer

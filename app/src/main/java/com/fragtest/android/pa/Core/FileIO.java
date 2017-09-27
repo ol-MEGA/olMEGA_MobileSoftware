@@ -53,6 +53,7 @@ public class FileIO {
         boolean isFirst = sharedPreferences.getBoolean("isFirst", true);
         Log.i(LOG, "First use detected: " + isFirst);
 
+
         if (isFirst) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean("isFirst", false);
@@ -60,6 +61,7 @@ public class FileIO {
             File fileConfig = saveDataToFile(context, FILE_CONFIG, "This file may remain empty.");
             new SingleMediaScanner(mContext, fileConfig);
         }
+
 
         String[] string = scanQuestOptions();
         if (string == null) {
