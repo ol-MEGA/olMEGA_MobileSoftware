@@ -105,8 +105,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
             }
 
-            Log.i(LOG, "Checkbox: "+checkBox.getId());
-
             checkBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

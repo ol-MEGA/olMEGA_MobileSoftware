@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name = "isTimer">true</bool>
+    <bool name = "isLocked">false</bool>
+    <bool name = "isWave">false</bool>
+    <bool name = "keepAudioCache">false</bool>
+    <bool name = "filterHp">false</bool>
+    <bool name = "showConfigButton">true</bool>
+    <bool name = "showRecordingButton">true</bool>
+    <bool name = "downsample">true</bool>
+    <integer name = "samplerate">16000</integer>
+    <integer name = "chunklengthInS">60</integer>
+    <integer name = "filterHpFrequency">100</integer>
+    <integer name = "mFinalCountDown">-255</integer>
+    <integer name = "mTimerInterval">-255</integer>
+</resources>

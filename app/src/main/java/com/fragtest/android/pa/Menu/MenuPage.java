@@ -116,6 +116,10 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
     }
 
+    public void setText() {
+        mStartQuestionnaire.setText(mCountDownString);
+    }
+
     public void resetStartTextSize() {
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeAnswer));

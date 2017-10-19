@@ -94,15 +94,12 @@ public class ControlService extends Service {
     private XMLReader mXmlReader;
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
-    private static final String KEY_QUEST = "whichQuest";
-    private static final String KEY_LOCKED = "isLocked";
 
     // preferences
-    private boolean isTimer, isWave, keepAudioCache, isLocked;
-    private int samplerate, chunklengthInS;
+    private boolean isTimer, isWave, keepAudioCache, isLocked, filterHp, downsample,
+            showConfigButton, showRecordingButton;
 
-    private int mFinalCountDown = -255;
-    private int mTimerInterval = -255;
+    private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
@@ -134,8 +131,6 @@ public class ControlService extends Service {
     // thread-safety
     static boolean isRecording = false;
     static boolean isProcessing = false;
-    private boolean showConfigButton = false;
-    private boolean showRecordingButton = false;
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
 
@@ -250,6 +245,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHECK_FOR_PREFERENCES:
+                    Bundle prefs = msg.getData();
+                    updatePreferences(prefs);
                     checkForPreferences();
                     break;
 
@@ -346,9 +343,8 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
 
-
-        Log.i(LOG, "GETAPPLICATIONCONTEXT: "+getApplicationContext());
-
+        // Load preset values
+        initialiseValues();
 
         Log.d(LOG, "onCreate");
         // log-file
@@ -371,7 +367,7 @@ public class ControlService extends Service {
 
         checkForPreferences();
 
-        Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService started");
 
     }
@@ -517,31 +513,86 @@ public class ControlService extends Service {
         }
     }
 
+    // Load preset values
+    private void initialiseValues() {
+
+        PresetValues presetValues = new PresetValues(context);
+
+        // preferences
+        isTimer = presetValues.isTimer;
+        isWave = presetValues.isWave;
+        keepAudioCache = presetValues.keepAudioCache;
+        isLocked = presetValues.isLocked;
+        filterHp = presetValues.filterHp;
+        downsample = presetValues.downsample;
+        showConfigButton = presetValues.showConfigButton;
+        showRecordingButton = presetValues.showRecordingButton;
+
+        samplerate = presetValues.samplerate;
+        chunklengthInS = presetValues.chunklengthInS;
+        filterHpFrequency = presetValues.filterHpFrequency;
+
+        mFinalCountDown = presetValues.mFinalCountDown;
+        mTimerInterval = presetValues.mTimerInterval;
+    }
+
+    private void updatePreferences(Bundle dataPreferences) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        // Extract preferences from data Bundle
+        mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
+        samplerate = Integer.parseInt(dataPreferences.getString("samplerate", ""+samplerate));
+        chunklengthInS = Integer.parseInt(dataPreferences.getString("chunklengthInS", ""+chunklengthInS));
+        keepAudioCache = dataPreferences.getBoolean("keepAudioCache", false);
+        isWave = dataPreferences.getBoolean("isWave", false);
+        isTimer = dataPreferences.getBoolean("isTimer", false);
+        //isLocked = prefs.getBoolean("isLocked", false);
+        //filterHp = prefs.getBoolean("filterHp", false);
+        //filterHpFrequency = prefs.getInt("filterHpFrequency", filterHpFrequency);
+        //downsample = prefs.getBoolean("downsample", downsample);
+        //activeFeatures = prefs.getStringArray("activeFeatures");
+        Log.i(LOG, "KEEP WAVE REALLY?"+isWave);
+
+        editor.putString("whichQuest", mSelectQuestionnaire);
+        editor.putString("samplerate", ""+samplerate);
+        editor.putString("chunklengthInS", ""+chunklengthInS);
+        editor.putBoolean("keepAudioCache", keepAudioCache);
+        editor.putBoolean("isWave", isWave);
+        editor.putBoolean("isTimer", isTimer);
+        //editor.putBoolean("isLocked", isLocked);
+        //editor.putBoolean("filterHp", filterHp);
+        //editor.putInt("filterHpFrequency", filterHpFrequency);
+        //editor.putBoolean("downsample", downsample);
+        //editor.putStringSet("activeFeatures", activeFeatures);
+        editor.apply();
+    }
+
     private void checkForPreferences() {
 
         Bundle bundle = getPreferences();
         isLocked = bundle.getBoolean("isLocked", false);
         isTimer = bundle.getBoolean("isTimer", false);
 
-        Log.i(LOG, "Locked: "+isLocked+", timing: "+isTimer+" quest: "+mTempQuestionnaire);
-
         //TODO: Transform this to a simple shared preference setting
         // deletes rules.ini
         if (isLocked) {
             showConfigButton = !isLocked;
             mFileIO.lockPreferences();
-            Bundle data = new Bundle();
-            data.putBoolean("showConfigButton", showConfigButton);
-            data.putBoolean("showRecordingButton", showRecordingButton);
-            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
-            messageClient(MSG_SET_VISIBILITY, data);
+            Bundle dataVisibility = new Bundle();
+            dataVisibility.putBoolean("showConfigButton", showConfigButton);
+            dataVisibility.putBoolean("showRecordingButton", showRecordingButton);
+            //dataVisibility.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+            messageClient(MSG_SET_VISIBILITY, dataVisibility);
         }
 
+        Log.i(LOG, "Questionnaire to be displayed: "+mSelectQuestionnaire);
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
-            Log.i(LOG, "timer - which it does, is timer: "+isTimer);
+
+            Log.i(LOG, "Questionnaire is not the same.");
+
             mTempQuestionnaire = mSelectQuestionnaire;
-            Log.i(LOG, "shit that gets displayed: "+mSelectQuestionnaire);
             // Reads new XML file
             renewQuestionnaire();
 
@@ -563,13 +614,83 @@ public class ControlService extends Service {
         messageClient(MSG_RESET_MENU, data);
     }
 
+
+    private Bundle getPreferences() {
+
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+        Log.i(LOG, "Questionnaire present: "+isQuestionnairePresent);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        //sharedPreferences = getSharedPreferences(sharedPreferencesName, MODE_MULTI_PROCESS);
+
+        // recording
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", ""+samplerate));
+        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", ""+chunklengthInS));
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
+        isWave = sharedPreferences.getBoolean("isWave", false);
+
+        //TODO: For some reason this is only updated after relaunch -> maybe due to service/activity
+        // Use automatic timer
+        isTimer = sharedPreferences.getBoolean("isTimer", false);
+        // Show preferences button
+        isLocked = sharedPreferences.getBoolean("isLocked", false);
+
+        // Scan file system for questionnaires
+        if (isQuestionnairePresent) {
+            String[] fileList = mFileIO.scanQuestOptions();
+
+            if (fileList.length == 0) {
+                Log.e(LOG, "No Questionnaires available.");
+                messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
+                isQuestionnairePresent = false;
+            } else {
+                // Load questionnaire if selected, otherwise load default
+                mSelectQuestionnaire = sharedPreferences.getString("whichQuest", fileList[0]);
+
+                if (mTempQuestionnaire == null || mTempQuestionnaire.isEmpty()) {
+                    mTempQuestionnaire = "";
+                }
+
+                if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
+                    mSelectQuestionnaire = fileList[0];
+                    Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
+                }
+            }
+
+        } else {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("whichQuest", "").apply();
+            Log.e(LOG, "No Questionnaires available.");
+            messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
+        }
+
+        // processing
+        HashSet<String> activeFeatures =
+                (HashSet<String>) sharedPreferences.getStringSet("features", null);
+        filterHp = sharedPreferences.getBoolean("filterHp", true);
+        //int filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
+        //Boolean downsample = sharedPreferences.getBoolean("downsample", false);
+
+        // TODO: bundle up everything for initial adaptation of processing stack.
+        // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
+        Bundle processingSettings = new Bundle();
+        processingSettings.putBoolean("isTimer", isTimer);
+        processingSettings.putInt("samplerate", samplerate);
+        processingSettings.putInt("chunklengthInS", chunklengthInS);
+        processingSettings.putBoolean("isWave", isWave);
+        processingSettings.putSerializable("activeFeatures", activeFeatures);
+        processingSettings.putBoolean("filterHp", filterHp);
+        processingSettings.putInt("filterHpFrequency", filterHpFrequency);
+        processingSettings.putBoolean("downsample", downsample);
+        processingSettings.putString("whichQuest", mSelectQuestionnaire);
+
+        return processingSettings;
+    }
+
     private void setAlarmAndCountdown() {
 
-        Log.i(LOG, "is timer running: "+isTimerRunning);
-        Log.i(LOG, "is questionnaire present? "+isQuestionnairePresent);
-        Log.i(LOG, "is timer: "+isTimer);
-
-
+        Log.i(LOG, "Timer present: "+isTimer);
+        Log.i(LOG, "Questionnaire present: "+isQuestionnairePresent);
 
         if (isQuestionnairePresent && isTimer) {
 
@@ -603,17 +724,12 @@ public class ControlService extends Service {
 
     // Load new questionnaire (initiated after quest change in preferences)
     public void renewQuestionnaire() {
-        isQuestionnairePresent = mFileIO.setupFirstUse(this);
-        Log.i(LOG, "is this shit present??" + isQuestionnairePresent);
+
         if (isQuestionnairePresent) {
             String[] questList = mFileIO.scanQuestOptions();
 
-            Log.i(LOG, "length of this shit: "+questList.length);
-            Log.i(LOG, "empty: "+mSelectQuestionnaire.isEmpty());
-
             if (mSelectQuestionnaire.isEmpty() && questList.length > 0) {
                 mSelectQuestionnaire = questList[0];
-                Log.e(LOG, "Questionnaire not found, default: " + mSelectQuestionnaire);
             }
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
         }
@@ -642,89 +758,6 @@ public class ControlService extends Service {
         }
     }
 
-    private Bundle getPreferences() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // recording
-        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
-        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
-        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
-        isWave = sharedPreferences.getBoolean("isWave", false);
-
-        Log.i(LOG, "THIS SHIT IS FS: "+samplerate);
-
-        //TODO: For some reason this is only updated after relaunch -> maybe due to service/activity
-        // Use automatic timer
-        isTimer = sharedPreferences.getBoolean("isTimer", false);
-        Log.i(LOG, "timing: "+isTimer);
-        // Show preferences button
-        isLocked = sharedPreferences.getBoolean("isLocked", false);
-
-        // Scan file system for questionnaires
-        if (isQuestionnairePresent) {
-            String[] fileList = mFileIO.scanQuestOptions();
-
-            for (int iE = 0; iE < fileList.length; iE++) {
-                Log.e(LOG, "files found: " + fileList[iE]);
-            }
-
-
-
-
-
-
-
-
-
-            //TODO: Implement reaction to unavailable questionnaires
-            if (fileList.length == 0 || fileList == null) {
-                Log.e(LOG, "No Questionnaires availabe.");
-                messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
-            } else {
-                // Load questionnaire if selected, otherwise load default
-                mSelectQuestionnaire = sharedPreferences.getString("whichQuest", "");
-
-                Log.i(LOG, "DISPLAY THIS SHIT!!!: "+mSelectQuestionnaire);
-
-                if (mTempQuestionnaire == null) {
-                    mTempQuestionnaire = fileList[0];
-                }
-
-                if (mSelectQuestionnaire.isEmpty() && fileList.length > 0) {
-                    mSelectQuestionnaire = fileList[0];
-                    Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
-                }
-                //SharedPreferences.Editor editor = sharedPreferences.edit();
-                //editor.putString("whichQuest", mSelectQuestionnaire).commit();
-            }
-
-        } else {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString("whichQuest", "").commit();
-        }
-
-        // processing
-        HashSet<String> activeFeatures =
-                (HashSet<String>) sharedPreferences.getStringSet("features", null);
-        Boolean filterHp = sharedPreferences.getBoolean("filterHp", true);
-        int filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
-        Boolean downsample = sharedPreferences.getBoolean("downsample", false);
-
-        // TODO: bundle up everything for initial adaptation of processing stack.
-        // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
-        Bundle processingSettings = new Bundle();
-        processingSettings.putBoolean("isTimer", isTimer);
-        processingSettings.putInt("samplerate", samplerate);
-        processingSettings.putInt("chunklengthInS", chunklengthInS);
-        // processingSettings.putBoolean("isWave", isWave);
-        processingSettings.putSerializable("activeFeatures", activeFeatures);
-        processingSettings.putBoolean("filterHp", filterHp);
-        processingSettings.putInt("filterHpFrequency", filterHpFrequency);
-        processingSettings.putBoolean("downsample", downsample);
-        processingSettings.putString("whichQuest", mSelectQuestionnaire);
-
-        return processingSettings;
-    }
 
 
     /**
@@ -766,5 +799,6 @@ public class ControlService extends Service {
             processingBuffer[idx] = null;
         }
     }
+
 
 }

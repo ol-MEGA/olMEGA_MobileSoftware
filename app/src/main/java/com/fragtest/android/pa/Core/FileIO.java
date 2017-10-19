@@ -104,9 +104,8 @@ public class FileIO {
 
         // Scan for files
         File[] files = dir.listFiles();
+        String[] fileList = new String[files.length];
         try {
-            String[] fileList = new String[files.length];
-
             if (fileList.length == 0) {
                 return null;
             }
@@ -118,7 +117,7 @@ public class FileIO {
 
         } catch (Exception e) {
             Log.i(LOG,""+e.toString());
-            return null;
+            return fileList;
         }
     }
 
