@@ -61,6 +61,7 @@ public class ControlService extends Service {
     public static final int MSG_SET_VISIBILITY = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_INITIALISE_PREFERENCES = 16;
+    public static final int MSG_NO_TIMER = 17;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -154,12 +155,17 @@ public class ControlService extends Service {
                     mClientMessenger = msg.replyTo;
 
                     if (isQuestionnairePresent) {
-                        setAlarmAndCountdown();
+                        if (isTimer) {
+                            setAlarmAndCountdown();
+                        } else {
+                            messageClient(MSG_NO_TIMER);
+                            stopAlarmAndCountdown();
+                        }
                     } else{
-                        Log.i(LOG, "SENDING NO QUEST FOUND");
                         messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
+                        messageClient(MSG_NO_TIMER);
+                        stopAlarmAndCountdown();
                     }
-
 
                     Bundle bundleShow = new Bundle();
                     bundleShow.putBoolean("showConfigButton", showConfigButton);
@@ -241,15 +247,12 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
-
                     isMenu = true;
-                    if (isMenu) {
-                        isActiveQuestionnaire = false;
-                        if (isTimer) {
-                            Log.i(LOG, "setAlarmAndCountdown()");
-                            setAlarmAndCountdown();
-                        }
-                        Log.i(LOG, "Questionnaire inactive");
+                    isActiveQuestionnaire = false;
+                    if (isTimer) {
+                        setAlarmAndCountdown();
+                    } else {
+                        messageClient(MSG_NO_TIMER);
                     }
                     break;
 
@@ -404,10 +407,11 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
-        if (isQuestionnairePresent) {
-            mEventTimer.stopTimer();
-            mVibration.repeatingBurstOff();
-        }
+        //if (isQuestionnairePresent) {
+        //    mEventTimer.stopTimer();
+        //    mVibration.repeatingBurstOff();
+        //}
+        stopAlarmAndCountdown();
         mNotificationManager.cancel(NOTIFICATION_ID);
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
@@ -436,10 +440,11 @@ public class ControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e(LOG,"onTaskRemoved");
-        if (isQuestionnairePresent) {
-            mEventTimer.stopTimer();
-            mVibration.repeatingBurstOff();
-        }
+        //if (isQuestionnairePresent) {
+        //    mEventTimer.stopTimer();
+        //    mVibration.repeatingBurstOff();
+        //}
+        stopAlarmAndCountdown();
         super.onTaskRemoved(rootIntent);
     }
 
@@ -511,16 +516,6 @@ public class ControlService extends Service {
         // NotificationManager.notify() to prevent service from being killed
         // by ActivityManager when the Activity gets shut down.
         startForeground(NOTIFICATION_ID, notification);
-    }
-
-    private void stopAlarmAndCountdown() {
-        if (isTimerRunning) {
-            mEventTimer.stopTimer();
-            mVibration.repeatingBurstOff();
-            Bundle data = new Bundle();
-            data.putBoolean("isTimer", isTimer);
-            messageClient(MSG_GET_STATUS, data);
-        }
     }
 
     // Load preset values
@@ -598,15 +593,15 @@ public class ControlService extends Service {
         //isLocked = bundle.getBoolean("isLocked", false);
         isTimer = bundle.getBoolean("isTimer", isTimer);
 
+        Log.i(LOG, "REALLY TIMER: "+isTimer);
+
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 
-            Log.i(LOG, "Questionnaire is not the same.");
-
+            Log.i(LOG, "New Questionnaire selected.");
             mTempQuestionnaire = mSelectQuestionnaire;
+
             // Reads new XML file
             renewQuestionnaire();
-
-            Log.i(LOG, "isTIMER?:"+isTimer);
 
             //TODO: Needed?
             isTimerRunning = false;
@@ -614,9 +609,16 @@ public class ControlService extends Service {
             if (isTimer) {
                 setAlarmAndCountdown();
             } else{
+                //messageClient(MSG_NO_TIMER);
                 stopAlarmAndCountdown();
             }
 
+        } else if (!isTimer) {
+            //messageClient(MSG_NO_TIMER);
+            stopAlarmAndCountdown();
+        } else {
+            Log.i(LOG, "HERERERER something happened. isTimer: "+isTimer+", isTimerRunning: "+isTimerRunning);
+            setAlarmAndCountdown();
         }
 
         Bundle data = new Bundle();
@@ -630,10 +632,8 @@ public class ControlService extends Service {
     private Bundle getPreferences() {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
-        Log.i(LOG, "Questionnaire present: "+isQuestionnairePresent);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        //sharedPreferences = getSharedPreferences(sharedPreferencesName, MODE_MULTI_PROCESS);
 
         // recording
         samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "" + samplerate));
@@ -643,8 +643,7 @@ public class ControlService extends Service {
 
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
-
-        Log.i(LOG, "getPref IsTimer:"+isTimer);
+        Log.i(LOG, "HERERERER getPreferences(): "+isTimer);
 
         // Show preferences button
         isLocked = sharedPreferences.getBoolean("isLocked", isLocked);
@@ -670,9 +669,6 @@ public class ControlService extends Service {
                     Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
                 }
             }
-
-
-
         } else {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("whichQuest", "").apply();
@@ -684,11 +680,7 @@ public class ControlService extends Service {
         HashSet<String> activeFeatures =
                 (HashSet<String>) sharedPreferences.getStringSet("features", null);
         filterHp = sharedPreferences.getBoolean("filterHp", true);
-        //int filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
-        //Boolean downsample = sharedPreferences.getBoolean("downsample", false);
 
-        // TODO: bundle up everything for initial adaptation of processing stack.
-        // TODO: how to clean this up? read SharedPreferences from processing stack (synchronise?!)?
         Bundle processingSettings = new Bundle();
         processingSettings.putBoolean("isTimer", isTimer);
         processingSettings.putInt("samplerate", samplerate);
@@ -705,8 +697,7 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        Log.i(LOG, "Timer present: "+isTimer);
-        Log.i(LOG, "Questionnaire present: "+isQuestionnairePresent);
+        Log.i(LOG, "setAlarmAndCountdown");
 
         if (isQuestionnairePresent && isTimer) {
 
@@ -735,6 +726,19 @@ public class ControlService extends Service {
             data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
             messageClient(MSG_START_COUNTDOWN, data);
             Log.i(LOG, "Countdown set.");
+        }
+    }
+
+    private void stopAlarmAndCountdown() {
+
+        messageClient(MSG_NO_TIMER);
+        if (isTimerRunning) {
+            isTimerRunning = false;
+            mEventTimer.stopTimer();
+            mVibration.repeatingBurstOff();
+            //Bundle data = new Bundle();
+            //data.putBoolean("isTimer", isTimer);
+            //messageClient(MSG_GET_STATUS, data);
         }
     }
 

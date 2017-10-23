@@ -397,7 +397,6 @@ public class MainActivity extends AppCompatActivity {
         if (BuildConfig.DEBUG) {
             Log.e(LOG, "onResume");
         }
-        Log.i(LOG, "MainActivity ONRESUME first ShowRecordingButton: "+showRecordingButton);
 
         if (isPrefsInForeGround) {
             isPrefsInForeGround = false;
@@ -418,18 +417,12 @@ public class MainActivity extends AppCompatActivity {
             dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
             dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
 
-
-            Log.i(LOG, "MainActivity ONRESUME ShowRecordingButton: "+showRecordingButton);
-
-            //HashSet<String> activeFeatures =
-            //       (HashSet<String>) sharedPreferences.getStringSet("features", null);
             Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
 
             ArrayList<String> listActiveFeatures = new ArrayList<>();
             listActiveFeatures.addAll(activeFeatures);
             dataPreferences.putStringArrayList("features", listActiveFeatures);
 
-            Log.i(LOG, "SENDING DATA NOW!");
             messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
         }
         mAdapter.onResume();
@@ -467,11 +460,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Bundle dataVisibility = msg.getData();
                     showConfigButton = dataVisibility.getBoolean("showConfigButton", showConfigButton);
-                    //showRecordingButton = dataVisibility.getBoolean("showRecordingButton", showRecordingButton);
                     isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
-
-
-                    Log.i(LOG, "MainActivity MSG_SET_VISIBILITY ShowRecordingButton: "+showRecordingButton);
 
                     if (isQuestionnairePresent) {
                         mAdapter.questionnairePresent();
@@ -483,47 +472,27 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
-                    Log.i(LOG, "NO QUEST FOUND.");
                     mAdapter.noQuestionnaires();
-                    /*showConfigButton = msg.getData().getBoolean("showConfigButton", false);
-                    showRecordingButton = msg.getData().getBoolean("showRecordingButton", false);
-                    isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent", false);
-
-                    setConfigVisibility();
-                    setRecordingVisibility();*/
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
-                    Log.e(LOG, "isPrefsInForeGround: "+isPrefsInForeGround);
 
                     isTimer = true;
-                    //showConfigButton = msg.getData().getBoolean("showConfigButton", false);
-                    //showRecordingButton = msg.getData().getBoolean("showRecordingButton", false);
-                    //isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent", false);
-
-                    //setConfigVisibility();
-                    //setRecordingVisibility();
 
                     if (isQuestionnairePresent) {
-                        Log.e(LOG, "Trying to set FCD");
                         int finalCountDown = msg.getData().getInt("finalCountDown");
                         int countDownInterval = msg.getData().getInt("countDownInterval");
                         if (isTimer) {
-                            Log.i(LOG, "here.");
                             mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
                             mAdapter.startCountDown();
                         } else {
-                            Log.i(LOG, "here here.");
                             mAdapter.setQuestionnaireProgressBar(100);
                         }
                         mAdapter.questionnairePresent();
                         mAdapter.displayManualStart();
                     } else {
-                        Log.i(LOG, "here here here.");
                         mAdapter.noQuestionnaires();
                     }
-
-
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
@@ -537,7 +506,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
-
                     mAdapter.proposeQuestionnaire();
                     break;
 
@@ -545,32 +513,6 @@ public class MainActivity extends AppCompatActivity {
                     // Set UI to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
-
-                    /*
-                    isQuestionnairePresent = status.getBoolean("isQuestionnairePresent");
-                    showConfigButton = status.getBoolean("showConfigButton");
-                    showRecordingButton = status.getBoolean("showRecordingButton");
-                    isTimer = status.getBoolean("isTimer");
-
-                    if (!isTimer) {
-                        mAdapter.setQuestionnaireProgressBar(100);
-                    } else {
-
-                    }
-
-                    if (isQuestionnairePresent) {
-                        mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
-                    } else {
-                        mAdapter.noQuestionnaires();
-                    }
-
-                    setConfigVisibility();
-                    setRecordingVisibility();
-
-                    if (status.getBoolean("isQuestionnairePending", false)) {
-                        mAdapter.proposeQuestionnaire();
-                    }*/
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
@@ -586,24 +528,18 @@ public class MainActivity extends AppCompatActivity {
 
                     break;
 
+                case ControlService.MSG_NO_TIMER:
+                    Log.i(LOG, "HERERERER: Noo TIMER");
+                    isTimer = false;
+                    mAdapter.noTimer();
+                    break;
+
                 case ControlService.MSG_RESET_MENU:
                     mAdapter.resetMenu();
-
-                    /*showConfigButton = msg.getData().getBoolean("showConfigButton");
-                    showRecordingButton = msg.getData().getBoolean("showRecordingButton");
-                    isQuestionnairePresent = msg.getData().getBoolean("isQuestionnairePresent");
-                    if (!isQuestionnairePresent) {
-                        mAdapter.noQuestionnaires();
-                        Log.e(LOG, "Received: no questionnaires");
-                    }
-
-                    setConfigVisibility();
-                    setRecordingVisibility();*/
                     break;
 
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
                     isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
-                    Log.e(LOG, "Foreground: "+isPrefsInForeGround);
                     break;
 
                 case ControlService.MSG_START_RECORDING:

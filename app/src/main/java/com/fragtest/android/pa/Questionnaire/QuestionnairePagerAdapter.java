@@ -38,6 +38,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Stores all Views
     ArrayList<QuestionViewActive> mListOfViewsStorage;
     private boolean isCountDownRunning = false;
+    private boolean isTimer = false;
     private boolean isInForeGround = false;
     private boolean isMenu = false;
     private boolean isQuestionnaireActive = false;
@@ -75,6 +76,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void noQuestionnaires() {
         isQuestionnairePresent = false;
+        isTimer = false;
         mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
         mMenuPage.updateCountDownText("");
     }
@@ -86,7 +88,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Calculation of remaining time and visual update
     private void updateCountDown() {
 
-        if (mSecondsRemaining >= 0) {
+        if (mSecondsRemaining >= 0 && isTimer) {
             mMenuPage.updateCountdownText(mSecondsRemaining);
             setQuestionnaireProgressBar((float) mSecondsRemaining / mCountDownInterval);
         } else {
@@ -98,6 +100,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void setFinalCountDown(int finalCountDown, int countDownInterval) {
         mFinalCountdown = finalCountDown;
         mCountDownInterval = countDownInterval;
+        isTimer = true;
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "Final Countdown set: " + finalCountDown);
         }
@@ -113,25 +116,25 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Start/restart countdown and determine validity
     public void startCountDown() {
-
         mMenuPage.resetStartTextSize();
         mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
-        Log.e(LOG, "Text set to: "+mContext.getResources().getString(R.string.menuText));
+        Log.e(LOG, "Text set to: " + mContext.getResources().getString(R.string.menuText));
 
-        if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
-            mCountDownHandler.post(mCountDownRunnable);
-            isCountDownRunning = true;
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG, "Countdown started.");
+        if (isTimer)
+            if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
+                mCountDownHandler.post(mCountDownRunnable);
+                isCountDownRunning = true;
+                if (BuildConfig.DEBUG) {
+                    Log.i(LOG, "Countdown started.");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    Log.e(LOG, "Countdown out of time.");
+                }
+                stopCountDown();
+                setQuestionnaireProgressBar(0f);
             }
-        } else {
-            if (BuildConfig.DEBUG) {
-                Log.e(LOG, "Countdown out of time.");
-            }
-            stopCountDown();
-            setQuestionnaireProgressBar(0f);
         }
-    }
 
     // End/Stop countdown
     private void stopCountDown() {
@@ -140,6 +143,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "CountDown stopped.");
         }
+    }
+
+    public void noTimer() {
+        isTimer = false;
+        stopCountDown();
+        mMenuPage.updateCountDownText("");
+        Log.i(LOG, "SETTING PROGBAR");
+        hideQuestionnaireProgressBar();
     }
 
     // Initialise menu with visible countdown
@@ -238,6 +249,28 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             */
         }
+    }
+
+    public void hideQuestionnaireProgressBar() {
+        View progress = MainActivity.mProgress;
+        View regress = MainActivity.mRegress;
+
+        int nProgress = 0;
+        int nRegress = 1;
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
     }
 
     // Set the horizontal Indicator at the Top to follow Page Position
