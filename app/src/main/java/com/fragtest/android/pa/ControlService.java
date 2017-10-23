@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * The brains of the operation.
@@ -59,6 +60,7 @@ public class ControlService extends Service {
     public static final int MSG_GET_STATUS = 13;
     public static final int MSG_SET_VISIBILITY = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
+    public static final int MSG_INITIALISE_PREFERENCES = 16;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -154,17 +156,20 @@ public class ControlService extends Service {
                     if (isQuestionnairePresent) {
                         setAlarmAndCountdown();
                     } else{
+                        Log.i(LOG, "SENDING NO QUEST FOUND");
                         messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
                     }
-                    Bundle show = new Bundle();
-                    show.putBoolean("showConfigButton", showConfigButton);
-                    show.putBoolean("showRecordingButton", showRecordingButton);
-                    show.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+
+
+                    Bundle bundleShow = new Bundle();
+                    bundleShow.putBoolean("showConfigButton", showConfigButton);
+                    bundleShow.putBoolean("showRecordingButton", showRecordingButton);
+                    bundleShow.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
                     Log.e(LOG, "Visibility Config: "+showConfigButton);
-                    Log.e(LOG, "Visibility Recording: "+showRecordingButton);
+                    Log.e(LOG, "Visibility Recording here: "+showRecordingButton);
                     Log.e(LOG, "isQuestionnairePresent: "+isQuestionnairePresent);
-                    messageClient(MSG_SET_VISIBILITY, show);
+                    messageClient(MSG_SET_VISIBILITY, bundleShow);
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -184,6 +189,10 @@ public class ControlService extends Service {
                     status.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
                     status.putBoolean("isTimer", isTimer);
                     messageClient(MSG_GET_STATUS, status);
+                    break;
+
+                case MSG_INITIALISE_PREFERENCES:
+                    initialiseValues();
                     break;
 
                 case MSG_ALARM_RECEIVED:
@@ -343,9 +352,6 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
 
-        // Load preset values
-        initialiseValues();
-
         Log.d(LOG, "onCreate");
         // log-file
         Configurator.currentConfig()
@@ -356,9 +362,13 @@ public class ControlService extends Service {
 
         Logger.info("Service onCreate");
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
+
         showConfigButton = mFileIO.scanConfigMode();
+
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
 
@@ -516,24 +526,29 @@ public class ControlService extends Service {
     // Load preset values
     private void initialiseValues() {
 
-        PresetValues presetValues = new PresetValues(context);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         // preferences
-        isTimer = presetValues.isTimer;
-        isWave = presetValues.isWave;
-        keepAudioCache = presetValues.keepAudioCache;
-        isLocked = presetValues.isLocked;
-        filterHp = presetValues.filterHp;
-        downsample = presetValues.downsample;
-        showConfigButton = presetValues.showConfigButton;
-        showRecordingButton = presetValues.showRecordingButton;
+        isTimer = sharedPreferences.getBoolean("isTimer", InitValues.isTimer);
+        isWave = sharedPreferences.getBoolean("isWave", InitValues.isWave);
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache);
+        isLocked = sharedPreferences.getBoolean("isLocked", InitValues.isLocked);
+        filterHp = sharedPreferences.getBoolean("filterHp", InitValues.filterHp);
+        downsample = sharedPreferences.getBoolean("downsample", InitValues.downsample);
+        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
 
-        samplerate = presetValues.samplerate;
-        chunklengthInS = presetValues.chunklengthInS;
-        filterHpFrequency = presetValues.filterHpFrequency;
+        filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
 
-        mFinalCountDown = presetValues.mFinalCountDown;
-        mTimerInterval = presetValues.mTimerInterval;
+        // Cave: These are Strings
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
+        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+
+        mFinalCountDown = InitValues.finalCountDown;
+        mTimerInterval = InitValues.timerInterval;
+
+        Log.i(LOG, "INIT showRecordingButton:"+showRecordingButton);
+
     }
 
     private void updatePreferences(Bundle dataPreferences) {
@@ -542,51 +557,46 @@ public class ControlService extends Service {
 
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
-        samplerate = Integer.parseInt(dataPreferences.getString("samplerate", ""+samplerate));
-        chunklengthInS = Integer.parseInt(dataPreferences.getString("chunklengthInS", ""+chunklengthInS));
-        keepAudioCache = dataPreferences.getBoolean("keepAudioCache", false);
-        isWave = dataPreferences.getBoolean("isWave", false);
-        isTimer = dataPreferences.getBoolean("isTimer", false);
-        //isLocked = prefs.getBoolean("isLocked", false);
-        //filterHp = prefs.getBoolean("filterHp", false);
-        //filterHpFrequency = prefs.getInt("filterHpFrequency", filterHpFrequency);
-        //downsample = prefs.getBoolean("downsample", downsample);
-        //activeFeatures = prefs.getStringArray("activeFeatures");
-        Log.i(LOG, "KEEP WAVE REALLY?"+isWave);
 
-        editor.putString("whichQuest", mSelectQuestionnaire);
-        editor.putString("samplerate", ""+samplerate);
-        editor.putString("chunklengthInS", ""+chunklengthInS);
+        isWave = dataPreferences.getBoolean("isWave", isWave);
+        isTimer = dataPreferences.getBoolean("isTimer", isTimer);
+        isLocked = dataPreferences.getBoolean("isLocked", isLocked);
+        filterHp = dataPreferences.getBoolean("filterHp", filterHp);
+        filterHpFrequency = Integer.parseInt(dataPreferences.getString("filterHpFrequency", "" + filterHpFrequency));
+        downsample = dataPreferences.getBoolean("downsample", downsample);
+        keepAudioCache = dataPreferences.getBoolean("keepAudioCache", keepAudioCache);
+
+        samplerate = Integer.parseInt(dataPreferences.getString("samplerate", "" + samplerate));
+        chunklengthInS = Integer.parseInt(dataPreferences.getString("chunklengthInS", "" + chunklengthInS));
+
+        ArrayList<String> listActiveFeatures = dataPreferences.getStringArrayList("features");
+        Set<String> activeFeatures = new HashSet<>();
+        activeFeatures.addAll(listActiveFeatures);
+
         editor.putBoolean("keepAudioCache", keepAudioCache);
         editor.putBoolean("isWave", isWave);
         editor.putBoolean("isTimer", isTimer);
-        //editor.putBoolean("isLocked", isLocked);
-        //editor.putBoolean("filterHp", filterHp);
-        //editor.putInt("filterHpFrequency", filterHpFrequency);
-        //editor.putBoolean("downsample", downsample);
-        //editor.putStringSet("activeFeatures", activeFeatures);
+        editor.putBoolean("isLocked", isLocked);
+        editor.putBoolean("filterHp", filterHp);
+        editor.putBoolean("downsample", downsample);
+        editor.putBoolean("showCofigButton", showConfigButton);
+        editor.putBoolean("showRecordingButton", showRecordingButton);
+
+        editor.putStringSet("features", activeFeatures);
+
+        editor.putString("whichQuest", mSelectQuestionnaire);
+        editor.putString("filterHpFrequency", "" + filterHpFrequency);
+        editor.putString("samplerate", "" + samplerate);
+        editor.putString("chunklengthInS", "" + chunklengthInS);
+
         editor.apply();
     }
 
     private void checkForPreferences() {
 
         Bundle bundle = getPreferences();
-        isLocked = bundle.getBoolean("isLocked", false);
-        isTimer = bundle.getBoolean("isTimer", false);
-
-        //TODO: Transform this to a simple shared preference setting
-        // deletes rules.ini
-        if (isLocked) {
-            showConfigButton = !isLocked;
-            mFileIO.lockPreferences();
-            Bundle dataVisibility = new Bundle();
-            dataVisibility.putBoolean("showConfigButton", showConfigButton);
-            dataVisibility.putBoolean("showRecordingButton", showRecordingButton);
-            //dataVisibility.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
-            messageClient(MSG_SET_VISIBILITY, dataVisibility);
-        }
-
-        Log.i(LOG, "Questionnaire to be displayed: "+mSelectQuestionnaire);
+        //isLocked = bundle.getBoolean("isLocked", false);
+        isTimer = bundle.getBoolean("isTimer", isTimer);
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 
@@ -595,6 +605,8 @@ public class ControlService extends Service {
             mTempQuestionnaire = mSelectQuestionnaire;
             // Reads new XML file
             renewQuestionnaire();
+
+            Log.i(LOG, "isTIMER?:"+isTimer);
 
             //TODO: Needed?
             isTimerRunning = false;
@@ -624,16 +636,18 @@ public class ControlService extends Service {
         //sharedPreferences = getSharedPreferences(sharedPreferencesName, MODE_MULTI_PROCESS);
 
         // recording
-        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", ""+samplerate));
-        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", ""+chunklengthInS));
-        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
-        isWave = sharedPreferences.getBoolean("isWave", false);
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "" + samplerate));
+        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "" + chunklengthInS));
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", keepAudioCache);
+        isWave = sharedPreferences.getBoolean("isWave", isWave);
 
-        //TODO: For some reason this is only updated after relaunch -> maybe due to service/activity
         // Use automatic timer
-        isTimer = sharedPreferences.getBoolean("isTimer", false);
+        isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
+
+        Log.i(LOG, "getPref IsTimer:"+isTimer);
+
         // Show preferences button
-        isLocked = sharedPreferences.getBoolean("isLocked", false);
+        isLocked = sharedPreferences.getBoolean("isLocked", isLocked);
 
         // Scan file system for questionnaires
         if (isQuestionnairePresent) {
@@ -656,6 +670,8 @@ public class ControlService extends Service {
                     Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
                 }
             }
+
+
 
         } else {
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -680,7 +696,7 @@ public class ControlService extends Service {
         processingSettings.putBoolean("isWave", isWave);
         processingSettings.putSerializable("activeFeatures", activeFeatures);
         processingSettings.putBoolean("filterHp", filterHp);
-        processingSettings.putInt("filterHpFrequency", filterHpFrequency);
+        processingSettings.putString("filterHpFrequency", "" + filterHpFrequency);
         processingSettings.putBoolean("downsample", downsample);
         processingSettings.putString("whichQuest", mSelectQuestionnaire);
 

@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
@@ -59,9 +60,6 @@ public class MainActivity extends AppCompatActivity {
             showConfigButton, showRecordingButton;
     private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
 
-    private PresetValues presetValues;
-
-
     private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
     private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
     private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
@@ -78,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = new Messenger(service);
             messageService(ControlService.MSG_REGISTER_CLIENT);
             messageService(ControlService.MSG_GET_STATUS);
+            messageService(ControlService.MSG_INITIALISE_PREFERENCES);
         }
 
         @Override
@@ -199,9 +198,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        presetValues = new PresetValues(this);
-        showConfigButton = sharedPreferences.getBoolean("showConfigButton", presetValues.showConfigButton);
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", presetValues.showRecordingButton);
+        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
 
         Log.d(LOG, "Requesting Permissions.");
 
@@ -399,31 +397,39 @@ public class MainActivity extends AppCompatActivity {
         if (BuildConfig.DEBUG) {
             Log.e(LOG, "onResume");
         }
+        Log.i(LOG, "MainActivity ONRESUME first ShowRecordingButton: "+showRecordingButton);
 
         if (isPrefsInForeGround) {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
-            //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             Bundle dataPreferences = new Bundle();
 
             dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
-            dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", ""+presetValues.samplerate));
-            dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", ""+presetValues.chunklengthInS));
-            dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", presetValues.isWave));
-            dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", presetValues.isTimer));
-            dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", presetValues.keepAudioCache));
+            dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
+            dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
+            dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
+            dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache));
+            dataPreferences.putBoolean("downsample", sharedPreferences.getBoolean("downsample", InitValues.downsample));
+            dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
+            dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
+            dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
+            dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
+            dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+            dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
 
-            dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", presetValues.showConfigButton));
-            dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", presetValues.showRecordingButton));
-            //data.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", true));
-            //data.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", false));
-            //data.putInt("filterHpFrequency", Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100")));
-            //data.putBoolean("downsample", sharedPreferences.getBoolean("downsample", false));
+
+            Log.i(LOG, "MainActivity ONRESUME ShowRecordingButton: "+showRecordingButton);
+
             //HashSet<String> activeFeatures =
             //       (HashSet<String>) sharedPreferences.getStringSet("features", null);
-            //data.putSerializable("activeFeatures", activeFeatures);
+            Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
 
+            ArrayList<String> listActiveFeatures = new ArrayList<>();
+            listActiveFeatures.addAll(activeFeatures);
+            dataPreferences.putStringArrayList("features", listActiveFeatures);
+
+            Log.i(LOG, "SENDING DATA NOW!");
             messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
         }
         mAdapter.onResume();
@@ -460,14 +466,17 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_SET_VISIBILITY:
 
                     Bundle dataVisibility = msg.getData();
-                    showConfigButton = dataVisibility.getBoolean("showConfigButton", false);
-                    showRecordingButton = dataVisibility.getBoolean("showRecordingButton", false);
-                    isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", false);
+                    showConfigButton = dataVisibility.getBoolean("showConfigButton", showConfigButton);
+                    //showRecordingButton = dataVisibility.getBoolean("showRecordingButton", showRecordingButton);
+                    isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
-                    /*if (isQuestionnairePresent) {
+
+                    Log.i(LOG, "MainActivity MSG_SET_VISIBILITY ShowRecordingButton: "+showRecordingButton);
+
+                    if (isQuestionnairePresent) {
                         mAdapter.questionnairePresent();
                         mAdapter.displayManualStart();
-                    }*/
+                    }
 
                     setConfigVisibility();
                     setRecordingVisibility();
