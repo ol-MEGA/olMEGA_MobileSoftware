@@ -154,6 +154,8 @@ public class ControlService extends Service {
                     Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
 
+                    setupApplication();
+
                     if (isQuestionnairePresent) {
                         if (isTimer) {
                             setAlarmAndCountdown();
@@ -362,28 +364,46 @@ public class ControlService extends Service {
 
         Logger.info("Service onCreate");
 
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        showNotification();
+
+        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
+        Log.e(LOG,"ControlService started");
+
+    }
+
+
+
+
+
+
+
+    // TODO: Countdown is not shown upon first use.
+
+
+
+
+
+
+
+
+
+
+
+    private void setupApplication() {
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
-        showConfigButton = mFileIO.scanConfigMode();
-
-
-
-
+        // Determine whether to show or hide preferences menu
+        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", false));
 
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
 
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        showNotification();
-
         checkForPreferences();
-
-        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
-        Log.e(LOG,"ControlService started");
-
     }
 
     @Override
@@ -521,7 +541,8 @@ public class ControlService extends Service {
         isLocked = sharedPreferences.getBoolean("isLocked", InitValues.isLocked);
         filterHp = sharedPreferences.getBoolean("filterHp", InitValues.filterHp);
         downsample = sharedPreferences.getBoolean("downsample", InitValues.downsample);
-        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
+        //showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
+        showConfigButton = !isLocked;
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
 
         filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
@@ -532,6 +553,14 @@ public class ControlService extends Service {
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
+
+        if (!sharedPreferences.getBoolean("usedBefore", false)) {
+            Log.i(LOG, "FIRSTUSE detected");
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("usedBefore", true);
+            editor.apply();
+        }
+
     }
 
     private void updatePreferences(Bundle dataPreferences) {
@@ -581,6 +610,9 @@ public class ControlService extends Service {
 
         Bundle bundle = getPreferences();
         isTimer = bundle.getBoolean("isTimer", isTimer);
+        showConfigButton = !isLocked;
+
+        Log.i(LOG, "SHOWCONFIG cfp: "+showConfigButton);
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 

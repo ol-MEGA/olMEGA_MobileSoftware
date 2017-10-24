@@ -16,7 +16,7 @@
     </PreferenceCategory>
 
 
-    <PreferenceCategory android:title="Lock Preferences">
+    <PreferenceCategory android:title="Hide Preferences">
 
         <SwitchPreference
             android:layout_width="wrap_content"

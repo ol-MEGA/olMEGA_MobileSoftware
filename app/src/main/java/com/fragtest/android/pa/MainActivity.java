@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
@@ -60,6 +61,22 @@ public class MainActivity extends AppCompatActivity {
     private boolean mServiceIsRecording;
     private Messenger mServiceMessenger;
     private boolean isQuestionnairePresent = true;
+
+    private String[] requestString = {"Please grant permission to read/write storage",
+        "Please grant permission to read/write storage",
+        "Please grant permission to read/write storage",
+        "Come on.",
+        "Really? This is how you want to play?",
+        "Don't be like that!",
+        "You're being ridiculous",
+        "Goddamn it, give me permission!",
+        "GIVE ME PERMISSION!!!",
+        "SCREW YOU!"};
+    private int requestIterator = 0;
+
+
+    private boolean permissionGranted = false;
+
     // preferences
     private SharedPreferences sharedPreferences;
     private boolean isTimer, showConfigButton, showRecordingButton;
@@ -156,13 +173,37 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionGranted = true;
+                    doBindService();
+                } else {
+                    Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
+                    requestPermissions();
+                    requestIterator++;
+                }
+                return;
+            }
+
+        }
+    }
+
     void doBindService() {
-        if (!isServiceRunning()) {
+
+        if (!isServiceRunning() && permissionGranted) {
             startService(new Intent(this, ControlService.class));
         }
-        bindService(new Intent(this, ControlService.class),
-                mConnection, Context.BIND_AUTO_CREATE);
-        mServiceIsBound = true;
+
+        if (permissionGranted) {
+            bindService(new Intent(this, ControlService.class),
+                    mConnection, Context.BIND_AUTO_CREATE);
+            mServiceIsBound = true;
+        }
     }
 
     void doUnbindService() {
@@ -182,20 +223,8 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
     }
 
-    /**
-     * Lifecycle methods
-     **/
+    public void requestPermissions() {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
-
-        Log.d(LOG, "Requesting Permissions.");
-
-        //Android 6.0.1+
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
@@ -227,6 +256,21 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.CAMERA},
                 MY_PERMISSIONS_CAMERA);
+    }
+
+
+    /**
+     * Lifecycle methods
+     **/
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
+
+
 
 
         if (BuildConfig.DEBUG) {
@@ -235,6 +279,49 @@ public class MainActivity extends AppCompatActivity {
 
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
+
+
+            Log.d(LOG, "Requesting Permissions.");
+            requestPermissions();
+
+/*
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
+                    MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    MY_PERMISSIONS_RECORD_AUDIO);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.VIBRATE},
+                    MY_PERMISSIONS_VIBRATE);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WAKE_LOCK},
+                    MY_PERMISSIONS_WAKE_LOCK);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.DISABLE_KEYGUARD},
+                    MY_PERMISSIONS_DISABLE_KEYGUARD);
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    MY_PERMISSIONS_CAMERA);
+
+
+
+*/
+
+
 
             //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             setContentView(R.layout.activity_main);
