@@ -149,8 +149,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isTimer = false;
         stopCountDown();
         mMenuPage.updateCountDownText("");
-        Log.i(LOG, "SETTING PROGBAR");
         hideQuestionnaireProgressBar();
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG, "Timer offline.");
+        }
     }
 
     // Initialise menu with visible countdown

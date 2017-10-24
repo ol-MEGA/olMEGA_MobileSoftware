@@ -41,6 +41,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String KEY_QUEST = "whichQuest";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
     private static final String KEY_LOCKED = "isLocked";
+    private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
+    private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
+    private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
+    private final static int MY_PERMISSIONS_RECORD_AUDIO = 3;
+    private final static int MY_PERMISSIONS_VIBRATE = 4;
+    private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
+    private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
+    private final static int MY_PERMISSIONS_CAMERA = 7;
+    final Messenger mMessageHandler = new Messenger(new MessageHandler());
     public ViewPager mViewPager = null;
     public TextView mLogo;
     public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
@@ -50,26 +59,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isActivityRunning = false;
     private boolean mServiceIsRecording;
     private Messenger mServiceMessenger;
-    final Messenger mMessageHandler = new Messenger(new MessageHandler());
-
-    private SharedPreferences sharedPreferences;
-
     private boolean isQuestionnairePresent = true;
     // preferences
-    private boolean isTimer, isWave, keepAudioCache, isLocked, filterHp, downsample,
-            showConfigButton, showRecordingButton;
-    private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
-
-    private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
-    private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
-    private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
-    private final static int MY_PERMISSIONS_RECORD_AUDIO = 3;
-    private final static int MY_PERMISSIONS_VIBRATE = 4;
-    private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
-    private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
-    private final static int MY_PERMISSIONS_CAMERA = 7;
-
-
+    private SharedPreferences sharedPreferences;
+    private boolean isTimer, showConfigButton, showRecordingButton;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -181,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void handleNewPagerAdapter() {
-
         mViewPager = null;
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
@@ -275,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
             });
 
             if (showConfigButton) {
-
                 mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -305,14 +296,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
-
-
-
     @Override
     protected void onDestroy() {
         if (BuildConfig.DEBUG) {
@@ -330,12 +313,6 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onStart();
         mAdapter.onStart();
-
-
-
-
-
-
 /*
         // start lock task mode if it's not already active
         ActivityManager am = (ActivityManager) getSystemService(
@@ -353,18 +330,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 */
-
-
-
-
-
     }
-
-
-
-
-
-
 
     @Override
     protected void onRestart() {
@@ -402,9 +368,14 @@ public class MainActivity extends AppCompatActivity {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
+            // Load information from shared preferences and bundle them
             Bundle dataPreferences = new Bundle();
-
+            // String
             dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
+            dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
+            dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+            dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+            // Boolean
             dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
             dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
             dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
@@ -413,12 +384,9 @@ public class MainActivity extends AppCompatActivity {
             dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
             dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
             dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
-            dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
-            dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
-            dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
-
+            // String Set
             Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
-
+            // String Set cannot be bundled natively, cast to ArrayList
             ArrayList<String> listActiveFeatures = new ArrayList<>();
             listActiveFeatures.addAll(activeFeatures);
             dataPreferences.putStringArrayList("features", listActiveFeatures);
@@ -444,6 +412,11 @@ public class MainActivity extends AppCompatActivity {
             mRecord.setVisibility(View.INVISIBLE);
         }
     }
+
+
+    /**
+     * Message Handling
+     **/
 
     class MessageHandler extends Handler {
 
@@ -529,7 +502,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_NO_TIMER:
-                    Log.i(LOG, "HERERERER: Noo TIMER");
                     isTimer = false;
                     mAdapter.noTimer();
                     break;
@@ -554,7 +526,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
 }

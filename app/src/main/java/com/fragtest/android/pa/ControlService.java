@@ -167,14 +167,12 @@ public class ControlService extends Service {
                         stopAlarmAndCountdown();
                     }
 
+                    // Bundled information about visible contents
                     Bundle bundleShow = new Bundle();
                     bundleShow.putBoolean("showConfigButton", showConfigButton);
                     bundleShow.putBoolean("showRecordingButton", showRecordingButton);
                     bundleShow.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
-                    Log.e(LOG, "Visibility Config: "+showConfigButton);
-                    Log.e(LOG, "Visibility Recording here: "+showRecordingButton);
-                    Log.e(LOG, "isQuestionnairePresent: "+isQuestionnairePresent);
                     messageClient(MSG_SET_VISIBILITY, bundleShow);
                     break;
 
@@ -216,8 +214,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
-                    // Check if necessary states are set for questionnaire
-                    //TODO: perform checks
+                    // User has initiated questionnaire manually without/before timer
                     if (!isActiveQuestionnaire) {
                         startQuestionnaire("manual");
                     }
@@ -372,6 +369,10 @@ public class ControlService extends Service {
 
         showConfigButton = mFileIO.scanConfigMode();
 
+
+
+
+
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
 
@@ -407,10 +408,6 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
-        //if (isQuestionnairePresent) {
-        //    mEventTimer.stopTimer();
-        //    mVibration.repeatingBurstOff();
-        //}
         stopAlarmAndCountdown();
         mNotificationManager.cancel(NOTIFICATION_ID);
 
@@ -440,10 +437,6 @@ public class ControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e(LOG,"onTaskRemoved");
-        //if (isQuestionnairePresent) {
-        //    mEventTimer.stopTimer();
-        //    mVibration.repeatingBurstOff();
-        //}
         stopAlarmAndCountdown();
         super.onTaskRemoved(rootIntent);
     }
@@ -491,14 +484,12 @@ public class ControlService extends Service {
 
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
-        //intent.putExtra("showConfigButton",showConfigButton);
-        //Log.e(LOG, "shw Config: "+showConfigButton);
         startActivity(intent);
     }
 
     private void showNotification() {
 
-        // Launch activiy when notification is selected
+        // Launch activity when notification is selected
         PendingIntent intent = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
 
@@ -518,7 +509,7 @@ public class ControlService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    // Load preset values
+    // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -541,14 +532,10 @@ public class ControlService extends Service {
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
-
-        Log.i(LOG, "INIT showRecordingButton:"+showRecordingButton);
-
     }
 
     private void updatePreferences(Bundle dataPreferences) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
 
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
@@ -568,6 +555,9 @@ public class ControlService extends Service {
         Set<String> activeFeatures = new HashSet<>();
         activeFeatures.addAll(listActiveFeatures);
 
+        // Editor accumulates new preferences and writes them to shared preferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        // Boolean
         editor.putBoolean("keepAudioCache", keepAudioCache);
         editor.putBoolean("isWave", isWave);
         editor.putBoolean("isTimer", isTimer);
@@ -576,56 +566,44 @@ public class ControlService extends Service {
         editor.putBoolean("downsample", downsample);
         editor.putBoolean("showCofigButton", showConfigButton);
         editor.putBoolean("showRecordingButton", showRecordingButton);
-
+        // String Set
         editor.putStringSet("features", activeFeatures);
-
+        // String
         editor.putString("whichQuest", mSelectQuestionnaire);
         editor.putString("filterHpFrequency", "" + filterHpFrequency);
         editor.putString("samplerate", "" + samplerate);
         editor.putString("chunklengthInS", "" + chunklengthInS);
-
+        // Make changes permanent
         editor.apply();
     }
 
     private void checkForPreferences() {
 
         Bundle bundle = getPreferences();
-        //isLocked = bundle.getBoolean("isLocked", false);
         isTimer = bundle.getBoolean("isTimer", isTimer);
-
-        Log.i(LOG, "REALLY TIMER: "+isTimer);
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 
-            Log.i(LOG, "New Questionnaire selected.");
-            mTempQuestionnaire = mSelectQuestionnaire;
+            if (BuildConfig.DEBUG) {
+                Log.i(LOG, "New Questionnaire selected.");
+            }
 
+            mTempQuestionnaire = mSelectQuestionnaire;
             // Reads new XML file
             renewQuestionnaire();
-
-            //TODO: Needed?
             isTimerRunning = false;
 
             if (isTimer) {
                 setAlarmAndCountdown();
             } else{
-                //messageClient(MSG_NO_TIMER);
                 stopAlarmAndCountdown();
             }
-
-        } else if (!isTimer) {
-            //messageClient(MSG_NO_TIMER);
-            stopAlarmAndCountdown();
-        } else {
-            Log.i(LOG, "HERERERER something happened. isTimer: "+isTimer+", isTimerRunning: "+isTimerRunning);
+        } else if (isTimer) {
             setAlarmAndCountdown();
+        } else {
+            stopAlarmAndCountdown();
         }
-
-        Bundle data = new Bundle();
-        data.putBoolean("showConfigButton", showConfigButton);
-        data.putBoolean("showRecordingButton", showRecordingButton);
-        data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
-        messageClient(MSG_RESET_MENU, data);
+        messageClient(MSG_RESET_MENU);
     }
 
 
@@ -666,13 +644,17 @@ public class ControlService extends Service {
 
                 if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
                     mSelectQuestionnaire = fileList[0];
-                    Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
+                    if (BuildConfig.DEBUG) {
+                        Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
+                    }
                 }
             }
         } else {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putString("whichQuest", "").apply();
-            Log.e(LOG, "No Questionnaires available.");
+            if (BuildConfig.DEBUG) {
+                Log.e(LOG, "No Questionnaires available.");
+            }
             messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
         }
 
@@ -711,19 +693,20 @@ public class ControlService extends Service {
                 mEventTimer.setTimer(mTimerInterval);
                 mFinalCountDown = mEventTimer.getFinalCountDown();
                 isTimerRunning = true;
-                Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+                if (BuildConfig.DEBUG) {
+                    Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+                }
             } else {
                 // Usually when app is restarted
-                Log.i(LOG, "Timer already set. Reinstating countdown");
+                if (BuildConfig.DEBUG) {
+                    Log.i(LOG, "Timer already set. Reinstating countdown");
+                }
             }
 
             // Send message to initialise / update timer
             Bundle data = new Bundle();
             data.putInt("finalCountDown", mFinalCountDown);
             data.putInt("countDownInterval", mTimerInterval);
-            data.putBoolean("showConfigButton", showConfigButton);
-            data.putBoolean("showRecordingButton", showRecordingButton);
-            data.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
             messageClient(MSG_START_COUNTDOWN, data);
             Log.i(LOG, "Countdown set.");
         }
@@ -732,13 +715,11 @@ public class ControlService extends Service {
     private void stopAlarmAndCountdown() {
 
         messageClient(MSG_NO_TIMER);
+
         if (isTimerRunning) {
             isTimerRunning = false;
             mEventTimer.stopTimer();
             mVibration.repeatingBurstOff();
-            //Bundle data = new Bundle();
-            //data.putBoolean("isTimer", isTimer);
-            //messageClient(MSG_GET_STATUS, data);
         }
     }
 
@@ -755,6 +736,7 @@ public class ControlService extends Service {
         }
     }
 
+    // Starts a new questionnaire, motivation can be {"auto", "manual"}
     private void startQuestionnaire(String motivation) {
 
         if (isQuestionnairePresent) {
@@ -777,8 +759,6 @@ public class ControlService extends Service {
             isQuestionnairePending = false;
         }
     }
-
-
 
     /**
      * Thread-safe status variables
@@ -819,6 +799,4 @@ public class ControlService extends Service {
             processingBuffer[idx] = null;
         }
     }
-
-
 }
