@@ -25,7 +25,6 @@ import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
-import com.fragtest.android.pa.Questionnaire.PermissionActivity;
 
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -60,8 +59,7 @@ public class ControlService extends Service {
     public static final int MSG_GET_STATUS = 13;
     public static final int MSG_SET_VISIBILITY = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
-    public static final int MSG_INITIALISE_PREFERENCES = 16;
-    public static final int MSG_NO_TIMER = 17;
+    public static final int MSG_NO_TIMER = 16;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -179,7 +177,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
-                    mClientMessenger = null; //TODO: Evaluate whether this is good
+                    mClientMessenger = null;
                     Logger.info("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
@@ -189,16 +187,7 @@ public class ControlService extends Service {
                 case MSG_GET_STATUS:
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", isRecording);
-                    status.putBoolean("isQuestionnairePending", isQuestionnairePending);
-                    status.putBoolean("showConfigButton", showConfigButton);
-                    status.putBoolean("showRecordingButton", showRecordingButton);
-                    status.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
-                    status.putBoolean("isTimer", isTimer);
                     messageClient(MSG_GET_STATUS, status);
-                    break;
-
-                case MSG_INITIALISE_PREFERENCES:
-                    initialiseValues();
                     break;
 
                 case MSG_ALARM_RECEIVED:
@@ -209,6 +198,7 @@ public class ControlService extends Service {
                         mVibration.repeatingBurstOn();
                     } else {
                         // React to when questionnaire is active but another one is due
+                        // -> probably deprecated because timer is only started after Q was finished
                         Log.i(LOG,"Waiting for new questionnaire.");
                     }
                     isTimerRunning = false;
@@ -369,36 +359,17 @@ public class ControlService extends Service {
 
         //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService started");
-
     }
 
-
-
-
-
-
-
-    // TODO: Countdown is not shown upon first use.
-
-
-
-
-
-
-
-
-
-
-
     private void setupApplication() {
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        initialiseValues();
 
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
         // Determine whether to show or hide preferences menu
-        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", false));
+        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", isLocked));
 
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
@@ -496,12 +467,6 @@ public class ControlService extends Service {
         }
     }
 
-    public void requestPermissions() {
-        Intent intent = new Intent(this, PermissionActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-    }
-
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
@@ -560,7 +525,6 @@ public class ControlService extends Service {
             editor.putBoolean("usedBefore", true);
             editor.apply();
         }
-
     }
 
     private void updatePreferences(Bundle dataPreferences) {
@@ -612,8 +576,6 @@ public class ControlService extends Service {
         isTimer = bundle.getBoolean("isTimer", isTimer);
         showConfigButton = !isLocked;
 
-        Log.i(LOG, "SHOWCONFIG cfp: "+showConfigButton);
-
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 
             if (BuildConfig.DEBUG) {
@@ -653,7 +615,6 @@ public class ControlService extends Service {
 
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
-        Log.i(LOG, "HERERERER getPreferences(): "+isTimer);
 
         // Show preferences button
         isLocked = sharedPreferences.getBoolean("isLocked", isLocked);
@@ -745,9 +706,7 @@ public class ControlService extends Service {
     }
 
     private void stopAlarmAndCountdown() {
-
         messageClient(MSG_NO_TIMER);
-
         if (isTimerRunning) {
             isTimerRunning = false;
             mEventTimer.stopTimer();
@@ -757,7 +716,6 @@ public class ControlService extends Service {
 
     // Load new questionnaire (initiated after quest change in preferences)
     public void renewQuestionnaire() {
-
         if (isQuestionnairePresent) {
             String[] questList = mFileIO.scanQuestOptions();
 

@@ -86,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = new Messenger(service);
             messageService(ControlService.MSG_REGISTER_CLIENT);
             messageService(ControlService.MSG_GET_STATUS);
-            messageService(ControlService.MSG_INITIALISE_PREFERENCES);
         }
 
         @Override
@@ -173,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
@@ -258,7 +256,6 @@ public class MainActivity extends AppCompatActivity {
                 MY_PERMISSIONS_CAMERA);
     }
 
-
     /**
      * Lifecycle methods
      **/
@@ -270,9 +267,6 @@ public class MainActivity extends AppCompatActivity {
         showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
 
-
-
-
         if (BuildConfig.DEBUG) {
             Log.e(LOG, "OnCreate");
         }
@@ -280,48 +274,8 @@ public class MainActivity extends AppCompatActivity {
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
-
             Log.d(LOG, "Requesting Permissions.");
             requestPermissions();
-
-/*
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
-                    MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    MY_PERMISSIONS_RECORD_AUDIO);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.VIBRATE},
-                    MY_PERMISSIONS_VIBRATE);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WAKE_LOCK},
-                    MY_PERMISSIONS_WAKE_LOCK);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.DISABLE_KEYGUARD},
-                    MY_PERMISSIONS_DISABLE_KEYGUARD);
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    MY_PERMISSIONS_CAMERA);
-
-
-
-*/
-
-
 
             //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             setContentView(R.layout.activity_main);
@@ -368,8 +322,6 @@ public class MainActivity extends AppCompatActivity {
             handleNewPagerAdapter();
             doBindService();
 
-            mAdapter.createMenu();
-
             //mWindow = this.getWindow();
             //mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
             //mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
@@ -377,8 +329,8 @@ public class MainActivity extends AppCompatActivity {
 
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+            mAdapter.createMenu();
             mAdapter.onCreate();
-
             isActivityRunning = true;
         }
     }
@@ -390,7 +342,6 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onDestroy();
         doUnbindService();
-
     }
 
     @Override
@@ -532,11 +483,16 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
+                    isQuestionnairePresent = false;
                     mAdapter.noQuestionnaires();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
 
+                    Log.i(LOG, "msg start countdown");
+                    Log.i(LOG, "ISQUESTIONNAIRE" + isQuestionnairePresent);
+
+                    isQuestionnairePresent = true;
                     isTimer = true;
 
                     if (isQuestionnairePresent) {
