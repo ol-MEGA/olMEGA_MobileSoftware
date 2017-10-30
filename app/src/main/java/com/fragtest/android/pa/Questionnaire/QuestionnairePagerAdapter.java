@@ -41,7 +41,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean isTimer = false;
     private boolean isInForeGround = false;
     private boolean isMenu = false;
-    private boolean isQuestionnaireActive = false;
+    //private boolean isQuestionnaireActive = false;
     private boolean needsIncreasing = false;
     private boolean isPrefsInForeGround = false;
     private boolean isQuestionnairePresent = false;
@@ -63,11 +63,17 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             }
         }
     };
+    private final Runnable mHideProgressBarRunnable = new Runnable() {
+        @Override
+        public void run() {
+                hideQuestionnaireProgressBar();
+
+        }
+    };
     private String mMotivation = "";
     private ArrayList<String> mQuestionList;
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
-
         mContext = context;
         MainActivity = (MainActivity) context;
         mViewPager = viewPager;
@@ -149,7 +155,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isTimer = false;
         stopCountDown();
         mMenuPage.updateCountDownText("");
-        hideQuestionnaireProgressBar();
+        mCountDownHandler.post(mHideProgressBarRunnable);
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "Timer offline.");
         }
@@ -172,7 +178,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setControlsMenu();
 
         sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        isQuestionnaireActive = false;
+        //isQuestionnaireActive = false;
     }
 
     // Initialise questionnaire based on new input parameters
@@ -182,7 +188,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isMenu = false;
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
-        isQuestionnaireActive = true;
+        //isQuestionnaireActive = true;
         mQuestionList = questionList;
         mHead = head;
         mFoot = foot;
@@ -253,12 +259,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
-    public void hideQuestionnaireProgressBar() {
+    private void hideQuestionnaireProgressBar() {
         View progress = MainActivity.mProgress;
         View regress = MainActivity.mRegress;
 
-        int nProgress = 0;
-        int nRegress = 1;
+        float nProgress = 0;
+        float nRegress = 1;
 
         LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,

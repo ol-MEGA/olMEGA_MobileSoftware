@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             if (mViewPager.getCurrentItem() != 0) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
             } else {
-                // Might be too unsafe for elderly people
+                // Might be unsafe because this accidentally resets the timer and starts a new cycle
                 //mAdapter.createMenu();
             }
         }
@@ -187,7 +187,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
-
         }
     }
 
@@ -311,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
                 mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.e(LOG, "CLICK");
                         startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                         isPrefsInForeGround = true;
                         mAdapter.setPrefsInForeGround(isPrefsInForeGround);
@@ -488,9 +486,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
-
-                    Log.i(LOG, "msg start countdown");
-                    Log.i(LOG, "ISQUESTIONNAIRE" + isQuestionnairePresent);
 
                     isQuestionnairePresent = true;
                     isTimer = true;

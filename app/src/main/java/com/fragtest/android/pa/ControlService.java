@@ -98,7 +98,7 @@ public class ControlService extends Service {
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, isLocked, filterHp, downsample,
-            showConfigButton, showRecordingButton;
+            showConfigButton, showRecordingButton, questionnaireHasTimer;
 
     private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
 
@@ -586,13 +586,9 @@ public class ControlService extends Service {
             // Reads new XML file
             renewQuestionnaire();
             isTimerRunning = false;
-
-            if (isTimer) {
-                setAlarmAndCountdown();
-            } else{
-                stopAlarmAndCountdown();
-            }
-        } else if (isTimer) {
+            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
+        }
+        if (isTimer && questionnaireHasTimer) {
             setAlarmAndCountdown();
         } else {
             stopAlarmAndCountdown();
@@ -672,28 +668,32 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        Log.i(LOG, "setAlarmAndCountdown");
-
         if (isQuestionnairePresent && isTimer) {
 
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
             mTimerInterval = mXmlReader.getNewTimerInterval();
+            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
 
-            if (!isTimerRunning) {
+            // Needed for the first run
+            if (questionnaireHasTimer) {
+                if (!isTimerRunning) {
 
-                mEventTimer.stopTimer();
-                mVibration.repeatingBurstOff();
-                mEventTimer.setTimer(mTimerInterval);
-                mFinalCountDown = mEventTimer.getFinalCountDown();
-                isTimerRunning = true;
-                if (BuildConfig.DEBUG) {
-                    Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+                    mEventTimer.stopTimer();
+                    mVibration.repeatingBurstOff();
+                    mEventTimer.setTimer(mTimerInterval);
+                    mFinalCountDown = mEventTimer.getFinalCountDown();
+                    isTimerRunning = true;
+                    if (BuildConfig.DEBUG) {
+                        Log.e(LOG, "Timer set to " + mTimerInterval + "s");
+                    }
+                } else {
+                    // Usually when app is restarted
+                    if (BuildConfig.DEBUG) {
+                        Log.i(LOG, "Timer already set. Reinstating countdown");
+                    }
                 }
             } else {
-                // Usually when app is restarted
-                if (BuildConfig.DEBUG) {
-                    Log.i(LOG, "Timer already set. Reinstating countdown");
-                }
+                messageClient(MSG_NO_TIMER);
             }
 
             // Send message to initialise / update timer
@@ -701,17 +701,14 @@ public class ControlService extends Service {
             data.putInt("finalCountDown", mFinalCountDown);
             data.putInt("countDownInterval", mTimerInterval);
             messageClient(MSG_START_COUNTDOWN, data);
-            Log.i(LOG, "Countdown set.");
         }
     }
 
     private void stopAlarmAndCountdown() {
         messageClient(MSG_NO_TIMER);
-        if (isTimerRunning) {
-            isTimerRunning = false;
-            mEventTimer.stopTimer();
-            mVibration.repeatingBurstOff();
-        }
+        isTimerRunning = false;
+        mEventTimer.stopTimer();
+        mVibration.repeatingBurstOff();
     }
 
     // Load new questionnaire (initiated after quest change in preferences)

@@ -31,7 +31,6 @@ public class MenuPage extends AppCompatActivity {
 
         mContext = context;
         mContextQPA = contextQPA;
-        //questFileName = mContext.getResources().getString(R.string.menuText);
         StartText = "";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
