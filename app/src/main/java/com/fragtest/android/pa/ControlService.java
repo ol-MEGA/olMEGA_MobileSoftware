@@ -60,6 +60,7 @@ public class ControlService extends Service {
     public static final int MSG_SET_VISIBILITY = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_NO_TIMER = 16;
+    public static final int MSG_CHANGE_PREFERENCE = 17;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -374,8 +375,9 @@ public class ControlService extends Service {
         checkForPreferences();
 
         // Determine whether to show or hide preferences menu
-        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", isLocked));
-
+        showConfigButton = (mFileIO.checkConfigFile());
+        isLocked = !showConfigButton;
+        setSinglePreference("isLocked", isLocked);
     }
 
     @Override
@@ -509,6 +511,8 @@ public class ControlService extends Service {
         downsample = sharedPreferences.getBoolean("downsample", InitValues.downsample);
         //showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
         showConfigButton = !isLocked;
+        Log.i(LOG, "Show Button: "+showConfigButton);
+
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
 
         filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
@@ -519,16 +523,14 @@ public class ControlService extends Service {
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
+    }
 
-        if (!sharedPreferences.getBoolean("usedBefore", false)) {
-            Log.i(LOG, "FIRSTUSE detected");
-
-
-
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("usedBefore", true);
-            editor.apply();
-        }
+    private void setSinglePreference(String key, boolean value) {
+        Bundle data = new Bundle();
+        data.putString("type", "boolean");
+        data.putString("key", key);
+        data.putBoolean(key, value);
+        messageClient(MSG_CHANGE_PREFERENCE, data);
     }
 
     private void updatePreferences(Bundle dataPreferences) {
@@ -750,6 +752,15 @@ public class ControlService extends Service {
             isQuestionnairePending = false;
         }
     }
+
+    /*
+    public void setPrefrence(String key, boolean value) {
+        Bundle data = new Bundle();
+        data.putString("type", "boolean");
+        data.putString("key", key);
+        data.putBoolean("value", value);
+        messageClient(MSG_CHANGE_PREFERENCE, data);
+    }*/
 
     /**
      * Thread-safe status variables

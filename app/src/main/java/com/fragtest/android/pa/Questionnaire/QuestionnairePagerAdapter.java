@@ -50,7 +50,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mFinalCountdown = -255;
     private int mSecondsRemaining = 120;
     private String mHead, mFoot, mSurveyURI;
-
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
     private final Runnable mCountDownRunnable = new Runnable() {
@@ -116,12 +115,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void setFinalCountDown(int finalCountDown, int countDownInterval) {
         mFinalCountdown = finalCountDown;
         mCountDownInterval = countDownInterval;
-        isTimer = true;
 
-        Log.i(LOG, "SEEEEEEEEEEEEEEEETTTT!");
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG, "Final Countdown set: " + finalCountDown);
+        // Not the most beautiful and holistic approach but easiest this way
+        if (mCountDownInterval > 0) {
+            isTimer = true;
+            if (BuildConfig.DEBUG) {
+                Log.i(LOG, "Final Countdown set: " + finalCountDown);
+            }
         }
     }
 
@@ -589,10 +589,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
-        Log.e(LOG, "isTimer: "+isTimer);
-
         if(isMenu && isTimer) {
-            Log.e(LOG, "HERE!");
             isCountDownRunning = false;
             if (isQuestionnairePresent) {
                 startCountDown();
@@ -603,7 +600,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
 
         if (isMenu && needsIncreasing) {
-            Log.e(LOG, "OR HERE!");
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);

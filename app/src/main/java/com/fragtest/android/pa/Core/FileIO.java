@@ -1,9 +1,7 @@
 package com.fragtest.android.pa.Core;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.fragtest.android.pa.BuildConfig;
@@ -26,12 +24,10 @@ public class FileIO {
     public static final String FOLDER_MAIN = "IHAB";
     public static final String FOLDER_DATA = "data";
     private static final String FOLDER_QUEST = "quest";
-    //private static final String FILE_NAME = "hoersituation-v0.xml";
     private static final String FILE_NAME = "questionnairecheckboxgroup.xml";
     private static final String LOG = "FileIO";
     // File the system looks for in order to show preferences, needs to be in main directory
     private static final String FILE_CONFIG = "rules.ini";
-    private static final String FILE_FIRST = "ihab.ini";
     private boolean isVerbose = false;
     private Context mContext;
 
@@ -50,11 +46,7 @@ public class FileIO {
         mContext = context;
 
         // If for whatever reason rules.ini exists, preferences are shown
-        if (scanConfigMode()) {
-            Log.e(LOG, "RULES FOUND!");
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences((mContext));
-            sharedPreferences.edit().putBoolean("isLocked", false).apply();
-        }
+
 
         String[] string = scanQuestOptions();
         if (string == null) {
@@ -64,10 +56,20 @@ public class FileIO {
         }
     }
 
+    public boolean checkConfigFile() {
+        if (scanConfigMode()) {
+            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+            //sharedPreferences.edit().putBoolean("isLocked", false).apply();
+            deleteConfigFile();
+            return true;
+        }
+        return false;
+    }
+
     public boolean lockPreferences() {
         File file = new File(getFolderPath() + File.separator + FOLDER_DATA +
                 File.separator + FILE_CONFIG);
-        Log.i(LOG, "does file exist? "+file.exists());
+        Log.i(LOG, "does file exist? " + file.exists());
         boolean deleted = file.delete();
         new SingleMediaScanner(mContext, file);
         Log.e(LOG, "Bridge burnt: " + file.getAbsolutePath() + ", successful: "+ deleted);
@@ -80,12 +82,20 @@ public class FileIO {
         Log.i(LOG, "Scan config mode");
         File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
                 File.separator + FILE_CONFIG);
+
+        new SingleMediaScanner(mContext, fileConfig);
+
         if (fileConfig.exists()) {
             return true;
         } else {
             return false;
         }
+    }
 
+    public boolean deleteConfigFile() {
+        File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
+                File.separator + FILE_CONFIG);
+        return fileConfig.delete();
     }
 
     // Scan "quest" directory for present questionnaires

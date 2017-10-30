@@ -24,8 +24,8 @@
             android:defaultValue="false"
             android:checked="false"
             android:key="isLocked"
-            android:title="Lock Preferences"
-            android:summary="Hide preferences menu" />
+            android:title="Hide Preferences"
+            android:summary="Make preferences menu invisible" />
 
     </PreferenceCategory>
 

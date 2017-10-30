@@ -24,8 +24,6 @@ public class EventReceiver extends BroadcastReceiver {
         Context ctx = context.getApplicationContext();
         Log.d(LOG, "Context:" + ctx.toString());
 
-
-
         Messenger messenger = intent.getParcelableExtra("Messenger");
 
         Log.e(LOG,"messenger: "+messenger.toString());

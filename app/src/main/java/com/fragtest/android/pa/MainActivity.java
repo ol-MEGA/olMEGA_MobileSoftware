@@ -33,6 +33,7 @@ import java.util.Set;
 
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
+import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 
 
@@ -449,7 +450,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Message Handling
      **/
@@ -483,6 +483,17 @@ public class MainActivity extends AppCompatActivity {
                 case MSG_NO_QUESTIONNAIRE_FOUND:
                     isQuestionnairePresent = false;
                     mAdapter.noQuestionnaires();
+                    break;
+
+                case MSG_CHANGE_PREFERENCE:
+                    Bundle data = msg.getData();
+                    if (data.getString("type").equals("boolean")) {
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
+                                edit().putBoolean(data.getString("key"), data.getBoolean("value")).
+                                apply();
+
+                        Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+data.getBoolean("value"));
+                    }
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
