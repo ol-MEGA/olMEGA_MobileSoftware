@@ -87,6 +87,16 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMenuPage.updateCountDownText("");
     }
 
+    public void noTimer() {
+        isTimer = false;
+        stopCountDown();
+        mMenuPage.updateCountDownText("");
+        mCountDownHandler.post(mHideProgressBarRunnable);
+        if (BuildConfig.DEBUG) {
+            Log.i(LOG, "Timer offline.");
+        }
+    }
+
     public void questionnairePresent() {
         isQuestionnairePresent = true;
     }
@@ -107,6 +117,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mFinalCountdown = finalCountDown;
         mCountDownInterval = countDownInterval;
         isTimer = true;
+
+        Log.i(LOG, "SEEEEEEEEEEEEEEEETTTT!");
+
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "Final Countdown set: " + finalCountDown);
         }
@@ -148,16 +161,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mCountDownHandler.removeCallbacks(mCountDownRunnable);
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "CountDown stopped.");
-        }
-    }
-
-    public void noTimer() {
-        isTimer = false;
-        stopCountDown();
-        mMenuPage.updateCountDownText("");
-        mCountDownHandler.post(mHideProgressBarRunnable);
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG, "Timer offline.");
         }
     }
 
@@ -586,14 +589,21 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
-        if(isMenu) {
+        Log.e(LOG, "isTimer: "+isTimer);
+
+        if(isMenu && isTimer) {
+            Log.e(LOG, "HERE!");
             isCountDownRunning = false;
             if (isQuestionnairePresent) {
                 startCountDown();
             }
+        } else {
+            // This should not be needed but is due to some weird behaviour.
+            mCountDownHandler.post(mHideProgressBarRunnable);
         }
 
         if (isMenu && needsIncreasing) {
+            Log.e(LOG, "OR HERE!");
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);

@@ -368,13 +368,14 @@ public class ControlService extends Service {
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
-        // Determine whether to show or hide preferences menu
-        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", isLocked));
-
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
 
         checkForPreferences();
+
+        // Determine whether to show or hide preferences menu
+        showConfigButton = (mFileIO.scanConfigMode() && !sharedPreferences.getBoolean("isLocked", isLocked));
+
     }
 
     @Override
@@ -521,6 +522,9 @@ public class ControlService extends Service {
 
         if (!sharedPreferences.getBoolean("usedBefore", false)) {
             Log.i(LOG, "FIRSTUSE detected");
+
+
+
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean("usedBefore", true);
             editor.apply();

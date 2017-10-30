@@ -49,19 +49,12 @@ public class FileIO {
 
         mContext = context;
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        boolean isFirst = sharedPreferences.getBoolean("isFirst", true);
-        Log.i(LOG, "First use detected: " + isFirst);
-
-
-        if (isFirst) {
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putBoolean("isFirst", false);
-            editor.commit();
-            File fileConfig = saveDataToFile(context, FILE_CONFIG, "This file may remain empty.");
-            new SingleMediaScanner(mContext, fileConfig);
+        // If for whatever reason rules.ini exists, preferences are shown
+        if (scanConfigMode()) {
+            Log.e(LOG, "RULES FOUND!");
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences((mContext));
+            sharedPreferences.edit().putBoolean("isLocked", false).apply();
         }
-
 
         String[] string = scanQuestOptions();
         if (string == null) {
