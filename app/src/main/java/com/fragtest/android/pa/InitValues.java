@@ -11,7 +11,6 @@ public class InitValues {
     // preferences
     public static boolean isTimer = true,
             isWave = false,
-            isLocked = false,
             keepAudioCache = false,
             filterHp = false,
             downsample = true,
@@ -32,7 +31,6 @@ public class InitValues {
         initBundle = new Bundle();
         initBundle.putBoolean("isTimer", isTimer);
         initBundle.putBoolean("isWave", isWave);
-        initBundle.putBoolean("isLocked", isLocked);
         initBundle.putBoolean("keepAudioCache", keepAudioCache);
         initBundle.putBoolean("filterHp", filterHp);
         initBundle.putBoolean("downsample", downsample);

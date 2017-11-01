@@ -27,7 +27,7 @@ public class FileIO {
     private static final String FILE_NAME = "questionnairecheckboxgroup.xml";
     private static final String LOG = "FileIO";
     // File the system looks for in order to show preferences, needs to be in main directory
-    private static final String FILE_CONFIG = "rules.ini";
+    private static final String FILE_CONFIG = "config";
     private boolean isVerbose = false;
     private Context mContext;
 
@@ -45,9 +45,6 @@ public class FileIO {
 
         mContext = context;
 
-        // If for whatever reason rules.ini exists, preferences are shown
-
-
         String[] string = scanQuestOptions();
         if (string == null) {
             return false;
@@ -57,42 +54,23 @@ public class FileIO {
     }
 
     public boolean checkConfigFile() {
+        // If for whatever reason rules.ini exists, preferences are shown
         if (scanConfigMode()) {
-            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-            //sharedPreferences.edit().putBoolean("isLocked", false).apply();
-            deleteConfigFile();
+            //deleteConfigFile();
             return true;
         }
         return false;
     }
 
-    public boolean lockPreferences() {
-        File file = new File(getFolderPath() + File.separator + FOLDER_DATA +
-                File.separator + FILE_CONFIG);
-        Log.i(LOG, "does file exist? " + file.exists());
-        boolean deleted = file.delete();
-        new SingleMediaScanner(mContext, file);
-        Log.e(LOG, "Bridge burnt: " + file.getAbsolutePath() + ", successful: "+ deleted);
-        return deleted;
-    }
-
     // Check whether preferences unlock file is present in main directory
-    public boolean scanConfigMode() {
-
-        Log.i(LOG, "Scan config mode");
-        File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
-                File.separator + FILE_CONFIG);
+    private boolean scanConfigMode() {
+        File fileConfig = new File(getFolderPath() + File.separator + FILE_CONFIG);
 
         new SingleMediaScanner(mContext, fileConfig);
-
-        if (fileConfig.exists()) {
-            return true;
-        } else {
-            return false;
-        }
+        return fileConfig.exists();
     }
 
-    public boolean deleteConfigFile() {
+    private boolean deleteConfigFile() {
         File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
                 File.separator + FILE_CONFIG);
         return fileConfig.delete();

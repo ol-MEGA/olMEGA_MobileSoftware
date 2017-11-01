@@ -26,7 +26,6 @@ public class XMLReader {
         mContext = context;
         mFileIO = new FileIO();
         mQuestionList = new ArrayList<>();
-
         String rawInput = mFileIO.readRawTextFile(fileName);
 
         // offline version

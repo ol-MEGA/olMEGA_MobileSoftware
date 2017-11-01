@@ -42,7 +42,8 @@ public class MainActivity extends AppCompatActivity {
     static final String LOG = "MainActivity";
     private static final String KEY_QUEST = "whichQuest";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
-    private static final String KEY_LOCKED = "isLocked";
+    private int nPermissions = 8;
+    private int iPermission;
     private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
     private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
     private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
@@ -62,17 +63,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean mServiceIsRecording;
     private Messenger mServiceMessenger;
     private boolean isQuestionnairePresent = true;
+    private String[] requestString;
 
-    private String[] requestString = {"Please grant permission to read/write storage",
-        "Please grant permission to read/write storage",
-        "Please grant permission to read/write storage",
-        "Come on.",
-        "Really? This is how you want to play?",
-        "Don't be like that!",
-        "You're being ridiculous",
-        "Goddamn it, give me permission!",
-        "GIVE ME PERMISSION!!!",
-        "SCREW YOU!"};
     private int requestIterator = 0;
 
 
@@ -80,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     // preferences
     private SharedPreferences sharedPreferences;
-    private boolean isTimer, showConfigButton, showRecordingButton;
+    private boolean isTimer, showConfigButton = false, showRecordingButton = true;
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -175,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        requestString = getResources().getStringArray(R.array.permissionMessages);
         switch (requestCode) {
             case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
                 // If request is cancelled, the result arrays are empty.
@@ -183,10 +176,9 @@ public class MainActivity extends AppCompatActivity {
                     doBindService();
                 } else {
                     Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
-                    requestPermissions();
+                    requestPermissions(iPermission);
                     requestIterator++;
                 }
-                return;
             }
         }
     }
@@ -221,39 +213,85 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
     }
 
-    public void requestPermissions() {
+    private void shipPreferencesToControlService() {
+        // Load information from shared preferences and bundle them
+        Bundle dataPreferences = new Bundle();
+        // String
+        dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
+        dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
+        dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+        dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        // Boolean
+        dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
+        dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
+        //dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
+        dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache));
+        dataPreferences.putBoolean("downsample", sharedPreferences.getBoolean("downsample", InitValues.downsample));
+        dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
+        dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
+        dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
+        // String Set
+        Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
+        // String Set cannot be bundled natively, cast to ArrayList
+        ArrayList<String> listActiveFeatures = new ArrayList<>();
+        listActiveFeatures.addAll(activeFeatures);
+        dataPreferences.putStringArrayList("features", listActiveFeatures);
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+        messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
+    }
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+    public void requestPermissions(int iPermission) {
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
-                MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+        // TODO: Make array
+        switch (iPermission) {
+            case 0:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+                break;
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
-                MY_PERMISSIONS_RECORD_AUDIO);
+            case 1:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+                break;
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.VIBRATE},
-                MY_PERMISSIONS_VIBRATE);
+            case 2:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
+                    MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+                break;
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WAKE_LOCK},
-                MY_PERMISSIONS_WAKE_LOCK);
+            case 3:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    MY_PERMISSIONS_RECORD_AUDIO);
+                break;
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.DISABLE_KEYGUARD},
-                MY_PERMISSIONS_DISABLE_KEYGUARD);
+            case 4:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.VIBRATE},
+                    MY_PERMISSIONS_VIBRATE);
+                break;
 
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.CAMERA},
-                MY_PERMISSIONS_CAMERA);
+            case 5:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WAKE_LOCK},
+                    MY_PERMISSIONS_WAKE_LOCK);
+                break;
+
+            case 6:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.DISABLE_KEYGUARD},
+                    MY_PERMISSIONS_DISABLE_KEYGUARD);
+                break;
+
+            case 7:
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    MY_PERMISSIONS_CAMERA);
+                break;
+        }
     }
 
     /**
@@ -264,8 +302,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
+        showConfigButton = sharedPreferences.getBoolean("showConfigButton", showConfigButton);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", showRecordingButton);
 
         if (BuildConfig.DEBUG) {
             Log.e(LOG, "OnCreate");
@@ -275,7 +313,10 @@ public class MainActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
 
             Log.d(LOG, "Requesting Permissions.");
-            requestPermissions();
+            for (iPermission = 0; iPermission < nPermissions; iPermission++) {
+                requestPermissions(iPermission);
+            }
+            //requestPermissions();
 
             //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             setContentView(R.layout.activity_main);
@@ -292,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mServiceIsBound) {
+                    /*if (mServiceIsBound) {
                         if (mServiceIsRecording) {
                             messageService(ControlService.MSG_STOP_RECORDING);
                         } else {
@@ -303,20 +344,23 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this,
                                 "Not connected to service.",
                                 Toast.LENGTH_SHORT).show();
-                    }
+                    }*/
                 }
             });
 
-            if (showConfigButton) {
+            Log.i(LOG, "SHOWCONFIGBUTTON: "+showConfigButton);
+
+            //if (showConfigButton) {
                 mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Log.e(LOG, "CLICK!");
                         startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                         isPrefsInForeGround = true;
                         mAdapter.setPrefsInForeGround(isPrefsInForeGround);
                     }
                 });
-            }
+            //}
 
             handleNewPagerAdapter();
             doBindService();
@@ -350,7 +394,8 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onStart();
         mAdapter.onStart();
-/*
+
+        /*
         // start lock task mode if it's not already active
         ActivityManager am = (ActivityManager) getSystemService(
                 Context.ACTIVITY_SERVICE);
@@ -366,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
                 startLockTask();
             }
         }
-*/
+        */
     }
 
     @Override
@@ -405,30 +450,7 @@ public class MainActivity extends AppCompatActivity {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
-            // Load information from shared preferences and bundle them
-            Bundle dataPreferences = new Bundle();
-            // String
-            dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
-            dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
-            dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
-            dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
-            // Boolean
-            dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
-            dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
-            dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
-            dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache));
-            dataPreferences.putBoolean("downsample", sharedPreferences.getBoolean("downsample", InitValues.downsample));
-            dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
-            dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
-            dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
-            // String Set
-            Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
-            // String Set cannot be bundled natively, cast to ArrayList
-            ArrayList<String> listActiveFeatures = new ArrayList<>();
-            listActiveFeatures.addAll(activeFeatures);
-            dataPreferences.putStringArrayList("features", listActiveFeatures);
-
-            messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
+            shipPreferencesToControlService();
         }
         mAdapter.onResume();
         super.onResume();
@@ -469,6 +491,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Bundle dataVisibility = msg.getData();
                     showConfigButton = dataVisibility.getBoolean("showConfigButton", showConfigButton);
+                    showRecordingButton = dataVisibility.getBoolean("showRecordingButton", showRecordingButton);
                     isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
                     if (isQuestionnairePresent) {
@@ -492,8 +515,9 @@ public class MainActivity extends AppCompatActivity {
                                 edit().putBoolean(data.getString("key"), data.getBoolean("value")).
                                 apply();
 
-                        Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+data.getBoolean("value"));
+                        Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(data.getString("key"), false));
                     }
+                    shipPreferencesToControlService();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
@@ -547,7 +571,6 @@ public class MainActivity extends AppCompatActivity {
                                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                         darker_gray, null)));
                     }
-
                     break;
 
                 case ControlService.MSG_NO_TIMER:

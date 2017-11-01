@@ -15,7 +15,7 @@
 
     </PreferenceCategory>
 
-
+<!--
     <PreferenceCategory android:title="Hide Preferences">
 
         <SwitchPreference
@@ -28,6 +28,7 @@
             android:summary="Make preferences menu invisible" />
 
     </PreferenceCategory>
+    -->
 
     <PreferenceCategory android:title="General">
 

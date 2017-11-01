@@ -98,7 +98,7 @@ public class ControlService extends Service {
     private String mSelectQuestionnaire, mTempQuestionnaire;
 
     // preferences
-    private boolean isTimer, isWave, keepAudioCache, isLocked, filterHp, downsample,
+    private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
             showConfigButton, showRecordingButton, questionnaireHasTimer;
 
     private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
@@ -155,6 +155,7 @@ public class ControlService extends Service {
 
                     setupApplication();
 
+/*
                     if (isQuestionnairePresent) {
                         if (isTimer) {
                             setAlarmAndCountdown();
@@ -167,6 +168,7 @@ public class ControlService extends Service {
                         messageClient(MSG_NO_TIMER);
                         stopAlarmAndCountdown();
                     }
+*/
 
                     // Bundled information about visible contents
                     Bundle bundleShow = new Bundle();
@@ -237,6 +239,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
+                    // In case questionnaires are no longer present, program crashes..
+                    // but shouldn't be a problem since it is destructive user interference.
                     isMenu = true;
                     isActiveQuestionnaire = false;
                     if (isTimer) {
@@ -346,7 +350,7 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.d(LOG, "onCreate");
-        // log-file
+        // log file
         Configurator.currentConfig()
                 .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
                 .level(Level.INFO)
@@ -358,26 +362,7 @@ public class ControlService extends Service {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
 
-        //Toast.makeText(this, "ControlService started", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService started");
-    }
-
-    private void setupApplication() {
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        initialiseValues();
-
-        mFileIO = new FileIO();
-        isQuestionnairePresent = mFileIO.setupFirstUse(this);
-
-        mEventTimer = new EventTimer(this, mMessengerHandler);
-        mVibration = new Vibration(this);
-
-        checkForPreferences();
-
-        // Determine whether to show or hide preferences menu
-        showConfigButton = (mFileIO.checkConfigFile());
-        isLocked = !showConfigButton;
-        setSinglePreference("isLocked", isLocked);
     }
 
     @Override
@@ -497,29 +482,40 @@ public class ControlService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
+    private void setupApplication() {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        initialiseValues();
+
+        mFileIO = new FileIO();
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+
+        mEventTimer = new EventTimer(this, mMessengerHandler);
+        mVibration = new Vibration(this);
+
+        checkForPreferences();
+
+        // Determine whether to show or hide preferences menu
+        showConfigButton = (mFileIO.checkConfigFile());
+    }
+
+
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         // preferences
-        isTimer = sharedPreferences.getBoolean("isTimer", InitValues.isTimer);
-        isWave = sharedPreferences.getBoolean("isWave", InitValues.isWave);
-        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache);
-        isLocked = sharedPreferences.getBoolean("isLocked", InitValues.isLocked);
-        filterHp = sharedPreferences.getBoolean("filterHp", InitValues.filterHp);
-        downsample = sharedPreferences.getBoolean("downsample", InitValues.downsample);
-        //showConfigButton = sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton);
-        showConfigButton = !isLocked;
-        Log.i(LOG, "Show Button: "+showConfigButton);
-
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton);
-
-        filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        isTimer = sharedPreferences.getBoolean("isTimer", true);
+        isWave = sharedPreferences.getBoolean("isWave", false);
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
+        filterHp = sharedPreferences.getBoolean("filterHp", false);
+        downsample = sharedPreferences.getBoolean("downsample", true);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", true);
 
         // Cave: These are Strings
-        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
-        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
+        filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
+        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
+        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
@@ -530,6 +526,7 @@ public class ControlService extends Service {
         data.putString("type", "boolean");
         data.putString("key", key);
         data.putBoolean(key, value);
+        sharedPreferences.edit().putBoolean(key, value).apply();
         messageClient(MSG_CHANGE_PREFERENCE, data);
     }
 
@@ -541,7 +538,6 @@ public class ControlService extends Service {
 
         isWave = dataPreferences.getBoolean("isWave", isWave);
         isTimer = dataPreferences.getBoolean("isTimer", isTimer);
-        isLocked = dataPreferences.getBoolean("isLocked", isLocked);
         filterHp = dataPreferences.getBoolean("filterHp", filterHp);
         filterHpFrequency = Integer.parseInt(dataPreferences.getString("filterHpFrequency", "" + filterHpFrequency));
         downsample = dataPreferences.getBoolean("downsample", downsample);
@@ -560,7 +556,6 @@ public class ControlService extends Service {
         editor.putBoolean("keepAudioCache", keepAudioCache);
         editor.putBoolean("isWave", isWave);
         editor.putBoolean("isTimer", isTimer);
-        editor.putBoolean("isLocked", isLocked);
         editor.putBoolean("filterHp", filterHp);
         editor.putBoolean("downsample", downsample);
         editor.putBoolean("showCofigButton", showConfigButton);
@@ -580,7 +575,6 @@ public class ControlService extends Service {
 
         Bundle bundle = getPreferences();
         isTimer = bundle.getBoolean("isTimer", isTimer);
-        showConfigButton = !isLocked;
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
 
@@ -594,6 +588,7 @@ public class ControlService extends Service {
             isTimerRunning = false;
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
         }
+
         if (isTimer && questionnaireHasTimer) {
             setAlarmAndCountdown();
         } else {
@@ -618,8 +613,7 @@ public class ControlService extends Service {
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
 
-        // Show preferences button
-        isLocked = sharedPreferences.getBoolean("isLocked", isLocked);
+        Log.e(LOG, "ISQUESTPRESENT: "+isQuestionnairePresent+", "+mSelectQuestionnaire);
 
         // Scan file system for questionnaires
         if (isQuestionnairePresent) {
@@ -711,6 +705,9 @@ public class ControlService extends Service {
     }
 
     private void stopAlarmAndCountdown() {
+
+        Log.e(LOG, "Cancelling");
+
         messageClient(MSG_NO_TIMER);
         isTimerRunning = false;
         mEventTimer.stopTimer();
@@ -752,15 +749,6 @@ public class ControlService extends Service {
             isQuestionnairePending = false;
         }
     }
-
-    /*
-    public void setPrefrence(String key, boolean value) {
-        Bundle data = new Bundle();
-        data.putString("type", "boolean");
-        data.putString("key", key);
-        data.putBoolean("value", value);
-        messageClient(MSG_CHANGE_PREFERENCE, data);
-    }*/
 
     /**
      * Thread-safe status variables
