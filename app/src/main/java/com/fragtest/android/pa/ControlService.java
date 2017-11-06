@@ -210,6 +210,7 @@ public class ControlService extends Service {
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
+                    Log.e(LOG, "isActiveQuestionnaire: "+isActiveQuestionnaire);
                     if (!isActiveQuestionnaire) {
                         startQuestionnaire("manual");
                     }
@@ -234,7 +235,6 @@ public class ControlService extends Service {
                         isActiveQuestionnaire = true;
                         mEventTimer.stopTimer();
                         isTimerRunning = false;
-                        isMenu = false;
                         Log.i(LOG, "Questionnaire active");
                     break;
 
