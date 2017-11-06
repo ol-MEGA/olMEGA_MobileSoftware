@@ -210,7 +210,6 @@ public class ControlService extends Service {
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
-                    Log.e(LOG, "isActiveQuestionnaire: "+isActiveQuestionnaire);
                     if (!isActiveQuestionnaire) {
                         startQuestionnaire("manual");
                     }
@@ -612,8 +611,6 @@ public class ControlService extends Service {
 
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
-
-        Log.e(LOG, "ISQUESTPRESENT: "+isQuestionnairePresent+", "+mSelectQuestionnaire);
 
         // Scan file system for questionnaires
         if (isQuestionnairePresent) {

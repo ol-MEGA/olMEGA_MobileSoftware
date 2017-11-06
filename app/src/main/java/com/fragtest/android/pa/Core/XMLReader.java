@@ -40,7 +40,6 @@ public class XMLReader {
             if (timerTemp[1].split("mean").length > 1) {
                 try {
                     mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
-                    Log.e(LOG_STRING, "Timer mean set to " + mTimerMean + " seconds.");
                 } catch (Exception e) {
                     mTimerMean = 30 * 60;
                     Log.e(LOG_STRING, "Invalid entry. Timer mean set to " + mTimerMean + " seconds.");
@@ -50,7 +49,6 @@ public class XMLReader {
             if (timerTemp[1].split("deviation").length > 1) {
                 try {
                     mTimerDeviation = Integer.parseInt(timerTemp[1].split("\"")[3]);
-                    Log.e(LOG_STRING, "Timer deviation set to " + mTimerDeviation + " seconds.");
                 } catch (Exception e) {
                     mTimerDeviation = 5 * 60;
                     Log.e(LOG_STRING, "Invalid entry. Timer mean set to 300 seconds.");

@@ -70,7 +70,7 @@ public class EventTimer {
         isSet = false;
 
         if (BuildConfig.DEBUG) {
-            Log.i(LOG,"Timer canceled.");
+            Log.i(LOG,"Timer cancelled.");
         }
     }
 

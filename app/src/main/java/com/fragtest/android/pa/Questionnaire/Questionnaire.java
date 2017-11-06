@@ -44,6 +44,7 @@ public class Questionnaire {
     private String mHead, mFoot, mSurveyURI, mMotivation;
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
+    private boolean isImmersive = false;
 
     public Questionnaire(Context context, String head, String foot, String surveyUri,
                          String motivation, QuestionnairePagerAdapter contextQPA) {
@@ -88,7 +89,9 @@ public class Questionnaire {
     }
 
     // Builds the Layout of each Stage Question
-    LinearLayout generateView(Question question) {
+    LinearLayout generateView(Question question, boolean immersive) {
+
+        isImmersive = immersive;
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
@@ -129,15 +132,15 @@ public class Questionnaire {
 
         // In case of emoji type
         final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
                 mContext, this, answerLayout, question.getQuestionId());

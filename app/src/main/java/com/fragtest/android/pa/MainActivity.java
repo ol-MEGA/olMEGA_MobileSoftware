@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isQuestionnairePresent = true;
     private String[] requestString;
 
+    private boolean isImmersive = true;
+
     private int requestIterator = 0;
 
 
@@ -207,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
     public void handleNewPagerAdapter() {
         mViewPager = null;
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mAdapter = new QuestionnairePagerAdapter(this, mViewPager);
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, isImmersive);
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
@@ -306,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", showRecordingButton);
 
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "OnCreate");
+            Log.i(LOG, "OnCreate");
         }
 
         if (!isActivityRunning) {
@@ -316,9 +318,7 @@ public class MainActivity extends AppCompatActivity {
             for (iPermission = 0; iPermission < nPermissions; iPermission++) {
                 requestPermissions(iPermission);
             }
-            //requestPermissions();
 
-            //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             setContentView(R.layout.activity_main);
 
             mLogo = (TextView) findViewById(R.id.Action_Logo);
@@ -348,40 +348,41 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            Log.i(LOG, "SHOWCONFIGBUTTON: "+showConfigButton);
 
-            //if (showConfigButton) {
                 mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Log.e(LOG, "CLICK!");
                         startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                         isPrefsInForeGround = true;
                         mAdapter.setPrefsInForeGround(isPrefsInForeGround);
                     }
                 });
-            //}
+
 
             handleNewPagerAdapter();
             doBindService();
-
-            //mWindow = this.getWindow();
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-            //mWindow.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
             mAdapter.createMenu();
             mAdapter.onCreate();
             isActivityRunning = true;
         }
+
+        if (isImmersive) {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
     }
 
     @Override
     protected void onDestroy() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onDestroy");
+            Log.i(LOG, "onDestroy");
         }
         super.onDestroy();
         doUnbindService();
@@ -390,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onStart");
+            Log.i(LOG, "onStart");
         }
         super.onStart();
         mAdapter.onStart();
@@ -417,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onRestart() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onRestart");
+            Log.i(LOG, "onRestart");
         }
         super.onRestart();
     }
@@ -426,7 +427,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onStop");
+            Log.i(LOG, "onStop");
         }
         mAdapter.onStop();
     }
@@ -434,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onPause");
+            Log.i(LOG, "onPause");
         }
         mAdapter.onPause();
         super.onPause();
@@ -443,7 +444,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         if (BuildConfig.DEBUG) {
-            Log.e(LOG, "onResume");
+            Log.i(LOG, "onResume");
         }
 
         if (isPrefsInForeGround) {

@@ -5,7 +5,6 @@ import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
@@ -63,13 +62,15 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             checkBox.setText(currentString);
             checkBox.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             checkBox.setChecked(false);
-            checkBox.setGravity(Gravity.START);
-            checkBox.setPadding(
+            checkBox.setGravity(Gravity.CENTER_VERTICAL);
+            //checkBox.setGravity(Gravity.START);
+            checkBox.setPadding(24, 24, 24, 24);
+            /*checkBox.setPadding(
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Left),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Top),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Right),
                     (int) mContext.getResources().getDimension(R.dimen.answerTypeCheckBoxPadding_Bottom)
-            );
+            );*/
             checkBox.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             checkBox.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
             int states[][] = {{android.R.attr.state_checked}, {}};

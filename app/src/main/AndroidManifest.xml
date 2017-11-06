@@ -40,7 +40,7 @@
             android:name=".Questionnaire.PermissionActivity"
             android:screenOrientation="portrait">
         </activity>-->
-        <receiver android:name=".Core.EventReceiver" />
+        <!--<receiver android:name=".Core.EventReceiver" />
 
         <receiver
             android:name="com.fragtest.android.pa.AutostartReceiver"
@@ -51,7 +51,7 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-        </receiver>
+        </receiver>-->
 
         <service android:name=".ControlService"
                 android:process=":remote" />

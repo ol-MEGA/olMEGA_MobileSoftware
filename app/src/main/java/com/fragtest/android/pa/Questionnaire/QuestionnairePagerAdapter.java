@@ -52,6 +52,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private String mHead, mFoot, mSurveyURI;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
+    private boolean isImmersive = false;
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
         public void run() {
@@ -72,10 +73,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private String mMotivation = "";
     private ArrayList<String> mQuestionList;
 
-    public QuestionnairePagerAdapter(Context context, ViewPager viewPager) {
+    public QuestionnairePagerAdapter(Context context, ViewPager viewPager, boolean immersive) {
         mContext = context;
         MainActivity = (MainActivity) context;
         mViewPager = viewPager;
+        isImmersive = immersive;
         handleControls();
     }
 
@@ -137,7 +139,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void startCountDown() {
         mMenuPage.resetStartTextSize();
         mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
-        Log.e(LOG, "Text set to: " + mContext.getResources().getString(R.string.menuText));
+        Log.i(LOG, "Text set to: " + mContext.getResources().getString(R.string.menuText));
 
         if (isTimer)
             if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
@@ -443,7 +445,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Extracts Question Details from Questionnaire and creates Question
             Question question = mQuestionnaire.createQuestion(iQuestion);
             // Inflates Question Layout based on Question Details
-            LinearLayout layout = mQuestionnaire.generateView(question);
+            LinearLayout layout = mQuestionnaire.generateView(question, isImmersive);
             // Sets Layout Id to Question Id
             layout.setId(mQuestionnaire.getId(question));
             // Adds the Layout to List carrying all ACTIVE Views
@@ -575,6 +577,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.messageService(what);
     }
 
+    public void setPrefsInForeGround(boolean state) {
+        isPrefsInForeGround = state;
+    }
+
     /**
      * Lifecycle methods
      **/
@@ -617,16 +623,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onStop() {
         isCountDownRunning = false;
-        if (isMenu && !isPrefsInForeGround) {
+        //if (isMenu && !isPrefsInForeGround) {
             //sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        }
+        //}
         if (!isMenu && !isPrefsInForeGround) {
             sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         }
     }
-
-    public void setPrefsInForeGround(boolean state) {
-        isPrefsInForeGround = state;
-    }
-
 }
