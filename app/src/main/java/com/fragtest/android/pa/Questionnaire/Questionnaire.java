@@ -143,7 +143,7 @@ public class Questionnaire {
                 mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
-                mContext, this, answerLayout, question.getQuestionId());
+                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
                 mContext, this, answerLayout);
