@@ -40,9 +40,9 @@
             android:name=".Questionnaire.PermissionActivity"
             android:screenOrientation="portrait">
         </activity>-->
-        <!--<receiver android:name=".Core.EventReceiver" />
+        <receiver android:name=".Core.EventReceiver" />
 
-        <receiver
+        <!--<receiver
             android:name="com.fragtest.android.pa.AutostartReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
 
