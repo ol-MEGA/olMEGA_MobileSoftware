@@ -30,6 +30,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
     private final List<Integer> mListOfDefaults;
     private final Questionnaire mQuestionnaire;
     public LinearLayout.LayoutParams answerParams;
+    private int mExclusiveId = -1;
 
     public AnswerTypeCheckBox(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
@@ -42,10 +43,13 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
 
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault) {
+    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault, boolean isExclusive) {
         mListOfAnswers.add(new StringIntegerAndInteger(sAnswer, nAnswerId, nGroup));
         if (isDefault) {
             mListOfDefaults.add(mListOfAnswers.size() - 1);
+        }
+        if (isExclusive) {
+            mExclusiveId = nAnswerId;
         }
         return true;
     }
@@ -115,6 +119,11 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                         if (group != -1) {
                             unCheckGroup(group);
                         }
+                        if (currentId == mExclusiveId) {
+                            unCheckEverythingElse();
+                        } else {
+                            unCheckExclusive();
+                        }
                         checkBox.setChecked(true);
                         mQuestionnaire.addIdToEvaluationList(mQuestionId, currentId);
 
@@ -128,7 +137,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         return true;
     }
 
-    public boolean unCheckGroup(int nGroup) {
+    private boolean unCheckGroup(int nGroup) {
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
             if (mListOfAnswers.get(iAnswer).getGroup() == nGroup) {
                 int currentId = mListOfAnswers.get(iAnswer).getId();
@@ -138,6 +147,23 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    private void unCheckExclusive() {
+        final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(mExclusiveId);
+        checkBox.setChecked(false);
+        mQuestionnaire.removeIdFromEvaluationList(mExclusiveId);
+    }
+
+    private void unCheckEverythingElse() {
+        for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
+            if (mListOfAnswers.get(iAnswer).getId() != mExclusiveId) {
+                int currentId = mListOfAnswers.get(iAnswer).getId();
+                final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(currentId);
+                checkBox.setChecked(false);
+                mQuestionnaire.removeIdFromEvaluationList(currentId);
+            }
+        }
     }
 
 }

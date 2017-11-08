@@ -155,21 +155,6 @@ public class ControlService extends Service {
 
                     setupApplication();
 
-/*
-                    if (isQuestionnairePresent) {
-                        if (isTimer) {
-                            setAlarmAndCountdown();
-                        } else {
-                            messageClient(MSG_NO_TIMER);
-                            stopAlarmAndCountdown();
-                        }
-                    } else{
-                        messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
-                        messageClient(MSG_NO_TIMER);
-                        stopAlarmAndCountdown();
-                    }
-*/
-
                     // Bundled information about visible contents
                     Bundle bundleShow = new Bundle();
                     bundleShow.putBoolean("showConfigButton", showConfigButton);

@@ -2,6 +2,7 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.fragtest.android.pa.R;
 
@@ -15,7 +16,7 @@ import java.util.List;
 
 public class Question extends AppCompatActivity {
 
-    private final String LOG_STRING = "Question";
+    private final String LOG = "Question";
     private final String mQuestionBlueprint;
     private final String mQuestionText;
     private final String mTypeAnswer;
@@ -53,10 +54,9 @@ public class Question extends AppCompatActivity {
             mQuestionId = extractQuestionId();
             // Obtain Question Text
             mQuestionText = extractQuestionText();
+
             // Obtain Filter Id
             mFilterId = extractFilterId();
-            // Obtain Filter Id Condition ("if true" or "if false")
-            //mFilterCondition = extractFilterCondition();
             // Obtain Answer Type (e.g. Radio, Button, Slider,...)
             mTypeAnswer = extractTypeAnswers();
             // Obtain information whether question is mandatory
@@ -67,18 +67,21 @@ public class Question extends AppCompatActivity {
             // In case of real text input no answer text is given
             if (mAnswers.size() == 0) {
                 mAnswers = new ArrayList<>();
-                mAnswers.add(new Answer("", 33333, -1, false));
+                mAnswers.add(new Answer("", 33333, -1, false, false));
             }
 
             // Obtain Number of Answers
             mNumAnswers = extractNumAnswers();
             // Determine whether Element is hidden
             mHidden = extractHidden();
-            /*Log.e(LOG_STRING, "----------------------");
-            Log.i(LOG_STRING, "Question id: "+getQuestionId());
+
+
+            Log.e(LOG, "----------------------");
+            Log.i(LOG, "Question id: "+getQuestionId());
+            Log.i(LOG, ""+mQuestionText);
             for (int iId = 0; iId<mFilterId.size(); iId++) {
-                Log.e(LOG_STRING,"Filter id: "+mFilterId.get(iId));
-            }*/
+                Log.e(LOG,"Filter id: "+mFilterId.get(iId));
+            }
         }
     }
 
@@ -147,6 +150,7 @@ public class Question extends AppCompatActivity {
             int answerGroup = -1;
             String sGroupTmp;
             boolean isDefault = false;
+            boolean isExclusive = false;
 
             if (stringArray[iA].contains("option")) {
                 isDefault = false;
@@ -160,12 +164,16 @@ public class Question extends AppCompatActivity {
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
                     answerString = stringArray[iA].split("<text>|</text>")[1];
                 }
+                if (stringArray[iA].contains("condition=\"exclusive\"")) {
+                    isExclusive = true;
+                }
 
                 listAnswers.add(new Answer(
                         answerString,
                         answerId,
                         answerGroup,
-                        isDefault
+                        isDefault,
+                        isExclusive
                 ));
             }
 
@@ -181,11 +189,15 @@ public class Question extends AppCompatActivity {
                 if (stringArray[iA].split("<text>|</text>").length > 1) {
                     answerString = stringArray[iA].split("<text>|</text>")[1];
                 }
+                if (stringArray[iA].contains("condition=\"exclusive\"")) {
+                    isExclusive = true;
+                }
                 listAnswers.add(new Answer(
                         answerString,
                         answerId,
                         answerGroup,
-                        isDefault
+                        isDefault,
+                        isExclusive
                 ));
             }
         }

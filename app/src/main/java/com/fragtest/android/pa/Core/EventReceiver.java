@@ -21,8 +21,6 @@ public class EventReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Log.e(LOG, "I Received Very Good Alarm!");
-
         Context ctx = context.getApplicationContext();
         Log.d(LOG, "Context:" + ctx.toString());
 

@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -385,24 +386,6 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onStart();
         mAdapter.onStart();
-
-        /*
-        // start lock task mode if it's not already active
-        ActivityManager am = (ActivityManager) getSystemService(
-                Context.ACTIVITY_SERVICE);
-        // ActivityManager.getLockTaskModeState api is not available in pre-M.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            if (!am.isInLockTaskMode()) {
-                startLockTask();
-                //setLockTaskPackages();
-            }
-        } else {
-            if (am.getLockTaskModeState() ==
-                    ActivityManager.LOCK_TASK_MODE_NONE) {
-                startLockTask();
-            }
-        }
-        */
     }
 
     @Override
@@ -454,6 +437,22 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
+
+        // start lock task mode if it's not already active
+        ActivityManager am = (ActivityManager) getSystemService(
+                Context.ACTIVITY_SERVICE);
+        // ActivityManager.getLockTaskModeState api is not available in pre-M.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            if (!am.isInLockTaskMode()) {
+                startLockTask();
+                //setLockTaskPackages();
+            }
+        } else {
+            if (am.getLockTaskModeState() ==
+                    ActivityManager.LOCK_TASK_MODE_NONE) {
+                startLockTask();
+            }
         }
     }
 

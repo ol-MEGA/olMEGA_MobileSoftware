@@ -25,7 +25,7 @@ import java.util.List;
 
 public class Questionnaire {
 
-    private static final String LOG_STRING = "Questionnaire";
+    private static final String LOG = "Questionnaire";
     // Accumulator for ids, values and texts gathered from user input
     private final EvaluationList mEvaluationList;
     // Number of pages in questionnaire (visible and hidden)
@@ -168,6 +168,7 @@ public class Questionnaire {
             int nAnswerId = currentAnswer.Id;
             int nAnswerGroup = currentAnswer.Group;
             boolean isDefault = currentAnswer.isDefault();
+            boolean isExclusive = currentAnswer.isExclusive();
 
             if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
 
@@ -183,7 +184,8 @@ public class Questionnaire {
                     }
                     case "checkbox": {
                         isCheckBox = true;
-                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, nAnswerGroup, isDefault);
+                        answerTypeCheckBox.addAnswer(nAnswerId, sAnswer, nAnswerGroup,
+                                isDefault, isExclusive);
                         break;
                     }
                     case "text": {
@@ -221,7 +223,7 @@ public class Questionnaire {
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
-                            Log.e(LOG_STRING, "Weird object found. Id: " +
+                            Log.e(LOG, "Weird object found. Id: " +
                                     question.getQuestionId());
                         }
                         break;
@@ -318,6 +320,13 @@ public class Questionnaire {
         // toggles visibility by destroying or creating the views and adding them to the list of
         // views which is handled by QuestionnairePagerAdapter
 
+        String sid = "";
+        for (int iQ = 0; iQ < mEvaluationList.size(); iQ++){
+            sid += mEvaluationList.get(iQ).getValue();
+            sid += ", ";
+        }
+        Log.i(LOG, "IDs in memory: "+sid);
+
         boolean wasChanged = true;
 
         while (wasChanged) {
@@ -355,6 +364,7 @@ public class Questionnaire {
     }
 
     private boolean addQuestion(int iPos) {
+
         // Adds the question to the displayed list
         mQuestionInfo.get(iPos).setActive();
         // View is fetched from Storage List and added to Active List
@@ -366,11 +376,16 @@ public class Questionnaire {
         renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
+
+        Log.i(LOG, "Adding: "+mQuestionInfo.get(iPos).getQuestion().getQuestionText());
+
         return true;
     }
 
     private boolean removeQuestion(int iPos) {
         // Removes the question from the displayed list
+
+        Log.i(LOG, "Removing: "+mQuestionInfo.get(iPos).getQuestion().getQuestionText());
 
         /*
         // If view is mandatory but declared hidden
