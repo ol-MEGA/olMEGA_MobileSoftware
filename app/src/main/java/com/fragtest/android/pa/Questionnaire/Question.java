@@ -104,7 +104,7 @@ public class Question extends AppCompatActivity {
         ArrayList<Integer> listOfFilterIds = new ArrayList<>();
 
         if (mQuestionBlueprint.split("filter=\"").length > 1) {
-            String[] arrayTmp = mQuestionBlueprint.split("filter=\"")[1].split("\"")[0].split(",");
+            String[] arrayTmp = mQuestionBlueprint.split("filter=\"")[1].split("\"")[0].replaceAll("\\s+","").split(",");
             for (int iId = 0; iId < arrayTmp.length; iId++) {
 
                 // Negative factor represents EXCLUSION filter
@@ -112,6 +112,8 @@ public class Question extends AppCompatActivity {
                 if (arrayTmp[iId].startsWith("!")) {
                     nFactor = -1;
                 }
+                Log.i(LOG, "fid: "+arrayTmp[iId]);
+
                 listOfFilterIds.add(Integer.parseInt(
                         arrayTmp[iId].replace("_","").replace("!","")) * nFactor);
             }

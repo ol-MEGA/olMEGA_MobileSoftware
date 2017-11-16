@@ -5,7 +5,7 @@
     <string name="infoTextSave">Data was saved</string>
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="buttonTextOkay">OK</string>
-    <string name="timeRemaining">Next Questionnaire in %m %s</string>
+    <string name="timeRemaining">Next Questionnaire scheduled in %m %s</string>
     <string name="menuText">Take Questionnaire</string>
     <string name="noQuestionnaires">Unable to load Questionnaire.</string>
 </resources>

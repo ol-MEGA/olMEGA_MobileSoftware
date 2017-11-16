@@ -463,6 +463,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                //MainActivity.startActivity(new Intent(mContext, HelpActivity.class));
+                //isPrefsInForeGround = true;
+                //setPrefsInForeGround(isPrefsInForeGround);
+
                 createMenu();
                 startCountDown();
             }

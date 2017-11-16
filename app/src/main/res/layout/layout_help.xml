@@ -1,6 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/TextColor"
+        android:text="\nBedienung des Fragebogens\n"
+        android:textSize="24sp"
+        android:gravity="center_horizontal"
+        android:background="@color/lighterGray"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <RelativeLayout
+        android:id="@+id/relLayout"
+        android:layout_below="@id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="32dp"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp">
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:textColor="@color/TextColor"
+        android:layout_marginTop="16dp"
+        android:textSize="16sp"
+        android:text="Innerhalb des Fragebogens begegnen Ihnen hauptsächlich zwei Arten von Antworten:" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="16dp"
+        android:layout_below="@id/textView3"
+        android:textColor="@color/TextColor_Light"
+        android:textSize="16sp"
+        android:text="Einfachantworten und Mehrfachantworten" />
+
+
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="32dp"
+        android:layout_below="@+id/textView4"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/radioGroup">
+
+        <RadioButton
+            android:id="@+id/radioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginBottom="8dp"
+            android:text="Dieses Symbol bedeutet, dass Sie nur eine Möglichkeit auswählen können" />
+
+        <RadioButton
+            android:id="@+id/radioButton2"
+            android:layout_width="336dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="Probieren Sie es!" />
+
+    </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/checkBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/radioGroup"
+        android:layout_marginTop="37dp"
+        android:text="Bei diesem Symbol dürfen Sie mehrere Optionen auswählen" />
+
+    <CheckBox
+        android:id="@+id/checkBox2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/checkBox"
+        android:layout_marginTop="13dp"
+        android:text="Zum Beispiel diese" />
+
+    <CheckBox
+        android:id="@+id/checkBox3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_below="@+id/checkBox2"
+        android:layout_marginTop="12dp"
+        android:text="Oder diese" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/checkBox3"
+        android:textColor="@color/TextColor"
+        android:textSize="16sp"
+        android:layout_marginTop="32dp"
+        android:text="Hin und wieder kommt es vor, dass bestimmte Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann automatisch eine Antwort wieder ab." />
+
+    </RelativeLayout>
+
+</RelativeLayout>
