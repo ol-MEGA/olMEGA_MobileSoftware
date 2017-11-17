@@ -473,6 +473,7 @@ public class ControlService extends Service {
         mFileIO = new FileIO();
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
+        Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
         mEventTimer = new EventTimer(this, mMessengerHandler);
         mVibration = new Vibration(this);
 

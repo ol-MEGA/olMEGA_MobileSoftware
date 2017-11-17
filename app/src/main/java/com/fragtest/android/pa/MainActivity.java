@@ -471,6 +471,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void incrementPage() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
+    }
+
     public void setImmersive() {
         if (isImmersive) {
             getWindow().getDecorView().setSystemUiVisibility(

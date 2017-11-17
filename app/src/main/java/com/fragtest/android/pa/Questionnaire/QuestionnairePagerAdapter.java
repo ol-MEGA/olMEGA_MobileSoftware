@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
+import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
 import com.fragtest.android.pa.R;
 
@@ -52,6 +53,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private String mHead, mFoot, mSurveyURI;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
+    private Help mHelpScreen;
     private boolean isImmersive = false;
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
@@ -183,8 +185,58 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setControlsMenu();
 
         sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        //isQuestionnaireActive = false;
     }
+
+    public void backToMenu() {
+
+        isMenu = true;
+        sendMessage(ControlService.MSG_ISMENU);
+        // Instantiates a MenuPage Object based on Contents of raw XML File
+        mMenuPage = new MenuPage(MainActivity, this);
+        mNUM_PAGES = 1;
+        mViewPager.setOffscreenPageLimit(0);
+
+        mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
+
+        createMenuLayout();
+        setControlsMenu();
+
+        onResume();
+
+    }
+
+
+    public void createHelpScreen() {
+
+        // Instantiates a MenuPage Object based on Contents of raw XML File
+        mHelpScreen = new Help(MainActivity, this);
+        mNUM_PAGES = 1;
+        mViewPager.setOffscreenPageLimit(0);
+
+        mListOfActiveViews = new ArrayList<>();
+        mListOfViewsStorage = new ArrayList<>();
+
+        createHelpLayout();
+    }
+
+    // Inserts contents in blank menu
+    private void createHelpLayout() {
+
+        LinearLayout layout = mHelpScreen.generateView();
+
+        layout.setId(0);
+        // Adds the Layout to List carrying all ACTIVE Views
+        mListOfActiveViews.add(new QuestionViewActive(layout, layout.getId(),
+                0, true, null));
+        // Adds the Layout to List storing ALL Views
+        mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
+                0, true, null));
+
+        notifyDataSetChanged();
+        mViewPager.setCurrentItem(0);
+    }
+
 
     // Initialise questionnaire based on new input parameters
     public void createQuestionnaire(ArrayList<String> questionList, String head, String foot,
@@ -415,6 +467,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Sets up visible control elements for menu i.e. status bar
     private void setControlsMenu() {
 
+        MainActivity.mLogo.setText("Hilfe");
         MainActivity.mArrowForward.setVisibility(View.INVISIBLE);
         MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
         MainActivity.mRevert.setVisibility(View.INVISIBLE);
@@ -422,12 +475,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 ContextCompat.getColor(mContext, R.color.JadeRed));
         MainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeGray));
-        MainActivity.mLogo.setEnabled(false);
+        MainActivity.mLogo.setEnabled(true);
     }
 
     // Sets up visible control elements for questionnaire i.e. navigation symbols
     private void setControlsQuestionnaire() {
 
+        MainActivity.mLogo.setText("IHAB");
         MainActivity.mArrowForward.setVisibility(View.VISIBLE);
         MainActivity.mArrowBack.setVisibility(View.VISIBLE);
         MainActivity.mRevert.setVisibility(View.VISIBLE);
@@ -464,12 +518,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             @Override
             public void onClick(View v) {
 
-                //MainActivity.startActivity(new Intent(mContext, HelpActivity.class));
                 //isPrefsInForeGround = true;
                 //setPrefsInForeGround(isPrefsInForeGround);
-
-                createMenu();
-                startCountDown();
+                if (isMenu) {
+                    createHelpScreen();
+                } else {
+                    createMenu();
+                    startCountDown();
+                }
             }
         });
         MainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {

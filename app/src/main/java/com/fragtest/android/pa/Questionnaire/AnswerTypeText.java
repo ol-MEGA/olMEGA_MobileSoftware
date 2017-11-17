@@ -78,12 +78,17 @@ public class AnswerTypeText extends AppCompatActivity {
 
             mButtonOkay = new Button(mContext);
             mButtonOkay.setText(R.string.buttonTextOkay);
+            mButtonOkay.setScaleX(1.5f);
+            mButtonOkay.setScaleY(1.5f);
             mButtonOkay.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
             mButtonOkay.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button));
             LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
+
+            buttonParams.topMargin = 96;
+            buttonParams.bottomMargin = 48;
 
             mAnswerText.isFocusableInTouchMode();
 
@@ -119,6 +124,7 @@ public class AnswerTypeText extends AppCompatActivity {
                     }
 
                     ((MainActivity) mContext).setImmersive();
+                    ((MainActivity) mContext).incrementPage();
                 }
             });
         }

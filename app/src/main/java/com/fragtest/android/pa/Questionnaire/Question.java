@@ -112,7 +112,6 @@ public class Question extends AppCompatActivity {
                 if (arrayTmp[iId].startsWith("!")) {
                     nFactor = -1;
                 }
-                Log.i(LOG, "fid: "+arrayTmp[iId]);
 
                 listOfFilterIds.add(Integer.parseInt(
                         arrayTmp[iId].replace("_","").replace("!","")) * nFactor);
