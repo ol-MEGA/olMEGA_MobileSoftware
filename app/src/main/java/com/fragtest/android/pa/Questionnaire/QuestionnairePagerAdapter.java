@@ -467,7 +467,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Sets up visible control elements for menu i.e. status bar
     private void setControlsMenu() {
 
-        MainActivity.mLogo.setText("Hilfe");
+        MainActivity.mLogo.setText(R.string.menuHelp);
         MainActivity.mArrowForward.setVisibility(View.INVISIBLE);
         MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
         MainActivity.mRevert.setVisibility(View.INVISIBLE);
