@@ -9,6 +9,7 @@
     <string name="menuText">Starte Fragebogen</string>
     <string name="noQuestionnaires">Fragebogen konnte nicht geladen werden.</string>
 
+    <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>
     <string name="helpHinweis"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
         Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann

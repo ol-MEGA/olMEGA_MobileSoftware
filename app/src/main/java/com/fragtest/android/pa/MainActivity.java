@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    /*if (mServiceIsBound) {
+                    if (mServiceIsBound) {
                         if (mServiceIsRecording) {
                             messageService(ControlService.MSG_STOP_RECORDING);
                         } else {
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this,
                                 "Not connected to service.",
                                 Toast.LENGTH_SHORT).show();
-                    }*/
+                    }
                 }
             });
 

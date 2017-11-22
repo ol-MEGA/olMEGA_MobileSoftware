@@ -179,7 +179,7 @@ public class BasicProcessingThread extends Thread {
 	protected boolean isActiveFeature(String s){
 		boolean result = false;
 
-		Log.i(LOG, "ACTIVE FEATURES:"+activeFeatures.size());
+		//Log.i(LOG, "ACTIVE FEATURES:"+activeFeatures.size());
 
 		for (String feature : activeFeatures) {
 			if (s.equalsIgnoreCase(feature)) {

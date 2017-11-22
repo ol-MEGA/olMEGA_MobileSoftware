@@ -206,7 +206,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     }
 
-
     public void createHelpScreen() {
 
         // Instantiates a MenuPage Object based on Contents of raw XML File
@@ -220,7 +219,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         createHelpLayout();
     }
 
-    // Inserts contents in blank menu
     private void createHelpLayout() {
 
         LinearLayout layout = mHelpScreen.generateView();
@@ -236,7 +234,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
     }
-
 
     // Initialise questionnaire based on new input parameters
     public void createQuestionnaire(ArrayList<String> questionList, String head, String foot,
