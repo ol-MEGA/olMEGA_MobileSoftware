@@ -150,7 +150,6 @@ public class BasicProcessingThread extends Thread {
 		}
 	}
 
-
 	// check if all active features have been processed
 	private void isFinished() {
 
@@ -173,13 +172,10 @@ public class BasicProcessingThread extends Thread {
 		}
 	}
 
-
 	// check if feature is active, called by MainProcessingThread to
     // determine whether or not to process a given feature
 	protected boolean isActiveFeature(String s){
 		boolean result = false;
-
-		//Log.i(LOG, "ACTIVE FEATURES:"+activeFeatures.size());
 
 		for (String feature : activeFeatures) {
 			if (s.equalsIgnoreCase(feature)) {
@@ -189,7 +185,6 @@ public class BasicProcessingThread extends Thread {
 		}
 		return result;
 	}
-
 
     // Handler of incoming messages from clients.
 	private class ProcessHandler extends Handler {

@@ -1,6 +1,9 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.support.v4.BuildConfig;
 import android.support.v4.content.ContextCompat;
@@ -55,6 +58,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private MenuPage mMenuPage;
     private Help mHelpScreen;
     private boolean isImmersive = false;
+
+    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    Intent batteryStatus;
+
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
         public void run() {
@@ -62,6 +69,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateRate);
+
+                setBatteryLogo();
             }
         }
     };
@@ -168,8 +177,44 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
+    private void setBatteryLogo() {
+        LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
+                MainActivity.mBatteryReg.getLayoutParams().width,
+                MainActivity.mBatteryReg.getLayoutParams().height,
+                0.86f*(1.0f - getbatteryInfo())
+        );
+        MainActivity.mBatteryProg.setLayoutParams(regparams);
+
+        LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
+                MainActivity.mBatteryProg.getLayoutParams().width,
+                MainActivity.mBatteryProg.getLayoutParams().height,
+                0.86f*getbatteryInfo()
+        );
+        MainActivity.mBatteryProg.setLayoutParams(progparams);
+    }
+
+    private float getbatteryInfo() {
+
+        // Are we charging / charged?
+        //int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        //boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+        //        status == BatteryManager.BATTERY_STATUS_FULL;
+
+        // How are we charging?
+        //int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        //boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+        //boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        return level / (float)scale;
+    }
+
     // Initialise menu with visible countdown
     public void createMenu() {
+
+        batteryStatus = mContext.registerReceiver(null, ifilter);
 
         isMenu = true;
         sendMessage(ControlService.MSG_ISMENU);
@@ -299,17 +344,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void proposeQuestionnaire() {
+        backToMenu();
+        needsIncreasing = true;
         if (isInForeGround) {
             mMenuPage.increaseStartTextSize();
-        } else {
-            needsIncreasing = true;
-
-            /*
-            final Intent notificationIntent = new Intent(mContext, MainActivity.class);
-            notificationIntent.setAction(Intent.ACTION_MAIN);
-            notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-            notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            */
         }
     }
 

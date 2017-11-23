@@ -56,7 +56,8 @@ public class MainActivity extends AppCompatActivity {
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     public ViewPager mViewPager = null;
     public TextView mLogo;
-    public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig;
+    public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig,
+            mBatteryReg, mBatteryProg;
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
     private boolean isPrefsInForeGround = false;
@@ -330,6 +331,8 @@ public class MainActivity extends AppCompatActivity {
             mProgress = findViewById(R.id.progress);
             mRegress = findViewById(R.id.regress);
             mConfig = findViewById(R.id.Action_Config);
+            mBatteryProg = findViewById(R.id.battery_prog);
+            mBatteryReg = findViewById(R.id.battery_reg);
 
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -81,13 +81,69 @@
             android:layout_weight="0"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
-            >
+            />
 
-        </View>
+
+        <RelativeLayout
+            android:layout_width="12dp"
+            android:layout_height="24dp">
+
+        <LinearLayout
+            android:layout_width="12dp"
+            android:layout_height="24dp"
+            android:orientation="vertical"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0">
+
+            <View
+                android:id="@+id/battery_top"
+                android:layout_width="10dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.07"
+                />
+            <View
+                android:id="@+id/battery_reg"
+                android:layout_width="8dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.43"
+                android:background="@color/BackgroundColor"
+                android:layout_gravity="center_horizontal" />
+            <View
+                android:id="@+id/battery_prog"
+                android:layout_width="9dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.43"
+                android:background="@color/JadeRed"
+                android:layout_gravity="center_horizontal"/>
+
+            <View
+                android:id="@+id/battery_bottom"
+                android:layout_width="10dp"
+                android:layout_height="0dp"
+                android:layout_weight="0.07"
+                />
+        </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/battery"/>
+
+
+        </RelativeLayout>
 
     </LinearLayout>
 
     <!-- "Progress Bar" -->
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:layout_weight="1">
+
+    </android.support.v4.view.ViewPager>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/progressBarHeight"
@@ -110,15 +166,6 @@
         </View>
 
     </LinearLayout>
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/viewpager"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_gravity="top">
-
-    </android.support.v4.view.ViewPager>
 
     <View
         android:id="@+id/Action_Config"

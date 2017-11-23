@@ -101,7 +101,9 @@ public class ControlService extends Service {
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
             showConfigButton, showRecordingButton, questionnaireHasTimer;
 
-    private int samplerate, chunklengthInS, filterHpFrequency, mFinalCountDown, mTimerInterval;
+    private int mFinalCountDown, mTimerInterval;
+
+    private String samplerate, chunklengthInS, filterHpFrequency;
 
     private boolean restartActivity = false; // TODO: implement in settings
     private NotificationManager mNotificationManager;
@@ -114,7 +116,6 @@ public class ControlService extends Service {
 
     // Messenger to clients
     private Messenger mClientMessenger;
-
     // Messenger to pass to threads
     final Messenger serviceMessenger = new Messenger(new MessageHandler());
 
@@ -224,7 +225,7 @@ public class ControlService extends Service {
 
                 case MSG_QUESTIONNAIRE_INACTIVE:
                     // In case questionnaires are no longer present, program crashes..
-                    // but shouldn't be a problem since it is destructive user interference.
+                    // but shouldn't be a problem since it is destructive user interference (DUI).
                     isMenu = true;
                     isActiveQuestionnaire = false;
                     if (isTimer) {
@@ -245,8 +246,8 @@ public class ControlService extends Service {
                     Logger.info("Start caching audio");
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
-                            chunklengthInS,
-                            samplerate,
+                            Integer.parseInt(chunklengthInS),
+                            Integer.parseInt(samplerate),
                             isWave);
                     audioRecorder.start();
                     isRecording = true;
@@ -269,7 +270,6 @@ public class ControlService extends Service {
 
                 case MSG_CHUNK_RECORDED:
                     String filename = msg.getData().getString("filename");
-
                     addProccessingBuffer(idxRecording, filename);
                     idxRecording = (idxRecording + 1) % processingBufferSize;
 
@@ -474,7 +474,7 @@ public class ControlService extends Service {
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
         Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
-        mEventTimer = new EventTimer(this, mMessengerHandler);
+        mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
         mVibration = new Vibration(this);
 
         checkForPreferences();
@@ -498,9 +498,9 @@ public class ControlService extends Service {
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", true);
 
         // Cave: These are Strings
-        filterHpFrequency = Integer.parseInt(sharedPreferences.getString("filterHpFrequency", "100"));
-        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "16000"));
-        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
+        filterHpFrequency = sharedPreferences.getString("filterHpFrequency", "100");
+        samplerate = sharedPreferences.getString("samplerate", "16000");
+        chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
@@ -524,12 +524,12 @@ public class ControlService extends Service {
         isWave = dataPreferences.getBoolean("isWave", isWave);
         isTimer = dataPreferences.getBoolean("isTimer", isTimer);
         filterHp = dataPreferences.getBoolean("filterHp", filterHp);
-        filterHpFrequency = Integer.parseInt(dataPreferences.getString("filterHpFrequency", "" + filterHpFrequency));
+        filterHpFrequency = dataPreferences.getString("filterHpFrequency", "" + filterHpFrequency);
         downsample = dataPreferences.getBoolean("downsample", downsample);
         keepAudioCache = dataPreferences.getBoolean("keepAudioCache", keepAudioCache);
 
-        samplerate = Integer.parseInt(dataPreferences.getString("samplerate", "" + samplerate));
-        chunklengthInS = Integer.parseInt(dataPreferences.getString("chunklengthInS", "" + chunklengthInS));
+        samplerate = dataPreferences.getString("samplerate", "" + samplerate);
+        chunklengthInS = dataPreferences.getString("chunklengthInS", "" + chunklengthInS);
 
         ArrayList<String> listActiveFeatures = dataPreferences.getStringArrayList("features");
         Set<String> activeFeatures = new HashSet<>();
@@ -590,8 +590,8 @@ public class ControlService extends Service {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // recording
-        samplerate = Integer.parseInt(sharedPreferences.getString("samplerate", "" + samplerate));
-        chunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "" + chunklengthInS));
+        samplerate = sharedPreferences.getString("samplerate","16000");
+        chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", keepAudioCache);
         isWave = sharedPreferences.getBoolean("isWave", isWave);
 
@@ -637,12 +637,12 @@ public class ControlService extends Service {
 
         Bundle processingSettings = new Bundle();
         processingSettings.putBoolean("isTimer", isTimer);
-        processingSettings.putInt("samplerate", samplerate);
-        processingSettings.putInt("chunklengthInS", chunklengthInS);
+        processingSettings.putInt("samplerate", Integer.parseInt(samplerate));
+        processingSettings.putInt("chunklengthInS", Integer.parseInt(chunklengthInS));
         processingSettings.putBoolean("isWave", isWave);
         processingSettings.putSerializable("activeFeatures", activeFeatures);
         processingSettings.putBoolean("filterHp", filterHp);
-        processingSettings.putString("filterHpFrequency", "" + filterHpFrequency);
+        processingSettings.putInt("filterHpFrequency", Integer.parseInt(filterHpFrequency));
         processingSettings.putBoolean("downsample", downsample);
         processingSettings.putString("whichQuest", mSelectQuestionnaire);
 
@@ -689,7 +689,7 @@ public class ControlService extends Service {
 
     private void stopAlarmAndCountdown() {
 
-        Log.e(LOG, "Cancelling");
+        Log.e(LOG, "Cancelling Alarm.");
 
         messageClient(MSG_NO_TIMER);
         isTimerRunning = false;

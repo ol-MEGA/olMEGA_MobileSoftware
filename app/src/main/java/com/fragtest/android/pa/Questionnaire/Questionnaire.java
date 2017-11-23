@@ -28,10 +28,6 @@ public class Questionnaire {
     private static final String LOG = "Questionnaire";
     // Accumulator for ids, values and texts gathered from user input
     private final EvaluationList mEvaluationList;
-    // Number of pages in questionnaire (visible and hidden)
-    private int mNumPages, mViewPagerHeight;
-    // ArrayList containing all questions (including all attached information)
-    private ArrayList<String> mQuestionList;
     // Context of QuestionnairePageAdapter for visibility
     private final QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
@@ -39,11 +35,15 @@ public class Questionnaire {
     // Basic information about all available questions
     private final ArrayList<QuestionInfo> mQuestionInfo;
     private final MandatoryInfo mMandatoryInfo;
-    private MetaData mMetaData;
     private final FileIO mFileIO;
-    private String mHead, mFoot, mSurveyURI, mMotivation;
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
+    // Number of pages in questionnaire (visible and hidden)
+    private int mNumPages, mViewPagerHeight;
+    // ArrayList containing all questions (including all attached information)
+    private ArrayList<String> mQuestionList;
+    private MetaData mMetaData;
+    private String mHead, mFoot, mSurveyURI, mMotivation;
     private boolean isImmersive = false;
 
     public Questionnaire(Context context, String head, String foot, String surveyUri,
@@ -315,20 +315,21 @@ public class Questionnaire {
         return question.getQuestionId();
     }
 
+    // Function checks all available pages on whether their filtering condition has been met and
+    // toggles visibility by destroying or creating the views and adding them to the list of
+    // views which is handled by QuestionnairePagerAdapter
     boolean checkVisibility() {
-        // Function checks all available pages on whether their filtering condition has been met and
-        // toggles visibility by destroying or creating the views and adding them to the list of
-        // views which is handled by QuestionnairePagerAdapter
 
         String sid = "";
-        for (int iQ = 0; iQ < mEvaluationList.size(); iQ++){
+        for (int iQ = 0; iQ < mEvaluationList.size(); iQ++) {
             sid += mEvaluationList.get(iQ).getValue();
             sid += ", ";
         }
-        Log.i(LOG, "IDs in memory: "+sid);
+        Log.i(LOG, "IDs in memory: " + sid);
 
         boolean wasChanged = true;
 
+        // Repeat until nothing changes anymore
         while (wasChanged) {
             wasChanged = false;
 
@@ -338,34 +339,42 @@ public class Questionnaire {
 
                 if (qI.isActive()) {                                                                    // View is active but might be obsolete
 
-                    if (qI.isHidden()) {                                                                // View has been declared invisible
+                    if (qI.isHidden()) {
+                        Log.e(LOG, "CASE 1");                                                           // View is declared "Hidden"
                         removeQuestion(iPos);
                         wasChanged = true;
-                    } else if (!mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {       // Not ALL MUST EXIST ids are INCLUDED
+                    } else if (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // Not even 1 positive Filter Id exists OR No positive filter Ids declared
+                            && qI.getFilterIdPositive().size() > 0) {
+                        Log.e(LOG, "CASE 2");
                         removeQuestion(iPos);
                         wasChanged = true;
-                    } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // at least one MUST NOT EXIST id IS INCLUDED
+                    } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // At least 1 negative filter Id exists
+                        Log.e(LOG, "CASE 3");
                         removeQuestion(iPos);
                         wasChanged = true;
                     }
 
                 } else {                                                                                // View is inactive but should possibly be active
 
-                    if (!qI.isHidden()                                                                  // View has not been declared invisible
-                            && !mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())    // No MUST NOT EXIST id is  INCLUDED
-                            && mEvaluationList.containsAllAnswerIds(qI.getFilterIdPositive())) {        // MUST EXIST ids are ALL INCLUDED
+                    if (!qI.isHidden()
+                            && (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // View is not declared "Hidden"
+                            || qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
+                            && (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())   // && (Not even 1 negative Filter Id exists OR No negative filter Ids declared)
+                            || qI.getFilterIdNegative().size() == 0)
+                            ) {
+                        Log.e(LOG, "CASE 4");
                         addQuestion(iPos);
                         wasChanged = true;
                     }
                 }
             }
-    }
+        }
         return true;
     }
 
+    // Adds the question to the displayed list
     private boolean addQuestion(int iPos) {
 
-        // Adds the question to the displayed list
         mQuestionInfo.get(iPos).setActive();
         // View is fetched from Storage List and added to Active List
         mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
@@ -377,22 +386,16 @@ public class Questionnaire {
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
-        Log.i(LOG, "Adding: "+mQuestionInfo.get(iPos).getQuestion().getQuestionText());
+        Log.i(LOG, "Adding: " + mQuestionInfo.get(iPos).getQuestion().getQuestionText());
 
         return true;
     }
 
+    // Removes the question from the displayed list and all given answer ids from memory
     private boolean removeQuestion(int iPos) {
-        // Removes the question from the displayed list
 
-        Log.i(LOG, "Removing: "+mQuestionInfo.get(iPos).getQuestion().getQuestionText());
 
-        /*
-        // If view is mandatory but declared hidden
-        if (mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId()) &&
-                mMandatoryInfo.isHiddenFromId(mQuestionInfo.get(iPos).getId())) {
-        }
-        */
+        Log.i(LOG, "Removing: " + mQuestionInfo.get(iPos).getQuestion().getQuestionText());
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
@@ -411,10 +414,10 @@ public class Questionnaire {
                     if (checkBox != null) {
                         checkBox.setChecked(false);
                     }
-                } else if(sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
+                } else if (sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
                     RadioButton radioButton = (RadioButton) mContextQPA.mViewPager.findViewById(
                             mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
-                    if ( radioButton != null) {
+                    if (radioButton != null) {
                         radioButton.setChecked(false);
                     }
                 }
@@ -431,8 +434,8 @@ public class Questionnaire {
         return true;
     }
 
+    // Renews all the positions in information object gathered from actual order
     private void renewPositionsInPager() {
-        // Renews all the positions in information object gathered from actual order
 
         for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
             int iId = mQuestionInfo.get(iItem).getId();
