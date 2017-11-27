@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
@@ -58,6 +59,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private MenuPage mMenuPage;
     private Help mHelpScreen;
     private boolean isImmersive = false;
+    private Units mUnits;
+    private float batteryPlaceholderWeight;
 
     IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     Intent batteryStatus;
@@ -89,6 +92,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity = (MainActivity) context;
         mViewPager = viewPager;
         isImmersive = immersive;
+        mUnits = new Units(mContext);
+        batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
         handleControls();
     }
 
@@ -179,17 +184,21 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private void setBatteryLogo() {
         LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
-                MainActivity.mBatteryReg.getLayoutParams().width,
-                MainActivity.mBatteryReg.getLayoutParams().height,
-                0.86f*(1.0f - getbatteryInfo())
+                mUnits.convertDpToPixels(10),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getbatteryInfo())
         );
-        MainActivity.mBatteryProg.setLayoutParams(regparams);
+        regparams.leftMargin = mUnits.convertDpToPixels(1);
+        regparams.rightMargin = mUnits.convertDpToPixels(1);
+        MainActivity.mBatteryReg.setLayoutParams(regparams);
 
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
-                MainActivity.mBatteryProg.getLayoutParams().width,
-                MainActivity.mBatteryProg.getLayoutParams().height,
-                0.86f*getbatteryInfo()
+                mUnits.convertDpToPixels(10),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)*getbatteryInfo()
         );
+        progparams.leftMargin = mUnits.convertDpToPixels(1);
+        progparams.rightMargin = mUnits.convertDpToPixels(1);
         MainActivity.mBatteryProg.setLayoutParams(progparams);
     }
 

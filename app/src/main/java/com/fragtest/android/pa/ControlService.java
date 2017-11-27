@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
+import com.fragtest.android.pa.Core.Comm;
+import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
@@ -96,6 +99,7 @@ public class ControlService extends Service {
     private XMLReader mXmlReader;
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
+    private Comm comm;
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
@@ -139,6 +143,29 @@ public class ControlService extends Service {
 
     Context context = this;
 
+
+
+    private EventReceiver mMessageReceiver = new EventReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            messageClient(MSG_ALARM_RECEIVED);
+            // perform checks whether running a questionnaire is valid
+            if (isMenu) { //!isActiveQuestionnaire
+                messageClient(MSG_PROPOSE_QUESTIONNAIRE);
+                mVibration.repeatingBurstOn();
+            } else {
+                // React to when questionnaire is active but another one is due
+                // -> probably deprecated because timer is only started after Q was finished
+                Log.i(LOG,"Waiting for new questionnaire.");
+            }
+            isTimerRunning = false;
+            isQuestionnairePending = true;
+
+        }
+    };
+
+
     class MessageHandler extends Handler {
 
         @Override
@@ -180,7 +207,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_ALARM_RECEIVED:
-                    messageClient(MSG_ALARM_RECEIVED);
+                    /*messageClient(MSG_ALARM_RECEIVED);
                     // perform checks whether running a questionnaire is valid
                     if (isMenu) { //!isActiveQuestionnaire
                         messageClient(MSG_PROPOSE_QUESTIONNAIRE);
@@ -191,7 +218,7 @@ public class ControlService extends Service {
                         Log.i(LOG,"Waiting for new questionnaire.");
                     }
                     isTimerRunning = false;
-                    isQuestionnairePending = true;
+                    isQuestionnairePending = true;*/
                     break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
@@ -333,7 +360,8 @@ public class ControlService extends Service {
     @Override
     public void onCreate() {
 
-        Log.d(LOG, "onCreate");
+        Log.e(LOG, "onCreate");
+
         // log file
         Configurator.currentConfig()
                 .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
@@ -345,6 +373,10 @@ public class ControlService extends Service {
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
+
+
+        this.registerReceiver(mMessageReceiver, new IntentFilter("AlarmReceived"));
+
 
         Log.e(LOG,"ControlService started");
     }
@@ -482,7 +514,6 @@ public class ControlService extends Service {
         // Determine whether to show or hide preferences menu
         showConfigButton = (mFileIO.checkConfigFile());
     }
-
 
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
@@ -772,4 +803,5 @@ public class ControlService extends Service {
             processingBuffer[idx] = null;
         }
     }
+
 }

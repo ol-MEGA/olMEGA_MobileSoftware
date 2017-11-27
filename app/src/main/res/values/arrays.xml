@@ -33,5 +33,8 @@
         <item>GIVE ME PERMISSION!!!</item>
         <item>SCREW YOU!</item>
     </string-array>
-    
+
+    <integer-array name="battery_placeholder_weight">
+        <item name="battery_placeholder_weight">3</item>
+    </integer-array>
 </resources>
