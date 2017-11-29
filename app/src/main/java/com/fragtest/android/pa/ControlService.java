@@ -406,6 +406,8 @@ public class ControlService extends Service {
         stopAlarmAndCountdown();
         mNotificationManager.cancel(NOTIFICATION_ID);
 
+        this.unregisterReceiver(mMessageReceiver);
+
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
         Logger.info("Service stopped");

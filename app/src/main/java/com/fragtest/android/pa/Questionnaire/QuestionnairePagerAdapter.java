@@ -62,8 +62,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Units mUnits;
     private float batteryPlaceholderWeight;
 
-    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-    Intent batteryStatus;
+    private IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    private Intent batteryStatus;
 
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
@@ -204,16 +204,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private float getbatteryInfo() {
 
-        // Are we charging / charged?
-        //int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        //boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-        //        status == BatteryManager.BATTERY_STATUS_FULL;
-
-        // How are we charging?
-        //int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        //boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
-        //boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
-
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
@@ -226,6 +216,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         batteryStatus = mContext.registerReceiver(null, ifilter);
 
         isMenu = true;
+        needsIncreasing = false;
         sendMessage(ControlService.MSG_ISMENU);
         // Instantiates a MenuPage Object based on Contents of raw XML File
         mMenuPage = new MenuPage(MainActivity, this);
@@ -349,6 +340,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setCurrentItem(0);
         setArrows(0);
         setQuestionnaireProgressBar();
+        needsIncreasing = false;
     }
 
     // Simply increases text size of "Start Questionnaire" item in user menu
@@ -567,8 +559,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 if (isMenu) {
                     createHelpScreen();
                 } else {
-                    createMenu();
-                    startCountDown();
+                    //createMenu();
+                    //startCountDown();
                 }
             }
         });
@@ -700,6 +692,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onResume() {
 
+        Log.i(LOG, "onResume");
+
         if(isMenu && isTimer) {
             isCountDownRunning = false;
             if (isQuestionnairePresent) {
@@ -714,7 +708,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);
-            needsIncreasing = false;
         }
 
         isInForeGround = true;

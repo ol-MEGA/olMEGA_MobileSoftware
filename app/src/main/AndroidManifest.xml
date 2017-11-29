@@ -44,6 +44,7 @@
         <receiver android:name=".Core.EventReceiver"
             android:enabled="true"/>
 
+
         <!--<receiver
             android:name="com.fragtest.android.pa.AutostartReceiver"
             android:permission="android.permission.RECEIVE_BOOT_COMPLETED">

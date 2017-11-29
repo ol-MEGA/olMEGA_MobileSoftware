@@ -41,11 +41,7 @@ public class EventReceiver extends BroadcastReceiver {
     }
 
     private static void sendMessageToService() {
-
         Intent intent = new Intent("AlarmReceived");
         mContext.sendBroadcast(intent);
-
-        Log.e(LOG, "Intent sent my friend.");
-
     }
 }

@@ -71,4 +71,11 @@
     <dimen name="battery_margin_top">4dp</dimen>
     <dimen name="battery_margin_bottom">4dp</dimen>
 
+    <dimen name="charging_margin_left">1dp</dimen>
+    <dimen name="charging_margin_right">1dp</dimen>
+    <dimen name="charging_margin_top">2dp</dimen>
+    <dimen name="charging_margin_bottom">2dp</dimen>
+    <dimen name="charging_width">10dp</dimen>
+    <dimen name="charging_height">20dp</dimen>
+
 </resources>

@@ -136,6 +136,17 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/battery" />
 
+            <View
+                android:id="@+id/charging"
+                android:scaleX="-1"
+                android:layout_width="@dimen/charging_width"
+                android:layout_height="@dimen/charging_height"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/charging_margin_top"
+                android:layout_marginBottom="@dimen/charging_margin_bottom"
+                android:layout_marginLeft="@dimen/charging_margin_left"
+                android:layout_marginRight="@dimen/charging_margin_right"
+                android:background="@drawable/charging"/>
         </RelativeLayout>
 
     </LinearLayout>

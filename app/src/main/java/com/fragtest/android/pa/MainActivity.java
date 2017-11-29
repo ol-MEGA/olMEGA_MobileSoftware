@@ -2,14 +2,17 @@ package com.fragtest.android.pa;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     public ViewPager mViewPager = null;
     public TextView mLogo;
     public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig,
-            mBatteryReg, mBatteryProg;
+            mBatteryReg, mBatteryProg, mCharging;
     private QuestionnairePagerAdapter mAdapter;
     private boolean mServiceIsBound;
     private boolean isPrefsInForeGround = false;
@@ -73,6 +76,21 @@ public class MainActivity extends AppCompatActivity {
 
 
     private boolean permissionGranted = false;
+
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+
+            if (isCharging) {
+                mCharging.setVisibility(View.VISIBLE);
+            } else {
+                mCharging.setVisibility(View.INVISIBLE);
+            }
+        }
+    };
 
     // preferences
     private SharedPreferences sharedPreferences;
@@ -333,10 +351,12 @@ public class MainActivity extends AppCompatActivity {
             mConfig = findViewById(R.id.Action_Config);
             mBatteryProg = findViewById(R.id.battery_prog);
             mBatteryReg = findViewById(R.id.battery_reg);
+            mCharging = findViewById(R.id.charging);
 
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+/*
                     if (mServiceIsBound) {
                         if (mServiceIsRecording) {
                             messageService(ControlService.MSG_STOP_RECORDING);
@@ -349,6 +369,8 @@ public class MainActivity extends AppCompatActivity {
                                 "Not connected to service.",
                                 Toast.LENGTH_SHORT).show();
                     }
+*/
+
                 }
             });
 
@@ -365,6 +387,8 @@ public class MainActivity extends AppCompatActivity {
             handleNewPagerAdapter();
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+            this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
             mAdapter.createMenu();
             mAdapter.onCreate();

@@ -339,17 +339,14 @@ public class Questionnaire {
 
                 if (qI.isActive()) {                                                                    // View is active but might be obsolete
 
-                    if (qI.isHidden()) {
-                        Log.e(LOG, "CASE 1");                                                           // View is declared "Hidden"
+                    if (qI.isHidden()) {                                                                // View is declared "Hidden"
                         removeQuestion(iPos);
                         wasChanged = true;
                     } else if (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // Not even 1 positive Filter Id exists OR No positive filter Ids declared
                             && qI.getFilterIdPositive().size() > 0) {
-                        Log.e(LOG, "CASE 2");
                         removeQuestion(iPos);
                         wasChanged = true;
                     } else if (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())) {  // At least 1 negative filter Id exists
-                        Log.e(LOG, "CASE 3");
                         removeQuestion(iPos);
                         wasChanged = true;
                     }
@@ -362,7 +359,6 @@ public class Questionnaire {
                             && (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())   // && (Not even 1 negative Filter Id exists OR No negative filter Ids declared)
                             || qI.getFilterIdNegative().size() == 0)
                             ) {
-                        Log.e(LOG, "CASE 4");
                         addQuestion(iPos);
                         wasChanged = true;
                     }
