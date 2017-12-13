@@ -56,6 +56,8 @@ public class ControlService extends Service {
      * Constants for messaging. Should(!) be self-explanatory.
      */
 
+    static final boolean USE_KIOSK_MODE = false;
+
     // 1* - general
     public static final int MSG_REGISTER_CLIENT = 11;
     public static final int MSG_UNREGISTER_CLIENT = 12;
@@ -271,11 +273,13 @@ public class ControlService extends Service {
                 case MSG_START_RECORDING:
                     Log.d(LOG, "Start caching audio");
                     Logger.info("Start caching audio");
+
                     audioRecorder = new AudioRecorder(
                             serviceMessenger,
                             Integer.parseInt(chunklengthInS),
                             Integer.parseInt(samplerate),
                             isWave);
+
                     audioRecorder.start();
                     isRecording = true;
                     messageClient(MSG_START_RECORDING);
@@ -594,7 +598,7 @@ public class ControlService extends Service {
         Bundle bundle = getPreferences();
         isTimer = bundle.getBoolean("isTimer", isTimer);
 
-        if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire)) {
+        if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire) && !mSelectQuestionnaire.isEmpty()) {
 
             if (BuildConfig.DEBUG) {
                 Log.i(LOG, "New Questionnaire selected.");

@@ -39,6 +39,7 @@ import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
+import static com.fragtest.android.pa.ControlService.USE_KIOSK_MODE;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -70,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isQuestionnairePresent = true;
     private String[] requestString;
 
-    private boolean isImmersive = true;
+    private boolean isImmersive = USE_KIOSK_MODE;
+    private boolean isPinned = USE_KIOSK_MODE;
 
     private int requestIterator = 0;
 
@@ -356,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
             mRecord.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-/*
+
                     if (mServiceIsBound) {
                         if (mServiceIsRecording) {
                             messageService(ControlService.MSG_STOP_RECORDING);
@@ -369,7 +371,7 @@ public class MainActivity extends AppCompatActivity {
                                 "Not connected to service.",
                                 Toast.LENGTH_SHORT).show();
                     }
-*/
+
 
                 }
             });
@@ -465,19 +467,21 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
 
-        // start lock task mode if it's not already active
-        ActivityManager am = (ActivityManager) getSystemService(
-                Context.ACTIVITY_SERVICE);
-        // ActivityManager.getLockTaskModeState api is not available in pre-M.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            if (!am.isInLockTaskMode()) {
-                startLockTask();
-                //setLockTaskPackages();
-            }
-        } else {
-            if (am.getLockTaskModeState() ==
-                    ActivityManager.LOCK_TASK_MODE_NONE) {
-                startLockTask();
+        if (isPinned) {
+            // start lock task mode if it's not already active
+            ActivityManager am = (ActivityManager) getSystemService(
+                    Context.ACTIVITY_SERVICE);
+            // ActivityManager.getLockTaskModeState api is not available in pre-M.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                if (!am.isInLockTaskMode()) {
+                    startLockTask();
+                    //setLockTaskPackages();
+                }
+            } else {
+                if (am.getLockTaskModeState() ==
+                        ActivityManager.LOCK_TASK_MODE_NONE) {
+                    startLockTask();
+                }
             }
         }
     }
@@ -538,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (isQuestionnairePresent) {
                         mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
+                        //mAdapter.displayManualStart();
                     }
 
                     setConfigVisibility();
@@ -577,7 +581,7 @@ public class MainActivity extends AppCompatActivity {
                             mAdapter.setQuestionnaireProgressBar(100);
                         }
                         mAdapter.questionnairePresent();
-                        mAdapter.displayManualStart();
+                        //mAdapter.displayManualStart();
                     } else {
                         mAdapter.noQuestionnaires();
                     }

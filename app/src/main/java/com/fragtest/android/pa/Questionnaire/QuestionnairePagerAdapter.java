@@ -188,8 +188,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 0,
                 (1.0f-2* batteryPlaceholderWeight)*(1.0f - getbatteryInfo())
         );
-        regparams.leftMargin = mUnits.convertDpToPixels(1);
-        regparams.rightMargin = mUnits.convertDpToPixels(1);
+        regparams.leftMargin = mUnits.convertDpToPixels(0);
+        regparams.rightMargin = mUnits.convertDpToPixels(10);
         MainActivity.mBatteryReg.setLayoutParams(regparams);
 
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
@@ -197,8 +197,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 0,
                 (1.0f-2* batteryPlaceholderWeight)*getbatteryInfo()
         );
-        progparams.leftMargin = mUnits.convertDpToPixels(1);
-        progparams.rightMargin = mUnits.convertDpToPixels(1);
+        progparams.leftMargin = mUnits.convertDpToPixels(0);
+        progparams.rightMargin = mUnits.convertDpToPixels(0);
         MainActivity.mBatteryProg.setLayoutParams(progparams);
     }
 
@@ -229,6 +229,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         createMenuLayout();
         setControlsMenu();
 
+        setBatteryLogo();
+
         sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
     }
 
@@ -248,6 +250,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setControlsMenu();
 
         onResume();
+
+        if (!isQuestionnairePresent) {
+                noQuestionnaires();
+        }
 
     }
 
@@ -709,6 +715,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mMenuPage.updateCountdownText(0);
             setQuestionnaireProgressBar(0f);
         }
+
+        setBatteryLogo();
 
         isInForeGround = true;
     }
