@@ -6,7 +6,6 @@
         <item>RMS</item>
         <item>ZCR</item>
         <item>PSD</item>
-        <!--<item>SRMR</item>-->
     </string-array>
 
     <string-array name="samplingrateEntries">
