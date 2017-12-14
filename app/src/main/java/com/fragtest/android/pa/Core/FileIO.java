@@ -5,11 +5,13 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.fragtest.android.pa.BuildConfig;
+import com.fragtest.android.pa.ControlService;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,13 +23,15 @@ import java.io.OutputStreamWriter;
 
 public class FileIO {
 
-    public static final String FOLDER_MAIN = "IHAB";
-    public static final String FOLDER_DATA = "data";
+    static final String FOLDER_MAIN = "IHAB";
+    private static final String FOLDER_DATA = "data";
     private static final String FOLDER_QUEST = "quest";
     private static final String FILE_NAME = "questionnairecheckboxgroup.xml";
     private static final String LOG = "FileIO";
     // File the system looks for in order to show preferences, needs to be in main directory
     private static final String FILE_CONFIG = "config";
+    private static final String FORMAT_QUESTIONNAIRE = ".xml";
+    private static final String FILE_TEMP = "copy_questionnaire_here";
     private boolean isVerbose = false;
     private Context mContext;
 
@@ -81,11 +85,30 @@ public class FileIO {
 
         //TODO: Validate files
         // Obtain working Directory
-        File dir = new File(getFolderPath() + "/" + FOLDER_QUEST);
+        File dir = new File(getFolderPath() + File.separator + FOLDER_QUEST);
+        // Temporary file targeted by MediaScanner
+        File tmp = new File(getFolderPath() + File.separator + FOLDER_QUEST + File.separator + FILE_TEMP);
 
-        // Scan for files
-        File[] files = dir.listFiles();
+        if (!dir.exists()) {
+            tmp.mkdirs();
+            new SingleMediaScanner(mContext, tmp);
+            File fileLog = new File(getFolderPath() + File.separator + ControlService.FILENAME_LOG);
+            new SingleMediaScanner(mContext, fileLog);
+            //Log.i(LOG, "Temporary file created.");
+        } /*else {
+            if (tmp.delete()) {
+                Log.i(LOG, "Temporary file deleted.");
+            }
+        }*/
+
+        // Scan for files of type XML
+        File[] files = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(FORMAT_QUESTIONNAIRE);
+            }
+        });
         String[] fileList = new String[files.length];
+
         try {
             if (fileList.length == 0) {
                 return null;
@@ -98,7 +121,7 @@ public class FileIO {
 
         } catch (Exception e) {
             Log.i(LOG,""+e.toString());
-            return fileList;
+            return null;
         }
     }
 

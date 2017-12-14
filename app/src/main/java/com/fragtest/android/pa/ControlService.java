@@ -20,7 +20,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
-import com.fragtest.android.pa.Core.Comm;
 import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
@@ -101,7 +100,8 @@ public class ControlService extends Service {
     private XMLReader mXmlReader;
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
-    private Comm comm;
+
+    public static final String FILENAME_LOG = "log.txt";
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
@@ -368,7 +368,7 @@ public class ControlService extends Service {
 
         // log file
         Configurator.currentConfig()
-                .writer(new FileWriter(FileIO.getFolderPath() + "/log.txt", false, true))
+                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG, false, true))
                 .level(Level.INFO)
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();

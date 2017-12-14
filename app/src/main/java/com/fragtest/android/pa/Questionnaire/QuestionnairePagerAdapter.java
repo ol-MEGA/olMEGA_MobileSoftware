@@ -73,7 +73,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateRate);
 
-                setBatteryLogo();
+                //setBatteryLogo();
             }
         }
     };
@@ -184,7 +184,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private void setBatteryLogo() {
         LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
-                mUnits.convertDpToPixels(10),
+                mUnits.convertDpToPixels(12),
                 0,
                 (1.0f-2* batteryPlaceholderWeight)*(1.0f - getbatteryInfo())
         );
@@ -193,7 +193,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         MainActivity.mBatteryReg.setLayoutParams(regparams);
 
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
-                mUnits.convertDpToPixels(10),
+                mUnits.convertDpToPixels(12),
                 0,
                 (1.0f-2* batteryPlaceholderWeight)*getbatteryInfo()
         );
