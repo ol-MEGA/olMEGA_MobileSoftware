@@ -55,7 +55,7 @@ public class BasicProcessingThread extends Thread {
 
         samplerate = settings.getInt("samplerate");
         chunklengthInS = settings.getInt("chunklengthInS");
-        activeFeatures = (Set) settings.getSerializable("activeFeatures");
+        activeFeatures = (Set) settings.getSerializable("features");
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
         filename = settings.getString("filename");

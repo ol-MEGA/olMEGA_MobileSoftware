@@ -178,10 +178,13 @@ public class ControlService extends Service {
             switch (msg.what) {
 
                 case MSG_REGISTER_CLIENT:
+
                     Log.e(LOG,"msg: "+msg);
                     Log.i(LOG, "Client registered to service");
                     Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
+
+                    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
                     setupApplication();
 
@@ -208,7 +211,7 @@ public class ControlService extends Service {
                     messageClient(MSG_GET_STATUS, status);
                     break;
 
-                case MSG_ALARM_RECEIVED:
+                //case MSG_ALARM_RECEIVED:
                     /*messageClient(MSG_ALARM_RECEIVED);
                     // perform checks whether running a questionnaire is valid
                     if (isMenu) { //!isActiveQuestionnaire
@@ -221,7 +224,7 @@ public class ControlService extends Service {
                     }
                     isTimerRunning = false;
                     isQuestionnairePending = true;*/
-                    break;
+                    //break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
@@ -306,7 +309,7 @@ public class ControlService extends Service {
 
                     if (!getIsProcessing()) {
                         Bundle settings = getPreferences();
-                        settings.putString("filename", processingBuffer[idxProcessing]);;
+                        settings.putString("filename", processingBuffer[idxProcessing]);
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
@@ -505,7 +508,8 @@ public class ControlService extends Service {
     }
 
     private void setupApplication() {
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
         initialiseValues();
 
         mFileIO = new FileIO();
@@ -524,7 +528,7 @@ public class ControlService extends Service {
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         // preferences
         isTimer = sharedPreferences.getBoolean("isTimer", true);
@@ -553,7 +557,7 @@ public class ControlService extends Service {
     }
 
     private void updatePreferences(Bundle dataPreferences) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
@@ -624,7 +628,7 @@ public class ControlService extends Service {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // recording
         samplerate = sharedPreferences.getString("samplerate","16000");
@@ -668,8 +672,9 @@ public class ControlService extends Service {
         }
 
         // processing
-        HashSet<String> activeFeatures =
+       HashSet<String> activeFeatures =
                 (HashSet<String>) sharedPreferences.getStringSet("features", null);
+
         filterHp = sharedPreferences.getBoolean("filterHp", true);
 
         Bundle processingSettings = new Bundle();
@@ -677,7 +682,7 @@ public class ControlService extends Service {
         processingSettings.putInt("samplerate", Integer.parseInt(samplerate));
         processingSettings.putInt("chunklengthInS", Integer.parseInt(chunklengthInS));
         processingSettings.putBoolean("isWave", isWave);
-        processingSettings.putSerializable("activeFeatures", activeFeatures);
+        processingSettings.putSerializable("features", activeFeatures);
         processingSettings.putBoolean("filterHp", filterHp);
         processingSettings.putInt("filterHpFrequency", Integer.parseInt(filterHpFrequency));
         processingSettings.putBoolean("downsample", downsample);

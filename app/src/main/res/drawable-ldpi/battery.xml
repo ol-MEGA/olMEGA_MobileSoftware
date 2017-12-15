@@ -6,8 +6,8 @@
     <!--<solid android:color="@color/BackgroundColor"></solid>-->
     <!--<gradient android:startColor="#FFFFFF"
         android:endColor="@color/lighterGray"
-        android:angle="225" />-->
-    <corners android:radius="3dp" />
+        android:angle="225" />
+    <corners android:radius="3dp" />-->
     <stroke android:width="3px" android:color="@color/TextColor" />
     <stroke android:width="3px" android:color="@color/TextColor" />
     </shape>
