@@ -26,6 +26,7 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +34,8 @@ import android.widget.Toast;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import static android.R.color.darker_gray;
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int requestIterator = 0;
 
+    private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
 
     private boolean permissionGranted = false;
 
@@ -483,6 +487,16 @@ public class MainActivity extends AppCompatActivity {
                     startLockTask();
                 }
             }
+        }
+    }
+
+    // This disables the Volume Buttons
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (blockedKeys.contains(event.getKeyCode())) {
+            return true;
+        } else {
+            return super.dispatchKeyEvent(event);
         }
     }
 
