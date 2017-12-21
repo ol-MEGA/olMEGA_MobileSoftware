@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.BATTERY_STATS"/>
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+
+
+
 
     <application
         android:allowBackup="true"
@@ -43,6 +48,13 @@
         </activity>-->
         <receiver android:name=".Core.EventReceiver"
             android:enabled="true"/>
+
+        <receiver android:name="com.fragtest.android.pa.Core.BootReceiver">
+            <intent-filter >
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
 
 
         <!--<receiver
