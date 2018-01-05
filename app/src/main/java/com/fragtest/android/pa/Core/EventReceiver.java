@@ -31,13 +31,6 @@ public class EventReceiver extends BroadcastReceiver {
 
         sendMessageToService();
 
-
-        /*Message msg = Message.obtain(null, ControlService.MSG_ALARM_RECEIVED);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }*/
     }
 
     private static void sendMessageToService() {

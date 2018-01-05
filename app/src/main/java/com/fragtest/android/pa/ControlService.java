@@ -55,7 +55,7 @@ public class ControlService extends Service {
      * Constants for messaging. Should(!) be self-explanatory.
      */
 
-    static final boolean USE_KIOSK_MODE = false;
+    static final boolean USE_KIOSK_MODE = true;
 
     // 1* - general
     public static final int MSG_REGISTER_CLIENT = 11;
@@ -210,21 +210,6 @@ public class ControlService extends Service {
                     status.putBoolean("isRecording", isRecording);
                     messageClient(MSG_GET_STATUS, status);
                     break;
-
-                //case MSG_ALARM_RECEIVED:
-                    /*messageClient(MSG_ALARM_RECEIVED);
-                    // perform checks whether running a questionnaire is valid
-                    if (isMenu) { //!isActiveQuestionnaire
-                        messageClient(MSG_PROPOSE_QUESTIONNAIRE);
-                        mVibration.repeatingBurstOn();
-                    } else {
-                        // React to when questionnaire is active but another one is due
-                        // -> probably deprecated because timer is only started after Q was finished
-                        Log.i(LOG,"Waiting for new questionnaire.");
-                    }
-                    isTimerRunning = false;
-                    isQuestionnairePending = true;*/
-                    //break;
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer

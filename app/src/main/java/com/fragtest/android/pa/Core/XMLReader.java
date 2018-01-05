@@ -13,10 +13,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class XMLReader {
 
-    private static String LOG_STRING = "XMLReader";
+    private static String LOG = "XMLReader";
     private Context mContext;
     private FileIO mFileIO;
-    private String mHead, mFoot, mSurveyURI;
+    private String mHead, mFoot, mSurveyURI, KEY_NEW_LINE;
     private int mTimerMean, mTimerDeviation, mTimerInterval;
     // List containing all questions (including attached information)
     private ArrayList<String> mQuestionList;
@@ -27,6 +27,7 @@ public class XMLReader {
         mFileIO = new FileIO();
         mQuestionList = new ArrayList<>();
         String rawInput = mFileIO.readRawTextFile(fileName);
+        KEY_NEW_LINE = "\n";
 
         // offline version
         //String rawInput = mFileIO.readRawTextFile(mContext, R.raw.questionnairecheckboxgroup);
@@ -42,7 +43,7 @@ public class XMLReader {
                     mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
                 } catch (Exception e) {
                     mTimerMean = 30 * 60;
-                    Log.e(LOG_STRING, "Invalid entry. Timer mean set to " + mTimerMean + " seconds.");
+                    Log.e(LOG, "Invalid entry. Timer mean set to " + mTimerMean + " seconds.");
                 }
             }
 
@@ -51,7 +52,7 @@ public class XMLReader {
                     mTimerDeviation = Integer.parseInt(timerTemp[1].split("\"")[3]);
                 } catch (Exception e) {
                     mTimerDeviation = 5 * 60;
-                    Log.e(LOG_STRING, "Invalid entry. Timer mean set to 300 seconds.");
+                    Log.e(LOG, "Invalid entry. Timer mean set to 300 seconds.");
                 }
             }
         } else {
@@ -74,7 +75,9 @@ public class XMLReader {
 
         head += "<";
         head += tempHead[1];
-        head +="><";
+        head +=">";
+        head += KEY_NEW_LINE;
+        head +="<";
         head += tempHead[3];
         head += ">";
 

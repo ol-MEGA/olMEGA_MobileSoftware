@@ -148,8 +148,8 @@ public class Questionnaire {
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
                 mContext, this, answerLayout);
 
-        final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
-                mContext, this, question.getQuestionId());
+        /*final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
+                mContext, this, question.getQuestionId());*/
 
         final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
                 mContext, answerLayout);
@@ -173,10 +173,10 @@ public class Questionnaire {
             if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
 
                 switch (sType) {
-                    case "date": {
+                    /*case "date": {
                         answerTypeDate.addAnswer(sAnswer);
                         break;
-                    }
+                    }*/
                     case "radio": {
                         isRadio = true;
                         answerTypeRadio.addAnswer(nAnswerId, sAnswer, isDefault);
@@ -325,7 +325,6 @@ public class Questionnaire {
             sid += mEvaluationList.get(iQ).getValue();
             sid += ", ";
         }
-        Log.i(LOG, "IDs in memory: " + sid);
 
         boolean wasChanged = true;
 
@@ -382,16 +381,11 @@ public class Questionnaire {
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
-        Log.i(LOG, "Adding: " + mQuestionInfo.get(iPos).getQuestion().getQuestionText());
-
         return true;
     }
 
     // Removes the question from the displayed list and all given answer ids from memory
     private boolean removeQuestion(int iPos) {
-
-
-        Log.i(LOG, "Removing: " + mQuestionInfo.get(iPos).getQuestion().getQuestionText());
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {

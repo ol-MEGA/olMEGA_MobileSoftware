@@ -15,19 +15,22 @@ import static android.content.Context.VIBRATOR_SERVICE;
 
 public class Vibration {
 
-    private final static String LOG_STRING = "Vibration";
+    private final static String LOG = "Vibration";
     private Context mContext;
     // Interval between bursts of vibration when reminder alarm is set off
     private static int mVibrationInterval_s = 1;
     private static int mVibrationDuration_ms = 200;
+    private static long mLengthWakeLock_ms = 2000;
     private final Handler mTimerHandler = new Handler();
     private boolean isActive = false;
+    private Vibrator mVibrator;
 
     private final Runnable loop = new Runnable() {
         @Override
         public void run() {
             if (isActive) {
-                ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mVibrationDuration_ms);
+                mVibrator.vibrate(mVibrationDuration_ms);
+                Log.e(LOG, "Ring.");
                 mTimerHandler.postDelayed(this, mVibrationInterval_s*1000);
             }
         }
@@ -35,14 +38,15 @@ public class Vibration {
 
     public Vibration(Context context) {
         mContext = context;
+        mVibrator = ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE));
     }
 
     public void singleBurst() {
-        ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE)).vibrate(mVibrationDuration_ms);
+        mVibrator.vibrate(mVibrationDuration_ms);
     }
 
     public void repeatingBurstOn() {
-        Log.i(LOG_STRING,"rrringgrrrrinngggg!");
+        Log.e(LOG,"rrringgrrrrinngggg!");
 
         if (!isActive) { // ensure that only one alarm is annoying us at any given time
             mTimerHandler.post(loop);
@@ -50,7 +54,7 @@ public class Vibration {
                     Context.POWER_SERVICE);
             PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
                     PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-            wakeLock.acquire();
+            wakeLock.acquire(mLengthWakeLock_ms);
         }
 
         isActive = true;
