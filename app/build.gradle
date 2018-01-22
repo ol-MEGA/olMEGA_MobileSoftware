@@ -10,8 +10,6 @@ android {
         }
     }
     compileSdkVersion 25
-    //"25.0.2"
-    buildToolsVersion '25.0.0'
     defaultConfig {
         applicationId "com.fragtest.android.pa"
         minSdkVersion 22
