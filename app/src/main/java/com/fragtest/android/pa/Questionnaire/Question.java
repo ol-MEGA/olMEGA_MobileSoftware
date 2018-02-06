@@ -2,7 +2,6 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.fragtest.android.pa.R;
 
@@ -76,12 +75,12 @@ public class Question extends AppCompatActivity {
             mHidden = extractHidden();
 
 
-            Log.e(LOG, "----------------------");
+            /*Log.e(LOG, "----------------------");
             Log.i(LOG, "Question id: "+getQuestionId());
             Log.i(LOG, ""+mQuestionText);
             for (int iId = 0; iId<mFilterId.size(); iId++) {
                 Log.e(LOG,"Filter id: "+mFilterId.get(iId));
-            }
+            }*/
         }
     }
 

@@ -750,7 +750,7 @@ public class ControlService extends Service {
             data.putString("head", head);
             data.putString("foot", foot);
             data.putString("surveyUri", surveyUri);
-            data.putString("motivation", "<motivation='" + motivation + "'>");
+            data.putString("motivation", "<motivation=\"" + motivation + "\">");
 
             messageClient(MSG_START_QUESTIONNAIRE, data);
 

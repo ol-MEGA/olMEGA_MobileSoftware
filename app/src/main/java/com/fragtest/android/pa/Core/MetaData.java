@@ -108,7 +108,7 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += "/";
         KEY_DATA += KEY_QUESTID;
         KEY_DATA += ".xml\"";
-        KEY_DATA += " survey uri=\"";
+        KEY_DATA += " survey_uri=\"";
         KEY_DATA += KEY_SURVEY_URI;
         KEY_DATA += "\"";
         KEY_DATA += KEY_TAG_CLOSE;

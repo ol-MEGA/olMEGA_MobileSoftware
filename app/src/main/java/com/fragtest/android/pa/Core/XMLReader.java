@@ -20,6 +20,7 @@ public class XMLReader {
     private int mTimerMean, mTimerDeviation, mTimerInterval;
     // List containing all questions (including attached information)
     private ArrayList<String> mQuestionList;
+    private int nDefaultTimerMean = 30, nDefaultTimerDeviation = 5, nSecondsInMinute = 60;
 
     public XMLReader(Context context, String fileName) {
 
@@ -42,7 +43,7 @@ public class XMLReader {
                 try {
                     mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
                 } catch (Exception e) {
-                    mTimerMean = 30 * 60;
+                    mTimerMean = nDefaultTimerMean * nSecondsInMinute;
                     Log.e(LOG, "Invalid entry. Timer mean set to " + mTimerMean + " seconds.");
                 }
             }
@@ -51,7 +52,7 @@ public class XMLReader {
                 try {
                     mTimerDeviation = Integer.parseInt(timerTemp[1].split("\"")[3]);
                 } catch (Exception e) {
-                    mTimerDeviation = 5 * 60;
+                    mTimerDeviation = nDefaultTimerDeviation * nSecondsInMinute;
                     Log.e(LOG, "Invalid entry. Timer mean set to 300 seconds.");
                 }
             }
@@ -64,7 +65,8 @@ public class XMLReader {
         String[] questionnaire = rawInput.split("<question|</question>|<finish>|</finish>");
         mHead = extractHead(rawInput);
         mFoot = extractFoot(rawInput);
-        mSurveyURI = extractSurveyURI(rawInput);
+        //mSurveyURI = extractSurveyURI(rawInput);
+        mSurveyURI = extractSurveyURI(fileName);
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
     }
@@ -84,8 +86,12 @@ public class XMLReader {
         return head;
     }
 
-    private String extractSurveyURI(String rawInput) {
+    /*private String extractSurveyURI(String rawInput) {
         return rawInput.split("<survey uri=\"")[1].split("\">")[0];
+    }*/
+
+    private String extractSurveyURI(String inString) {
+        return inString;
     }
 
     private String extractFoot(String rawInput) {

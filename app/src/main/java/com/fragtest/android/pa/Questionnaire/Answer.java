@@ -8,10 +8,10 @@ import android.util.Log;
 
 public class Answer {
 
+    private String LOG_STRING = "Answer";
     String Text;
     int Id, Group;
     private boolean isDefault = false;
-    private String LOG_STRING = "Answer";
     private boolean isDebug = false;
     private boolean isExclusive = false;
 
