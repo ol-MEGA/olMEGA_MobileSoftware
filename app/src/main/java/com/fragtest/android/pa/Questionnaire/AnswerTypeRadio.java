@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -14,49 +13,47 @@ import android.widget.RadioGroup;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
 import com.fragtest.android.pa.R;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeRadio extends AppCompatActivity {
+public class AnswerTypeRadio extends AnswerType {
 
     private static String LOG_STRING = "AnswerTypeRadio";
     private final RadioGroup mRadioGroup;
-    private final AnswerLayout mParent;
+    /*private final AnswerLayout mParent;
     private final Context mContext;
     private final Questionnaire mQuestionnaire;
     private final int mQuestionId;
-    private final List<StringAndInteger> mListOfAnswers;
+    private final List<StringAndInteger> mListOfAnswers;*/
     private int mDefault = -1;
 
 
-    public AnswerTypeRadio(Context context, Questionnaire questionnaire, AnswerLayout parent, int Id) {
+    public AnswerTypeRadio(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
-        mContext = context;
-        mQuestionnaire = questionnaire;
-        mParent = parent;
-        mQuestionId = Id;
+        super(context, questionnaire, qParent, nQuestionId);
 
-        mListOfAnswers = new ArrayList<>();
+        //mContext = context;
+        //mQuestionnaire = questionnaire;
+        //mParent = parent;
+        //mQuestionId = Id;
+
+        //mListOfAnswers = new ArrayList<>();
 
         // Answer Buttons of type "radio" are grouped and handled together
         mRadioGroup = new RadioGroup(mContext);
         mRadioGroup.setOrientation(RadioGroup.VERTICAL);
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
+    public void addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
         mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
         if (isDefault) {
             mDefault = mListOfAnswers.size() - 1;
         }
-        return true;
     }
 
-    public boolean buildView() {
+    public void buildView() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
 
@@ -93,7 +90,6 @@ public class AnswerTypeRadio extends AppCompatActivity {
                 mRadioGroup.addView(button, answerParams);
         }
         mParent.layoutAnswer.addView(mRadioGroup);
-        return true;
     }
 
     public void addClickListener() {

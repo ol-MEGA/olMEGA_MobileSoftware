@@ -67,6 +67,12 @@ public class XMLReader {
         mFoot = extractFoot(rawInput);
         //mSurveyURI = extractSurveyURI(rawInput);
         mSurveyURI = extractSurveyURI(fileName);
+
+        Log.e(LOG, "-------------------------------");
+        Log.e(LOG, "Filename: "+mSurveyURI);
+        Log.e(LOG, "-------------------------------");
+
+
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
     }

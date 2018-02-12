@@ -34,7 +34,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private static String LOG = "Quest..PagerAdapter";
     final ViewPager mViewPager;
-    private final MainActivity MainActivity;
+    private final MainActivity mMainActivity;
     private final Context mContext;
     private final Handler mCountDownHandler = new Handler();
     private final int mUpdateRate = 1000;
@@ -54,7 +54,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private int mNUM_PAGES;
     private int mFinalCountdown = -255;
     private int mSecondsRemaining = 120;
-    private String mHead, mFoot, mSurveyURI;
+    private String mHead, mFoot, mSurveyURI, mVersion;
     private Questionnaire mQuestionnaire;
     private MenuPage mMenuPage;
     private Help mHelpScreen;
@@ -89,8 +89,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public QuestionnairePagerAdapter(Context context, ViewPager viewPager, boolean immersive) {
         mContext = context;
-        MainActivity = (MainActivity) context;
+        mMainActivity = (MainActivity) context;
         mViewPager = viewPager;
+        mVersion = mMainActivity.getVersion();
         isImmersive = immersive;
         mUnits = new Units(mContext);
         batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
@@ -190,7 +191,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         );
         regparams.leftMargin = mUnits.convertDpToPixels(0);
         regparams.rightMargin = mUnits.convertDpToPixels(10);
-        MainActivity.mBatteryReg.setLayoutParams(regparams);
+        mMainActivity.mBatteryReg.setLayoutParams(regparams);
 
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
@@ -199,7 +200,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         );
         progparams.leftMargin = mUnits.convertDpToPixels(0);
         progparams.rightMargin = mUnits.convertDpToPixels(0);
-        MainActivity.mBatteryProg.setLayoutParams(progparams);
+        mMainActivity.mBatteryProg.setLayoutParams(progparams);
     }
 
     private float getbatteryInfo() {
@@ -219,7 +220,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         needsIncreasing = false;
         sendMessage(ControlService.MSG_ISMENU);
         // Instantiates a MenuPage Object based on Contents of raw XML File
-        mMenuPage = new MenuPage(MainActivity, this);
+        mMenuPage = new MenuPage(mMainActivity, this);
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
@@ -239,7 +240,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isMenu = true;
         sendMessage(ControlService.MSG_ISMENU);
         // Instantiates a MenuPage Object based on Contents of raw XML File
-        mMenuPage = new MenuPage(MainActivity, this);
+        mMenuPage = new MenuPage(mMainActivity, this);
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
@@ -260,7 +261,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void createHelpScreen() {
 
         // Instantiates a MenuPage Object based on Contents of raw XML File
-        mHelpScreen = new Help(MainActivity, this);
+        mHelpScreen = new Help(mMainActivity, this);
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
@@ -301,8 +302,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMotivation = motivation;
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, mHead, mFoot,
-                mSurveyURI, mMotivation, this);
+        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot,
+                mSurveyURI, mMotivation, mVersion, this);
         mQuestionnaire.setUp(questionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -328,7 +329,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(MainActivity, mHead, mFoot, mSurveyURI,
+        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI, mVersion,
                 mMotivation, this);
         mQuestionnaire.setUp(mQuestionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
@@ -359,8 +360,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     private void hideQuestionnaireProgressBar() {
-        View progress = MainActivity.mProgress;
-        View regress = MainActivity.mRegress;
+        View progress = mMainActivity.mProgress;
+        View regress = mMainActivity.mRegress;
 
         float nProgress = 0;
         float nRegress = 1;
@@ -383,8 +384,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Set the horizontal Indicator at the Top to follow Page Position
     public void setQuestionnaireProgressBar(int position) {
 
-        View progress = MainActivity.mProgress;
-        View regress = MainActivity.mRegress;
+        View progress = mMainActivity.mProgress;
+        View regress = mMainActivity.mRegress;
 
         int nAccuracy = 100;
         float nProgress = (float) (position + 1) / mViewPager.getAdapter().getCount() * nAccuracy;
@@ -410,8 +411,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         int nAccuracy = 100;
 
-        View progress = MainActivity.mProgress;
-        View regress = MainActivity.mRegress;
+        View progress = mMainActivity.mProgress;
+        View regress = mMainActivity.mRegress;
 
         float nProgress = (float) (mViewPager.getCurrentItem() + 1) /
                 mViewPager.getAdapter().getCount() * nAccuracy;
@@ -435,8 +436,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Set the horizontal Indicator at the Top to follow Page Position
     private void setQuestionnaireProgressBar(float fraction) {
 
-        View progress = MainActivity.mProgress;
-        View regress = MainActivity.mRegress;
+        View progress = mMainActivity.mProgress;
+        View regress = mMainActivity.mRegress;
 
         float nProgress = fraction;
         float nRegress = 1f - nProgress;
@@ -460,15 +461,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void setArrows(int position) {
 
         if (position == 0) {
-            MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
-        } else if (MainActivity.mArrowBack.getVisibility() == View.INVISIBLE) {
-            MainActivity.mArrowBack.setVisibility(View.VISIBLE);
+            mMainActivity.mArrowBack.setVisibility(View.INVISIBLE);
+        } else if (mMainActivity.mArrowBack.getVisibility() == View.INVISIBLE) {
+            mMainActivity.mArrowBack.setVisibility(View.VISIBLE);
         }
 
         if (position == mViewPager.getAdapter().getCount() - 1) {
-            MainActivity.mArrowForward.setVisibility(View.INVISIBLE);
-        } else if (MainActivity.mArrowForward.getVisibility() == View.INVISIBLE) {
-            MainActivity.mArrowForward.setVisibility(View.VISIBLE);
+            mMainActivity.mArrowForward.setVisibility(View.INVISIBLE);
+        } else if (mMainActivity.mArrowForward.getVisibility() == View.INVISIBLE) {
+            mMainActivity.mArrowForward.setVisibility(View.VISIBLE);
         }
     }
 
@@ -509,29 +510,29 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Sets up visible control elements for menu i.e. status bar
     private void setControlsMenu() {
 
-        MainActivity.mLogo.setText(R.string.menuHelp);
-        MainActivity.mArrowForward.setVisibility(View.INVISIBLE);
-        MainActivity.mArrowBack.setVisibility(View.INVISIBLE);
-        MainActivity.mRevert.setVisibility(View.INVISIBLE);
-        MainActivity.mProgress.setBackgroundColor(
+        mMainActivity.mLogo.setText(R.string.menuHelp);
+        mMainActivity.mArrowForward.setVisibility(View.INVISIBLE);
+        mMainActivity.mArrowBack.setVisibility(View.INVISIBLE);
+        mMainActivity.mRevert.setVisibility(View.INVISIBLE);
+        mMainActivity.mProgress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeRed));
-        MainActivity.mRegress.setBackgroundColor(
+        mMainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeGray));
-        MainActivity.mLogo.setEnabled(true);
+        mMainActivity.mLogo.setEnabled(true);
     }
 
     // Sets up visible control elements for questionnaire i.e. navigation symbols
     private void setControlsQuestionnaire() {
 
-        MainActivity.mLogo.setText("IHAB");
-        MainActivity.mArrowForward.setVisibility(View.VISIBLE);
-        MainActivity.mArrowBack.setVisibility(View.VISIBLE);
-        MainActivity.mRevert.setVisibility(View.VISIBLE);
-        MainActivity.mProgress.setBackgroundColor(
+        mMainActivity.mLogo.setText("IHAB");
+        mMainActivity.mArrowForward.setVisibility(View.VISIBLE);
+        mMainActivity.mArrowBack.setVisibility(View.VISIBLE);
+        mMainActivity.mRevert.setVisibility(View.VISIBLE);
+        mMainActivity.mProgress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeRed));
-        MainActivity.mRegress.setBackgroundColor(
+        mMainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mContext, R.color.JadeGray));
-        MainActivity.mLogo.setEnabled(true);
+        mMainActivity.mLogo.setEnabled(true);
     }
 
     // Inserts contents into questionnaire and appoints recycler
@@ -556,7 +557,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Set up control elements on top menu
     private void handleControls() {
 
-        MainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
+        mMainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -570,7 +571,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 }
             }
         });
-        MainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
+        mMainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mViewPager.getCurrentItem() != 0) {
@@ -578,7 +579,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 }
             }
         });
-        MainActivity.mArrowForward.setOnClickListener(new View.OnClickListener() {
+        mMainActivity.mArrowForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1) {
@@ -586,10 +587,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 }
             }
         });
-        MainActivity.mRevert.setOnClickListener(new View.OnClickListener() {
+        mMainActivity.mRevert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity, R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mMainActivity, R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
                 createQuestionnaire();
             }
         });
@@ -677,7 +678,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Message service for communication with ControlService
     public void sendMessage(int what) {
-        MainActivity.messageService(what);
+        mMainActivity.messageService(what);
     }
 
     public void setPrefsInForeGround(boolean state) {

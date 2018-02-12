@@ -3,7 +3,6 @@ package com.fragtest.android.pa.Questionnaire;
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,29 +16,26 @@ import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
 import com.fragtest.android.pa.R;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /**
  * Created by ulrikkowalk on 04.04.17.
  */
 
-public class AnswerTypeSliderFree extends AppCompatActivity {
+public class AnswerTypeSliderFree extends AnswerType {
 
     public static String LOG_STRING = "AnswerTypeSliderFree";
     private static final int mMinProgress = 10;
-    public final AnswerLayout parent;
-    private final Context mContext;
-    private final List<StringAndInteger> mListOfAnswers;
+    //public final AnswerLayout parent;
+    //private final Context mContext;
+    //private final List<StringAndInteger> mListOfAnswers;
     private final LinearLayout mHorizontalContainer;
     private final LinearLayout mAnswerListContainer;
     private final View mResizeView;
     private final View mRemainView;
     private final int width;
     private final int mUsableHeight;
-    private final int mQuestionId;
-    private final Questionnaire mQuestionnaire;
+    //private final int mQuestionId;
+    //private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
     private boolean isImmersive = false;
@@ -51,20 +47,22 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
     public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
                                 AnswerLayout qParent, int nQuestionId, boolean immersive) {
 
+        super(context, questionnaire, qParent, nQuestionId);
+
         //TODO: Resolve magic numbers
 
-        mContext = context;
-        parent = qParent;
-        mQuestionnaire = questionnaire;
-        mListOfAnswers = new ArrayList<>();
-        mQuestionId = nQuestionId;
+        //mContext = context;
+        //parent = qParent;
+        //mQuestionnaire = questionnaire;
+        //mListOfAnswers = new ArrayList<>();
+        //mQuestionId = nQuestionId;
         isImmersive = immersive;
 
         // Slider Layout is predefined in XML
         LayoutInflater inflater = LayoutInflater.from(context);
         width = Units.getScreenWidth();
 
-        parent.scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
+        mParent.scrollContent.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 1.f
@@ -81,7 +79,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
 
         // mHorizontalContainer is parent to both slider and answer option containers
         mHorizontalContainer = (LinearLayout) inflater.inflate(
-                R.layout.answer_type_slider, parent.scrollContent, false);
+                R.layout.answer_type_slider, mParent.scrollContent, false);
 
         mHorizontalContainer.setOrientation(LinearLayout.HORIZONTAL);
         mHorizontalContainer.setLayoutParams(new LinearLayout.LayoutParams(
@@ -117,7 +115,7 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
         mResizeView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.JadeRed));
     }
 
-    public boolean buildView() {
+    public void buildView() {
 
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
@@ -158,12 +156,10 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
 
             mAnswerListContainer.addView(textMark);
         }
-        parent.layoutAnswer.addView(mHorizontalContainer);
-
-        return true;
+        mParent.layoutAnswer.addView(mHorizontalContainer);
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
+    public void addAnswer(int nAnswerId, String sAnswer, boolean isDefault) {
         mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
         // index of default answer if present
         if (isDefault) {
@@ -172,11 +168,9 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
             // Handles default id if existent
             setProgressItem(mDefaultAnswer);
         }
-        return true;
     }
 
-    public boolean addClickListener() {
-
+    public void addClickListener() {
 
         final TextView tvTemp = (TextView) mAnswerListContainer.findViewById(mListOfAnswers.get(0).getId());
         tvTemp.post(new Runnable() {
@@ -260,8 +254,6 @@ public class AnswerTypeSliderFree extends AppCompatActivity {
                 return true;
             }
         });
-
-        return true;
     }
 
     // Set progress  bar according to user input

@@ -43,11 +43,11 @@ public class Questionnaire {
     // ArrayList containing all questions (including all attached information)
     private ArrayList<String> mQuestionList;
     private MetaData mMetaData;
-    private String mHead, mFoot, mSurveyURI, mMotivation;
+    private String mHead, mFoot, mSurveyURI, mMotivation, mVersion;
     private boolean isImmersive = false;
 
     public Questionnaire(Context context, String head, String foot, String surveyUri,
-                         String motivation, QuestionnairePagerAdapter contextQPA) {
+                         String motivation, String version, QuestionnairePagerAdapter contextQPA) {
 
         mContext = context;
         mContextQPA = contextQPA;
@@ -60,6 +60,7 @@ public class Questionnaire {
         mFileIO = new FileIO();
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
+        mVersion = version;
 
     }
 
@@ -68,7 +69,7 @@ public class Questionnaire {
         // offline version
         //String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
-        mMetaData = new MetaData(mContext, mHead, mFoot, mSurveyURI, mMotivation);
+        mMetaData = new MetaData(mContext, mHead, mFoot, mSurveyURI, mMotivation, mVersion);
         mMetaData.initialise();
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();

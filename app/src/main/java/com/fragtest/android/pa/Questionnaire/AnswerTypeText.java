@@ -3,7 +3,6 @@ package com.fragtest.android.pa.Questionnaire;
 import android.content.Context;
 import android.provider.Settings.Secure;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,13 +19,13 @@ import com.fragtest.android.pa.R;
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeText extends AppCompatActivity {
+public class AnswerTypeText extends AnswerType {
 
-    public final AnswerLayout parent;
+    //public final AnswerLayout parent;
     private final String LOG_STRING = "AnswerTypeText";
-    private final Context mContext;
-    private final int mQuestionId;
-    private final Questionnaire mQuestionnaire;
+    //private final Context mContext;
+    //private final int mQuestionId;
+    //private final Questionnaire mQuestionnaire;
     public EditText mAnswerText;
     public LinearLayout.LayoutParams answerParams;
     private Button mButtonOkay;
@@ -36,21 +35,22 @@ public class AnswerTypeText extends AppCompatActivity {
 
     public AnswerTypeText(Context context, Questionnaire questionnaire, AnswerLayout qParent,
                           int nQuestionId, boolean immersive) {
-        mContext = context;
-        mQuestionId = nQuestionId;
-        parent = qParent;
-        mQuestionnaire = questionnaire;
+
+        super(context, questionnaire, qParent, nQuestionId);
+        //mContext = context;
+        //mQuestionId = nQuestionId;
+        //parent = qParent;
+        //mQuestionnaire = questionnaire;
         isImmersive = immersive;
     }
 
-    public boolean addQuestion(String sAnswer) {
+    public void addQuestion(String sAnswer) {
         switch (sAnswer) {
             case "$device.id":
                 isSystem = true;
                 mQuestionnaire.addTextToEvaluationLst(mQuestionId, generateDeviceId());
                 break;
         }
-        return true;
     }
 
     public void buildView() {
@@ -92,12 +92,12 @@ public class AnswerTypeText extends AppCompatActivity {
 
             mAnswerText.isFocusableInTouchMode();
 
-            parent.layoutAnswer.addView(mAnswerText, answerParams);
-            parent.layoutAnswer.addView(mButtonOkay, buttonParams);
+            mParent.layoutAnswer.addView(mAnswerText, answerParams);
+            mParent.layoutAnswer.addView(mButtonOkay, buttonParams);
         }
     }
 
-    public boolean addClickListener() {
+    public void addClickListener() {
 
         if (!isSystem) {
             mButtonOkay.setOnClickListener(new View.OnClickListener() {
@@ -128,7 +128,6 @@ public class AnswerTypeText extends AppCompatActivity {
                 }
             });
         }
-        return true;
     }
 
     private String generateDeviceId() {

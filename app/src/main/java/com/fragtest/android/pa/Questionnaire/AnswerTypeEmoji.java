@@ -2,7 +2,6 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -18,16 +17,16 @@ import java.util.List;
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeEmoji extends AppCompatActivity {
+public class AnswerTypeEmoji extends AnswerType {
 
-    private final Context mContext;
-    private final AnswerLayout mParent;
-    private final List<StringAndInteger> mListOfAnswers;
+    //private final Context mContext;
+    //private final AnswerLayout mParent;
+    //private final List<StringAndInteger> mListOfAnswers;
     private final List<Integer> mListOfIds;
     private final int[] drawables = new int[5];
     private final int[] drawables_pressed = new int[5];
-    private final Questionnaire mQuestionnaire;
-    private final int mQuestionId;
+    //private final Questionnaire mQuestionnaire;
+    //private final int mQuestionId;
     private String LOG_STRING = "AnswerTypeEmoji";
     private int mDefault = -1;
     private int mViewPagerHeight = 0;
@@ -36,12 +35,14 @@ public class AnswerTypeEmoji extends AppCompatActivity {
     public AnswerTypeEmoji(Context context, Questionnaire questionnaire,
                            AnswerLayout qParent, int questionId, boolean immersive) {
 
-        mContext = context;
-        mParent = qParent;
-        mQuestionnaire = questionnaire;
-        mListOfAnswers = new ArrayList<>();
+
+        super(context, questionnaire, qParent, questionId);
+        //mContext = context;
+        //mParent = qParent;
+        //mQuestionnaire = questionnaire;
+        //mListOfAnswers = new ArrayList<>();
         mListOfIds = new ArrayList<>();
-        mQuestionId = questionId;
+        //mQuestionId = questionId;
         isImmersive = immersive;
 
         drawables[0] = R.drawable.em1of5;
@@ -66,7 +67,7 @@ public class AnswerTypeEmoji extends AppCompatActivity {
         return true;
     }
 
-    public boolean buildView() {
+    public void buildView() {
 
         int usableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive);
         int numEmojis = mListOfAnswers.size();
@@ -133,11 +134,9 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                 mParent.layoutAnswer.addView(placeHolder);
             }
         }
-
-        return true;
     }
 
-    public boolean addClickListener() {
+    public void addClickListener() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
             final Button button = (Button) mParent.layoutAnswer.findViewById(
@@ -161,7 +160,6 @@ public class AnswerTypeEmoji extends AppCompatActivity {
                 }
             });
         }
-        return true;
     }
 
     private void setChecked(boolean isChecked, Button answerButton) {

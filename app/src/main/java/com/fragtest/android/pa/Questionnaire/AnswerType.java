@@ -1,8 +1,9 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.support.v7.app.AppCompatActivity;
 
-import com.fragtest.android.pa.DataTypes.StringIntegerAndInteger;
+import com.fragtest.android.pa.DataTypes.StringAndInteger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,17 +12,16 @@ import java.util.List;
  * Created by ul1021 on 06.02.2018.
  */
 
-public class AnswerType {
+public abstract class AnswerType extends AppCompatActivity {
 
-    private static final String LOG = "AnswerType";
-    public final AnswerLayout mParent;
-    private final Context mContext;
-    private final int mQuestionId;
-    private final List<StringIntegerAndInteger> mListOfAnswers;
-    private final Questionnaire mQuestionnaire;
+    static final String LOG = "AnswerType";
+    final AnswerLayout mParent;
+    final Context mContext;
+    final int mQuestionId;
+    final List<StringAndInteger> mListOfAnswers;
+    final Questionnaire mQuestionnaire;
 
     public AnswerType(Context context, Questionnaire questionnaire, AnswerLayout parent, int Id) {
-
         mContext = context;
         mQuestionnaire = questionnaire;
         mParent = parent;
@@ -29,10 +29,8 @@ public class AnswerType {
         mListOfAnswers = new ArrayList<>();
     }
 
-    public void addAnswer(){}
+    public abstract void buildView();
 
-    public void buildView(){}
-
-    public void addClickListener(){}
+    public abstract void addClickListener();
 
 }

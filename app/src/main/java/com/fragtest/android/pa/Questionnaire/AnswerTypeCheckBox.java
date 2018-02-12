@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.CheckBox;
@@ -20,30 +19,32 @@ import java.util.List;
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeCheckBox extends AppCompatActivity {
+public class AnswerTypeCheckBox extends AnswerType {
 
     private static final String LOG = "AnswerTypeCheckbox";
-    public final AnswerLayout mParent;
-    private final Context mContext;
-    private final int mQuestionId;
+    //public final AnswerLayout mParent;
+    //private final Context mContext;
+    //private final int mQuestionId;
     private final List<StringIntegerAndInteger> mListOfAnswers;
     private final List<Integer> mListOfDefaults;
-    private final Questionnaire mQuestionnaire;
+    //private final Questionnaire mQuestionnaire;
     public LinearLayout.LayoutParams answerParams;
     private int mExclusiveId = -1;
 
     public AnswerTypeCheckBox(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
-        mContext = context;
+        /*mContext = context;
         mParent = qParent;
         mQuestionId = nQuestionId;
-        mQuestionnaire = questionnaire;
-        mListOfDefaults = new ArrayList<>();
+        mQuestionnaire = questionnaire;*/
+        super(context, questionnaire, qParent, nQuestionId);
         mListOfAnswers = new ArrayList<>();
+        mListOfDefaults = new ArrayList<>();
+
 
     }
 
-    public boolean addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault, boolean isExclusive) {
+    public void addAnswer(int nAnswerId, String sAnswer, int nGroup, boolean isDefault, boolean isExclusive) {
         mListOfAnswers.add(new StringIntegerAndInteger(sAnswer, nAnswerId, nGroup));
         if (isDefault) {
             mListOfDefaults.add(mListOfAnswers.size() - 1);
@@ -51,7 +52,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         if (isExclusive) {
             mExclusiveId = nAnswerId;
         }
-        return true;
     }
 
     public void buildView() {
@@ -97,7 +97,7 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
         }
     }
 
-    public boolean addClickListener() {
+    public void addClickListener() {
 
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
 
@@ -134,7 +134,6 @@ public class AnswerTypeCheckBox extends AppCompatActivity {
                 }
             });
         }
-        return true;
     }
 
     private boolean unCheckGroup(int nGroup) {

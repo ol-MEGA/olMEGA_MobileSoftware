@@ -24,8 +24,8 @@ public class MetaData extends AppCompatActivity {
 
     private String DEVICE_Id, START_DATE, START_DATE_UTC, END_DATE,
             END_DATE_UTC, KEY_HEAD, KEY_FOOT, KEY_TAG_CLOSE, KEY_VALUE_OPEN, KEY_VALUE_CLOSE,
-            KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA,
-            KEY_QUESTID, mRawInput, FILE_NAME, KEY_MOTIVATION, KEY_NEW_LINE, KEY_SHORT_CLOSE;
+            KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA, KEY_VERSION,
+            KEY_QUESTID, FILE_NAME, KEY_MOTIVATION, KEY_NEW_LINE, KEY_SHORT_CLOSE;
 
     private SimpleDateFormat DATE_FORMAT;
 
@@ -38,12 +38,14 @@ public class MetaData extends AppCompatActivity {
 
     private EvaluationList mEvaluationList;
 
-    public MetaData(Context context, String head, String foot, String surveyUri, String motivation) {
+    public MetaData(Context context, String head, String foot, String surveyUri, String motivation,
+                    String version) {
         mContext = context;
         KEY_HEAD = head;
         KEY_FOOT = foot;
         KEY_SURVEY_URI = surveyUri;
         KEY_MOTIVATION = motivation;
+        KEY_VERSION = version;
         mQuestionList = new ArrayList<>();
         DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
 
@@ -108,6 +110,7 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += "/";
         KEY_DATA += KEY_QUESTID;
         KEY_DATA += ".xml\"";
+        KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += " survey_uri=\"";
         KEY_DATA += KEY_SURVEY_URI;
         KEY_DATA += "\"";
@@ -134,6 +137,14 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += KEY_VALUE_OPEN;
         KEY_DATA += "start_date_UTC=\"";
         KEY_DATA += START_DATE_UTC;
+        KEY_DATA += "\"";
+        KEY_DATA += KEY_SHORT_CLOSE;
+        KEY_DATA += KEY_NEW_LINE;
+
+        /* App version */
+        KEY_DATA += KEY_VALUE_OPEN;
+        KEY_DATA += "app_version=\"";
+        KEY_DATA += KEY_VERSION;
         KEY_DATA += "\"";
         KEY_DATA += KEY_SHORT_CLOSE;
         KEY_DATA += KEY_NEW_LINE;
