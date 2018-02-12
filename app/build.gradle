@@ -3,19 +3,18 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         config {
-            storeFile file('key/Android.jks')
+            storeFile file('key/local.jks')
             storePassword 'android'
             keyAlias 'key0'
             keyPassword 'android'
         }
     }
     compileSdkVersion 25
-    //"25.0.2"
     buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.fragtest.android.pa"
         minSdkVersion 22
-        targetSdkVersion 22
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
