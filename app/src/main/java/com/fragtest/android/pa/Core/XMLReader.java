@@ -30,8 +30,6 @@ public class XMLReader {
         String rawInput = mFileIO.readRawTextFile(fileName);
         KEY_NEW_LINE = "\n";
 
-        // offline version
-        //String rawInput = mFileIO.readRawTextFile(mContext, R.raw.questionnairecheckboxgroup);
         String[] timerTemp = rawInput.split("<timer|</timer>");
 
         // timerTemp.length == 0 means no timer information can be found
@@ -68,11 +66,6 @@ public class XMLReader {
         //mSurveyURI = extractSurveyURI(rawInput);
         mSurveyURI = extractSurveyURI(fileName);
 
-        Log.e(LOG, "-------------------------------");
-        Log.e(LOG, "Filename: "+mSurveyURI);
-        Log.e(LOG, "-------------------------------");
-
-
         mQuestionList = stringArrayToListString(questionnaire);
         mQuestionList = thinOutList(mQuestionList);
     }
@@ -88,6 +81,8 @@ public class XMLReader {
         head +="<";
         head += tempHead[3];
         head += ">";
+
+        Log.e(LOG, "HEAD: "+head);
 
         return head;
     }

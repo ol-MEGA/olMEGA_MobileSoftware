@@ -2,6 +2,7 @@ package com.fragtest.android.pa;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -14,13 +15,13 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.os.BatteryManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -77,6 +78,13 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isImmersive = USE_KIOSK_MODE;
     private boolean isPinned = USE_KIOSK_MODE;
+    private DevicePolicyManager mDpm;
+    private boolean isKioskEnabled;
+
+    private ComponentName mAdminComponentName;
+    private DevicePolicyManager mDevicePolicyManager;
+
+
 
     private int requestIterator = 0;
 
@@ -401,6 +409,27 @@ public class MainActivity extends AppCompatActivity {
             mAdapter.onCreate();
             isActivityRunning = true;
         }
+
+
+        ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
+        mDpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if (!mDpm.isAdminActive(deviceAdmin)) {
+            Toast.makeText(this, "Not device admin.", Toast.LENGTH_SHORT).show();
+        }
+
+        if (mDpm.isDeviceOwnerApp(getPackageName())) {
+            mDpm.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
+        } else {
+            Toast.makeText(this, "Not device owner.", Toast.LENGTH_SHORT).show();
+        }
+
+        mAdminComponentName = deviceAdmin;
+        mDevicePolicyManager = (DevicePolicyManager) getSystemService(
+                Context.DEVICE_POLICY_SERVICE);
+
+        setDefaultCosuPolicies(isImmersive);
+        enableKioskMode(isImmersive);
+
     }
 
     @Override
@@ -445,6 +474,12 @@ public class MainActivity extends AppCompatActivity {
         }
         mAdapter.onPause();
         super.onPause();
+
+        ActivityManager activityManager = (ActivityManager) getApplicationContext()
+                .getSystemService(Context.ACTIVITY_SERVICE);
+
+        activityManager.moveTaskToFront(getTaskId(), 0);
+
     }
 
     @Override
@@ -463,6 +498,13 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         if (isImmersive) {
+            hideSystemUI();
+        }
+
+        this.getActionBar().hide();
+
+        /*
+        if (isImmersive) {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -480,7 +522,6 @@ public class MainActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 if (!am.isInLockTaskMode()) {
                     startLockTask();
-                    //setLockTaskPackages();
                 }
             } else {
                 if (am.getLockTaskModeState() ==
@@ -488,7 +529,118 @@ public class MainActivity extends AppCompatActivity {
                     startLockTask();
                 }
             }
+        }*/
+    }
+
+
+
+
+
+
+
+
+    private void setDefaultCosuPolicies(boolean active) {
+        // set user restrictions
+        //setUserRestriction(UserManager.DISALLOW_SAFE_BOOT, active);
+        //setUserRestriction(UserManager.DISALLOW_FACTORY_RESET, active);
+        setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
+        setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
+        setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
+        setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
+
+        // disable keyguard and status bar
+        //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
+        //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
+
+        // enable STAY_ON_WHILE_PLUGGED_IN
+        //enableStayOnWhilePluggedIn(active);
+
+        // set System Update policy
+/*
+        if (active){
+            mDevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName,
+                    SystemUpdatePolicy.createWindowedInstallPolicy(60,120));
+        } else {
+            DevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName, null);
+        }*/
+
+        // set this Activity as a lock task package
+
+        /*mDevicePolicyManager.setLockTaskPackages(mAdminComponentName,
+                active ? new String[]{getPackageName()} : new String[]{});
+
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_MAIN);
+        intentFilter.addCategory(Intent.CATEGORY_HOME);
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+*/
+        /*if (active) {
+            // set Cosu activity as home intent receiver so that it is started
+            // on reboot
+            mDevicePolicyManager.addPersistentPreferredActivity(
+                    mAdminComponentName, intentFilter, new ComponentName(
+                            getPackageName(), CosuActivity.class.getName()));
+        } else {
+            mDevicePolicyManager.clearPackagePersistentPreferredActivities(
+                    mAdminComponentName, getPackageName());
+        }*/
+    }
+
+    private void setUserRestriction(String restriction, boolean disallow) {
+        if (disallow) {
+            mDevicePolicyManager.addUserRestriction(mAdminComponentName,
+                    restriction);
+        } else {
+            mDevicePolicyManager.clearUserRestriction(mAdminComponentName,
+                    restriction);
         }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private void enableKioskMode(boolean enabled) {
+        try {
+            if (enabled) {
+                if (mDpm.isLockTaskPermitted(this.getPackageName())) {
+                    startLockTask();
+                    isKioskEnabled = true;
+                } else {
+                    Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                stopLockTask();
+                isKioskEnabled = false;
+            }
+        } catch (Exception e) {
+            // TODO: Log and handle appropriately
+        }
+
+        UserManager uM = (UserManager) this.getSystemService(this.USER_SERVICE);
+        //uM.setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, true);
+        //mDpm.addUserRestriction(getComponentName(),UserManager.DISALLOW_CREATE_WINDOWS);
+    }
+
+    // This snippet hides the system bars.
+    private void hideSystemUI() {
+        // Set the IMMERSIVE flag.
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
     }
 
     // This disables the Volume Buttons
@@ -531,6 +683,16 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
     }
 
+
+
+
+
+
+
+
+
+
+
     public void setImmersive() {
         if (isImmersive) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -540,6 +702,14 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+            ComponentName mDeviceAdminSample = null;
+            mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
+            DevicePolicyManager dpm = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
+            //dpm.lockNow();
+            startLockTask();
         }
     }
 
@@ -669,4 +839,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
+
+
 }

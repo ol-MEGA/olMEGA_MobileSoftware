@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BATTERY_STATS"/>
 
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/logo"
@@ -38,6 +40,19 @@
         <!-- Receiver needed for Alarm function -->
         <receiver android:name=".Core.EventReceiver"
             android:enabled="true"/>
+
+        <!-- Receiver needed for DEVICE OWNERSHIP -->
+        <receiver
+            android:name=".AdminReceiver"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DEVICE_ADMIN" >
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Receiver needed for Autostart function of the app -->
         <receiver android:name="com.fragtest.android.pa.Core.BootReceiver">
