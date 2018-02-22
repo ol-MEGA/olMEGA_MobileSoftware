@@ -55,7 +55,7 @@ public class ControlService extends Service {
      * Constants for messaging. Should(!) be self-explanatory.
      */
 
-    static final boolean USE_KIOSK_MODE = true;
+    static boolean USE_KIOSK_MODE = true;
 
     // 1* - general
     public static final int MSG_REGISTER_CLIENT = 11;
@@ -507,7 +507,12 @@ public class ControlService extends Service {
         checkForPreferences();
 
         // Determine whether to show or hide preferences menu
-        showConfigButton = (mFileIO.checkConfigFile());
+        showConfigButton = mFileIO.checkConfigFile();
+        if (!showConfigButton) {
+            USE_KIOSK_MODE = false;
+        }
+
+        Log.e(LOG, "KIOSK MODE: "+USE_KIOSK_MODE);
     }
 
     // Load preset values from shared preferences, default values from external class InitValues

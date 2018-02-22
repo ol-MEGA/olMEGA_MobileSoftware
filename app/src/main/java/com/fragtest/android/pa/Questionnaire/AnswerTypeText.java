@@ -21,27 +21,18 @@ import com.fragtest.android.pa.R;
 
 public class AnswerTypeText extends AnswerType {
 
-    //public final AnswerLayout parent;
     private final String LOG_STRING = "AnswerTypeText";
-    //private final Context mContext;
-    //private final int mQuestionId;
-    //private final Questionnaire mQuestionnaire;
     public EditText mAnswerText;
     public LinearLayout.LayoutParams answerParams;
     private Button mButtonOkay;
     private boolean isSystem = false;
     private boolean isImmersive = false;
 
-
     public AnswerTypeText(Context context, Questionnaire questionnaire, AnswerLayout qParent,
-                          int nQuestionId, boolean immersive) {
+                          int nQuestionId, boolean isImmersive) {
 
         super(context, questionnaire, qParent, nQuestionId);
-        //mContext = context;
-        //mQuestionId = nQuestionId;
-        //parent = qParent;
-        //mQuestionnaire = questionnaire;
-        isImmersive = immersive;
+        this.isImmersive = isImmersive;
     }
 
     public void addQuestion(String sAnswer) {
@@ -116,14 +107,12 @@ public class AnswerTypeText extends AnswerType {
                     String text = mAnswerText.getText().toString();
                     if (text.length() != 0) {
                         mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
-                        // mEvaluationList.removeQuestionId(mQuestionId);
                         mQuestionnaire.addTextToEvaluationLst(mQuestionId, text);
-                        //  mEvaluationList.add(mQuestionId, text);
                     } else {
                         Log.e(LOG_STRING, "No text was entered.");
                     }
 
-                    ((MainActivity) mContext).setImmersive();
+                    ((MainActivity) mContext).hideSystemUI(isImmersive);
                     ((MainActivity) mContext).incrementPage();
                 }
             });

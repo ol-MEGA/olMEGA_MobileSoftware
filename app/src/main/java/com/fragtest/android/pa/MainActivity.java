@@ -76,22 +76,17 @@ public class MainActivity extends AppCompatActivity {
     private boolean isQuestionnairePresent = true;
     private String[] requestString;
 
-    private boolean isImmersive = USE_KIOSK_MODE;
-    private boolean isPinned = USE_KIOSK_MODE;
-    private DevicePolicyManager mDpm;
-    private boolean isKioskEnabled;
-
+    // RELEVANT FOR KIOSK MODE
     private ComponentName mAdminComponentName;
     private DevicePolicyManager mDevicePolicyManager;
-
-
-
-    private int requestIterator = 0;
-
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
 
+
+    // RELEVANT FOR PERMISSIONS (Android 6+, just in case)
+    private int requestIterator = 0;
     private boolean permissionGranted = false;
 
+    // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
         @Override
         public void onReceive(Context ctxt, Intent intent) {
@@ -107,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // preferences
+    // Preferences
     private SharedPreferences sharedPreferences;
     private boolean isTimer, showConfigButton = false, showRecordingButton = true;
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -142,53 +137,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
-    // When back button is pressed, questionnaire navigates one page backwards, menu does nothing
-    @Override
-    public void onBackPressed() {
-        if (!mAdapter.isMenu()) {
-            if (mViewPager.getCurrentItem() != 0) {
-                mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
-            } else {
-                // Might be unsafe because this accidentally resets the timer and starts a new cycle
-                //mAdapter.createMenu();
-            }
-        }
-    }
 
-    // Send message to connected client
-    public void messageService(int what) {
 
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
-
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
-        }
-    }
-
-    // Send message to connected client
-    public void messageService(int what, Bundle data) {
-
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
-
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.setData(data);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
-        }
-    }
 
     // Is ControlService already running?
     private boolean isServiceRunning() {
@@ -202,30 +152,10 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        requestString = getResources().getStringArray(R.array.permissionMessages);
-        switch (requestCode) {
-            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    permissionGranted = true;
-                    doBindService();
-                } else {
-                    Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
-                    requestPermissions(iPermission);
-                    requestIterator++;
-                }
-            }
-        }
-    }
-
     void doBindService() {
-
         if (!isServiceRunning() && permissionGranted) {
             startService(new Intent(this, ControlService.class));
         }
-
         if (permissionGranted) {
             bindService(new Intent(this, ControlService.class),
                     mConnection, Context.BIND_AUTO_CREATE);
@@ -244,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     public void handleNewPagerAdapter() {
         mViewPager = null;
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, isImmersive);
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, USE_KIOSK_MODE);
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
@@ -277,63 +207,9 @@ public class MainActivity extends AppCompatActivity {
         messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
     }
 
-    public void requestPermissions(int iPermission) {
 
-        // TODO: Make array
-        switch (iPermission) {
-            case 0:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
-                break;
+    /** Lifecycle methods */
 
-            case 1:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-                break;
-
-            case 2:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
-                    MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
-                break;
-
-            case 3:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    MY_PERMISSIONS_RECORD_AUDIO);
-                break;
-
-            case 4:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.VIBRATE},
-                    MY_PERMISSIONS_VIBRATE);
-                break;
-
-            case 5:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WAKE_LOCK},
-                    MY_PERMISSIONS_WAKE_LOCK);
-                break;
-
-            case 6:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.DISABLE_KEYGUARD},
-                    MY_PERMISSIONS_DISABLE_KEYGUARD);
-                break;
-
-            case 7:
-                ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    MY_PERMISSIONS_CAMERA);
-                break;
-        }
-    }
-
-    /**
-     * Lifecycle methods
-     **/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -412,13 +288,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
-        mDpm = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        if (!mDpm.isAdminActive(deviceAdmin)) {
+        mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        if (!mDevicePolicyManager.isAdminActive(deviceAdmin)) {
             Toast.makeText(this, "Not device admin.", Toast.LENGTH_SHORT).show();
         }
 
-        if (mDpm.isDeviceOwnerApp(getPackageName())) {
-            mDpm.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
+        if (mDevicePolicyManager.isDeviceOwnerApp(getPackageName())) {
+            mDevicePolicyManager.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
         } else {
             Toast.makeText(this, "Not device owner.", Toast.LENGTH_SHORT).show();
         }
@@ -427,8 +303,8 @@ public class MainActivity extends AppCompatActivity {
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
 
-        setDefaultCosuPolicies(isImmersive);
-        enableKioskMode(isImmersive);
+        setDefaultCosuPolicies(USE_KIOSK_MODE);
+        enableKioskMode(USE_KIOSK_MODE);
 
     }
 
@@ -497,160 +373,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.onResume();
         super.onResume();
 
-        if (isImmersive) {
-            hideSystemUI();
-        }
-
-        this.getActionBar().hide();
-
-        /*
-        if (isImmersive) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-        }
-
-        if (isPinned) {
-            // start lock task mode if it's not already active
-            ActivityManager am = (ActivityManager) getSystemService(
-                    Context.ACTIVITY_SERVICE);
-            // ActivityManager.getLockTaskModeState api is not available in pre-M.
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                if (!am.isInLockTaskMode()) {
-                    startLockTask();
-                }
-            } else {
-                if (am.getLockTaskModeState() ==
-                        ActivityManager.LOCK_TASK_MODE_NONE) {
-                    startLockTask();
-                }
-            }
-        }*/
-    }
-
-
-
-
-
-
-
-
-    private void setDefaultCosuPolicies(boolean active) {
-        // set user restrictions
-        //setUserRestriction(UserManager.DISALLOW_SAFE_BOOT, active);
-        //setUserRestriction(UserManager.DISALLOW_FACTORY_RESET, active);
-        setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
-        setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
-        setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
-        setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
-
-        // disable keyguard and status bar
-        //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
-        //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
-
-        // enable STAY_ON_WHILE_PLUGGED_IN
-        //enableStayOnWhilePluggedIn(active);
-
-        // set System Update policy
-/*
-        if (active){
-            mDevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName,
-                    SystemUpdatePolicy.createWindowedInstallPolicy(60,120));
-        } else {
-            DevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName, null);
-        }*/
-
-        // set this Activity as a lock task package
-
-        /*mDevicePolicyManager.setLockTaskPackages(mAdminComponentName,
-                active ? new String[]{getPackageName()} : new String[]{});
-
-        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_MAIN);
-        intentFilter.addCategory(Intent.CATEGORY_HOME);
-        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-*/
-        /*if (active) {
-            // set Cosu activity as home intent receiver so that it is started
-            // on reboot
-            mDevicePolicyManager.addPersistentPreferredActivity(
-                    mAdminComponentName, intentFilter, new ComponentName(
-                            getPackageName(), CosuActivity.class.getName()));
-        } else {
-            mDevicePolicyManager.clearPackagePersistentPreferredActivities(
-                    mAdminComponentName, getPackageName());
-        }*/
-    }
-
-    private void setUserRestriction(String restriction, boolean disallow) {
-        if (disallow) {
-            mDevicePolicyManager.addUserRestriction(mAdminComponentName,
-                    restriction);
-        } else {
-            mDevicePolicyManager.clearUserRestriction(mAdminComponentName,
-                    restriction);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private void enableKioskMode(boolean enabled) {
-        try {
-            if (enabled) {
-                if (mDpm.isLockTaskPermitted(this.getPackageName())) {
-                    startLockTask();
-                    isKioskEnabled = true;
-                } else {
-                    Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                stopLockTask();
-                isKioskEnabled = false;
-            }
-        } catch (Exception e) {
-            // TODO: Log and handle appropriately
-        }
-
-        UserManager uM = (UserManager) this.getSystemService(this.USER_SERVICE);
-        //uM.setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, true);
-        //mDpm.addUserRestriction(getComponentName(),UserManager.DISALLOW_CREATE_WINDOWS);
-    }
-
-    // This snippet hides the system bars.
-    private void hideSystemUI() {
-        // Set the IMMERSIVE flag.
-        // Set the content to appear under the system bars so that the content
-        // doesn't resize when the system bars hide and show.
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
-
-    // This disables the Volume Buttons
-    @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (blockedKeys.contains(event.getKeyCode())) {
-            return true;
-        } else {
-            return super.dispatchKeyEvent(event);
-        }
+        hideSystemUI(USE_KIOSK_MODE);
     }
 
     private void setConfigVisibility() {
@@ -684,17 +407,100 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+/** KIOSK MODE RELATED STUFF */
 
 
+    // This disables the Volume Buttons
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
+            Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
+            Toast.makeText(getApplicationContext(), "POWER TO THE PEOPLE!", Toast.LENGTH_SHORT).show();
+            return super.dispatchKeyEvent(event);
+        } else {
+            return super.dispatchKeyEvent(event);
+        }
+    }
 
+    // When back button is pressed, questionnaire navigates one page backwards, menu does nothing
+    @Override
+    public void onBackPressed() {
+        if (!mAdapter.isMenu()) {
+            if (mViewPager.getCurrentItem() != 0) {
+                mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+            } else {
+                // Might be unsafe because this accidentally resets the timer and starts a new cycle
+                //mAdapter.createMenu();
+            }
+        }
+    }
 
+    private void setDefaultCosuPolicies(boolean active) {
+    // set user restrictions
+    setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
+    setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
+    setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
+    setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
+    Log.e(LOG, "KIOSK MODE: "+active);
+    // disable keyguard and status bar
+    ///mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
+    //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
 
+    // enable STAY_ON_WHILE_PLUGGED_IN
+    //enableStayOnWhilePluggedIn(active);
+}
 
+    private void setUserRestriction(String restriction, boolean disallow) {
+        if (disallow) {
+            mDevicePolicyManager.addUserRestriction(mAdminComponentName,
+                    restriction);
+        } else {
+            mDevicePolicyManager.clearUserRestriction(mAdminComponentName,
+                    restriction);
+        }
+    }
 
+    private void enableKioskMode(boolean enabled) {
+        try {
+            if (enabled && USE_KIOSK_MODE) {
+                if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
+                    startLockTask();
+                } else {
+                    Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                stopLockTask();
+            }
+        } catch (Exception e) {
+            // TODO: Log and handle appropriately
+        }
+    }
 
-
-    public void setImmersive() {
+    // This snippet hides the system bars.
+    public void hideSystemUI(boolean isImmersive) {
+        // Set the IMMERSIVE flag.
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
         if (isImmersive) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_VISIBLE
+            );
+        }
+    }
+
+/*
+    public void setImmersive() {
+        if (USE_KIOSK_MODE) {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -703,19 +509,52 @@ public class MainActivity extends AppCompatActivity {
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
-            ComponentName mDeviceAdminSample = null;
-            mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
-            DevicePolicyManager dpm = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+            ComponentName mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
+            //DevicePolicyManager dpm = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
             Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
             intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
-            //dpm.lockNow();
             startLockTask();
+        }
+    }*/
+
+
+    /** Message Handling */
+
+
+    // Send message to connected client
+    public void messageService(int what) {
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "Sending Message: " + what);
+        }
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.replyTo = mMessageHandler;
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
         }
     }
 
-    /**
-     * Message Handling
-     **/
+    // Send message to connected client
+    public void messageService(int what, Bundle data) {
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "Sending Message: " + what);
+        }
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.setData(data);
+                msg.replyTo = mMessageHandler;
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        }
+    }
 
     class MessageHandler extends Handler {
 
@@ -841,6 +680,79 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /** PERMISSION STUFF (ANDROID 6+)  */
 
+
+    public void requestPermissions(int iPermission) {
+
+        // TODO: Make array
+        switch (iPermission) {
+            case 0:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+                break;
+
+            case 1:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+                break;
+
+            case 2:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
+                        MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+                break;
+
+            case 3:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_RECORD_AUDIO);
+                break;
+
+            case 4:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.VIBRATE},
+                        MY_PERMISSIONS_VIBRATE);
+                break;
+
+            case 5:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WAKE_LOCK},
+                        MY_PERMISSIONS_WAKE_LOCK);
+                break;
+
+            case 6:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.DISABLE_KEYGUARD},
+                        MY_PERMISSIONS_DISABLE_KEYGUARD);
+                break;
+
+            case 7:
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        MY_PERMISSIONS_CAMERA);
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        requestString = getResources().getStringArray(R.array.permissionMessages);
+        switch (requestCode) {
+            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionGranted = true;
+                    doBindService();
+                } else {
+                    Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
+                    requestPermissions(iPermission);
+                    requestIterator++;
+                }
+            }
+        }
+    }
 
 }
