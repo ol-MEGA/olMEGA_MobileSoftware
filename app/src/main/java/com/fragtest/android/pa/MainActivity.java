@@ -443,13 +443,10 @@ public class MainActivity extends AppCompatActivity {
     setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
     setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
     setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
-    Log.e(LOG, "KIOSK MODE: "+active);
+    Log.i(LOG, "KIOSK MODE: "+active);
     // disable keyguard and status bar
-    ///mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
+    //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
     //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
-
-    // enable STAY_ON_WHILE_PLUGGED_IN
-    //enableStayOnWhilePluggedIn(active);
 }
 
     private void setUserRestriction(String restriction, boolean disallow) {
