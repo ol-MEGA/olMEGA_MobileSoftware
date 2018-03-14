@@ -10,4 +10,6 @@
     <color name="TextColor">#000000</color>
     <color name="TextColor_Light">#888888</color>
     <color name="BackgroundColor">#FFFFFF</color>
+
+    <color name="lighterBlue">#AAAAFF</color>
 </resources>

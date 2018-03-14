@@ -14,6 +14,11 @@ import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
+
 /**
  * Created by ul1021 on 30.06.2017.
  */
@@ -25,8 +30,9 @@ public class MenuPage extends AppCompatActivity {
     private Context mContext;
     private QuestionnairePagerAdapter mContextQPA;
     private String StartText;
-    private TextView mCountDownRemaining, mStartQuestionnaire;
+    private TextView mCountDownRemaining, mStartQuestionnaire, mDate;
     private String[] mTempTextCountDownRemaining;
+    private SimpleDateFormat mDateFormat;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -35,6 +41,7 @@ public class MenuPage extends AppCompatActivity {
         StartText = "";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
+        mDateFormat = new SimpleDateFormat("dd.MM.yy, HH:mm", Locale.ROOT);
 
     }
 
@@ -50,7 +57,7 @@ public class MenuPage extends AppCompatActivity {
         mCountDownRemaining = new TextView(mContext);
         LinearLayout.LayoutParams tempTopParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
-                0, 0.3f);
+                0, 0.1f);
         mCountDownRemaining.setText(mCountDownString);
         mCountDownRemaining.setGravity(View.TEXT_ALIGNMENT_CENTER);
         mCountDownRemaining.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -84,10 +91,17 @@ public class MenuPage extends AppCompatActivity {
         // Bottom View (blank)
         View tempViewBottom = new View(mContext);
 
+        mDate = new TextView(mContext);
+        mDate.setText("DD.MM.YY, HH:MM");
+        mDate.setTextColor(ContextCompat.getColor(mContext, R.color.JadeGray));
+        mDate.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
+        mDate.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+
         centerLayout.addView(mStartQuestionnaire);
         menuLayout.addView(mCountDownRemaining, tempTopParams);
         menuLayout.addView(centerLayout, centerParams);
         menuLayout.addView(tempViewBottom, tempTopParams);
+        menuLayout.addView(mDate, tempTopParams);
 
         return menuLayout;
     }
@@ -105,6 +119,11 @@ public class MenuPage extends AppCompatActivity {
                 mContextQPA.sendMessage(ControlService.MSG_PROPOSITION_ACCEPTED);
             }
         });
+    }
+
+    public void setTime() {
+        Calendar dateTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        mDate.setText(mDateFormat.format(dateTime.getTime()));
     }
 
     public void setText(String text) {

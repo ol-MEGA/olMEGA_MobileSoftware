@@ -33,6 +33,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import java.util.ArrayList;
@@ -42,12 +43,16 @@ import java.util.Set;
 
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
+import static android.R.color.holo_green_light;
+import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
-import static com.fragtest.android.pa.ControlService.USE_KIOSK_MODE;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    private boolean USE_KIOSK_MODE = true;
+    private boolean USE_MASTER_MODE = false;
 
     static final String LOG = "MainActivity";
     private static final String KEY_QUEST = "whichQuest";
@@ -77,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private String[] requestString;
 
     // RELEVANT FOR KIOSK MODE
+    private FileIO mFileIO;
     private ComponentName mAdminComponentName;
     private DevicePolicyManager mDevicePolicyManager;
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
@@ -136,9 +142,6 @@ public class MainActivity extends AppCompatActivity {
                     mAdapter.setArrows(position);
                 }
             };
-
-
-
 
     // Is ControlService already running?
     private boolean isServiceRunning() {
@@ -244,26 +247,14 @@ public class MainActivity extends AppCompatActivity {
             mBatteryReg = findViewById(R.id.battery_reg);
             mCharging = findViewById(R.id.charging);
 
-            mRecord.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            mFileIO = new FileIO();
+            showConfigButton = mFileIO.checkConfigFile();
+            if (showConfigButton) {
+                USE_KIOSK_MODE = false;
+                USE_MASTER_MODE = true;
+            }
 
-                    if (mServiceIsBound) {
-                        if (mServiceIsRecording) {
-                            messageService(ControlService.MSG_STOP_RECORDING);
-                        } else {
-                            messageService(ControlService.MSG_START_RECORDING);
-                        }
-                        messageService(ControlService.MSG_GET_STATUS);
-                    } else {
-                        Toast.makeText(MainActivity.this,
-                                "Not connected to service.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-
-
-                }
-            });
+            setConfigVisibility();
 
             mConfig.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -303,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
 
+        Log.e(LOG, "KIOSK is: "+USE_KIOSK_MODE);
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
@@ -314,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(LOG, "onDestroy");
         }
         super.onDestroy();
+        messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
     }
 
@@ -354,7 +347,9 @@ public class MainActivity extends AppCompatActivity {
         ActivityManager activityManager = (ActivityManager) getApplicationContext()
                 .getSystemService(Context.ACTIVITY_SERVICE);
 
-        activityManager.moveTaskToFront(getTaskId(), 0);
+        if (USE_KIOSK_MODE) {
+            activityManager.moveTaskToFront(getTaskId(), 0);
+        }
 
     }
 
@@ -406,6 +401,22 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
     }
 
+    private void setBTLogoConnected() {
+        showRecordingButton = true;
+        setRecordingVisibility();
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        holo_green_light, null)));
+    }
+
+    private void setBTLogoDisconnected() {
+        showRecordingButton = false;
+        setRecordingVisibility();
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        darker_gray, null)));
+    }
+
 
 /** KIOSK MODE RELATED STUFF */
 
@@ -416,7 +427,7 @@ public class MainActivity extends AppCompatActivity {
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
             Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
             return true;
-        } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
+        } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER && USE_KIOSK_MODE) {
             Toast.makeText(getApplicationContext(), "POWER TO THE PEOPLE!", Toast.LENGTH_SHORT).show();
             return super.dispatchKeyEvent(event);
         } else {
@@ -427,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
     // When back button is pressed, questionnaire navigates one page backwards, menu does nothing
     @Override
     public void onBackPressed() {
-        if (!mAdapter.isMenu()) {
+        if (!mAdapter.isMenu() && USE_KIOSK_MODE) {
             if (mViewPager.getCurrentItem() != 0) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
             } else {
@@ -467,17 +478,15 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
                 }
-            } else {
+            }/*else {
                 stopLockTask();
-            }
+            }*/
         } catch (Exception e) {
             // TODO: Log and handle appropriately
         }
     }
 
-    // This snippet hides the system bars.
     public void hideSystemUI(boolean isImmersive) {
-        // Set the IMMERSIVE flag.
         // Set the content to appear under the system bars so that the content
         // doesn't resize when the system bars hide and show.
         if (isImmersive) {
@@ -494,25 +503,6 @@ public class MainActivity extends AppCompatActivity {
             );
         }
     }
-
-/*
-    public void setImmersive() {
-        if (USE_KIOSK_MODE) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-            ComponentName mDeviceAdminSample = new ComponentName(this, AdminReceiver.class);
-            //DevicePolicyManager dpm = (DevicePolicyManager) this.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdminSample);
-            startLockTask();
-        }
-    }*/
 
 
     /** Message Handling */
@@ -567,17 +557,12 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_SET_VISIBILITY:
 
                     Bundle dataVisibility = msg.getData();
-                    showConfigButton = dataVisibility.getBoolean("showConfigButton", showConfigButton);
-                    showRecordingButton = dataVisibility.getBoolean("showRecordingButton", showRecordingButton);
                     isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
                     if (isQuestionnairePresent) {
                         mAdapter.questionnairePresent();
-                        //mAdapter.displayManualStart();
                     }
 
-                    setConfigVisibility();
-                    setRecordingVisibility();
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
@@ -595,6 +580,16 @@ public class MainActivity extends AppCompatActivity {
                         Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(data.getString("key"), false));
                     }
                     shipPreferencesToControlService();
+                    break;
+
+                case ControlService.MSG_BT_CONNECTED:
+                    setBTLogoConnected();
+                    mAdapter.setBluetoothPresent();
+                    break;
+
+                case ControlService.MSG_BT_DISCONNECTED:
+                    setBTLogoDisconnected();
+                    mAdapter.noBluetooth();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:

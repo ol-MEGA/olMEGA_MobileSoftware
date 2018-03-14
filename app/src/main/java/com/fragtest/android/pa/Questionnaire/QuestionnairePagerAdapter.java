@@ -37,7 +37,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private final MainActivity mMainActivity;
     private final Context mContext;
     private final Handler mCountDownHandler = new Handler();
-    private final int mUpdateRate = 1000;
+    private final int mUpdateIntervalStatusBar = 1000;
+    private final int mUpdateIntervalBattery = 1000*60;
+    private final int mUpdateIntervalTime = 1000*10;
     // Stores all active Views
     ArrayList<QuestionViewActive> mListOfActiveViews;
     // Stores all Views
@@ -50,6 +52,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean needsIncreasing = false;
     private boolean isPrefsInForeGround = false;
     private boolean isQuestionnairePresent = false;
+    private boolean isBluetoothPresent = false;
     private int mCountDownInterval = 30;
     private int mNUM_PAGES;
     private int mFinalCountdown = -255;
@@ -62,7 +65,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Units mUnits;
     private float batteryPlaceholderWeight;
 
-    private IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+    private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
 
     private final Runnable mCountDownRunnable = new Runnable() {
@@ -71,12 +74,31 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             if (isCountDownRunning) {
                 mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
-                mCountDownHandler.postDelayed(this, mUpdateRate);
+                mCountDownHandler.postDelayed(this, mUpdateIntervalStatusBar);
 
                 //setBatteryLogo();
             }
         }
     };
+
+    private final Runnable mBatteryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setBatteryLogo();
+            mCountDownHandler.postDelayed(this, mUpdateIntervalBattery);
+        }
+    };
+
+    private final Runnable mTimeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isMenu) {
+                mMenuPage.setTime();
+                mCountDownHandler.postDelayed(this, mUpdateIntervalTime);
+            }
+        }
+    };
+
     private final Runnable mHideProgressBarRunnable = new Runnable() {
         @Override
         public void run() {
@@ -103,6 +125,20 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isTimer = false;
         mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
         mMenuPage.updateCountDownText("");
+    }
+
+    public void noBluetooth() {
+        isBluetoothPresent = false;
+        stopCountDown();
+        mMenuPage.setText(mContext.getResources().getString(R.string.noBluetooth));
+        mMenuPage.updateCountDownText("");
+        if (isMenu) {
+            mCountDownHandler.post(mHideProgressBarRunnable);
+        }
+    }
+
+    public void setBluetoothPresent() {
+        isBluetoothPresent = true;
     }
 
     public void noTimer() {
@@ -147,6 +183,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void displayManualStart() {
         if (isQuestionnairePresent) {
             mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
+        } else if (!isBluetoothPresent) {
+            mMenuPage.setText(mContext.getResources().getString(R.string.noBluetooth));
         } else {
             mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
         }
@@ -214,8 +252,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Initialise menu with visible countdown
     public void createMenu() {
 
-        batteryStatus = mContext.registerReceiver(null, ifilter);
+        batteryStatus = mContext.registerReceiver(null, batteryFilter);
 
+        /*
         isMenu = true;
         needsIncreasing = false;
         sendMessage(ControlService.MSG_ISMENU);
@@ -229,6 +268,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         createMenuLayout();
         setControlsMenu();
+        */
+        backToMenu();
 
         setBatteryLogo();
 
@@ -252,9 +293,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         onResume();
 
-        if (!isQuestionnairePresent) {
-                noQuestionnaires();
+        if (!isQuestionnairePresent && isBluetoothPresent) {
+            noQuestionnaires();
+        } else if (!isBluetoothPresent) {
+            noBluetooth();
+        } else {
+            Log.e(LOG, "Bluetooth: "+isBluetoothPresent+", Quest: "+isQuestionnairePresent);
         }
+
+        mCountDownHandler.post(mTimeRunnable);
 
     }
 
@@ -594,6 +641,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 createQuestionnaire();
             }
         });
+
+        mCountDownHandler.post(mBatteryRunnable);
     }
 
     // Removes specific view from list and updates viewpager
@@ -703,7 +752,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         if(isMenu && isTimer) {
             isCountDownRunning = false;
-            if (isQuestionnairePresent) {
+            if (isQuestionnairePresent && isBluetoothPresent) {
                 startCountDown();
             }
         } else {

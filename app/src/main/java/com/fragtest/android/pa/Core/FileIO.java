@@ -70,7 +70,7 @@ public class FileIO {
     private boolean scanConfigMode() {
         File fileConfig = new File(getFolderPath() + File.separator + FILE_CONFIG);
 
-        new SingleMediaScanner(mContext, fileConfig);
+        //new SingleMediaScanner(mContext, fileConfig);
         return fileConfig.exists();
     }
 
