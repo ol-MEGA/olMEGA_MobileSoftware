@@ -22,7 +22,8 @@ public class Vibration {
     private final static int mVibrationDuration_ms = 200;
     private final static int mLengthWakeLock_ms = 2000;
     private static int mNumberOfBursts = 0;
-    private final static int mMaxVibrationDuration_ms = 30000;
+    private final static int mMaxVibrationDuration_ms = 30*1000; // 30*1000
+    private final static int mTimeUntilNextReminder = 30*60*1000; // 30*60*1000
     private static int mMaxNumberOfBursts;
     private final Handler mTimerHandler = new Handler();
     private boolean isActive = false;
@@ -36,6 +37,9 @@ public class Vibration {
                 mNumberOfBursts++;
                 Log.e(LOG, "Ring.");
                 mTimerHandler.postDelayed(this, mVibrationInterval_ms);
+            } else if (isActive && mNumberOfBursts >= mMaxNumberOfBursts) {
+                mNumberOfBursts = 0;
+                mTimerHandler.postDelayed(loop, mTimeUntilNextReminder);
             }
         }
     };

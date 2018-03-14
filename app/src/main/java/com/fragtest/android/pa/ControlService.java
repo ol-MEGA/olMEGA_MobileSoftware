@@ -270,7 +270,6 @@ public class ControlService extends Service {
                 case MSG_PROPOSITION_ACCEPTED:
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
-                    //TODO: perform checks
                     mVibration.repeatingBurstOff();
                     if (!isActiveQuestionnaire) {
                         startQuestionnaire("auto");
