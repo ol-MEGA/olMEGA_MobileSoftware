@@ -33,6 +33,14 @@ public class Vibration {
         @Override
         public void run() {
             if (isActive && (mNumberOfBursts < mMaxNumberOfBursts)) {
+
+                if (mNumberOfBursts == 0) {
+                    PowerManager pm = (PowerManager) mContext.getSystemService(
+                            Context.POWER_SERVICE);
+                    PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                            PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
+                    wakeLock.acquire(mLengthWakeLock_ms);
+                }
                 mVibrator.vibrate(mVibrationDuration_ms);
                 mNumberOfBursts++;
                 Log.e(LOG, "Ring.");
@@ -57,11 +65,11 @@ public class Vibration {
     public void repeatingBurstOn() {
         if (!isActive) { // ensure that only one alarm is annoying us at any given time
             mTimerHandler.post(loop);
-            PowerManager pm = (PowerManager) mContext.getSystemService(
+            /*PowerManager pm = (PowerManager) mContext.getSystemService(
                     Context.POWER_SERVICE);
             PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
                     PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-            wakeLock.acquire(mLengthWakeLock_ms);
+            wakeLock.acquire(mLengthWakeLock_ms);*/
         }
         mNumberOfBursts = 0;
         isActive = true;

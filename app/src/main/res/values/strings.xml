@@ -9,6 +9,7 @@
     <string name="menuText">Take Ques-tionnaire</string>
     <string name="noQuestionnaires">Unable to load Questionnaire.</string>
     <string name="noBluetooth">Unable to connect to device.</string>
+    <string name="batteryCritical">Please charge the smartphone.</string>
     
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>

@@ -9,6 +9,7 @@
     <string name="menuText">Starte Frage-bogen</string>
     <string name="noQuestionnaires">Fragebogen kann nicht geladen werden.</string>
     <string name="noBluetooth">Aufnahmegerät kann nicht gefunden werden.</string>
+    <string name="batteryCritical">Bitte laden Sie das Smartphone.</string>
 
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>

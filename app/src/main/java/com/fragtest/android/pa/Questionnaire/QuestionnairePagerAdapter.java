@@ -64,6 +64,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean isImmersive = false;
     private Units mUnits;
     private float batteryPlaceholderWeight;
+    private float batteryCritical = 0.6f;
+    private boolean bBatteryCritical = false;
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
@@ -85,6 +87,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         @Override
         public void run() {
             setBatteryLogo();
+            checkBatteryCritical();
             mCountDownHandler.postDelayed(this, mUpdateIntervalBattery);
         }
     };
@@ -225,7 +228,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
                 0,
-                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getbatteryInfo())
+                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getBatteryInfo())
         );
         regparams.leftMargin = mUnits.convertDpToPixels(0);
         regparams.rightMargin = mUnits.convertDpToPixels(10);
@@ -234,19 +237,45 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
                 0,
-                (1.0f-2* batteryPlaceholderWeight)*getbatteryInfo()
+                (1.0f-2* batteryPlaceholderWeight)* getBatteryInfo()
         );
         progparams.leftMargin = mUnits.convertDpToPixels(0);
         progparams.rightMargin = mUnits.convertDpToPixels(0);
         mMainActivity.mBatteryProg.setLayoutParams(progparams);
     }
 
-    private float getbatteryInfo() {
+    private float getBatteryInfo() {
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        return level / (float)scale;
+        return level / (float) scale;
+    }
+
+    private void checkBatteryCritical() {
+
+        if (getBatteryInfo() < batteryCritical) {
+            mMenuPage.setText("Battery Critical");
+            bBatteryCritical = true;
+            announceBatteryCritical();
+        } else if (bBatteryCritical) {
+            bBatteryCritical = false;
+            announceBatteryNormal();
+        }
+    }
+
+    private void announceBatteryCritical() {
+        mMenuPage.setText(mContext.getResources().getString(R.string.batteryCritical));
+    }
+
+    private void announceBatteryNormal() {
+        if (!isQuestionnairePresent && isBluetoothPresent) {
+            noQuestionnaires();
+        } else if (isBluetoothPresent) {
+            noBluetooth();
+        } else {
+            mMenuPage.setText();
+        }
     }
 
     // Initialise menu with visible countdown

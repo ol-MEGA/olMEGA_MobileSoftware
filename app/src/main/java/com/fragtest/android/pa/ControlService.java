@@ -184,23 +184,23 @@ public class ControlService extends Service {
             //BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                Toast.makeText(getApplicationContext(), "Device found.", Toast.LENGTH_SHORT).show();
+                //.makeText(getApplicationContext(), "Device found.", Toast.LENGTH_SHORT).show();
                 Log.e(LOG, "BTDEVICES found.");
             }
             else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                Toast.makeText(getApplicationContext(), "Device connected.", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Device connected.", Toast.LENGTH_SHORT).show();
                 announceBTConnected();
             }
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Toast.makeText(getApplicationContext(), "Discovery finished.", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Discovery finished.", Toast.LENGTH_SHORT).show();
                 Log.e(LOG, "BTDEVICES finished.");
             }
             else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
-                Toast.makeText(getApplicationContext(), "Device about to disconnect.", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Device about to disconnect.", Toast.LENGTH_SHORT).show();
                 Log.e(LOG, "BTDEVICES about to disconnect.");
             }
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                Toast.makeText(getApplicationContext(), "Device disconected.", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Device disconected.", Toast.LENGTH_SHORT).show();
                 announceBTDisconnected();
             }
         }
