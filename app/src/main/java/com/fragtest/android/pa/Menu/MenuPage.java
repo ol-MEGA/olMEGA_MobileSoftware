@@ -5,9 +5,12 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.fragtest.android.pa.ControlService;
@@ -15,6 +18,7 @@ import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -33,6 +37,12 @@ public class MenuPage extends AppCompatActivity {
     private TextView mCountDownRemaining, mStartQuestionnaire, mDate;
     private String[] mTempTextCountDownRemaining;
     private SimpleDateFormat mDateFormat;
+    private ArrayList<String> mErrorList = new ArrayList<>();
+    private ArrayAdapter<String> mErrorAdapter;
+
+    public final int ERROR_NOBT = 0;
+    public final int ERROR_NOQUEST = 1;
+    public final int ERROR_BATT = 2;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -43,6 +53,61 @@ public class MenuPage extends AppCompatActivity {
         mTempTextCountDownRemaining = mCountDownString.split("%");
         mDateFormat = new SimpleDateFormat("dd.MM.yy, HH:mm", Locale.ROOT);
 
+    }
+
+    private String getMessage(int error) {
+        switch(error) {
+            case ERROR_BATT:
+                return mContext.getResources().getString(R.string.batteryCritical);
+            case ERROR_NOBT:
+                return mContext.getResources().getString(R.string.noBluetooth);
+            case ERROR_NOQUEST:
+                return mContext.getResources().getString(R.string.noQuestionnaires);
+            default:
+                return null;
+        }
+    }
+
+    private  void reactToErrors() {
+
+        Log.e(LOG, "Contains BT: "+mErrorList.contains(getMessage(ERROR_NOBT))+", contains Quest: "+mErrorList.contains(getMessage(ERROR_NOQUEST)));
+
+        if (mErrorList.contains(getMessage(ERROR_NOBT)) || mErrorList.contains(getMessage(ERROR_NOQUEST))) {
+            disableQuestionnaire();
+            Log.e(LOG, "errorlist Disabling Quest");
+        } else {
+            enableQuestionnaire();
+            Log.e(LOG, "errorlist Enabling Quest");
+        }
+    }
+
+    private void enableQuestionnaire() {
+        setText(mContext.getResources().getString(R.string.menuText));
+        mStartQuestionnaire.setEnabled(true);
+    }
+
+    private void disableQuestionnaire() {
+        setText(mContext.getResources().getString(R.string.infoError));
+        mStartQuestionnaire.setEnabled(false);
+        mCountDownRemaining.setText("");
+    }
+
+    public void addError(int error) {
+        if (!mErrorList.contains(getMessage(error))) {
+            mErrorList.add(getMessage(error));
+            mErrorAdapter.notifyDataSetChanged();
+            Log.e(LOG, "errorlist: " + mErrorList.size() + " - add");
+        }
+        reactToErrors();
+    }
+
+    public void removeError(int error) {
+        if (mErrorList.contains(getMessage(error))) {
+            mErrorList.remove(getMessage(error));
+            mErrorAdapter.notifyDataSetChanged();
+            Log.e(LOG, "errorlist: " + mErrorList.size() + " - remove");
+        }
+        reactToErrors();
     }
 
     public LinearLayout generateView() {
@@ -89,7 +154,15 @@ public class MenuPage extends AppCompatActivity {
         });
 
         // Bottom View (blank)
-        View tempViewBottom = new View(mContext);
+        ListView mErrorView = new ListView(mContext);
+        mErrorAdapter = new ArrayAdapter<String>(
+                mContext,
+                android.R.layout.simple_list_item_1,
+                mErrorList );
+        LinearLayout.LayoutParams tempErrorParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                0, 0.3f);
+        mErrorView.setAdapter(mErrorAdapter);
 
         mDate = new TextView(mContext);
         mDate.setText("DD.MM.YY, HH:MM");
@@ -100,7 +173,7 @@ public class MenuPage extends AppCompatActivity {
         centerLayout.addView(mStartQuestionnaire);
         menuLayout.addView(mCountDownRemaining, tempTopParams);
         menuLayout.addView(centerLayout, centerParams);
-        menuLayout.addView(tempViewBottom, tempTopParams);
+        menuLayout.addView(mErrorView, tempErrorParams);
         menuLayout.addView(mDate, tempTopParams);
 
         return menuLayout;
@@ -127,7 +200,6 @@ public class MenuPage extends AppCompatActivity {
     }
 
     public void setText(String text) {
-
         StartText = text;
         mStartQuestionnaire.setText(cleanUpString(text));
         mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);

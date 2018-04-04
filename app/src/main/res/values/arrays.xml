@@ -20,6 +20,11 @@
         <item>16000</item>
     </string-array>
 
+    <integer-array name="batteryStates">
+        <item>66</item>
+        <item>33</item>
+    </integer-array>
+
     <string-array name="permissionMessages">
         <item>Please grant permission to read/write storage</item>
         <item>Please grant permission to read/write storage</item>

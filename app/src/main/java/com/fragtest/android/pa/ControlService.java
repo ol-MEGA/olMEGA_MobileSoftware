@@ -54,7 +54,7 @@ import java.util.Set;
 public class ControlService extends Service {
 
     static final String LOG = "ControlService";
-    static final boolean needsBluetooth = false;
+    static final boolean needsBluetooth = true;
 
     /**
      * Constants for messaging. Should(!) be self-explanatory.
@@ -346,7 +346,7 @@ public class ControlService extends Service {
                     Logger.info("New cache:\t{}", filename);
 
                     //just to keep sure for now
-                    messageClient(MSG_BT_CONNECTED);
+                    //messageClient(MSG_BT_CONNECTED);
 
                     break;
 
@@ -547,18 +547,20 @@ public class ControlService extends Service {
     }
 
     private void startRecording() {
-        Log.d(LOG, "Start caching audio");
-        Logger.info("Start caching audio");
+        if (isQuestionnairePresent) {
+            Log.d(LOG, "Start caching audio");
+            Logger.info("Start caching audio");
 
-        audioRecorder = new AudioRecorder(
-                serviceMessenger,
-                Integer.parseInt(chunklengthInS),
-                Integer.parseInt(samplerate),
-                isWave);
+            audioRecorder = new AudioRecorder(
+                    serviceMessenger,
+                    Integer.parseInt(chunklengthInS),
+                    Integer.parseInt(samplerate),
+                    isWave);
 
-        audioRecorder.start();
-        isRecording = true;
-        messageClient(MSG_START_RECORDING);
+            audioRecorder.start();
+            isRecording = true;
+            messageClient(MSG_START_RECORDING);
+        }
     }
 
     private void stopRecording() {

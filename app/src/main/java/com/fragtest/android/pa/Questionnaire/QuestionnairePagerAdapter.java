@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.Units;
+import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
@@ -63,9 +64,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Help mHelpScreen;
     private boolean isImmersive = false;
     private Units mUnits;
+    private Vibration mVibration;
     private float batteryPlaceholderWeight;
-    private float batteryCritical = 0.6f;
+    private int[] batteryStates;
+    private float batteryCritical = 0.90f;
     private boolean bBatteryCritical = false;
+
+
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
@@ -77,8 +82,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateIntervalStatusBar);
-
-                //setBatteryLogo();
             }
         }
     };
@@ -120,27 +123,29 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         isImmersive = immersive;
         mUnits = new Units(mContext);
         batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
+        batteryStates = mContext.getResources().getIntArray(R.array.batteryStates);
+        mVibration =  new Vibration(mContext);
         handleControls();
     }
 
     public void noQuestionnaires() {
         isQuestionnairePresent = false;
         isTimer = false;
-        mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
-        mMenuPage.updateCountDownText("");
+        mMenuPage.addError(mMenuPage.ERROR_NOQUEST);
     }
 
     public void noBluetooth() {
         isBluetoothPresent = false;
         stopCountDown();
-        mMenuPage.setText(mContext.getResources().getString(R.string.noBluetooth));
-        mMenuPage.updateCountDownText("");
+        mMenuPage.addError(mMenuPage.ERROR_NOBT);
+        //mMenuPage.updateCountDownText("");
         if (isMenu) {
             mCountDownHandler.post(mHideProgressBarRunnable);
         }
     }
 
     public void setBluetoothPresent() {
+        mMenuPage.removeError(mMenuPage.ERROR_NOBT);
         isBluetoothPresent = true;
     }
 
@@ -156,6 +161,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void questionnairePresent() {
         isQuestionnairePresent = true;
+        mMenuPage.removeError(mMenuPage.ERROR_NOQUEST);
     }
 
     // Calculation of remaining time and visual update
@@ -183,21 +189,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
-    public void displayManualStart() {
-        if (isQuestionnairePresent) {
-            mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
-        } else if (!isBluetoothPresent) {
-            mMenuPage.setText(mContext.getResources().getString(R.string.noBluetooth));
-        } else {
-            mMenuPage.setText(mContext.getResources().getString(R.string.noQuestionnaires));
-        }
-    }
-
     // Start/restart countdown and determine validity
     public void startCountDown() {
         mMenuPage.resetStartTextSize();
-        mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
-        Log.i(LOG, "Text set to: " + mContext.getResources().getString(R.string.menuText));
 
         if (isTimer)
             if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
@@ -249,32 +243,47 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        return level / (float) scale;
+        float info = level / (float) scale;
+       setBatteryColor(info);
+
+        return info;
+    }
+
+    private void setBatteryColor(float level) {
+        if (level > batteryStates[0]) {
+
+        }
     }
 
     private void checkBatteryCritical() {
 
-        if (getBatteryInfo() < batteryCritical) {
-            mMenuPage.setText("Battery Critical");
+        Log.e(LOG, "battery: "+getBatteryInfo());
+
+        if (getBatteryInfo() < batteryCritical && !bBatteryCritical) {
             bBatteryCritical = true;
             announceBatteryCritical();
         } else if (bBatteryCritical) {
             bBatteryCritical = false;
             announceBatteryNormal();
+            mMenuPage.removeError(mMenuPage.ERROR_BATT);
         }
     }
 
     private void announceBatteryCritical() {
-        mMenuPage.setText(mContext.getResources().getString(R.string.batteryCritical));
+        mMenuPage.addError(mMenuPage.ERROR_BATT);
+        mVibration.singleBurst();
     }
 
     private void announceBatteryNormal() {
         if (!isQuestionnairePresent && isBluetoothPresent) {
             noQuestionnaires();
+            mVibration.singleBurst();
         } else if (isBluetoothPresent) {
             noBluetooth();
+            mVibration.singleBurst();
         } else {
             mMenuPage.setText();
+            mVibration.singleBurst();
         }
     }
 
@@ -283,21 +292,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         batteryStatus = mContext.registerReceiver(null, batteryFilter);
 
-        /*
-        isMenu = true;
-        needsIncreasing = false;
-        sendMessage(ControlService.MSG_ISMENU);
-        // Instantiates a MenuPage Object based on Contents of raw XML File
-        mMenuPage = new MenuPage(mMainActivity, this);
-        mNUM_PAGES = 1;
-        mViewPager.setOffscreenPageLimit(0);
-
-        mListOfActiveViews = new ArrayList<>();
-        mListOfViewsStorage = new ArrayList<>();
-
-        createMenuLayout();
-        setControlsMenu();
-        */
         backToMenu();
 
         setBatteryLogo();
@@ -331,6 +325,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
 
         mCountDownHandler.post(mTimeRunnable);
+        checkBatteryCritical();
 
     }
 
@@ -565,7 +560,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         LinearLayout layout = mMenuPage.generateView();
         mMenuPage.updateCountDownText("");
-        mMenuPage.setText("");
+        //mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
 
         layout.setId(0);
         // Adds the Layout to List carrying all ACTIVE Views
@@ -796,6 +791,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
 
         setBatteryLogo();
+        //checkBatteryCritical();
 
         isInForeGround = true;
     }

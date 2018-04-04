@@ -42,7 +42,7 @@
             android:layout_weight="0"
             android:background="@android:drawable/ic_btn_speak_now"
             android:backgroundTint="@android:color/darker_gray"
-            android:visibility="invisible">
+            android:visibility="visible">
 
         </View>
 

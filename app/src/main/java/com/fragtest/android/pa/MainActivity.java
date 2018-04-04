@@ -97,8 +97,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_STATUS_FULL;
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
 
             if (isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
@@ -402,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setBTLogoConnected() {
-        showRecordingButton = true;
+        //showRecordingButton = true;
         setRecordingVisibility();
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
@@ -410,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setBTLogoDisconnected() {
-        showRecordingButton = false;
+        //showRecordingButton = false;
         setRecordingVisibility();
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
@@ -583,12 +582,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_BT_CONNECTED:
-                    setBTLogoConnected();
+                    //setBTLogoConnected();
                     mAdapter.setBluetoothPresent();
                     break;
 
                 case ControlService.MSG_BT_DISCONNECTED:
-                    setBTLogoDisconnected();
+                    //setBTLogoDisconnected();
                     mAdapter.noBluetooth();
                     break;
 
@@ -659,9 +658,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_START_RECORDING:
+                    setBTLogoConnected();
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
+                    setBTLogoDisconnected();
                     break;
 
                 default:
