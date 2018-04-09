@@ -100,6 +100,8 @@ public class ControlService extends Service {
     public static final int MSG_APPLICATION_SHUTDOWN = 61;
     public static final int MSG_BATTERY_CRITICAL = 62;
     public static final int MSG_BATTERY_LEVEL_INFO = 63;
+    public static final int MSG_CHARGING_OFF = 64;
+    public static final int MSG_CHARGING_ON = 65;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -425,9 +427,27 @@ public class ControlService extends Service {
 
                 case MSG_BATTERY_CRITICAL:
                     //TODO: Test this case
-                    Logger.info("CRITICAL battery level");
+                    Logger.info("CRITICAL battery level: active");
                     stopRecording();
                     mBluetoothAdapter.disable();
+                    break;
+
+                case MSG_CHARGING_OFF:
+                    //TODO: Test this case
+                    Logger.info("Charging: inactive");
+                    if (!mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.enable();
+                    }
+                    break;
+
+                case MSG_CHARGING_ON:
+                    //TODO: Test this case
+                    Logger.info("Charging: active");
+                    stopRecording();
+                    if (mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.disable();
+                    }
+                    break;
 
                 default:
                     super.handleMessage(msg);

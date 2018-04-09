@@ -836,7 +836,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         setQuestionnaireProgressBar();
         setBatteryLogo();
-        //checkBatteryCritical();
 
         isInForeGround = true;
     }
@@ -849,9 +848,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void onStop() {
         isCountDownRunning = false;
-        //if (isMenu && !isPrefsInForeGround) {
-            //sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
-        //}
         if (!isMenu && !isPrefsInForeGround) {
             sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         }

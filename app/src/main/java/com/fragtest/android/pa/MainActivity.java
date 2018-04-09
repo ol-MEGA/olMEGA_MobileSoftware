@@ -45,6 +45,8 @@ import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
+import static com.fragtest.android.pa.ControlService.MSG_CHARGING_OFF;
+import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 
 
@@ -102,8 +104,10 @@ public class MainActivity extends AppCompatActivity {
 
             if (isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
+                messageService(MSG_CHARGING_ON);
             } else {
                 mCharging.setVisibility(View.INVISIBLE);
+                messageService(MSG_CHARGING_OFF);
             }
             // Announce charging and possibly remove battery error message
             mAdapter.setChargin(isCharging);
