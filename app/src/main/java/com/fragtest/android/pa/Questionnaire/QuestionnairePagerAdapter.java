@@ -124,6 +124,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity = (MainActivity) context;
         mViewPager = viewPager;
         mVersion = mMainActivity.getVersion();
+        batteryStatus = mContext.registerReceiver(null, batteryFilter);
         isImmersive = immersive;
         mUnits = new Units(mContext);
         batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
@@ -230,7 +231,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Initialise menu with visible countdown
     public void createMenu() {
 
-        batteryStatus = mContext.registerReceiver(null, batteryFilter);
         backToMenu();
         needsIncreasing = false;
         setBatteryLogo();
@@ -666,12 +666,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private void checkBatteryCritical() {
 
-        if (getBatteryInfo() < mBatteryLevelWarning && getBatteryInfo() > mBatteryLevelCritical && !isCharging) {
+        float batteryInfo = getBatteryInfo();
+
+        if (batteryInfo < mBatteryLevelWarning && batteryInfo > mBatteryLevelCritical && !isCharging) {
             if (!bBatteryCritical) {
                 bBatteryCritical = true;
                 announceBatteryWarning();
             }
-        } else if (getBatteryInfo() <= mBatteryLevelCritical){
+        } else if (batteryInfo <= mBatteryLevelCritical){
             if (!bBatteryCritical) {
                 bBatteryCritical = true;
                 announceBatteryCritical();

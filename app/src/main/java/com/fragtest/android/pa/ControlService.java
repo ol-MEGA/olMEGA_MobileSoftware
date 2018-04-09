@@ -257,18 +257,21 @@ public class ControlService extends Service {
 
                     messageClient(MSG_BT_DISCONNECTED);
 
-
-                    /*try {
+                    /*
+                    try {
                         mBluetoothAdapter.disable();
                         TimeUnit.SECONDS.sleep(1);
-                    } catch (Exception e) {
-                        Log.e(LOG, "Exception caught disabling Bluetooth.");
+                        mBluetoothAdapter.enable();
+                    } catch(InterruptedException exception) {
+                        exception.printStackTrace();
                     }*/
+
 
 
                     if (!mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.enable();
                     }
+
                     if (!needsBluetooth) {
                         announceBTConnected();
                     }
@@ -658,6 +661,8 @@ public class ControlService extends Service {
         if (useLogMode) {
             Logger.info("Display: on");
         }
+
+        //mBluetoothAdapter.disable();
 
         checkForPreferences();
     }

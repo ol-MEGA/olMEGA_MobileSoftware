@@ -8,10 +8,10 @@
     <string name="buttonTextOkay">OK</string>
     <string name="timeRemaining">Next Questionnaire scheduled in %m %s</string>
     <string name="menuText">Take Ques-tionnaire</string>
-    <string name="noQuestionnaires">Unable to load Questionnaire.</string>
-    <string name="noBluetooth">Unable to connect to device.</string>
-    <string name="batteryWarning">Please charge the smartphone.</string>
-    <string name="batteryCritical">Battery level critical - recording stopped.</string>
+    <string name="noQuestionnaires">• Unable to load Questionnaire.</string>
+    <string name="noBluetooth">• Unable to connect to device.</string>
+    <string name="batteryWarning">• Please charge the smartphone.</string>
+    <string name="batteryCritical">• Battery level critical - recording stopped.</string>
 
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>
