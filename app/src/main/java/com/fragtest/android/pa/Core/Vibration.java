@@ -7,6 +7,10 @@ import android.os.PowerManager;
 import android.os.Vibrator;
 import android.util.Log;
 
+import com.fragtest.android.pa.ControlService;
+
+import org.pmw.tinylog.Logger;
+
 import static android.content.Context.VIBRATOR_SERVICE;
 
 /**
@@ -42,6 +46,9 @@ public class Vibration {
                     wakeLock.acquire(mLengthWakeLock_ms);
                 }
                 mVibrator.vibrate(mVibrationDuration_ms);
+                if (ControlService.useLogMode) {
+                    Logger.info("Vibration: " + mVibrationDuration_ms);
+                }
                 mNumberOfBursts++;
                 Log.e(LOG, "Ring.");
                 mTimerHandler.postDelayed(this, mVibrationInterval_ms);
@@ -60,6 +67,9 @@ public class Vibration {
 
     public void singleBurst() {
         mVibrator.vibrate(mVibrationDuration_ms);
+        if (ControlService.useLogMode) {
+            Logger.info("Vibration: " + mVibrationDuration_ms);
+        }
     }
 
     public void repeatingBurstOn() {

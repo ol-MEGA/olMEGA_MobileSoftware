@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.BuildConfig;
 import android.support.v4.content.ContextCompat;
@@ -32,6 +33,9 @@ import java.util.List;
  */
 
 public class QuestionnairePagerAdapter extends PagerAdapter {
+
+    // In log mode, information about battery is added to log on a regular basis
+    private boolean bLogMode = true;
 
     private static String LOG = "Quest..PagerAdapter";
     final ViewPager mViewPager;
@@ -67,7 +71,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Vibration mVibration;
     private float batteryPlaceholderWeight;
     private int[] batteryStates;
-    private float batteryCritical = 0.90f;
+    private float mBatteryLevelWarning = 0.15f;
+    private float mBatteryLevelCritical = 0.05f;
     private boolean bBatteryCritical = false;
 
 
@@ -218,85 +223,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
-    private void setBatteryLogo() {
-        LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
-                mUnits.convertDpToPixels(12),
-                0,
-                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getBatteryInfo())
-        );
-        regparams.leftMargin = mUnits.convertDpToPixels(0);
-        regparams.rightMargin = mUnits.convertDpToPixels(10);
-        mMainActivity.mBatteryReg.setLayoutParams(regparams);
-
-        LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
-                mUnits.convertDpToPixels(12),
-                0,
-                (1.0f-2* batteryPlaceholderWeight)* getBatteryInfo()
-        );
-        progparams.leftMargin = mUnits.convertDpToPixels(0);
-        progparams.rightMargin = mUnits.convertDpToPixels(0);
-        mMainActivity.mBatteryProg.setLayoutParams(progparams);
-    }
-
-    private float getBatteryInfo() {
-
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-
-        float info = level / (float) scale;
-       setBatteryColor(info);
-
-        return info;
-    }
-
-    private void setBatteryColor(float level) {
-        if (level > batteryStates[0]) {
-
-        }
-    }
-
-    private void checkBatteryCritical() {
-
-        Log.e(LOG, "battery: "+getBatteryInfo());
-
-        if (getBatteryInfo() < batteryCritical && !bBatteryCritical) {
-            bBatteryCritical = true;
-            announceBatteryCritical();
-        } else if (bBatteryCritical) {
-            bBatteryCritical = false;
-            announceBatteryNormal();
-            mMenuPage.removeError(mMenuPage.ERROR_BATT);
-        }
-    }
-
-    private void announceBatteryCritical() {
-        mMenuPage.addError(mMenuPage.ERROR_BATT);
-        mVibration.singleBurst();
-    }
-
-    private void announceBatteryNormal() {
-        if (!isQuestionnairePresent && isBluetoothPresent) {
-            noQuestionnaires();
-            mVibration.singleBurst();
-        } else if (isBluetoothPresent) {
-            noBluetooth();
-            mVibration.singleBurst();
-        } else {
-            mMenuPage.setText();
-            mVibration.singleBurst();
-        }
-    }
-
     // Initialise menu with visible countdown
     public void createMenu() {
 
         batteryStatus = mContext.registerReceiver(null, batteryFilter);
-
         backToMenu();
-
+        needsIncreasing = false;
         setBatteryLogo();
-
         sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+        mMenuPage.rehashErrors();
     }
 
     public void backToMenu() {
@@ -560,7 +495,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         LinearLayout layout = mMenuPage.generateView();
         mMenuPage.updateCountDownText("");
-        //mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
+        mMenuPage.setText(mContext.getResources().getString(R.string.menuText));
+        mMenuPage.resetStartTextSize();
 
         layout.setId(0);
         // Adds the Layout to List carrying all ACTIVE Views
@@ -669,6 +605,106 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mCountDownHandler.post(mBatteryRunnable);
     }
 
+
+    /**
+     * Battery Related Methods
+     */
+
+
+    private void setBatteryLogo() {
+        LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
+                mUnits.convertDpToPixels(12),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getBatteryInfo())
+        );
+        regparams.leftMargin = mUnits.convertDpToPixels(0);
+        regparams.rightMargin = mUnits.convertDpToPixels(10);
+        mMainActivity.mBatteryReg.setLayoutParams(regparams);
+
+        LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
+                mUnits.convertDpToPixels(12),
+                0,
+                (1.0f-2* batteryPlaceholderWeight)* getBatteryInfo()
+        );
+        progparams.leftMargin = mUnits.convertDpToPixels(0);
+        progparams.rightMargin = mUnits.convertDpToPixels(0);
+        mMainActivity.mBatteryProg.setLayoutParams(progparams);
+    }
+
+    private float getBatteryInfo() {
+
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        float info = level / (float) scale;
+        setBatteryColor(info);
+
+        if (ControlService.useLogMode) {
+            // Send battery level info to Control Service for logging etc.
+            Bundle batteryLevelBundle = new Bundle();
+            batteryLevelBundle.putFloat("batteryLevel", info);
+            sendMessage(ControlService.MSG_BATTERY_LEVEL_INFO, batteryLevelBundle);
+        }
+
+        return info;
+    }
+
+    private void setBatteryColor(float level) {
+
+        if (level*100 > batteryStates[0]) {
+            mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.BatteryGreen));
+        } else if (level*100 <= batteryStates[0] && level*100 > batteryStates[1]) {
+            mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.BatteryYellow));
+        } else {
+            mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.JadeRed));
+        }
+    }
+
+    private void checkBatteryCritical() {
+
+        if (getBatteryInfo() < mBatteryLevelWarning && getBatteryInfo() > mBatteryLevelCritical) {
+            if (!bBatteryCritical) {
+                bBatteryCritical = true;
+                announceBatteryWarning();
+            }
+        } else if (getBatteryInfo() <= mBatteryLevelCritical){
+            if (!bBatteryCritical) {
+                bBatteryCritical = true;
+                announceBatteryCritical();
+            }
+        } else {
+            if (bBatteryCritical) {
+                bBatteryCritical = false;
+                announceBatteryNormal();
+            }
+        }
+    }
+
+    private void announceBatteryWarning() {
+        mMenuPage.addError(mMenuPage.ERROR_BATT);
+        mMenuPage.removeError(mMenuPage.ERROR_BATT_CRIT);
+        mVibration.singleBurst();
+    }
+
+    private void announceBatteryCritical() {
+        mMenuPage.addError(mMenuPage.ERROR_BATT_CRIT);
+        mMenuPage.removeError(mMenuPage.ERROR_BATT);
+        mVibration.singleBurst();
+        sendMessage(ControlService.MSG_BATTERY_CRITICAL);
+    }
+
+    private void announceBatteryNormal() {
+
+        mMenuPage.removeError(mMenuPage.ERROR_BATT);
+        mVibration.singleBurst();
+    }
+
+
+    /**
+     * Array Adapter Methods
+     * */
+
+
     // Removes specific view from list and updates viewpager
     int removeView(int position) {
 
@@ -754,6 +790,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity.messageService(what);
     }
 
+    // Message service for communication with ControlService
+    public void sendMessage(int what, Bundle data) {
+        mMainActivity.messageService(what, data);
+    }
+
     public void setPrefsInForeGround(boolean state) {
         isPrefsInForeGround = state;
     }
@@ -779,9 +820,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             if (isQuestionnairePresent && isBluetoothPresent) {
                 startCountDown();
             }
-        } else {
-            // This should not be needed but is due to some weird behaviour.
-            mCountDownHandler.post(mHideProgressBarRunnable);
         }
 
         if (isMenu && needsIncreasing) {
@@ -790,6 +828,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             setQuestionnaireProgressBar(0f);
         }
 
+        setQuestionnaireProgressBar();
         setBatteryLogo();
         //checkBatteryCritical();
 

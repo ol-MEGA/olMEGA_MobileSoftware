@@ -98,6 +98,8 @@ public class ControlService extends Service {
 
     // 6* - application
     public static final int MSG_APPLICATION_SHUTDOWN = 61;
+    public static final int MSG_BATTERY_CRITICAL = 62;
+    public static final int MSG_BATTERY_LEVEL_INFO = 63;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -154,6 +156,8 @@ public class ControlService extends Service {
 
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
+    public static final boolean useLogMode = true;
+
     Context context = this;
 
 
@@ -176,6 +180,21 @@ public class ControlService extends Service {
         }
     };
 
+    private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            switch (action) {
+                case "android.intent.action.SCREEN_ON":
+                    Logger.info("Display: on");
+                    break;
+                case "android.intent.action.SCREEN_OFF":
+                    Logger.info("Display: off");
+                    break;
+            }
+        }
+    };
+
     //The BroadcastReceiver that listens for bluetooth broadcasts
     private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
         @Override
@@ -190,6 +209,7 @@ public class ControlService extends Service {
             else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 //Toast.makeText(getApplicationContext(), "Device connected.", Toast.LENGTH_SHORT).show();
                 announceBTConnected();
+                Logger.info("Bluetooth: connected");
             }
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 //Toast.makeText(getApplicationContext(), "Discovery finished.", Toast.LENGTH_SHORT).show();
@@ -202,6 +222,7 @@ public class ControlService extends Service {
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 //Toast.makeText(getApplicationContext(), "Device disconected.", Toast.LENGTH_SHORT).show();
                 announceBTDisconnected();
+                Logger.info("Bliuetooth: disconnected");
             }
         }
     };
@@ -235,6 +256,15 @@ public class ControlService extends Service {
                     messageClient(MSG_SET_VISIBILITY, bundleShow);
 
                     messageClient(MSG_BT_DISCONNECTED);
+
+
+                    /*try {
+                        mBluetoothAdapter.disable();
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (Exception e) {
+                        Log.e(LOG, "Exception caught disabling Bluetooth.");
+                    }*/
+
 
                     if (!mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.enable();
@@ -385,6 +415,17 @@ public class ControlService extends Service {
                     mBluetoothAdapter.disable();
                     break;
 
+                case MSG_BATTERY_LEVEL_INFO:
+                    float batteryLevel = msg.getData().getFloat("batteryLevel");
+                    Logger.info("battery level: " + batteryLevel);
+                    break;
+
+                case MSG_BATTERY_CRITICAL:
+                    //TODO: Test this case
+                    Logger.info("CRITICAL battery level");
+                    stopRecording();
+                    mBluetoothAdapter.disable();
+
                 default:
                     super.handleMessage(msg);
                     break;
@@ -410,16 +451,6 @@ public class ControlService extends Service {
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
-
-
-        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
-
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        this.registerReceiver(mBluetoothStateReceiver, filter);
 
         Log.e(LOG,"ControlService started");
     }
@@ -604,6 +635,29 @@ public class ControlService extends Service {
         Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
         mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
         mVibration = new Vibration(this);
+
+        if (useLogMode) {
+            // Register receiver for display activity (if used in log mode)
+            IntentFilter displayFilter = new IntentFilter();
+            displayFilter.addAction(Intent.ACTION_SCREEN_ON);
+            displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
+            this.registerReceiver(mDisplayReceiver, displayFilter);
+        }
+
+        // Register receiver for alarm
+        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
+
+        // Register broadcasts receiver for bluetooth state change
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        this.registerReceiver(mBluetoothStateReceiver, filter);
+
+        // It is safe to say, that the display is illuminated on system/application startup
+        if (useLogMode) {
+            Logger.info("Display: on");
+        }
 
         checkForPreferences();
     }

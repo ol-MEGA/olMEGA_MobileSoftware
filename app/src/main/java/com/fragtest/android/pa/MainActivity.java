@@ -43,7 +43,6 @@ import java.util.Set;
 
 import static android.R.color.darker_gray;
 import static android.R.color.holo_green_dark;
-import static android.R.color.holo_green_light;
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
@@ -97,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+            boolean isCharging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
 
             if (isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
@@ -405,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
         setRecordingVisibility();
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        holo_green_light, null)));
+                        R.color.BatteryGreen, null)));
     }
 
     private void setBTLogoDisconnected() {

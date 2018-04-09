@@ -43,6 +43,7 @@ public class MenuPage extends AppCompatActivity {
     public final int ERROR_NOBT = 0;
     public final int ERROR_NOQUEST = 1;
     public final int ERROR_BATT = 2;
+    public final int ERROR_BATT_CRIT = 3;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -58,38 +59,33 @@ public class MenuPage extends AppCompatActivity {
     private String getMessage(int error) {
         switch(error) {
             case ERROR_BATT:
-                return mContext.getResources().getString(R.string.batteryCritical);
+                return mContext.getResources().getString(R.string.batteryWarning);
             case ERROR_NOBT:
                 return mContext.getResources().getString(R.string.noBluetooth);
             case ERROR_NOQUEST:
                 return mContext.getResources().getString(R.string.noQuestionnaires);
+            case ERROR_BATT_CRIT:
+                return mContext.getResources().getString(R.string.batteryCritical);
             default:
                 return null;
         }
     }
 
-    private  void reactToErrors() {
+    private void reactToErrors() {
 
-        Log.e(LOG, "Contains BT: "+mErrorList.contains(getMessage(ERROR_NOBT))+", contains Quest: "+mErrorList.contains(getMessage(ERROR_NOQUEST)));
+        for (int iString = 0; iString < mErrorList.size(); iString++) {
+            Log.e(LOG, "error "+ iString + ": " + mErrorList.get(iString));
+        }
 
-        if (mErrorList.contains(getMessage(ERROR_NOBT)) || mErrorList.contains(getMessage(ERROR_NOQUEST))) {
+        if (mErrorList.contains(getMessage(ERROR_NOBT)) ||
+                mErrorList.contains(getMessage(ERROR_NOQUEST)) ||
+                mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
             disableQuestionnaire();
             Log.e(LOG, "errorlist Disabling Quest");
         } else {
             enableQuestionnaire();
             Log.e(LOG, "errorlist Enabling Quest");
         }
-    }
-
-    private void enableQuestionnaire() {
-        setText(mContext.getResources().getString(R.string.menuText));
-        mStartQuestionnaire.setEnabled(true);
-    }
-
-    private void disableQuestionnaire() {
-        setText(mContext.getResources().getString(R.string.infoError));
-        mStartQuestionnaire.setEnabled(false);
-        mCountDownRemaining.setText("");
     }
 
     public void addError(int error) {
@@ -108,6 +104,21 @@ public class MenuPage extends AppCompatActivity {
             Log.e(LOG, "errorlist: " + mErrorList.size() + " - remove");
         }
         reactToErrors();
+    }
+
+    public void rehashErrors() {
+        mErrorAdapter.notifyDataSetChanged();
+    }
+
+    private void enableQuestionnaire() {
+        setText(mContext.getResources().getString(R.string.menuText));
+        mStartQuestionnaire.setEnabled(true);
+    }
+
+    private void disableQuestionnaire() {
+        setText(mContext.getResources().getString(R.string.infoError));
+        mStartQuestionnaire.setEnabled(false);
+        mCountDownRemaining.setText("");
     }
 
     public LinearLayout generateView() {
@@ -149,11 +160,12 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                resetStartTextSize();
                 mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
 
-        // Bottom View (blank)
+        // Error View
         ListView mErrorView = new ListView(mContext);
         mErrorAdapter = new ArrayAdapter<String>(
                 mContext,
@@ -163,6 +175,8 @@ public class MenuPage extends AppCompatActivity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0, 0.3f);
         mErrorView.setAdapter(mErrorAdapter);
+        mErrorView.setOnItemClickListener(null);
+        mErrorView.setDividerHeight(0);
 
         mDate = new TextView(mContext);
         mDate.setText("DD.MM.YY, HH:MM");
