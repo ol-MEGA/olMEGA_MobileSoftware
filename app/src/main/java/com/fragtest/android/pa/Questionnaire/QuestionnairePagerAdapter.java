@@ -133,9 +133,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         handleControls();
     }
 
-    public void setChargin(boolean charging) {
+    public void setCharging(boolean charging) {
         isCharging = charging;
         checkBatteryCritical();
+        announceBatteryCharging();
     }
 
     public void noQuestionnaires() {
@@ -678,7 +679,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 bBatteryCritical = true;
                 announceBatteryCritical();
             }
-        } else {
+        } else if (isCharging) {
             if (bBatteryCritical) {
                 bBatteryCritical = false;
                 announceBatteryNormal();
@@ -695,14 +696,16 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private void announceBatteryCritical() {
         mMenuPage.addError(mMenuPage.ERROR_BATT_CRIT);
         mMenuPage.removeError(mMenuPage.ERROR_BATT);
-        mVibration.singleBurst();
         sendMessage(ControlService.MSG_BATTERY_CRITICAL);
     }
 
     private void announceBatteryNormal() {
-
         mMenuPage.removeError(mMenuPage.ERROR_BATT);
         mVibration.singleBurst();
+    }
+
+    private void announceBatteryCharging() {
+        mMenuPage.setCharging(isCharging);
     }
 
 

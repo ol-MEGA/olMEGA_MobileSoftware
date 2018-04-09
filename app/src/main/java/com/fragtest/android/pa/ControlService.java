@@ -102,6 +102,7 @@ public class ControlService extends Service {
     public static final int MSG_BATTERY_LEVEL_INFO = 63;
     public static final int MSG_CHARGING_OFF = 64;
     public static final int MSG_CHARGING_ON = 65;
+    public static final int MSG_CHARGING_ON_PRE = 66;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -113,6 +114,7 @@ public class ControlService extends Service {
     private XMLReader mXmlReader;
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
+    private static boolean isCharging = false;
 
     public static final String FILENAME_LOG = "log.txt";
 
@@ -224,7 +226,7 @@ public class ControlService extends Service {
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 //Toast.makeText(getApplicationContext(), "Device disconected.", Toast.LENGTH_SHORT).show();
                 announceBTDisconnected();
-                Logger.info("Bliuetooth: disconnected");
+                Logger.info("Bluetooth: disconnected");
             }
         }
     };
@@ -257,27 +259,23 @@ public class ControlService extends Service {
 
                     messageClient(MSG_SET_VISIBILITY, bundleShow);
 
+                    // Set and announce bluetooth disabled - then enable it to force recognition via
+                    // broadcast receiver. This way, a connection can be made with an already
+                    // running transmitter
+                    mBluetoothAdapter.disable();
                     messageClient(MSG_BT_DISCONNECTED);
 
-                    /*
-                    try {
-                        mBluetoothAdapter.disable();
-                        TimeUnit.SECONDS.sleep(1);
-                        mBluetoothAdapter.enable();
-                    } catch(InterruptedException exception) {
-                        exception.printStackTrace();
-                    }*/
-
-
-
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
+                    if (!isCharging) {
+                        if (!mBluetoothAdapter.isEnabled()) {
+                            mBluetoothAdapter.enable();
+                        }
+                    } else {
+                        mVibration.singleBurst();
                     }
 
                     if (!needsBluetooth) {
                         announceBTConnected();
                     }
-
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -285,8 +283,9 @@ public class ControlService extends Service {
                     Logger.info("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
+                    } else {
+                        mBluetoothAdapter.disable();
                     }
-                    mBluetoothAdapter.disable();
                     break;
 
                 case MSG_GET_STATUS:
@@ -417,36 +416,51 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-                    mBluetoothAdapter.disable();
+                    stopRecording();
+                    if (mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.disable();
+                    }
                     break;
 
                 case MSG_BATTERY_LEVEL_INFO:
                     float batteryLevel = msg.getData().getFloat("batteryLevel");
                     Logger.info("battery level: " + batteryLevel);
+                    Log.e(LOG, "Battery Level Info: "+batteryLevel);
                     break;
 
                 case MSG_BATTERY_CRITICAL:
                     //TODO: Test this case
                     Logger.info("CRITICAL battery level: active");
-                    stopRecording();
-                    mBluetoothAdapter.disable();
-                    break;
-
-                case MSG_CHARGING_OFF:
-                    //TODO: Test this case
-                    Logger.info("Charging: inactive");
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
-                    }
-                    break;
-
-                case MSG_CHARGING_ON:
-                    //TODO: Test this case
-                    Logger.info("Charging: active");
+                    mVibration.singleBurst();
                     stopRecording();
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
+                    break;
+
+                case MSG_CHARGING_OFF:
+                    Logger.info("Charging: inactive");
+                    isCharging = false;
+                    if (!mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.enable();
+                    } //else {
+                        mVibration.singleBurst();
+                    //}
+                    break;
+
+                case MSG_CHARGING_ON:
+                    isCharging = true;
+                    Logger.info("Charging: active");
+                    stopRecording();
+                    if (mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.disable();
+                    } //else {
+                        mVibration.singleBurst();
+                    //}
+                    break;
+
+                case MSG_CHARGING_ON_PRE:
+                    isCharging = true;
                     break;
 
                 default:
@@ -593,6 +607,10 @@ public class ControlService extends Service {
         } else {
             Log.d(LOG, "mClientMessenger is null.");
         }
+    }
+
+    public static void setCharging(boolean charging) {
+        isCharging = charging;
     }
 
     public void startActivity() {
@@ -926,7 +944,7 @@ public class ControlService extends Service {
             data.putString("head", head);
             data.putString("foot", foot);
             data.putString("surveyUri", surveyUri);
-            data.putString("motivation", "<motivation=\"" + motivation + "\">");
+            data.putString("motivation", "<motivation motivation =\"" + motivation + "\"/>");
 
             messageClient(MSG_START_QUESTIONNAIRE, data);
 

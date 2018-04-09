@@ -67,6 +67,11 @@ public class Vibration {
 
     public void singleBurst() {
         mVibrator.vibrate(mVibrationDuration_ms);
+        PowerManager pm = (PowerManager) mContext.getSystemService(
+                Context.POWER_SERVICE);
+        PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
+        wakeLock.acquire(mLengthWakeLock_ms);
         if (ControlService.useLogMode) {
             Logger.info("Vibration: " + mVibrationDuration_ms);
         }

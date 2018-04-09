@@ -47,6 +47,7 @@ import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_CHARGING_OFF;
 import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON;
+import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON_PRE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 
 
@@ -109,8 +110,9 @@ public class MainActivity extends AppCompatActivity {
                 mCharging.setVisibility(View.INVISIBLE);
                 messageService(MSG_CHARGING_OFF);
             }
-            // Announce charging and possibly remove battery error message
-            mAdapter.setChargin(isCharging);
+            // Announce charging and hide error messages
+            mAdapter.setCharging(isCharging);
+            ControlService.setCharging(isCharging);
         }
     };
 
@@ -120,7 +122,21 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+
             mServiceMessenger = new Messenger(service);
+
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+            // Are we charging / charged?
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+
+
+            if (isCharging) {
+                messageService(MSG_CHARGING_ON_PRE);
+            }
+
             messageService(ControlService.MSG_REGISTER_CLIENT);
             messageService(ControlService.MSG_GET_STATUS);
         }

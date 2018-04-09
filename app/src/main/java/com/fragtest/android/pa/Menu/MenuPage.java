@@ -39,11 +39,14 @@ public class MenuPage extends AppCompatActivity {
     private SimpleDateFormat mDateFormat;
     private ArrayList<String> mErrorList = new ArrayList<>();
     private ArrayAdapter<String> mErrorAdapter;
+    private ListView mErrorView;
+    private boolean isCharging = false;
 
     public final int ERROR_NOBT = 0;
     public final int ERROR_NOQUEST = 1;
     public final int ERROR_BATT = 2;
     public final int ERROR_BATT_CRIT = 3;
+    public final int ERROR_BATT_CHARGING = 4;
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -66,6 +69,8 @@ public class MenuPage extends AppCompatActivity {
                 return mContext.getResources().getString(R.string.noQuestionnaires);
             case ERROR_BATT_CRIT:
                 return mContext.getResources().getString(R.string.batteryCritical);
+            case ERROR_BATT_CHARGING:
+                return mContext.getResources().getString(R.string.infoCharging);
             default:
                 return null;
         }
@@ -116,9 +121,27 @@ public class MenuPage extends AppCompatActivity {
     }
 
     private void disableQuestionnaire() {
-        setText(mContext.getResources().getString(R.string.infoError));
-        mStartQuestionnaire.setEnabled(false);
-        mCountDownRemaining.setText("");
+        if (!isCharging) {
+            setText(mContext.getResources().getString(R.string.infoError));
+            mStartQuestionnaire.setEnabled(false);
+            mCountDownRemaining.setText("");
+        }
+    }
+
+    public void setCharging(boolean charging) {
+        isCharging = charging;
+        if (isCharging) {
+            setText(mContext.getResources().getString(R.string.infoCharging));
+            mStartQuestionnaire.setEnabled(false);
+            mCountDownRemaining.setText("");
+            mErrorView.setVisibility(View.INVISIBLE);
+        } else if (mErrorList.isEmpty()) {
+            mErrorView.setVisibility(View.VISIBLE);
+            setText(mContext.getResources().getString(R.string.menuText));
+        } else {
+            mErrorView.setVisibility(View.VISIBLE);
+            setText(mContext.getResources().getString(R.string.infoError));
+        }
     }
 
     public LinearLayout generateView() {
@@ -166,7 +189,7 @@ public class MenuPage extends AppCompatActivity {
         });
 
         // Error View
-        ListView mErrorView = new ListView(mContext);
+        mErrorView = new ListView(mContext);
         mErrorAdapter = new ArrayAdapter<String>(
                 mContext,
                 android.R.layout.simple_list_item_1,

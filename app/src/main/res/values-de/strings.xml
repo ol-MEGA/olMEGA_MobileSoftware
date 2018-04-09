@@ -4,6 +4,7 @@
     <string name="infoTextRevert">Daten wurden verworfen</string>
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="infoError">Fehler</string>
+    <string name="infoCharging">Laden</string>
     <string name="hintTextAnswer">Bitte hier klicken.</string>
     <string name="buttonTextOkay">Absenden</string>
     <string name="timeRemaining">Nächster Fragebogen geplant in %m %s</string>

@@ -4,6 +4,7 @@
     <string name="infoTextRevert">Data was reverted</string>
     <string name="infoTextSave">Data was saved</string>
     <string name="infoError">Error</string>
+    <string name="infoCharging">Charging</string>
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="buttonTextOkay">OK</string>
     <string name="timeRemaining">Next Questionnaire scheduled in %m %s</string>
