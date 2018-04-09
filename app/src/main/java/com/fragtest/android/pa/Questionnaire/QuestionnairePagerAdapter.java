@@ -74,8 +74,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private float mBatteryLevelWarning = 0.15f;
     private float mBatteryLevelCritical = 0.05f;
     private boolean bBatteryCritical = false;
-
-
+    private boolean isCharging = false;
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
@@ -131,6 +130,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         batteryStates = mContext.getResources().getIntArray(R.array.batteryStates);
         mVibration =  new Vibration(mContext);
         handleControls();
+    }
+
+    public void setChargin(boolean charging) {
+        isCharging = charging;
+        checkBatteryCritical();
     }
 
     public void noQuestionnaires() {
@@ -662,7 +666,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private void checkBatteryCritical() {
 
-        if (getBatteryInfo() < mBatteryLevelWarning && getBatteryInfo() > mBatteryLevelCritical) {
+        if (getBatteryInfo() < mBatteryLevelWarning && getBatteryInfo() > mBatteryLevelCritical && !isCharging) {
             if (!bBatteryCritical) {
                 bBatteryCritical = true;
                 announceBatteryWarning();

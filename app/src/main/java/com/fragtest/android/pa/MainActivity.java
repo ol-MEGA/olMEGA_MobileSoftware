@@ -80,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isQuestionnairePresent = true;
     private String[] requestString;
 
+    private boolean isCharging = false;
+
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
     private ComponentName mAdminComponentName;
@@ -96,13 +98,15 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
+            isCharging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
 
             if (isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
             } else {
                 mCharging.setVisibility(View.INVISIBLE);
             }
+            // Announce charging and possibly remove battery error message
+            mAdapter.setChargin(isCharging);
         }
     };
 
