@@ -247,8 +247,6 @@ public class ControlService extends Service {
                     Logger.info("Client registered to service");
                     mClientMessenger = msg.replyTo;
 
-                    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-
                     setupApplication();
 
                     // Bundled information about visible contents
@@ -439,6 +437,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHARGING_OFF:
+                    Log.e(LOG, "CHARGINNNN OFF");
                     Logger.info("Charging: inactive");
                     isCharging = false;
                     if (!mBluetoothAdapter.isEnabled()) {
@@ -449,6 +448,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHARGING_ON:
+                    Log.e(LOG, "CHARGINNNN ON");
                     isCharging = true;
                     Logger.info("Charging: active");
                     stopRecording();
@@ -666,7 +666,12 @@ public class ControlService extends Service {
     }
 
     private void setupApplication() {
-        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        // If no chunk Id in present shared preferences, initialise with 1
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (sharedPreferences.getInt("chunkId", 0) == 0) {
+            sharedPreferences.edit().putInt("chunkId", 1).apply();
+        }
 
         initialiseValues();
 

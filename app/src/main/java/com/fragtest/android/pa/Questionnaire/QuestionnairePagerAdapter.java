@@ -834,10 +834,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         if (isMenu && needsIncreasing) {
             mMenuPage.increaseStartTextSize();
             mMenuPage.updateCountdownText(0);
-            setQuestionnaireProgressBar(0f);
+            //setQuestionnaireProgressBar(0f);
         }
 
-        setQuestionnaireProgressBar();
+        //setQuestionnaireProgressBar();
         setBatteryLogo();
 
         isInForeGround = true;

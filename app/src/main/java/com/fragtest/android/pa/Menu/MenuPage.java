@@ -133,6 +133,7 @@ public class MenuPage extends AppCompatActivity {
         if (isCharging) {
             setText(mContext.getResources().getString(R.string.infoCharging));
             mStartQuestionnaire.setEnabled(false);
+            resetStartTextSize();
             mCountDownRemaining.setText("");
             mErrorView.setVisibility(View.INVISIBLE);
         } else if (mErrorList.isEmpty()) {

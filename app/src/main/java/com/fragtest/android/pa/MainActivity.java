@@ -100,21 +100,21 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
         @Override
         public void onReceive(Context ctxt, Intent intent) {
-            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean charging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
+            int tempPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
+                    tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
-            if (charging && !isCharging) {
+            if (plugged && !isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
                 messageService(MSG_CHARGING_ON);
-            } else if (!charging && isCharging){
+            } else if (!plugged && isCharging){
                 mCharging.setVisibility(View.INVISIBLE);
                 messageService(MSG_CHARGING_OFF);
             }
 
-            isCharging = charging;
+            isCharging = plugged;
             // Announce charging and hide error messages
             mAdapter.setCharging(isCharging);
-            ControlService.setCharging(isCharging);
         }
     };
 
