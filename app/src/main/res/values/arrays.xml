@@ -21,8 +21,8 @@
     </string-array>
 
     <integer-array name="batteryStates">
-        <item>66</item>
-        <item>33</item>
+        <item>50</item>
+        <item>15</item>
     </integer-array>
 
     <string-array name="permissionMessages">

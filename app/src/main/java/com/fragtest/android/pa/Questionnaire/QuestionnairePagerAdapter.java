@@ -75,6 +75,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private float mBatteryLevelCritical = 0.05f;
     private boolean bBatteryCritical = false;
     private boolean isCharging = false;
+    private float batteryLevel = 0f;
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
@@ -93,6 +94,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private final Runnable mBatteryRunnable = new Runnable() {
         @Override
         public void run() {
+            getBatteryInfo();
             setBatteryLogo();
             checkBatteryCritical();
             mCountDownHandler.postDelayed(this, mUpdateIntervalBattery);
@@ -135,6 +137,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void setCharging(boolean charging) {
         isCharging = charging;
+        getBatteryInfo();
+        setBatteryLogo();
         checkBatteryCritical();
         announceBatteryCharging();
     }
@@ -620,7 +624,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
                 0,
-                (1.0f-2* batteryPlaceholderWeight)*(1.0f - getBatteryInfo())
+                (1.0f-2* batteryPlaceholderWeight)*(1.0f - batteryLevel)
         );
         regparams.leftMargin = mUnits.convertDpToPixels(0);
         regparams.rightMargin = mUnits.convertDpToPixels(10);
@@ -629,36 +633,34 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
                 0,
-                (1.0f-2* batteryPlaceholderWeight)* getBatteryInfo()
+                (1.0f-2* batteryPlaceholderWeight)* batteryLevel
         );
         progparams.leftMargin = mUnits.convertDpToPixels(0);
         progparams.rightMargin = mUnits.convertDpToPixels(0);
         mMainActivity.mBatteryProg.setLayoutParams(progparams);
     }
 
-    private float getBatteryInfo() {
+    private void getBatteryInfo() {
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-        float info = level / (float) scale;
-        setBatteryColor(info);
+        batteryLevel = level / (float) scale;
+        setBatteryColor();
 
         if (ControlService.useLogMode) {
             // Send battery level info to Control Service for logging etc.
             Bundle batteryLevelBundle = new Bundle();
-            batteryLevelBundle.putFloat("batteryLevel", info);
+            batteryLevelBundle.putFloat("batteryLevel", batteryLevel);
             sendMessage(ControlService.MSG_BATTERY_LEVEL_INFO, batteryLevelBundle);
         }
-
-        return info;
     }
 
-    private void setBatteryColor(float level) {
+    private void setBatteryColor() {
 
-        if (level*100 > batteryStates[0]) {
+        if (batteryLevel*100 > batteryStates[0]) {
             mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.BatteryGreen));
-        } else if (level*100 <= batteryStates[0] && level*100 > batteryStates[1]) {
+        } else if (batteryLevel*100 <= batteryStates[0] && batteryLevel*100 > batteryStates[1]) {
             mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.BatteryYellow));
         } else {
             mMainActivity.mBatteryProg.setBackgroundColor(mContext.getResources().getColor(R.color.JadeRed));
@@ -667,14 +669,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     private void checkBatteryCritical() {
 
-        float batteryInfo = getBatteryInfo();
-
-        if (batteryInfo < mBatteryLevelWarning && batteryInfo > mBatteryLevelCritical && !isCharging) {
+        if (batteryLevel < mBatteryLevelWarning && batteryLevel > mBatteryLevelCritical && !isCharging) {
             if (!bBatteryCritical) {
                 bBatteryCritical = true;
                 announceBatteryWarning();
             }
-        } else if (batteryInfo <= mBatteryLevelCritical){
+        } else if (batteryLevel <= mBatteryLevelCritical){
             if (!bBatteryCritical) {
                 bBatteryCritical = true;
                 announceBatteryCritical();

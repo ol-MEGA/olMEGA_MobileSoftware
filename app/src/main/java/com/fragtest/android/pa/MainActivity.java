@@ -101,15 +101,17 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            isCharging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
+            boolean charging = status == BatteryManager.BATTERY_PLUGGED_USB || status == BatteryManager.BATTERY_PLUGGED_AC;
 
-            if (isCharging) {
+            if (charging && !isCharging) {
                 mCharging.setVisibility(View.VISIBLE);
                 messageService(MSG_CHARGING_ON);
-            } else {
+            } else if (!charging && isCharging){
                 mCharging.setVisibility(View.INVISIBLE);
                 messageService(MSG_CHARGING_OFF);
             }
+
+            isCharging = charging;
             // Announce charging and hide error messages
             mAdapter.setCharging(isCharging);
             ControlService.setCharging(isCharging);
@@ -122,6 +124,8 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+
+            Log.e(LOG, "ON SERVICE CONNECTED");
 
             mServiceMessenger = new Messenger(service);
 
