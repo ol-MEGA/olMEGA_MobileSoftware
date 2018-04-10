@@ -71,11 +71,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Vibration mVibration;
     private float batteryPlaceholderWeight;
     private int[] batteryStates;
-    private float mBatteryLevelWarning = 0.15f;
+    private float mBatteryLevelWarning = 0.10f;
     private float mBatteryLevelCritical = 0.05f;
     private boolean bBatteryCritical = false;
     private boolean isCharging = false;
-    private float batteryLevel = 0f;
+    private float batteryLevel = 1.0f;
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
