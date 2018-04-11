@@ -22,6 +22,8 @@ public class AudioFileIO {
     public static final String CACHE_WAVE = "wav";
     public static final String CACHE_RAW = "raw";
 
+    private static int chunkId = 1;
+
     public String filename;
 
     int samplerate   = 0;
@@ -47,12 +49,18 @@ public class AudioFileIO {
         String _filename = new StringBuilder()
                 .append(getFolderPath())
                 .append(File.separator)
+                .append(chunkId)
+                .append("_")
                 .append(Timestamp.getTimestamp(3))
                 .append(".")
                 .append(getExtension(wavHeader))
                 .toString();
 
         return _filename;
+    }
+
+    public static void setChunkId(int id) {
+        chunkId = id;
     }
 
     // file extension depending on format

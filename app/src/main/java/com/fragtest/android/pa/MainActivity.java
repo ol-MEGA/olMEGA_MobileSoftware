@@ -112,6 +112,10 @@ public class MainActivity extends AppCompatActivity {
                 messageService(MSG_CHARGING_OFF);
             }
 
+            if (!plugged) {
+                mCharging.setVisibility(View.INVISIBLE);
+            }
+
             isCharging = plugged;
             // Announce charging and hide error messages
             mAdapter.setCharging(isCharging);

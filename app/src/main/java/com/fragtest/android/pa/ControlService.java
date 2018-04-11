@@ -357,6 +357,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHUNK_RECORDED:
+
+                    AudioFileIO.setChunkId(getChunkId());
                     String filename = msg.getData().getString("filename");
                     addProccessingBuffer(idxRecording, filename);
                     idxRecording = (idxRecording + 1) % processingBufferSize;
@@ -414,7 +416,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-                    stopRecording();
+                    //stopRecording(); is called by receiver
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
@@ -515,6 +517,9 @@ public class ControlService extends Service {
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
         stopAlarmAndCountdown();
+
+        mBluetoothAdapter.disable();
+
         mNotificationManager.cancel(NOTIFICATION_ID);
 
         // Unregister broadcast listeners
@@ -525,7 +530,7 @@ public class ControlService extends Service {
         Log.e(LOG,"ControlService stopped");
         Logger.info("Service stopped");
 
-        mBluetoothAdapter.cancelDiscovery();
+        //mBluetoothAdapter.cancelDiscovery();
         //mBluetoothAdapter.disable();
     }
 
@@ -558,6 +563,17 @@ public class ControlService extends Service {
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         Log.e(LOG,"onDump");
         super.dump(fd, writer, args);
+    }
+
+    private int getChunkId() {
+        // Returns the current chunk ID and increments
+        int chunkId = sharedPreferences.getInt("chunkId", 0);
+        if (chunkId < Integer.MAX_VALUE) {
+            sharedPreferences.edit().putInt("chunkId", chunkId + 1).apply();
+        } else {
+            sharedPreferences.edit().putInt("chunkId", 1).apply();
+        }
+        return chunkId;
     }
 
     private void announceBTDisconnected() {

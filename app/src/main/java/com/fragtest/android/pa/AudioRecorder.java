@@ -31,7 +31,6 @@ public class AudioRecorder {
     private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
 
-
     AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
 
         messenger = _messenger;
@@ -78,7 +77,6 @@ public class AudioRecorder {
 
         audioRecord.release();
     }
-
 
     private void recordAudio() {
 
@@ -153,7 +151,6 @@ public class AudioRecorder {
                     e.printStackTrace();
                 }
             }
-
         }
 
         audioRecord.stop();
