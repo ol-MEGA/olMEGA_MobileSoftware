@@ -431,8 +431,6 @@ public class ControlService extends Service {
                 case MSG_BATTERY_CRITICAL:
                     //TODO: Test this case
                     Logger.info("CRITICAL battery level: active");
-                    mVibration.singleBurst();
-                    stopRecording();
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
@@ -444,9 +442,8 @@ public class ControlService extends Service {
                     isCharging = false;
                     if (!mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.enable();
-                    } //else {
-                        mVibration.singleBurst();
-                    //}
+                    }
+                    mVibration.singleBurst();
                     break;
 
                 case MSG_CHARGING_ON:
@@ -456,9 +453,8 @@ public class ControlService extends Service {
                     stopRecording();
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
-                    } //else {
-                        mVibration.singleBurst();
-                    //}
+                    }
+                    mVibration.singleBurst();
                     break;
 
                 case MSG_CHARGING_ON_PRE:
@@ -568,7 +564,7 @@ public class ControlService extends Service {
     private int getChunkId() {
         // Returns the current chunk ID and increments
         int chunkId = sharedPreferences.getInt("chunkId", 0);
-        if (chunkId < Integer.MAX_VALUE) {
+        if (chunkId < 999999) {
             sharedPreferences.edit().putInt("chunkId", chunkId + 1).apply();
         } else {
             sharedPreferences.edit().putInt("chunkId", 1).apply();
@@ -578,7 +574,6 @@ public class ControlService extends Service {
 
     private void announceBTDisconnected() {
         Log.e(LOG, "BTDEVICES not connected.");
-        //messageClient(MSG_STOP_RECORDING);
         stopRecording();
         isBluetoothPresent = false;
         messageClient(MSG_BT_DISCONNECTED);
@@ -588,7 +583,6 @@ public class ControlService extends Service {
 
     private void announceBTConnected() {
         Log.e(LOG, "BTDEVICES connected.");
-        //messageClient(MSG_START_RECORDING);
         startRecording();
         isBluetoothPresent = true;
         messageClient(MSG_BT_CONNECTED);

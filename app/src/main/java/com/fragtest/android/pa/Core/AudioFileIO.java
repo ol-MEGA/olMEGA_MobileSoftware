@@ -49,7 +49,7 @@ public class AudioFileIO {
         String _filename = new StringBuilder()
                 .append(getFolderPath())
                 .append(File.separator)
-                .append(chunkId)
+                .append(String.format("%06d", chunkId))
                 .append("_")
                 .append(Timestamp.getTimestamp(3))
                 .append(".")
