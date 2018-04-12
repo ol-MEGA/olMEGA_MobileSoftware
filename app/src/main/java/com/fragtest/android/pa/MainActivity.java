@@ -109,11 +109,16 @@ public class MainActivity extends AppCompatActivity {
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
             if (plugged && !isCharging) {
+                // a change towards charging
                 mCharging.setVisibility(View.VISIBLE);
                 messageService(MSG_CHARGING_ON);
+                Log.e(LOG, "Yes we are charging now");
+
             } else if (!plugged && isCharging){
+                // a change towards not charging
                 mCharging.setVisibility(View.INVISIBLE);
                 messageService(MSG_CHARGING_OFF);
+                Log.e(LOG, "Yes we are NOT charging any more");
             }
 
             if (!plugged) {
