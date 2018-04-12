@@ -3,6 +3,7 @@ package com.fragtest.android.pa.Menu;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -41,12 +42,22 @@ public class MenuPage extends AppCompatActivity {
     private ArrayAdapter<String> mErrorAdapter;
     private ListView mErrorView;
     private boolean isCharging = false;
+    private String mOriginalText = "";
+    private Handler mTaskHandler = new Handler();
+    private int mConnectingDelay = 5000;
 
     public final int ERROR_NOBT = 0;
     public final int ERROR_NOQUEST = 1;
     public final int ERROR_BATT = 2;
     public final int ERROR_BATT_CRIT = 3;
     public final int ERROR_BATT_CHARGING = 4;
+
+    private Runnable mConnectingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            stopConnecting();
+        }
+    };
 
     public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
 
@@ -128,12 +139,20 @@ public class MenuPage extends AppCompatActivity {
         }
     }
 
-    public void showConnecting() {
-        
+    public void startConnecting() {
+        mOriginalText = (String) mStartQuestionnaire.getText();
+        mStartQuestionnaire.setText(mContext.getResources().getString(R.string.infoConnecting));
+        mStartQuestionnaire.setEnabled(false);
+        resetStartTextSize();
+        mErrorView.setVisibility(View.INVISIBLE);
+        mTaskHandler.postDelayed(mConnectingRunnable, mConnectingDelay);
     }
 
     public void stopConnecting() {
-
+        mStartQuestionnaire.setText(mOriginalText);
+        mStartQuestionnaire.setEnabled(true);
+        mErrorView.setVisibility(View.VISIBLE);
+        mTaskHandler.removeCallbacks(mConnectingRunnable);
     }
 
     public void setCharging(boolean charging) {
@@ -264,7 +283,7 @@ public class MenuPage extends AppCompatActivity {
     }
 
     public void resetStartTextSize() {
-        mStartQuestionnaire.setText(cleanUpString(StartText));
+        //mStartQuestionnaire.setText(cleanUpString(StartText));
         mStartQuestionnaire.setTextSize(mContext.getResources().
                 getDimension(R.dimen.textSizeAnswer));
         mStartQuestionnaire.setTypeface(Typeface.DEFAULT);

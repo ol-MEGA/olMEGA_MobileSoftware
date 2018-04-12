@@ -293,6 +293,8 @@ public class ControlService extends Service {
 
                     if (!needsBluetooth) {
                         announceBTConnected();
+                    } else {
+                        mBluetoothAdapter.startDiscovery();
                     }
                     break;
 
