@@ -40,10 +40,16 @@ import org.pmw.tinylog.writers.FileWriter;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 
 /**
  * The brains of the operation.
@@ -130,6 +136,10 @@ public class ControlService extends Service {
     private NotificationManager mNotificationManager;
 
     private SharedPreferences sharedPreferences;
+    private SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
+    private Calendar dateTime;
+    private Handler mTaskHandler = new Handler();
+    private int mDelayDateTime = 10*1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -164,6 +174,14 @@ public class ControlService extends Service {
 
     Context context = this;
 
+
+    private Runnable mDateTimeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            putTime();
+            mTaskHandler.postDelayed(mDateTimeRunnable, mDelayDateTime);
+        }
+    };
 
     private EventReceiver mAlarmReceiver = new EventReceiver() {
         @Override
@@ -248,6 +266,7 @@ public class ControlService extends Service {
                     mClientMessenger = msg.replyTo;
 
                     setupApplication();
+                    mTaskHandler.post(mDateTimeRunnable);
 
                     // Bundled information about visible contents
                     Bundle bundleShow = new Bundle();
@@ -572,6 +591,26 @@ public class ControlService extends Service {
         return chunkId;
     }
 
+    private void putTime() {
+
+        dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
+        Date dateNew = dateTime.getTime();
+        try {
+            Date dateOld = DATE_FORMAT.parse(sharedPreferences.getString("currentDateTime", "0"));
+            if (dateNew.after(dateOld)) {
+                sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateNew)).apply();
+                Logger.info("Time put: " + DATE_FORMAT.format(dateNew));
+            } else {
+                Log.e(LOG, "Date was set back!!!");
+                Logger.info("Device time reset: " + DATE_FORMAT.format(dateNew));
+                sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateNew)).apply();
+            }
+        } catch (ParseException p) {
+            Log.e(LOG, "Parsing Exception: " + p.getMessage());
+        }
+
+    }
+
     private void announceBTDisconnected() {
         Log.e(LOG, "BTDEVICES not connected.");
         stopRecording();
@@ -681,6 +720,13 @@ public class ControlService extends Service {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         if (sharedPreferences.getInt("chunkId", 0) == 0) {
             sharedPreferences.edit().putInt("chunkId", 1).apply();
+        }
+
+        if (sharedPreferences.getString("currentDateTime", "") == "") {
+            dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
+            sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateTime.getTime())).apply();
+        } else {
+            putTime();
         }
 
         initialiseValues();

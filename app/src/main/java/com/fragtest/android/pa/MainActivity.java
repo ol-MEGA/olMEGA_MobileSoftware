@@ -30,6 +30,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -258,6 +260,9 @@ public class MainActivity extends AppCompatActivity {
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+
             Log.d(LOG, "Requesting Permissions.");
             for (iPermission = 0; iPermission < nPermissions; iPermission++) {
                 requestPermissions(iPermission);
@@ -451,14 +456,22 @@ public class MainActivity extends AppCompatActivity {
 /** KIOSK MODE RELATED STUFF */
 
 
+@Override
+public void onWindowFocusChanged(boolean hasFocus) {
+    super.onWindowFocusChanged(hasFocus);
+    if(!hasFocus) {
+        Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+        sendBroadcast(closeDialog);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    }
+}
     // This disables the Volume Buttons
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
             Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
             return true;
-        } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER && USE_KIOSK_MODE) {
-            Toast.makeText(getApplicationContext(), "POWER TO THE PEOPLE!", Toast.LENGTH_SHORT).show();
+        } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && USE_KIOSK_MODE) {
             return super.dispatchKeyEvent(event);
         } else {
             return super.dispatchKeyEvent(event);
@@ -485,9 +498,11 @@ public class MainActivity extends AppCompatActivity {
     setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
     setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
     Log.i(LOG, "KIOSK MODE: "+active);
-    // disable keyguard and status bar
+    // disable keyguard and status bar - needs API 23 (Damnit!)
     //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
     //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
+
+
 }
 
     private void setUserRestriction(String restriction, boolean disallow) {

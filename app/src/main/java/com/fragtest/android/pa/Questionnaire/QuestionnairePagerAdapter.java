@@ -126,7 +126,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity = (MainActivity) context;
         mViewPager = viewPager;
         mVersion = mMainActivity.getVersion();
-        batteryStatus = mContext.registerReceiver(null, batteryFilter);
+        //batteryStatus = mContext.registerReceiver(null, batteryFilter);
         isImmersive = immersive;
         mUnits = new Units(mContext);
         batteryPlaceholderWeight = mContext.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
@@ -641,6 +641,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     private void getBatteryInfo() {
+
+        batteryStatus = mContext.registerReceiver(null, batteryFilter);
 
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);

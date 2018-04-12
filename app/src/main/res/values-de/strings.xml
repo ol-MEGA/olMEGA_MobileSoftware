@@ -11,7 +11,7 @@
     <string name="timeRemaining">Nächster Fragebogen geplant in %m %s</string>
     <string name="menuText">Starte Frage-bogen</string>
     <string name="noQuestionnaires">• Fragebogen kann nicht geladen werden.</string>
-    <string name="noBluetooth">• Aufnahmegerät kann nicht gefunden werden.</string>
+    <string name="noBluetooth">• Sendebox kann nicht gefunden werden.</string>
     <string name="batteryWarning">• Bitte laden Sie das Smartphone.</string>
     <string name="batteryCritical">• Batteriestand kritisch - Aufnahme unterbrochen.</string>
 
