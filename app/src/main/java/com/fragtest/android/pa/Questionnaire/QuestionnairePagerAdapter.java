@@ -270,7 +270,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         mCountDownHandler.post(mTimeRunnable);
         checkBatteryCritical();
-
+        mMenuPage.setCharging(isCharging);
     }
 
     public void createHelpScreen() {
