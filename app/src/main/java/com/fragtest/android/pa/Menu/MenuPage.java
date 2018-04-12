@@ -128,6 +128,14 @@ public class MenuPage extends AppCompatActivity {
         }
     }
 
+    public void showConnecting() {
+        
+    }
+
+    public void stopConnecting() {
+
+    }
+
     public void setCharging(boolean charging) {
         isCharging = charging;
         if (isCharging) {

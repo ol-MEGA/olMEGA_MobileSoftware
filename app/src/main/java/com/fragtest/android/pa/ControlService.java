@@ -399,9 +399,6 @@ public class ControlService extends Service {
                     Log.d(LOG, "New cache: " + filename);
                     Logger.info("New cache:\t{}", filename);
 
-                    //just to keep sure for now
-                    //messageClient(MSG_BT_CONNECTED);
-
                     break;
 
                 case MSG_CHUNK_PROCESSED:

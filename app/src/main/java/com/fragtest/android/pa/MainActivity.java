@@ -92,11 +92,13 @@ public class MainActivity extends AppCompatActivity {
     private ComponentName mAdminComponentName;
     private DevicePolicyManager mDevicePolicyManager;
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
+    private Handler mTaskHandler = new Handler();
 
 
     // RELEVANT FOR PERMISSIONS (Android 6+, just in case)
     private int requestIterator = 0;
     private boolean permissionGranted = false;
+
 
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
@@ -456,22 +458,27 @@ public class MainActivity extends AppCompatActivity {
 /** KIOSK MODE RELATED STUFF */
 
 
-@Override
-public void onWindowFocusChanged(boolean hasFocus) {
-    super.onWindowFocusChanged(hasFocus);
-    if(!hasFocus) {
-        Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-        sendBroadcast(closeDialog);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        // Little hack since the Power button seems to be inaccessible at this point
+        super.onWindowFocusChanged(hasFocus);
+        if(!hasFocus) {
+            Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+            sendBroadcast(closeDialog);
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
     }
-}
     // This disables the Volume Buttons
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+
+    Log.e(LOG,"EVENT: "+event.getKeyCode());
+
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
             Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
             return true;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && USE_KIOSK_MODE) {
+            Log.e(LOG, "POWER BUTTON WAS PRESSED");
             return super.dispatchKeyEvent(event);
         } else {
             return super.dispatchKeyEvent(event);
