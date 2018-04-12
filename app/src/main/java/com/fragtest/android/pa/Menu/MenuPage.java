@@ -145,6 +145,14 @@ public class MenuPage extends AppCompatActivity {
         }
     }
 
+    public void setTimePlausible(boolean isPlausible) {
+        if (isPlausible) {
+            mDate.setVisibility(View.VISIBLE);
+        } else {
+            mDate.setVisibility(View.INVISIBLE);
+        }
+    }
+
     public LinearLayout generateView() {
 
         // Parent Layout of the menu

@@ -109,6 +109,7 @@ public class ControlService extends Service {
     public static final int MSG_CHARGING_OFF = 64;
     public static final int MSG_CHARGING_ON = 65;
     public static final int MSG_CHARGING_ON_PRE = 66;
+    public static final int MSG_TIME_PLAUSIBLE = 67;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -591,7 +592,25 @@ public class ControlService extends Service {
         return chunkId;
     }
 
+    private boolean timePlausible() {
+
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+
+        Log.e(LOG, "YEAR: "+year);
+        if (year < 2018) {
+            Bundle timeBundle = new Bundle();
+            timeBundle.putBoolean("timePlausible", false);
+            messageClient(MSG_TIME_PLAUSIBLE, timeBundle);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private void putTime() {
+
+        timePlausible();
 
         dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
         Date dateNew = dateTime.getTime();

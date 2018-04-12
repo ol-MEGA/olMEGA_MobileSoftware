@@ -711,6 +711,10 @@ public void onWindowFocusChanged(boolean hasFocus) {
                     setBTLogoDisconnected();
                     break;
 
+                case ControlService.MSG_TIME_PLAUSIBLE:
+                    mAdapter.setTimePlausible(msg.getData().getBoolean("timePlausible"));
+                    break;
+
                 default:
                     super.handleMessage(msg);
                     break;

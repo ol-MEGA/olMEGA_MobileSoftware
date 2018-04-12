@@ -614,6 +614,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mCountDownHandler.post(mBatteryRunnable);
     }
 
+    public void setTimePlausible(boolean isPlausible) {
+        mMenuPage.setTimePlausible(isPlausible);
+    }
+
 
     /**
      * Battery Related Methods
