@@ -40,16 +40,13 @@ import org.pmw.tinylog.writers.FileWriter;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TimeZone;
 
 /**
  * The brains of the operation.
@@ -61,6 +58,7 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     static final boolean needsBluetooth = true;
+    static final int CURRENT_YEAR = 2018;
 
     /**
      * Constants for messaging. Should(!) be self-explanatory.
@@ -296,6 +294,8 @@ public class ControlService extends Service {
                     } else {
                         mBluetoothAdapter.startDiscovery();
                     }
+
+                    timePlausible();
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -456,7 +456,6 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHARGING_OFF:
-                    Log.e(LOG, "CHARGINNNN OFF");
                     Logger.info("Charging: inactive");
                     isCharging = false;
                     if (!mBluetoothAdapter.isEnabled()) {
@@ -466,7 +465,6 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHARGING_ON:
-                    Log.e(LOG, "CHARGINNNN ON");
                     isCharging = true;
                     Logger.info("Charging: active");
                     stopRecording();
@@ -592,17 +590,21 @@ public class ControlService extends Service {
     }
 
     private boolean timePlausible() {
+        // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
 
-
-        int year = Calendar.getInstance().get(Calendar.YEAR);
-
-        Log.e(LOG, "YEAR: "+year);
-        if (year < 2018) {
+        if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
             Bundle timeBundle = new Bundle();
             timeBundle.putBoolean("timePlausible", false);
             messageClient(MSG_TIME_PLAUSIBLE, timeBundle);
+            Logger.info("Device Time false: " + Calendar.getInstance().getTime());
+            Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;
         } else {
+            Bundle timeBundle = new Bundle();
+            timeBundle.putBoolean("timePlausible", true);
+            messageClient(MSG_TIME_PLAUSIBLE, timeBundle);
+            Logger.info("Device Time reset: " + Calendar.getInstance().getTime());
+            Log.e(LOG, "Device Time reset: " + Calendar.getInstance().getTime());
             return true;
         }
     }
@@ -611,6 +613,9 @@ public class ControlService extends Service {
 
         timePlausible();
 
+        // Might not be needed any more
+
+        /*
         dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
         Date dateNew = dateTime.getTime();
         try {
@@ -626,6 +631,7 @@ public class ControlService extends Service {
         } catch (ParseException p) {
             Log.e(LOG, "Parsing Exception: " + p.getMessage());
         }
+        */
 
     }
 
@@ -740,12 +746,12 @@ public class ControlService extends Service {
             sharedPreferences.edit().putInt("chunkId", 1).apply();
         }
 
-        if (sharedPreferences.getString("currentDateTime", "") == "") {
+        /*if (sharedPreferences.getString("currentDateTime", "") == "") {
             dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
             sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateTime.getTime())).apply();
         } else {
             putTime();
-        }
+        }*/
 
         initialiseValues();
 
@@ -755,6 +761,7 @@ public class ControlService extends Service {
         Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
         mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
         mVibration = new Vibration(this);
+        mVibration.singleBurst();
 
         if (useLogMode) {
             // Register receiver for display activity (if used in log mode)
