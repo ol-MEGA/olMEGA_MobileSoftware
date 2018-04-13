@@ -6,7 +6,6 @@ import android.graphics.Typeface;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -35,22 +34,36 @@ public class MenuPage extends AppCompatActivity {
     private Context mContext;
     private QuestionnairePagerAdapter mContextQPA;
     private String StartText;
-    private TextView mCountDownRemaining, mStartQuestionnaire, mDate;
+    private TextView mCountDownRemaining, mStartQuestionnaire, mDate, mConnecting, mDots;
     private String[] mTempTextCountDownRemaining;
     private SimpleDateFormat mDateFormat;
     private ArrayList<String> mErrorList = new ArrayList<>();
     private ArrayAdapter<String> mErrorAdapter;
     private ListView mErrorView;
-    private boolean isCharging = false;
+    private boolean isCharging = true;
     private String mOriginalText = "";
     private Handler mTaskHandler = new Handler();
-    private int mConnectingDelay = 5000;
+    private int mConnectingDelay = 90*1000;
+    private boolean isTimePlausible = true;
+
+    private String[] mStringDots = {"   ", "•  ", "•• ", "•••"};
+    private int iDot = 0;
+    private int mDelayDots = 500;
 
     public final int ERROR_NOBT = 0;
     public final int ERROR_NOQUEST = 1;
     public final int ERROR_BATT = 2;
     public final int ERROR_BATT_CRIT = 3;
     public final int ERROR_BATT_CHARGING = 4;
+
+    private Runnable mDotRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mDots.setText(mStringDots[iDot%4]);
+            iDot++;
+            mTaskHandler.postDelayed(mDotRunnable, mDelayDots);
+        }
+    };
 
     private Runnable mConnectingRunnable = new Runnable() {
         @Override
@@ -59,15 +72,32 @@ public class MenuPage extends AppCompatActivity {
         }
     };
 
-    public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
+    private Runnable mDateViewRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isTimePlausible) {
+                mDate.setVisibility(View.VISIBLE);
+            } else {
+                mDate.setVisibility(View.INVISIBLE);
+            }
+            mTaskHandler.removeCallbacks(mDateViewRunnable);
+        }
+    };
 
+    public MenuPage(Context context, QuestionnairePagerAdapter contextQPA) {
         mContext = context;
         mContextQPA = contextQPA;
         StartText = "";
         mCountDownString = mContext.getResources().getString(R.string.timeRemaining);
         mTempTextCountDownRemaining = mCountDownString.split("%");
         mDateFormat = new SimpleDateFormat("dd.MM.yy, HH:mm", Locale.ROOT);
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopConnecting();
+        mTaskHandler.removeCallbacks(mConnectingRunnable);
     }
 
     private String getMessage(int error) {
@@ -88,19 +118,13 @@ public class MenuPage extends AppCompatActivity {
     }
 
     private void reactToErrors() {
-
-        for (int iString = 0; iString < mErrorList.size(); iString++) {
-            Log.e(LOG, "error "+ iString + ": " + mErrorList.get(iString));
-        }
-
         if (mErrorList.contains(getMessage(ERROR_NOBT)) ||
                 mErrorList.contains(getMessage(ERROR_NOQUEST)) ||
                 mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
             disableQuestionnaire();
-            Log.e(LOG, "errorlist Disabling Quest");
         } else {
             enableQuestionnaire();
-            Log.e(LOG, "errorlist Enabling Quest");
+            stopConnecting();
         }
     }
 
@@ -108,7 +132,6 @@ public class MenuPage extends AppCompatActivity {
         if (!mErrorList.contains(getMessage(error))) {
             mErrorList.add(getMessage(error));
             mErrorAdapter.notifyDataSetChanged();
-            Log.e(LOG, "errorlist: " + mErrorList.size() + " - add");
         }
         reactToErrors();
     }
@@ -117,7 +140,6 @@ public class MenuPage extends AppCompatActivity {
         if (mErrorList.contains(getMessage(error))) {
             mErrorList.remove(getMessage(error));
             mErrorAdapter.notifyDataSetChanged();
-            Log.e(LOG, "errorlist: " + mErrorList.size() + " - remove");
         }
         reactToErrors();
     }
@@ -137,47 +159,49 @@ public class MenuPage extends AppCompatActivity {
             mStartQuestionnaire.setEnabled(false);
             mCountDownRemaining.setText("");
         }
+        resetStartTextSize();
     }
 
     public void startConnecting() {
-        mOriginalText = (String) mStartQuestionnaire.getText();
-        mStartQuestionnaire.setText(mContext.getResources().getString(R.string.infoConnecting));
-        mStartQuestionnaire.setEnabled(false);
-        resetStartTextSize();
-        mErrorView.setVisibility(View.INVISIBLE);
-        mTaskHandler.postDelayed(mConnectingRunnable, mConnectingDelay);
+        if (mErrorList.contains(getMessage(ERROR_NOBT)) && !mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
+            mStartQuestionnaire.setVisibility(View.GONE);
+            mConnecting.setVisibility(View.VISIBLE);
+            mDots.setVisibility(View.VISIBLE);
+            mErrorView.setVisibility(View.INVISIBLE);
+            mTaskHandler.postDelayed(mConnectingRunnable, mConnectingDelay);
+            mTaskHandler.post(mDotRunnable);
+        }
     }
 
     public void stopConnecting() {
-        mStartQuestionnaire.setText(mOriginalText);
-        mStartQuestionnaire.setEnabled(true);
-        mErrorView.setVisibility(View.VISIBLE);
+        mConnecting.setVisibility(View.GONE);
+        mDots.setVisibility(View.GONE);
+        mStartQuestionnaire.setVisibility(View.VISIBLE);
         mTaskHandler.removeCallbacks(mConnectingRunnable);
+        mTaskHandler.removeCallbacks(mDotRunnable);
+        mErrorView.setVisibility(View.VISIBLE);
     }
 
-    public void setCharging(boolean charging) {
-        isCharging = charging;
-        if (isCharging) {
-            setText(mContext.getResources().getString(R.string.infoCharging));
-            mStartQuestionnaire.setEnabled(false);
-            resetStartTextSize();
-            mCountDownRemaining.setText("");
-            mErrorView.setVisibility(View.INVISIBLE);
-        } else if (mErrorList.isEmpty()) {
-            mErrorView.setVisibility(View.VISIBLE);
-            setText(mContext.getResources().getString(R.string.menuText));
-        } else {
-            mErrorView.setVisibility(View.VISIBLE);
-            setText(mContext.getResources().getString(R.string.infoError));
-        }
+    public void setNotCharging() {
+        isCharging = false;
+        resetStartTextSize();
+        reactToErrors();
+        startConnecting();
+    }
+
+    public void setCharging() {
+        isCharging = true;
+        stopConnecting();
+        setText(mContext.getResources().getString(R.string.infoCharging));
+        mStartQuestionnaire.setEnabled(false);
+        resetStartTextSize();
+        mCountDownRemaining.setText("");
+        mErrorView.setVisibility(View.INVISIBLE);
     }
 
     public void setTimePlausible(boolean isPlausible) {
-        if (isPlausible) {
-            mDate.setVisibility(View.VISIBLE);
-        } else {
-            mDate.setVisibility(View.INVISIBLE);
-        }
+        isTimePlausible = isPlausible;
+        mTaskHandler.post(mDateViewRunnable);
     }
 
     public LinearLayout generateView() {
@@ -202,6 +226,7 @@ public class MenuPage extends AppCompatActivity {
         // Layout patch carrying "Take Survey" Text/Button
         LinearLayout centerLayout = new LinearLayout(mContext);
         centerLayout.setBackgroundColor(ContextCompat.getColor(mContext,R.color.BackgroundColor));
+        centerLayout.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams centerParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0, 0.7f
@@ -213,7 +238,6 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setText("");
         mStartQuestionnaire.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
-        //mStartQuestionnaire.setMaxWidth(1000);
         mStartQuestionnaire.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
         mStartQuestionnaire.setBackgroundColor(Color.WHITE);
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
@@ -224,9 +248,30 @@ public class MenuPage extends AppCompatActivity {
             }
         });
 
+        // Is displayed during "Connecting" Stage INSTEAD OF mStartQuestionnaire
+        mConnecting = new TextView(mContext);
+        mConnecting.setVisibility(View.GONE);
+        mConnecting.setWidth(LinearLayout.LayoutParams.MATCH_PARENT);
+        mConnecting.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mConnecting.setText(mContext.getResources().getString(R.string.infoConnecting));
+        mConnecting.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
+        mConnecting.setTypeface(Typeface.DEFAULT);
+        mConnecting.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
+        mConnecting.setBackgroundColor(Color.WHITE);
+
+        mDots = new TextView(mContext);
+        mDots.setVisibility(View.GONE);
+        mDots.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        mDots.setWidth(LinearLayout.LayoutParams.MATCH_PARENT);
+        mDots.setText(mContext.getResources().getString(R.string.infoConnecting));
+        mDots.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
+        mDots.setTypeface(Typeface.DEFAULT_BOLD);
+        mDots.setTextColor(ContextCompat.getColor(mContext, R.color.JadeRed));
+        mDots.setBackgroundColor(Color.WHITE);
+
         // Error View
         mErrorView = new ListView(mContext);
-        mErrorAdapter = new ArrayAdapter<String>(
+        mErrorAdapter = new ArrayAdapter<>(
                 mContext,
                 android.R.layout.simple_list_item_1,
                 mErrorList );
@@ -236,14 +281,18 @@ public class MenuPage extends AppCompatActivity {
         mErrorView.setAdapter(mErrorAdapter);
         mErrorView.setOnItemClickListener(null);
         mErrorView.setDividerHeight(0);
+        mErrorView.setVisibility(View.VISIBLE);
 
         mDate = new TextView(mContext);
+        mDate.setVisibility(View.VISIBLE);
         mDate.setText("DD.MM.YY, HH:MM");
         mDate.setTextColor(ContextCompat.getColor(mContext, R.color.JadeGray));
         mDate.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
         mDate.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
 
         centerLayout.addView(mStartQuestionnaire);
+        centerLayout.addView(mConnecting);
+        centerLayout.addView(mDots);
         menuLayout.addView(mCountDownRemaining, tempTopParams);
         menuLayout.addView(centerLayout, centerParams);
         menuLayout.addView(mErrorView, tempErrorParams);
@@ -251,6 +300,7 @@ public class MenuPage extends AppCompatActivity {
 
         return menuLayout;
     }
+
     // Simply increases text size of "Start Questionnaire" item in user menu
     public void increaseStartTextSize() {
 
