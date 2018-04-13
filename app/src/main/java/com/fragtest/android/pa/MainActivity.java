@@ -111,12 +111,14 @@ public class MainActivity extends AppCompatActivity {
             if (plugged && !isCharging) {
                 // a change towards charging
                 mCharging.setVisibility(View.VISIBLE);
+                mAdapter.announceBatteryCharging();
                 messageService(MSG_CHARGING_ON);
                 Log.e(LOG, "Yes we are charging now");
 
             } else if (!plugged && isCharging){
                 // a change towards not charging
                 mCharging.setVisibility(View.INVISIBLE);
+                mAdapter.announceBatteryNotCharging();
                 messageService(MSG_CHARGING_OFF);
                 Log.e(LOG, "Yes we are NOT charging any more");
             }
@@ -126,8 +128,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
             isCharging = plugged;
-            // Announce charging and hide error messages
-            mAdapter.setCharging(isCharging);
         }
     };
 
@@ -142,8 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
             mServiceMessenger = new Messenger(service);
 
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = registerReceiver(null, ifilter);
+            IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, batteryFilter);
             // Are we charging / charged?
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
@@ -152,6 +152,9 @@ public class MainActivity extends AppCompatActivity {
 
             if (isCharging) {
                 messageService(MSG_CHARGING_ON_PRE);
+                mAdapter.announceBatteryCharging();
+            } else {
+                mAdapter.announceBatteryNotCharging();
             }
 
             messageService(ControlService.MSG_REGISTER_CLIENT);
