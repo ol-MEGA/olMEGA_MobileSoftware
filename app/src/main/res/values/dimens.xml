@@ -38,6 +38,7 @@
     <dimen name="answerLayoutPadding_Right">16dp</dimen>
     <dimen name="answerLayoutPadding_Bottom">16dp</dimen>
 
+    <dimen name="textSizeMenu">10sp</dimen>
     <dimen name="textSizeQuestion">10sp</dimen>
     <dimen name="textSizeAnswer">8sp</dimen>
     <dimen name="textSizeProposed">26sp</dimen>

@@ -107,7 +107,8 @@ public class ControlService extends Service {
     public static final int MSG_CHARGING_OFF = 64;
     public static final int MSG_CHARGING_ON = 65;
     public static final int MSG_CHARGING_ON_PRE = 66;
-    public static final int MSG_TIME_PLAUSIBLE = 67;
+    public static final int MSG_TIME_CORRECT = 67;
+    public static final int MSG_TIME_INCORRECT = 68;
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -269,11 +270,11 @@ public class ControlService extends Service {
 
                     // Bundled information about visible contents
                     Bundle bundleShow = new Bundle();
-                    bundleShow.putBoolean("showConfigButton", showConfigButton);
-                    bundleShow.putBoolean("showRecordingButton", showRecordingButton);
-                    bundleShow.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
+                    //bundleShow.putBoolean("showConfigButton", showConfigButton);
+                    //bundleShow.putBoolean("showRecordingButton", showRecordingButton);
+                    //bundleShow.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
-                    messageClient(MSG_SET_VISIBILITY, bundleShow);
+                    //messageClient(MSG_SET_VISIBILITY, bundleShow);
 
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
@@ -462,6 +463,7 @@ public class ControlService extends Service {
                         mBluetoothAdapter.enable();
                     }
                     mVibration.singleBurst();
+                    // startRecording() is invoked by receiver upon completion
                     break;
 
                 case MSG_CHARGING_ON:
@@ -593,16 +595,12 @@ public class ControlService extends Service {
         // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
 
         if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
-            Bundle timeBundle = new Bundle();
-            timeBundle.putBoolean("timePlausible", false);
-            messageClient(MSG_TIME_PLAUSIBLE, timeBundle);
+            messageClient(MSG_TIME_INCORRECT);
             Logger.info("Device Time false: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;
         } else {
-            Bundle timeBundle = new Bundle();
-            timeBundle.putBoolean("timePlausible", true);
-            messageClient(MSG_TIME_PLAUSIBLE, timeBundle);
+            messageClient(MSG_TIME_CORRECT);
             Logger.info("Device Time reset: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time reset: " + Calendar.getInstance().getTime());
             return true;
@@ -639,7 +637,7 @@ public class ControlService extends Service {
         Log.e(LOG, "BTDEVICES not connected.");
         stopRecording();
         isBluetoothPresent = false;
-        messageClient(MSG_BT_DISCONNECTED);
+        //messageClient(MSG_BT_DISCONNECTED);
         stopAlarmAndCountdown();
         mVibration.singleBurst();
     }
@@ -648,7 +646,7 @@ public class ControlService extends Service {
         Log.e(LOG, "BTDEVICES connected.");
         startRecording();
         isBluetoothPresent = true;
-        messageClient(MSG_BT_CONNECTED);
+        //messageClient(MSG_BT_CONNECTED);
         setAlarmAndCountdown();
         mVibration.singleBurst();
     }

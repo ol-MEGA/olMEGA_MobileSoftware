@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,7 +23,6 @@ import android.os.RemoteException;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -35,6 +33,13 @@ import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fragtest.android.pa.AppStates.AppState;
+import com.fragtest.android.pa.AppStates.StateCharging;
+import com.fragtest.android.pa.AppStates.StateConnecting;
+import com.fragtest.android.pa.AppStates.StateError;
+import com.fragtest.android.pa.AppStates.StateProposing;
+import com.fragtest.android.pa.AppStates.StateQuest;
+import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
@@ -43,26 +48,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import static android.R.color.darker_gray;
-import static android.R.color.holo_green_dark;
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
-import static com.fragtest.android.pa.ControlService.MSG_CHARGING_OFF;
-import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON;
-import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON_PRE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
-    private boolean USE_MASTER_MODE = false;
+    private boolean USE_DEVELOPER_MODE = false;
 
     static final String LOG = "MainActivity";
-    private static final String KEY_QUEST = "whichQuest";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
+
+    // RELEVANT FOR PERMISSIONS (Android 6+, just in case)
+    private int requestIterator = 0;
+    private boolean permissionGranted = false;
     private int nPermissions = 8;
     private int iPermission;
+    private String[] requestString;
     private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
     private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
     private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
@@ -71,34 +75,88 @@ public class MainActivity extends AppCompatActivity {
     private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
     private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
     private final static int MY_PERMISSIONS_CAMERA = 7;
+
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
-    public ViewPager mViewPager = null;
+    private Messenger mServiceMessenger;
+    private Handler mTaskHandler = new Handler();
+
+    public ViewPager mViewPager;
+    private QuestionnairePagerAdapter mAdapter;
     public TextView mLogo;
     public View mRecord, mArrowBack, mArrowForward, mRevert, mProgress, mRegress, mConfig,
             mBatteryReg, mBatteryProg, mCharging;
-    private QuestionnairePagerAdapter mAdapter;
+
     private boolean mServiceIsBound;
+    private boolean mServiceIsRecording;
     private boolean isPrefsInForeGround = false;
     private boolean isActivityRunning = false;
-    private boolean mServiceIsRecording;
-    private Messenger mServiceMessenger;
     private boolean isQuestionnairePresent = true;
-    private String[] requestString;
-
     private boolean isCharging = false;
+    private boolean isTimer = false;
+    private boolean showConfigButton = false;
+    private boolean showRecordingButton = true;
+    private boolean isBluetoothPresent = false;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
     private ComponentName mAdminComponentName;
     private DevicePolicyManager mDevicePolicyManager;
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
-    private Handler mTaskHandler = new Handler();
 
+    // Preferences
+    private SharedPreferences sharedPreferences;
 
-    // RELEVANT FOR PERMISSIONS (Android 6+, just in case)
-    private int requestIterator = 0;
-    private boolean permissionGranted = false;
+    // States
+    public  AppState mAppState;
+    private StateCharging mStateCharging;
+    private StateConnecting mStateConnecting;
+    private StateError mStateError;
+    private StateProposing mStateProposing;
+    private StateQuest mStateQuest;
+    private StateRunning mStateRunning;
 
+    private static Context mStatContext;
+
+    public static Context getContext(){
+        return mStatContext;
+    }
+
+    // Errors
+    public enum AppErrors {
+        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST;
+
+        public String getErrorMessage() {
+            switch(this) {
+                case ERROR_NO_BT:
+                    return mStatContext.getResources().getString(R.string.noBluetooth);
+                case ERROR_BATT_LOW:
+                    return mStatContext.getResources().getString(R.string.batteryWarning);
+                case ERROR_BATT_CRITICAL:
+                    return mStatContext.getResources().getString(R.string.batteryCritical);
+                case ERROR_NO_QUEST:
+                    return mStatContext.getResources().getString(R.string.noQuestionnaires);
+                default:
+                    return "generic error message";
+            }
+        }
+    }
+    public ArrayList<String> mErrorList = new ArrayList<>();
+
+    public void addError(AppErrors error) {
+        if (!mErrorList.contains(error.getErrorMessage())) {
+            mErrorList.add(error.getErrorMessage());
+            //mErrorAdapter.notifyDataSetChanged();
+        }
+        //reactToErrors();
+    }
+
+    public void removeError(AppErrors error) {
+        if (mErrorList.contains(error.getErrorMessage())) {
+            mErrorList.remove(error.getErrorMessage());
+            //mErrorAdapter.notifyDataSetChanged();
+        }
+        //reactToErrors();
+    }
 
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
@@ -109,31 +167,33 @@ public class MainActivity extends AppCompatActivity {
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
             if (plugged && !isCharging) {
+                mAppState.chargeOn();
                 // a change towards charging
-                mCharging.setVisibility(View.VISIBLE);
-                mAdapter.announceBatteryCharging();
-                messageService(MSG_CHARGING_ON);
-                Log.e(LOG, "Yes we are charging now");
+                //mCharging.setVisibility(View.VISIBLE);
+                //mAdapter.announceBatteryCharging();
+                messageService(ControlService.MSG_CHARGING_ON);
+                //Log.e(LOG, "Yes we are charging now");
 
             } else if (!plugged && isCharging){
+                mAppState.chargeOff();
                 // a change towards not charging
-                mCharging.setVisibility(View.INVISIBLE);
-                mAdapter.announceBatteryNotCharging();
-                messageService(MSG_CHARGING_OFF);
-                Log.e(LOG, "Yes we are NOT charging any more");
+                //mCharging.setVisibility(View.INVISIBLE);
+                //mAdapter.announceBatteryNotCharging();
+                messageService(ControlService.MSG_CHARGING_OFF);
+                //Log.e(LOG, "Yes we are NOT charging any more");
             }
 
-            if (!plugged) {
-                mCharging.setVisibility(View.INVISIBLE);
-            }
+            //if (!plugged) {
+                //mCharging.setVisibility(View.INVISIBLE);
+            //}
 
             isCharging = plugged;
+
         }
     };
 
-    // Preferences
-    private SharedPreferences sharedPreferences;
-    private boolean isTimer, showConfigButton = false, showRecordingButton = true;
+
+
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -144,17 +204,14 @@ public class MainActivity extends AppCompatActivity {
 
             IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = registerReceiver(null, batteryFilter);
-            // Are we charging / charged?
+
+            // Are we plugged in?
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                     status == BatteryManager.BATTERY_STATUS_FULL;
-
-
             if (isCharging) {
-                messageService(MSG_CHARGING_ON_PRE);
-                mAdapter.announceBatteryCharging();
-            } else {
-                mAdapter.announceBatteryNotCharging();
+                messageService(ControlService.MSG_CHARGING_ON_PRE);
+                mAppState.chargeOn();
             }
 
             messageService(ControlService.MSG_REGISTER_CLIENT);
@@ -253,33 +310,66 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /** State Affairs **/
+
+
+    public void setState(AppState newAppState) {
+        mAppState = newAppState;
+    }
+
+    public AppState getStateCharging() {
+        return mStateCharging;
+    }
+
+    public AppState getStateConnecting() {
+        return mStateConnecting;
+    }
+
+    public AppState getStateError() {
+        return mStateError;
+    }
+
+    public AppState getStateProposing() {
+        return mStateProposing;
+    }
+
+    public AppState getStateQuest() {
+        return mStateQuest;
+    }
+
+    public AppState getStateRunning() {
+        return mStateRunning;
+    }
+
+
+    /** QPA Modifiers **/
+
+
     /** Lifecycle methods */
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        mStatContext = this;
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        /*
         showConfigButton = sharedPreferences.getBoolean("showConfigButton", showConfigButton);
         showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", showRecordingButton);
-
-        if (BuildConfig.DEBUG) {
-            Log.i(LOG, "OnCreate");
-        }
-
+*/
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             getWindow().requestFeature(Window.FEATURE_NO_TITLE);
 
-            Log.d(LOG, "Requesting Permissions.");
             for (iPermission = 0; iPermission < nPermissions; iPermission++) {
                 requestPermissions(iPermission);
             }
 
             setContentView(R.layout.activity_main);
-
             mLogo = (TextView) findViewById(R.id.Action_Logo);
             mRecord = findViewById(R.id.Action_Record);
             mArrowBack = findViewById(R.id.Action_Back);
@@ -296,9 +386,8 @@ public class MainActivity extends AppCompatActivity {
             showConfigButton = mFileIO.checkConfigFile();
             if (showConfigButton) {
                 USE_KIOSK_MODE = false;
-                USE_MASTER_MODE = true;
+                USE_DEVELOPER_MODE = true;
             }
-
             setConfigVisibility();
 
             mConfig.setOnClickListener(new View.OnClickListener() {
@@ -311,35 +400,43 @@ public class MainActivity extends AppCompatActivity {
                 });
 
 
-            handleNewPagerAdapter();
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
             this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
+
+            handleNewPagerAdapter();
+
             mAdapter.createMenu();
             mAdapter.onCreate();
+
+            mStateCharging = new StateCharging(this, mAdapter);
+            mStateError = new StateError(this, mAdapter);
+            mStateProposing = new StateProposing(this, mAdapter);
+            mStateQuest = new StateQuest(this, mAdapter);
+            mStateRunning = new StateRunning(this, mAdapter);
+            mStateConnecting = new StateConnecting(this, mAdapter);
+            mAppState = mStateConnecting;
+            mAppState.setInterface();
+
             isActivityRunning = true;
         }
 
-
+        // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        if (!mDevicePolicyManager.isAdminActive(deviceAdmin)) {
+        /*if (!mDevicePolicyManager.isAdminActive(deviceAdmin)) {
             Toast.makeText(this, "Not device admin.", Toast.LENGTH_SHORT).show();
         }
-
         if (mDevicePolicyManager.isDeviceOwnerApp(getPackageName())) {
             mDevicePolicyManager.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
         } else {
             Toast.makeText(this, "Not device owner.", Toast.LENGTH_SHORT).show();
-        }
-
+        }*/
         mAdminComponentName = deviceAdmin;
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
-
-        Log.e(LOG, "KIOSK is: "+USE_KIOSK_MODE);
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
@@ -389,13 +486,12 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.onPause();
         super.onPause();
 
+        // KIOSK MODE related
         ActivityManager activityManager = (ActivityManager) getApplicationContext()
                 .getSystemService(Context.ACTIVITY_SERVICE);
-
         if (USE_KIOSK_MODE) {
             activityManager.moveTaskToFront(getTaskId(), 0);
         }
-
     }
 
     @Override
@@ -424,13 +520,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setRecordingVisibility() {
+    /*private void setRecordingVisibility() {
         if (showRecordingButton) {
             mRecord.setVisibility(View.VISIBLE);
         } else {
             mRecord.setVisibility(View.INVISIBLE);
         }
-    }
+    }*/
 
     public String getVersion() {
         try {
@@ -446,6 +542,7 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
     }
 
+    /*
     private void setBTLogoConnected() {
         //showRecordingButton = true;
         setRecordingVisibility();
@@ -462,7 +559,7 @@ public class MainActivity extends AppCompatActivity {
                         darker_gray, null)));
     }
 
-
+*/
 /** KIOSK MODE RELATED STUFF */
 
 
@@ -470,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         // Little hack since the Power button seems to be inaccessible at this point
         super.onWindowFocusChanged(hasFocus);
-        if(!hasFocus) {
+        if(!hasFocus && USE_KIOSK_MODE) {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
@@ -516,9 +613,7 @@ public class MainActivity extends AppCompatActivity {
     // disable keyguard and status bar - needs API 23 (Damnit!)
     //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
     //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
-
-
-}
+    }
 
     private void setUserRestriction(String restriction, boolean disallow) {
         if (disallow) {
@@ -616,18 +711,19 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_SET_VISIBILITY:
 
-                    Bundle dataVisibility = msg.getData();
-                    isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
+                    //Bundle dataVisibility = msg.getData();
+                    //isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
 
-                    if (isQuestionnairePresent) {
-                        mAdapter.questionnairePresent();
-                    }
+//                    if (isQuestionnairePresent) {
+ //                       mAdapter.questionnairePresent();
+  //                  }
 
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
-                    isQuestionnairePresent = false;
-                    mAdapter.noQuestionnaires();
+                    mAppState.noQuest();
+                    //isQuestionnairePresent = false;
+                    //mAdapter.noQuestionnaires();
                     break;
 
                 case MSG_CHANGE_PREFERENCE:
@@ -643,17 +739,21 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_BT_CONNECTED:
+                    mAppState.bluetoothPresent();
                     //setBTLogoConnected();
-                    mAdapter.setBluetoothPresent();
+                    //mAdapter.setBluetoothPresent();
                     break;
 
                 case ControlService.MSG_BT_DISCONNECTED:
+                    mAppState.bluetoothNotPresent();
                     //setBTLogoDisconnected();
-                    mAdapter.noBluetooth();
+                    //mAdapter.noBluetooth();
                     break;
 
                 case ControlService.MSG_START_COUNTDOWN:
+                    mAppState.countdownStart();
 
+                    /*
                     isQuestionnairePresent = true;
                     isTimer = true;
 
@@ -670,10 +770,12 @@ public class MainActivity extends AppCompatActivity {
                         //mAdapter.displayManualStart();
                     } else {
                         mAdapter.noQuestionnaires();
-                    }
+                    }*/
                     break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
+                    mAppState.startQuest();
+                    /*
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
                     String head = dataQuest.getString("head");
@@ -681,10 +783,12 @@ public class MainActivity extends AppCompatActivity {
                     String surveyUri = dataQuest.getString("surveyUri");
                     String motivation = dataQuest.getString("motivation");
                     mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation);
+                    */
                     break;
 
                 case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
-                    mAdapter.proposeQuestionnaire();
+                    mAppState.countdownFinish();
+                    //mAdapter.proposeQuestionnaire();
                     break;
 
                 case ControlService.MSG_GET_STATUS:
@@ -694,6 +798,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
+                    /*
                     if (mServiceIsRecording) {
                         mRecord.setBackgroundTintList(
                                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
@@ -702,16 +807,16 @@ public class MainActivity extends AppCompatActivity {
                         mRecord.setBackgroundTintList(
                                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                         darker_gray, null)));
-                    }
+                    }*/
                     break;
 
                 case ControlService.MSG_NO_TIMER:
-                    isTimer = false;
-                    mAdapter.noTimer();
+                    //isTimer = false;
+                    //mAdapter.noTimer();
                     break;
 
                 case ControlService.MSG_RESET_MENU:
-                    mAdapter.resetMenu();
+                    //mAdapter.resetMenu();
                     break;
 
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
@@ -719,15 +824,23 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_START_RECORDING:
-                    setBTLogoConnected();
+                    mAppState.bluetoothPresent();
+                    isBluetoothPresent = true;
+                    //setBTLogoConnected();
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
-                    setBTLogoDisconnected();
+                    mAppState.bluetoothNotPresent();
+                    isBluetoothPresent = false;
+                    //setBTLogoDisconnected();
                     break;
 
-                case ControlService.MSG_TIME_PLAUSIBLE:
-                    mAdapter.setTimePlausible(msg.getData().getBoolean("timePlausible"));
+                case ControlService.MSG_TIME_CORRECT:
+                    mAppState.timeCorrect();
+                    //mAdapter.setTimePlausible(msg.getData().getBoolean("timePlausible"));
+                    break;
+                case ControlService.MSG_TIME_INCORRECT:
+                    mAppState.timeIncorrect();
                     break;
 
                 default:
