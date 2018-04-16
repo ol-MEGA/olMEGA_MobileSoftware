@@ -203,7 +203,7 @@ public class ControlService extends Service {
     private Runnable mDateTimeRunnable = new Runnable() {
         @Override
         public void run() {
-            putTime();
+            checkTime();
             mTaskHandler.postDelayed(mDateTimeRunnable, mDelayDateTime);
         }
     };
@@ -321,7 +321,7 @@ public class ControlService extends Service {
                         //mBluetoothAdapter.startDiscovery();
                     }
 
-                    timePlausible();
+                    checkTime();
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
@@ -635,7 +635,7 @@ public class ControlService extends Service {
         return chunkId;
     }
 
-    private boolean timePlausible() {
+    private boolean checkTime() {
         // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
 
         if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
@@ -649,32 +649,6 @@ public class ControlService extends Service {
             Log.e(LOG, "Device Time reset: " + Calendar.getInstance().getTime());
             return true;
         }
-    }
-
-    private void putTime() {
-
-        timePlausible();
-
-        // Might not be needed any more
-
-        /*
-        dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
-        Date dateNew = dateTime.getTime();
-        try {
-            Date dateOld = DATE_FORMAT.parse(sharedPreferences.getString("currentDateTime", "0"));
-            if (dateNew.after(dateOld)) {
-                sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateNew)).apply();
-                Logger.info("Time put: " + DATE_FORMAT.format(dateNew));
-            } else {
-                Log.e(LOG, "Date was set back!!!");
-                Logger.info("Device time reset: " + DATE_FORMAT.format(dateNew));
-                sharedPreferences.edit().putString("currentDateTime", DATE_FORMAT.format(dateNew)).apply();
-            }
-        } catch (ParseException p) {
-            Log.e(LOG, "Parsing Exception: " + p.getMessage());
-        }
-        */
-
     }
 
     private void announceBTDisconnected() {
@@ -761,6 +735,8 @@ public class ControlService extends Service {
             audioRecorder.stop();
             //audioRecorder.close();
             setIsRecording(false);
+
+            messageClient(MSG_STOP_RECORDING);
         }
     }
 

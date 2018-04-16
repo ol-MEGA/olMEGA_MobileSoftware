@@ -66,7 +66,7 @@ public class StateProposing implements AppState {
     @Override
     public void bluetoothNotPresent() {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setState(mainActivity.getStateError());
+        mainActivity.setState(mainActivity.getStateConnecting());
         mainActivity.mAppState.setInterface();
     }
 

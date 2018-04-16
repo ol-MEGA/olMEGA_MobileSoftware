@@ -19,7 +19,7 @@ public class StateConnecting implements AppState {
     private QuestionnairePagerAdapter qpa;
     private int mDelayConnecting = 90*1000;
     private int mDelayDots = 500;
-    private int mDelayPollBT = 10*1000;
+    private int mDelayPollBT = 30*1000;
     private String[] mStringDots = {"   ", "•  ", "•• ", "•••"};
     private int iDot = 0;
     private boolean blockError;
@@ -72,7 +72,7 @@ public class StateConnecting implements AppState {
         mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
         mainActivity.mTaskHandler.post(mDotRunnable);
         // Have to run tests whether this is necessary
-        //mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
+        mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
         Log.e(LOG, LOG);
     }
@@ -117,16 +117,8 @@ public class StateConnecting implements AppState {
 
     @Override
     public void bluetoothNotPresent() {
-
         mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-
-        // No error message during startup
-        if (!blockError) {
-            mainActivity.setState(mainActivity.getStateError());
-            mainActivity.mAppState.setInterface();
-            stopConnecting();
-        }
     }
 
     @Override
@@ -187,6 +179,8 @@ public class StateConnecting implements AppState {
         mainActivity.mTaskHandler.removeCallbacks(mDotRunnable);
         mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
+
+        Log.e(LOG, "State Connecting going on to Error..");
 
         mainActivity.setState(mainActivity.getStateError());
         mainActivity.mAppState.setInterface();

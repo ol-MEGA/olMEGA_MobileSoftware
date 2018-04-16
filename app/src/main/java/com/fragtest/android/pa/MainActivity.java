@@ -148,17 +148,13 @@ public class MainActivity extends AppCompatActivity {
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
             mErrorList.add(error.getErrorMessage());
-            //mErrorAdapter.notifyDataSetChanged();
         }
-        //reactToErrors();
     }
 
     public void removeError(AppErrors error) {
         if (mErrorList.contains(error.getErrorMessage())) {
             mErrorList.remove(error.getErrorMessage());
-            //mErrorAdapter.notifyDataSetChanged();
         }
-        //reactToErrors();
     }
 
     // Battery Status Receiver
@@ -172,30 +168,15 @@ public class MainActivity extends AppCompatActivity {
             if (plugged && !isCharging) {
                 mAppState.chargeOn();
                 // a change towards charging
-                //mCharging.setVisibility(View.VISIBLE);
-                //mAdapter.announceBatteryCharging();
                 messageService(ControlService.MSG_CHARGING_ON);
-                //Log.e(LOG, "Yes we are charging now");
-
             } else if (!plugged && isCharging){
                 mAppState.chargeOff();
                 // a change towards not charging
-                //mCharging.setVisibility(View.INVISIBLE);
-                //mAdapter.announceBatteryNotCharging();
                 messageService(ControlService.MSG_CHARGING_OFF);
-                //Log.e(LOG, "Yes we are NOT charging any more");
             }
-
-            //if (!plugged) {
-                //mCharging.setVisibility(View.INVISIBLE);
-            //}
-
             isCharging = plugged;
-
         }
     };
-
-
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -226,24 +207,6 @@ public class MainActivity extends AppCompatActivity {
             mServiceMessenger = null;
         }
     };
-    private ViewPager.OnPageChangeListener myOnPageChangeListener =
-            new ViewPager.OnPageChangeListener() {
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                }
-
-                @Override
-                public void onPageScrolled(int position,
-                                           float positionOffset, int positionOffsetPixels) {
-                }
-
-                @Override
-                public void onPageSelected(int position) {
-                    mAdapter.setQuestionnaireProgressBar(position);
-                    mAdapter.setArrows(position);
-                }
-            };
 
     // Is ControlService already running?
     private boolean isServiceRunning() {
@@ -312,6 +275,39 @@ public class MainActivity extends AppCompatActivity {
         messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
     }
 
+    public String getVersion() {
+        try {
+            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public void incrementPage() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
+    }
+
+    private ViewPager.OnPageChangeListener myOnPageChangeListener =
+            new ViewPager.OnPageChangeListener() {
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                }
+
+                @Override
+                public void onPageScrolled(int position,
+                                           float positionOffset, int positionOffsetPixels) {
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    mAdapter.setQuestionnaireProgressBar(position);
+                    mAdapter.setArrows(position);
+                }
+            };
+
 
     /** State Affairs **/
 
@@ -352,6 +348,27 @@ public class MainActivity extends AppCompatActivity {
         mAppState.finishQuest();
     }
 
+    public void setBTLogoConnected() {
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        R.color.BatteryGreen, null)));
+    }
+
+    public void setBTLogoDisconnected() {
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        R.color.darkerGray, null)));
+    }
+
+    private void setConfigVisibility() {
+        if (showConfigButton) {
+            mConfig.setVisibility(View.VISIBLE);
+        } else {
+            mConfig.setVisibility(View.GONE);
+        }
+    }
+
+
     /** Lifecycle methods */
 
 
@@ -362,10 +379,6 @@ public class MainActivity extends AppCompatActivity {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-        /*
-        showConfigButton = sharedPreferences.getBoolean("showConfigButton", showConfigButton);
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", showRecordingButton);
-*/
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
@@ -416,7 +429,6 @@ public class MainActivity extends AppCompatActivity {
             handleNewPagerAdapter();
 
             mAdapter.createMenu();
-            mAdapter.onCreate();
 
             mStateCharging = new StateCharging(this, mAdapter);
             mStateError = new StateError(this, mAdapter);
@@ -433,14 +445,6 @@ public class MainActivity extends AppCompatActivity {
         // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        /*if (!mDevicePolicyManager.isAdminActive(deviceAdmin)) {
-            Toast.makeText(this, "Not device admin.", Toast.LENGTH_SHORT).show();
-        }
-        if (mDevicePolicyManager.isDeviceOwnerApp(getPackageName())) {
-            mDevicePolicyManager.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
-        } else {
-            Toast.makeText(this, "Not device owner.", Toast.LENGTH_SHORT).show();
-        }*/
         mAdminComponentName = deviceAdmin;
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -465,7 +469,6 @@ public class MainActivity extends AppCompatActivity {
             Log.i(LOG, "onStart");
         }
         super.onStart();
-        mAdapter.onStart();
     }
 
     @Override
@@ -482,7 +485,6 @@ public class MainActivity extends AppCompatActivity {
         if (BuildConfig.DEBUG) {
             Log.i(LOG, "onStop");
         }
-        mAdapter.onStop();
     }
 
     @Override
@@ -517,49 +519,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         hideSystemUI(USE_KIOSK_MODE);
-    }
-
-    private void setConfigVisibility() {
-        if (showConfigButton) {
-            mConfig.setVisibility(View.VISIBLE);
-        } else {
-            mConfig.setVisibility(View.GONE);
-        }
-    }
-
-    /*private void setRecordingVisibility() {
-        if (showRecordingButton) {
-            mRecord.setVisibility(View.VISIBLE);
-        } else {
-            mRecord.setVisibility(View.INVISIBLE);
-        }
-    }*/
-
-    public String getVersion() {
-        try {
-            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
-            return pInfo.versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
-    public void incrementPage() {
-        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
-    }
-
-
-    public void setBTLogoConnected() {
-        mRecord.setBackgroundTintList(
-                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        R.color.BatteryGreen, null)));
-    }
-
-    public void setBTLogoDisconnected() {
-        mRecord.setBackgroundTintList(
-                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        R.color.darkerGray, null)));
     }
 
 
@@ -637,9 +596,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
                 }
-            }/*else {
-                stopLockTask();
-            }*/
+            }
         } catch (Exception e) {
             // TODO: Log and handle appropriately
         }
@@ -660,208 +617,6 @@ public class MainActivity extends AppCompatActivity {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_VISIBLE
             );
-        }
-    }
-
-
-    /** Message Handling */
-
-
-    // Send message to connected client
-    public void messageService(int what) {
-
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
-
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
-        }
-    }
-
-    // Send message to connected client
-    public void messageService(int what, Bundle data) {
-
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
-
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.setData(data);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
-        }
-    }
-
-    class MessageHandler extends Handler {
-
-        @Override
-        public void handleMessage(Message msg) {
-
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG, "Message received: " + msg.what);
-            }
-
-            switch (msg.what) {
-
-                //case ControlService.MSG_SET_VISIBILITY:
-
-                    //Bundle dataVisibility = msg.getData();
-                    //isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
-
-//                    if (isQuestionnairePresent) {
- //                       mAdapter.questionnairePresent();
-  //                  }
-
-                    //break;
-
-                case MSG_NO_QUESTIONNAIRE_FOUND:
-                    mAppState.noQuest();
-                    //isQuestionnairePresent = false;
-                    //mAdapter.noQuestionnaires();
-                    break;
-
-                case MSG_CHANGE_PREFERENCE:
-                    Bundle data = msg.getData();
-                    if (data.getString("type").equals("boolean")) {
-                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
-                                edit().putBoolean(data.getString("key"), data.getBoolean("value")).
-                                apply();
-                    }
-                    shipPreferencesToControlService();
-                    break;
-
-                //case ControlService.MSG_BT_CONNECTED:
-                    //mAppState.bluetoothPresent();
-                    //setBTLogoConnected();
-                    //mAdapter.setBluetoothPresent();
-                    //break;
-
-                //case ControlService.MSG_BT_DISCONNECTED:
-                    //mAppState.bluetoothNotPresent();
-                    //setBTLogoDisconnected();
-                    //mAdapter.noBluetooth();
-                    //break;
-
-                case MSG_SET_COUNTDOWN_TIME:
-                    int finalCountDown = msg.getData().getInt("finalCountDown");
-                    int countDownInterval = msg.getData().getInt("countDownInterval");
-                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
-                    mAppState.countdownStart();
-                    break;
-                //case ControlService.MSG_START_COUNTDOWN:
-                    //mAppState.countdownStart();
-
-                    /*
-                    isQuestionnairePresent = true;
-                    isTimer = true;
-
-                    if (isQuestionnairePresent) {
-                        int finalCountDown = msg.getData().getInt("finalCountDown");
-                        int countDownInterval = msg.getData().getInt("countDownInterval");
-                        if (isTimer) {
-                            mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
-                            mAdapter.startCountDown();
-                        } else {
-                            mAdapter.setQuestionnaireProgressBar(100);
-                        }
-                        mAdapter.questionnairePresent();
-                        //mAdapter.displayManualStart();
-                    } else {
-                        mAdapter.noQuestionnaires();
-                    }*/
-                    //break;
-
-                case ControlService.MSG_START_QUESTIONNAIRE:
-                    Bundle dataQuest = msg.getData();
-                    ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
-                    String head = dataQuest.getString("head");
-                    String foot = dataQuest.getString("foot");
-                    String surveyUri = dataQuest.getString("surveyUri");
-                    String motivation = dataQuest.getString("motivation");
-                    mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation);
-                    mAppState.startQuest();
-                    /*
-
-                    */
-                    break;
-
-                case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
-                    mAppState.countdownFinish();
-                    //mAdapter.proposeQuestionnaire();
-                    break;
-
-                case ControlService.MSG_GET_STATUS:
-                    // Set UI to match ControlService's state
-                    Bundle status = msg.getData();
-                    mServiceIsRecording = status.getBoolean("isRecording");
-
-                    Log.d(LOG, "recording state: " + mServiceIsRecording);
-
-                    if (isBluetoothPresent) {
-                        mAppState.bluetoothPresent();
-                    } else {
-                        mAppState.bluetoothNotPresent();
-                    }
-
-                    /*
-                    if (mServiceIsRecording) {
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        holo_green_dark, null)));
-                    } else {
-                        mRecord.setBackgroundTintList(
-                                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                        darker_gray, null)));
-                    }*/
-                    break;
-
-                //case ControlService.MSG_NO_TIMER:
-                    //isTimer = false;
-                    //mAdapter.noTimer();
-                  //  break;
-
-                //case ControlService.MSG_RESET_MENU:
-                    //mAdapter.resetMenu();
-                    //break;
-
-                case ControlService.MSG_PREFS_IN_FOREGROUND:
-                    isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
-                    break;
-
-                case ControlService.MSG_START_RECORDING:
-                    mAppState.bluetoothPresent();
-                    isBluetoothPresent = true;
-                    //setBTLogoConnected();
-                    break;
-
-                case ControlService.MSG_STOP_RECORDING:
-                    mAppState.bluetoothNotPresent();
-                    isBluetoothPresent = false;
-                    //setBTLogoDisconnected();
-                    break;
-
-                case ControlService.MSG_TIME_CORRECT:
-                    mAppState.timeCorrect();
-                    //mAdapter.setTimePlausible(msg.getData().getBoolean("timePlausible"));
-                    break;
-                case ControlService.MSG_TIME_INCORRECT:
-                    mAppState.timeIncorrect();
-                    break;
-
-                default:
-                    super.handleMessage(msg);
-                    break;
-            }
         }
     }
 
@@ -941,4 +696,154 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /** Message Handling */
+
+
+    // Send message to connected client
+    public void messageService(int what) {
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "Sending Message: " + what);
+        }
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.replyTo = mMessageHandler;
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        }
+    }
+
+    // Send message to connected client
+    public void messageService(int what, Bundle data) {
+
+        if (BuildConfig.DEBUG) {
+            Log.e(LOG, "Sending Message: " + what);
+        }
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.setData(data);
+                msg.replyTo = mMessageHandler;
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        }
+    }
+
+    class MessageHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            if (BuildConfig.DEBUG) {
+                Log.d(LOG, "Message received: " + msg.what);
+            }
+
+            switch (msg.what) {
+
+                case MSG_NO_QUESTIONNAIRE_FOUND:
+
+                    mAppState.noQuest();
+
+                    break;
+
+                case MSG_CHANGE_PREFERENCE:
+
+                    Bundle data = msg.getData();
+                    if (data.getString("type").equals("boolean")) {
+                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
+                                edit().putBoolean(data.getString("key"), data.getBoolean("value")).
+                                apply();
+                    }
+                    shipPreferencesToControlService();
+
+                    break;
+
+                case MSG_SET_COUNTDOWN_TIME:
+
+                    int finalCountDown = msg.getData().getInt("finalCountDown");
+                    int countDownInterval = msg.getData().getInt("countDownInterval");
+                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
+                    mAppState.countdownStart();
+
+                    break;
+
+                case ControlService.MSG_START_QUESTIONNAIRE:
+
+                    Bundle dataQuest = msg.getData();
+                    ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
+                    String head = dataQuest.getString("head");
+                    String foot = dataQuest.getString("foot");
+                    String surveyUri = dataQuest.getString("surveyUri");
+                    String motivation = dataQuest.getString("motivation");
+                    mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation);
+                    mAppState.startQuest();
+
+                    break;
+
+                case ControlService.MSG_PROPOSE_QUESTIONNAIRE:
+
+                    mAppState.countdownFinish();
+
+                    break;
+
+                case ControlService.MSG_GET_STATUS:
+
+                    // Set UI to match ControlService's state
+                    Bundle status = msg.getData();
+                    mServiceIsRecording = status.getBoolean("isRecording");
+
+                    Log.d(LOG, "recording state: " + mServiceIsRecording);
+
+                    if (isBluetoothPresent) {
+                        mAppState.bluetoothPresent();
+                    } else {
+                        mAppState.bluetoothNotPresent();
+                    }
+
+                    break;
+
+                case ControlService.MSG_PREFS_IN_FOREGROUND:
+
+                    isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
+                    break;
+
+                case ControlService.MSG_START_RECORDING:
+
+                    mAppState.bluetoothPresent();
+                    isBluetoothPresent = true;
+
+                    break;
+
+                case ControlService.MSG_STOP_RECORDING:
+
+                    mAppState.bluetoothNotPresent();
+                    isBluetoothPresent = false;
+
+                    break;
+
+                case ControlService.MSG_TIME_CORRECT:
+
+                    mAppState.timeCorrect();
+
+                    break;
+                case ControlService.MSG_TIME_INCORRECT:
+
+                    mAppState.timeIncorrect();
+
+                    break;
+
+                default:
+
+                    super.handleMessage(msg);
+
+                    break;
+            }
+        }
+    }
 }
