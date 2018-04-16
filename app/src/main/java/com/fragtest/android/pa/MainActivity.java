@@ -14,6 +14,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +28,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -48,6 +50,7 @@ import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
@@ -60,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     private boolean USE_DEVELOPER_MODE = false;
+    private String LANGUAGE_CODE = "de";
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -208,7 +212,16 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    // Is ControlService already running?
+    private void setSystemLanguage() {
+        // Change system language
+        Resources res = this.getResources();
+        DisplayMetrics dm = this.getResources().getDisplayMetrics();
+        android.content.res.Configuration conf = res.getConfiguration();
+        conf.setLocale(new Locale(LANGUAGE_CODE.toLowerCase()));
+        res.updateConfiguration(conf, dm);
+
+    }
+
     private boolean isServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service :
@@ -377,6 +390,8 @@ public class MainActivity extends AppCompatActivity {
 
         mStatContext = this;
 
+        setSystemLanguage();
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (!isActivityRunning) {
@@ -418,7 +433,6 @@ public class MainActivity extends AppCompatActivity {
                         mAdapter.setPrefsInForeGround(isPrefsInForeGround);
                     }
                 });
-
 
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
