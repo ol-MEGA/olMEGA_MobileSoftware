@@ -3,6 +3,7 @@ package com.fragtest.android.pa.AppStates;
 import android.util.Log;
 import android.view.View;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -25,10 +26,15 @@ public class StateError implements AppState {
     @Override
     public void setInterface() {
         qpa.hideQuestionnaireProgressBar();
+        qpa.stopCountDown();
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoError));
         qpa.getMenuPage().makeTextSizeNormal();
+        qpa.getMenuPage().makeFontWeightNormal();
         qpa.getMenuPage().showErrorList();
+        qpa.getMenuPage().hideCountdownText();
+        qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
+        mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
 
         Log.e(LOG, LOG);
     }
@@ -104,7 +110,8 @@ public class StateError implements AppState {
 
     @Override
     public void finishQuest() {
-        // No questionnaires in error state
+        qpa.backToMenu();
+        setInterface();
     }
 
     @Override

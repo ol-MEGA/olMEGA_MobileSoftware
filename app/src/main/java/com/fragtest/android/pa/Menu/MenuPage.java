@@ -220,6 +220,20 @@ public class MenuPage extends AppCompatActivity {
         });
     }
 
+    public void resetQuestionnaireCallback() {
+        mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //resetStartTextSize();
+                mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
+            }
+        });
+    }
+
+    public void clearQuestionnaireCallback() {
+        mStartQuestionnaire.setOnClickListener(null);
+    }
+
     /*
     public void startConnecting() {
         if (mErrorList.contains(getMessage(ERROR_NOBT)) && !mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
@@ -271,6 +285,22 @@ public class MenuPage extends AppCompatActivity {
 
     public void hideTime() {
         mDate.setVisibility(View.INVISIBLE);
+    }
+
+    public void showCountdownText() {
+        mCountDownRemaining.setVisibility(View.VISIBLE);
+    }
+
+    public void hideCountdownText() {
+        mCountDownRemaining.setVisibility(View.INVISIBLE);
+    }
+
+    public void makeFontWeightBold() {
+        mStartQuestionnaire.setTypeface(null, Typeface.BOLD);
+    }
+
+    public void makeFontWeightNormal() {
+        mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
     }
 
     public LinearLayout generateView() {

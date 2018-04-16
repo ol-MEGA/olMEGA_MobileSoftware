@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -49,13 +50,18 @@ public class StateConnecting implements AppState {
     @Override
     public void setInterface() {
         qpa.hideQuestionnaireProgressBar();
+        qpa.stopCountDown();
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
         qpa.getMenuPage().makeTextSizeNormal();
-        mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
+        qpa.getMenuPage().makeFontWeightNormal();
         qpa.getMenuPage().mDots.setVisibility(View.VISIBLE);
-        mTaskHandler.post(mDotRunnable);
         qpa.getMenuPage().hideErrorList();
+        qpa.getMenuPage().hideCountdownText();
+        qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
+        mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+        mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
+        mTaskHandler.post(mDotRunnable);
 
         Log.e(LOG, LOG);
     }
@@ -133,7 +139,8 @@ public class StateConnecting implements AppState {
 
     @Override
     public void finishQuest() {
-        // No quest during connecting state
+        qpa.backToMenu();
+        setInterface();
     }
 
     @Override
@@ -160,8 +167,13 @@ public class StateConnecting implements AppState {
         qpa.getMenuPage().mDots.setVisibility(View.INVISIBLE);
         mTaskHandler.removeCallbacks(mConnectingRunnable);
         mTaskHandler.removeCallbacks(mDotRunnable);
-        mainActivity.setState(mainActivity.getStateError());
-        mainActivity.mAppState.setInterface();
         blockError = false;
+
+        if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL)) {
+            mainActivity.setState(mainActivity.getStateError());
+            mainActivity.mAppState.setInterface();
+        }
     }
 }

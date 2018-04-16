@@ -51,6 +51,7 @@ import java.util.Set;
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
+import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -345,6 +346,10 @@ public class MainActivity extends AppCompatActivity {
     /** QPA Modifiers **/
 
 
+    public void finishQuestionnaire() {
+        mAppState.finishQuest();
+    }
+
     /** Lifecycle methods */
 
 
@@ -571,6 +576,7 @@ public class MainActivity extends AppCompatActivity {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            enableKioskMode(true);
         }
     }
     // This disables the Volume Buttons
@@ -732,26 +738,30 @@ public class MainActivity extends AppCompatActivity {
                         PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
                                 edit().putBoolean(data.getString("key"), data.getBoolean("value")).
                                 apply();
-
-                        Log.i(LOG, "Boolean "+data.getString("key")+" changed to "+PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean(data.getString("key"), false));
                     }
                     shipPreferencesToControlService();
                     break;
 
-                case ControlService.MSG_BT_CONNECTED:
-                    mAppState.bluetoothPresent();
+                //case ControlService.MSG_BT_CONNECTED:
+                    //mAppState.bluetoothPresent();
                     //setBTLogoConnected();
                     //mAdapter.setBluetoothPresent();
-                    break;
+                    //break;
 
-                case ControlService.MSG_BT_DISCONNECTED:
-                    mAppState.bluetoothNotPresent();
+                //case ControlService.MSG_BT_DISCONNECTED:
+                    //mAppState.bluetoothNotPresent();
                     //setBTLogoDisconnected();
                     //mAdapter.noBluetooth();
-                    break;
+                    //break;
 
-                case ControlService.MSG_START_COUNTDOWN:
+                case MSG_SET_COUNTDOWN_TIME:
+                    int finalCountDown = msg.getData().getInt("finalCountDown");
+                    int countDownInterval = msg.getData().getInt("countDownInterval");
+                    mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
                     mAppState.countdownStart();
+                    break;
+                //case ControlService.MSG_START_COUNTDOWN:
+                    //mAppState.countdownStart();
 
                     /*
                     isQuestionnairePresent = true;
@@ -771,11 +781,9 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         mAdapter.noQuestionnaires();
                     }*/
-                    break;
+                    //break;
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
-                    mAppState.startQuest();
-                    /*
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
                     String head = dataQuest.getString("head");
@@ -783,6 +791,9 @@ public class MainActivity extends AppCompatActivity {
                     String surveyUri = dataQuest.getString("surveyUri");
                     String motivation = dataQuest.getString("motivation");
                     mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation);
+                    mAppState.startQuest();
+                    /*
+
                     */
                     break;
 

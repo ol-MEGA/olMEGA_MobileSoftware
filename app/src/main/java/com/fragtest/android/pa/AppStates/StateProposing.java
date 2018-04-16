@@ -23,8 +23,10 @@ public class StateProposing implements AppState {
 
     @Override
     public void setInterface() {
-        qpa.setQuestionnaireProgressBar(1f);
+        qpa.setQuestionnaireProgressBar(1.0f);
+        qpa.stopCountDown();
         qpa.getMenuPage().proposeQuestionnaire();
+        qpa.getMenuPage().hideCountdownText();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
 
         Log.e(LOG, LOG);

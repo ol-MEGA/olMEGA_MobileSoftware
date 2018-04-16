@@ -61,7 +61,6 @@ public class Questionnaire {
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
         mVersion = version;
-
     }
 
     public void setUp(ArrayList<String> questionList) {
@@ -436,6 +435,7 @@ public class Questionnaire {
 
     private void returnToMenu() {
         //mContextQPA.createMenu();
-        mMainActivity.setState(mMainActivity.getStateRunning());
+        //mMainActivity.setState(mMainActivity.getStateConnecting());
+        mMainActivity.finishQuestionnaire();
     }
 }

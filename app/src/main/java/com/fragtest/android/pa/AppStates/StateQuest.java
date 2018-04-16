@@ -3,6 +3,7 @@ package com.fragtest.android.pa.AppStates;
 import android.util.Log;
 import android.view.View;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
@@ -23,7 +24,15 @@ public class StateQuest implements AppState {
 
     @Override
     public void setInterface() {
+        qpa.stopCountDown();
+        qpa.getMenuPage().hideCountdownText();
+        qpa.getMenuPage().makeTextSizeNormal();
+        qpa.getMenuPage().makeFontWeightNormal();
+        qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
+        mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+
+        qpa.createQuestionnaire();
 
         Log.e(LOG, LOG);
     }
@@ -48,6 +57,7 @@ public class StateQuest implements AppState {
     @Override
     public void chargeOn() {
         mainActivity.setState(mainActivity.getStateCharging());
+        qpa.backToMenu();
         mainActivity.mAppState.setInterface();
     }
 
@@ -91,11 +101,16 @@ public class StateQuest implements AppState {
 
     @Override
     public void finishQuest() {
+
+        qpa.backToMenu();
+
         if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT) ||
                 mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST)) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
+        } else if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT)) {
+                mainActivity.setState(mainActivity.getStateConnecting());
+                mainActivity.mAppState.setInterface();
         } else {
             mainActivity.setState(mainActivity.getStateRunning());
             mainActivity.mAppState.setInterface();

@@ -3,6 +3,7 @@ package com.fragtest.android.pa.AppStates;
 import android.util.Log;
 import android.view.View;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -26,9 +27,15 @@ public class StateCharging implements AppState {
     public void setInterface() {
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoCharging));
         qpa.getMenuPage().makeTextSizeNormal();
+        qpa.getMenuPage().makeFontWeightNormal();
         qpa.hideQuestionnaireProgressBar();
+        qpa.stopCountDown();
         qpa.getMenuPage().hideErrorList();
+        qpa.getMenuPage().hideCountdownText();
+        qpa.getMenuPage().clearQuestionnaireCallback();
+
         mainActivity.mCharging.setVisibility(View.VISIBLE);
+        mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
 
         Log.e(LOG, LOG);
     }
@@ -95,7 +102,8 @@ public class StateCharging implements AppState {
 
     @Override
     public void finishQuest() {
-        // No quest during charging sate
+        qpa.backToMenu();
+        setInterface();
     }
 
     @Override

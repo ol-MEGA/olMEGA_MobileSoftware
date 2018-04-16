@@ -3,6 +3,7 @@ package com.fragtest.android.pa.AppStates;
 import android.util.Log;
 import android.view.View;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -26,9 +27,11 @@ public class StateRunning implements AppState {
     public void setInterface() {
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.menuText));
         qpa.getMenuPage().makeTextSizeNormal();
+        qpa.getMenuPage().makeFontWeightNormal();
         qpa.getMenuPage().showErrorList();
-        qpa.startCountDown();
+        qpa.getMenuPage().resetQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
+        mainActivity.messageService(ControlService.MSG_START_COUNTDOWN);
 
         Log.e(LOG, LOG);
     }
@@ -42,6 +45,7 @@ public class StateRunning implements AppState {
 
     @Override
     public void countdownStart() {
+        qpa.getMenuPage().showCountdownText();
         qpa.startCountDown();
     }
 
@@ -97,7 +101,7 @@ public class StateRunning implements AppState {
     @Override
     public void startQuest() {
         qpa.hideQuestionnaireProgressBar();
-        qpa.createQuestionnaire();
+        //qpa.createQuestionnaire();
         mainActivity.setState(mainActivity.getStateQuest());
         mainActivity.mAppState.setInterface();
     }
@@ -114,7 +118,7 @@ public class StateRunning implements AppState {
 
     @Override
     public void closeHelp() {
-        // Let's see
+        setInterface();
     }
 
     @Override

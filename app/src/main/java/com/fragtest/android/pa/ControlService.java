@@ -78,6 +78,8 @@ public class ControlService extends Service {
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
     public static final int MSG_START_COUNTDOWN = 22;
+    public static final int MSG_STOP_COUNTDOWN = 23;
+    public static final int MSG_SET_COUNTDOWN_TIME = 24;
 
     // 3* - questionnaire
     public static final int MSG_RESET_MENU = 30;
@@ -315,20 +317,28 @@ public class ControlService extends Service {
                     messageClient(MSG_GET_STATUS, status);
                     break;
 
+                case MSG_START_COUNTDOWN:
+                    setAlarmAndCountdown();
+                    break;
+
+                case MSG_STOP_COUNTDOWN:
+                    stopAlarmAndCountdown();
+                    break;
+
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
-                    if (!isActiveQuestionnaire && isBluetoothPresent) {
+                    //if (!isActiveQuestionnaire && isBluetoothPresent) {
                         startQuestionnaire("manual");
-                    }
+                    //}
                     break;
 
                 case MSG_PROPOSITION_ACCEPTED:
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
-                    mVibration.repeatingBurstOff();
-                    if (!isActiveQuestionnaire) {
+                    //mVibration.repeatingBurstOff();
+                    //if (!isActiveQuestionnaire) {
                         startQuestionnaire("auto");
-                    }
+                    //}
                     break;
 
                 case MSG_ISMENU:
@@ -343,7 +353,7 @@ public class ControlService extends Service {
                         Log.i(LOG, "Questionnaire active");
                     break;
 
-                case MSG_QUESTIONNAIRE_INACTIVE:
+                /*case MSG_QUESTIONNAIRE_INACTIVE:
                     // In case questionnaires are no longer present, program crashes..
                     // but shouldn't be a problem since it is destructive user interference (DUI).
                     isMenu = true;
@@ -355,7 +365,8 @@ public class ControlService extends Service {
                     } else {
                         messageClient(MSG_BT_DISCONNECTED);
                     }
-                    break;
+                    break;*/
+
 
                 case MSG_CHECK_FOR_PREFERENCES:
                     Bundle prefs = msg.getData();
@@ -638,7 +649,7 @@ public class ControlService extends Service {
         stopRecording();
         isBluetoothPresent = false;
         //messageClient(MSG_BT_DISCONNECTED);
-        stopAlarmAndCountdown();
+        //stopAlarmAndCountdown();
         mVibration.singleBurst();
     }
 
@@ -647,7 +658,7 @@ public class ControlService extends Service {
         startRecording();
         isBluetoothPresent = true;
         //messageClient(MSG_BT_CONNECTED);
-        setAlarmAndCountdown();
+        //setAlarmAndCountdown();
         mVibration.singleBurst();
     }
 
@@ -879,12 +890,14 @@ public class ControlService extends Service {
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
         }
 
+/*
         if (isTimer && questionnaireHasTimer) {
             setAlarmAndCountdown();
         } else {
             stopAlarmAndCountdown();
         }
         messageClient(MSG_RESET_MENU);
+        */
     }
 
     private Bundle getPreferences() {
@@ -956,39 +969,42 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        if (isQuestionnairePresent && isTimer && isBluetoothPresent) {
+        //if (isQuestionnairePresent && isTimer && isBluetoothPresent) {
 
-            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-            mTimerInterval = mXmlReader.getNewTimerInterval();
-            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
+        mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+        mTimerInterval = mXmlReader.getNewTimerInterval();
+        questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
 
-            // Needed for the first run
-            if (questionnaireHasTimer) {
-                if (!isTimerRunning) {
+        // Needed for the first run
+        if (questionnaireHasTimer) {
+            if (!isTimerRunning) {
 
-                    mEventTimer.stopTimer();
-                    mVibration.repeatingBurstOff();
-                    mEventTimer.setTimer(mTimerInterval);
-                    mFinalCountDown = mEventTimer.getFinalCountDown();
-                    isTimerRunning = true;
-                    if (BuildConfig.DEBUG) {
-                        Log.e(LOG, "Timer set to " + mTimerInterval + "s");
-                    }
-                } else {
-                    // Usually when app is restarted
-                    if (BuildConfig.DEBUG) {
-                        Log.i(LOG, "Timer already set. Reinstating countdown");
-                    }
-                }
+                mEventTimer.stopTimer();
+                mVibration.repeatingBurstOff();
+                mEventTimer.setTimer(mTimerInterval);
+                mFinalCountDown = mEventTimer.getFinalCountDown();
+                isTimerRunning = true;
+
+                Bundle dataCountdown = new Bundle();
+                dataCountdown.putInt("finalCountDown", mFinalCountDown);
+                dataCountdown.putInt("countDownInterval", mTimerInterval);
+                messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
+
             } else {
-                messageClient(MSG_NO_TIMER);
+                // Usually when app is restarted
+                if (BuildConfig.DEBUG) {
+                    Log.i(LOG, "Final Timer already set. Reinstating countdown");
+                }
             }
+            //} /*else {
+             //   messageClient(MSG_NO_TIMER);
+            //}*/
 
             // Send message to initialise / update timer
-            Bundle data = new Bundle();
-            data.putInt("finalCountDown", mFinalCountDown);
-            data.putInt("countDownInterval", mTimerInterval);
-            messageClient(MSG_START_COUNTDOWN, data);
+            //Bundle data = new Bundle();
+            //data.putInt("finalCountDown", mFinalCountDown);
+            //data.putInt("countDownInterval", mTimerInterval);
+            //messageClient(MSG_START_COUNTDOWN, data);
         }
     }
 
@@ -996,7 +1012,7 @@ public class ControlService extends Service {
 
         Log.e(LOG, "Cancelling Alarm.");
 
-        messageClient(MSG_NO_TIMER);
+        //messageClient(MSG_NO_TIMER);
         isTimerRunning = false;
         mEventTimer.stopTimer();
         mVibration.repeatingBurstOff();
