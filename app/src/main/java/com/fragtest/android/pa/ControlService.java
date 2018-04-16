@@ -176,6 +176,20 @@ public class ControlService extends Service {
 
     Context context = this;
 
+    private Runnable mStartRecordingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            audioRecorder = new AudioRecorder(
+                    serviceMessenger,
+                    Integer.parseInt(chunklengthInS),
+                    Integer.parseInt(samplerate),
+                    isWave);
+            audioRecorder.start();
+            setIsRecording(true);
+            messageClient(MSG_START_RECORDING);
+            mVibration.singleBurst();
+        }
+    };
 
     private Runnable mDateTimeRunnable = new Runnable() {
         @Override
@@ -271,7 +285,7 @@ public class ControlService extends Service {
                     mTaskHandler.post(mDateTimeRunnable);
 
                     // Bundled information about visible contents
-                    Bundle bundleShow = new Bundle();
+                    //Bundle bundleShow = new Bundle();
                     //bundleShow.putBoolean("showConfigButton", showConfigButton);
                     //bundleShow.putBoolean("showRecordingButton", showRecordingButton);
                     //bundleShow.putBoolean("isQuestionnairePresent", isQuestionnairePresent);
@@ -295,7 +309,7 @@ public class ControlService extends Service {
                     if (!needsBluetooth) {
                         announceBTConnected();
                     } else {
-                        mBluetoothAdapter.startDiscovery();
+                        //mBluetoothAdapter.startDiscovery();
                     }
 
                     timePlausible();
@@ -450,7 +464,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-                    //stopRecording(); is called by receiver
+                    //stopRecording() is called by receiver
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
@@ -663,7 +677,6 @@ public class ControlService extends Service {
         isBluetoothPresent = true;
         //messageClient(MSG_BT_CONNECTED);
         //setAlarmAndCountdown();
-        mVibration.singleBurst();
     }
 
     // Send message to connected client with additional data
@@ -708,7 +721,10 @@ public class ControlService extends Service {
         //if (isQuestionnairePresent) {
         Log.d(LOG, "Start caching audio");
         Logger.info("Start caching audio");
+        // A delay before starting a new recording prevents initialisation bug
         if (!getIsRecording()) {
+            /*Log.e(LOG, "XXX - Start Recording");
+
             audioRecorder = new AudioRecorder(
                     serviceMessenger,
                     Integer.parseInt(chunklengthInS),
@@ -716,9 +732,9 @@ public class ControlService extends Service {
                     isWave);
             audioRecorder.start();
             setIsRecording(true);
-            messageClient(MSG_START_RECORDING);
+            messageClient(MSG_START_RECORDING);*/
+            mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
         }
-        //}
     }
 
     private void stopRecording() {

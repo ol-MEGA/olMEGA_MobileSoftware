@@ -108,12 +108,15 @@ public class StateConnecting implements AppState {
 
     @Override
     public void bluetoothNotPresent() {
+
         mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+
         // No error message during startup
         if (!blockError) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
+            stopConnecting();
         }
     }
 
@@ -175,12 +178,6 @@ public class StateConnecting implements AppState {
         mTaskHandler.removeCallbacks(mDotRunnable);
         blockError = false;
 
-        /*if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT.getErrorMessage()) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
-            mainActivity.setState(mainActivity.getStateError());
-            mainActivity.mAppState.setInterface();
-        }*/
         mainActivity.setState(mainActivity.getStateError());
         mainActivity.mAppState.setInterface();
     }

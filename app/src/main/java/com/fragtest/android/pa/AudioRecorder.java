@@ -30,11 +30,13 @@ public class AudioRecorder {
     private boolean isWave;
     private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
+    private int samplerate;
 
     AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
 
         messenger = _messenger;
         isWave = _isWave;
+        samplerate = _samplerate;
 
         chunklengthInBytes = (_chunklengthInS * _samplerate * CHANNELS * BITS / 8);
 
@@ -43,9 +45,10 @@ public class AudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT
         );
 
+
         audioRecord = new AudioRecord(
                 MediaRecorder.AudioSource.DEFAULT,
-                _samplerate,
+                samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize
@@ -61,7 +64,13 @@ public class AudioRecorder {
 
 
     public void start() {
-
+        /*audioRecord = new AudioRecord(
+                MediaRecorder.AudioSource.DEFAULT,
+                samplerate,
+                AudioFormat.CHANNEL_IN_STEREO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+        );*/
         stopRecording = false;
         recordingThread.start();
     }

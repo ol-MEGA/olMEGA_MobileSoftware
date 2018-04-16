@@ -713,7 +713,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what) {
 
-                case ControlService.MSG_SET_VISIBILITY:
+                //case ControlService.MSG_SET_VISIBILITY:
 
                     //Bundle dataVisibility = msg.getData();
                     //isQuestionnairePresent = dataVisibility.getBoolean("isQuestionnairePresent", isQuestionnairePresent);
@@ -722,7 +722,7 @@ public class MainActivity extends AppCompatActivity {
  //                       mAdapter.questionnairePresent();
   //                  }
 
-                    break;
+                    //break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
                     mAppState.noQuest();
@@ -806,6 +806,12 @@ public class MainActivity extends AppCompatActivity {
                     mServiceIsRecording = status.getBoolean("isRecording");
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
+
+                    if (isBluetoothPresent) {
+                        mAppState.bluetoothPresent();
+                    } else {
+                        mAppState.bluetoothNotPresent();
+                    }
 
                     /*
                     if (mServiceIsRecording) {

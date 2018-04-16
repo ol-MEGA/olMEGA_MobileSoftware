@@ -35,6 +35,7 @@ public class StateCharging implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.setBTLogoDisconnected();
 
+        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.mCharging.setVisibility(View.VISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
         mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);

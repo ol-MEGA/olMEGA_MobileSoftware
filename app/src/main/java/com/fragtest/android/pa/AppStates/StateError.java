@@ -69,11 +69,10 @@ public class StateError implements AppState {
     @Override
     public void bluetoothPresent() {
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.setBTLogoConnected();
 
-        if (!mainActivity.mErrorList.contains(
-                MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) &&
-                !mainActivity.mErrorList.contains(
-                MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
+        if (!mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) &&
+                !mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
             mainActivity.setState(mainActivity.getStateRunning());
             mainActivity.mAppState.setInterface();
         }

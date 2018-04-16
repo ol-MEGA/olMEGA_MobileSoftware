@@ -32,6 +32,7 @@ public class StateRunning implements AppState {
         qpa.getMenuPage().resetQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_START_COUNTDOWN);
+        mainActivity.setBTLogoConnected();
 
         Log.e(LOG, LOG);
     }
