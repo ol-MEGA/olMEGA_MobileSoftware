@@ -113,8 +113,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public final Runnable mSetProgressBarFullRunnable = new Runnable() {
         @Override
         public void run() {
-                setQuestionnaireProgressBar(1.1f);
-
+                setQuestionnaireProgressBar(2f);
         }
     };
 

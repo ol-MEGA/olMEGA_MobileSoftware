@@ -30,7 +30,7 @@ public class StateProposing implements AppState {
         qpa.getMenuPage().proposeQuestionnaire();
         qpa.getMenuPage().hideCountdownText();
         mTaskHandler.post(qpa.mSetProgressBarFullRunnable);
-        mTaskHandler.removeCallbacks(qpa.mSetProgressBarFullRunnable);
+        //mTaskHandler.removeCallbacks(qpa.mSetProgressBarFullRunnable);
 
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
 

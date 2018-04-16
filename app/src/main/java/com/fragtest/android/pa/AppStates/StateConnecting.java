@@ -18,8 +18,9 @@ public class StateConnecting implements AppState {
     private final String LOG = "StateConnecting";
     private MainActivity mainActivity;
     private QuestionnairePagerAdapter qpa;
-    private int mDelayConnecting = 5*1000;
+    private int mDelayConnecting = 90*1000;
     private int mDelayDots = 500;
+    private int mDelayPollBT = 10*1000;
     private String[] mStringDots = {"   ", "•  ", "•• ", "•••"};
     private int iDot = 0;
     private boolean blockError;
@@ -29,6 +30,14 @@ public class StateConnecting implements AppState {
         @Override
         public void run() {
             stopConnecting();
+        }
+    };
+
+    private Runnable mPollBTRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mainActivity.messageService(ControlService.MSG_RESET_BT);
+            mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
         }
     };
 
@@ -64,6 +73,8 @@ public class StateConnecting implements AppState {
         mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
         mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
         mTaskHandler.post(mDotRunnable);
+        // Have to run tests whether this is necessary
+        //mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
         Log.e(LOG, LOG);
     }
@@ -176,6 +187,7 @@ public class StateConnecting implements AppState {
         qpa.getMenuPage().mDots.setVisibility(View.INVISIBLE);
         mTaskHandler.removeCallbacks(mConnectingRunnable);
         mTaskHandler.removeCallbacks(mDotRunnable);
+        mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
         mainActivity.setState(mainActivity.getStateError());

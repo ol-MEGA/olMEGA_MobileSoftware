@@ -825,14 +825,14 @@ public class MainActivity extends AppCompatActivity {
                     }*/
                     break;
 
-                case ControlService.MSG_NO_TIMER:
+                //case ControlService.MSG_NO_TIMER:
                     //isTimer = false;
                     //mAdapter.noTimer();
-                    break;
+                  //  break;
 
-                case ControlService.MSG_RESET_MENU:
+                //case ControlService.MSG_RESET_MENU:
                     //mAdapter.resetMenu();
-                    break;
+                    //break;
 
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
                     isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);

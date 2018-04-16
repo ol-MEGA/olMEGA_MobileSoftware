@@ -68,7 +68,7 @@ public class ControlService extends Service {
     public static final int MSG_REGISTER_CLIENT = 11;
     public static final int MSG_UNREGISTER_CLIENT = 12;
     public static final int MSG_GET_STATUS = 13;
-    public static final int MSG_SET_VISIBILITY = 14;
+    public static final int MSG_RESET_BT = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_NO_TIMER = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
@@ -171,6 +171,7 @@ public class ControlService extends Service {
     static final Object processingLock = new Object();
 
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    private int mDelayResetBT = 500;
 
     public static final boolean useLogMode = true;
 
@@ -188,6 +189,14 @@ public class ControlService extends Service {
             setIsRecording(true);
             messageClient(MSG_START_RECORDING);
             mVibration.singleBurst();
+        }
+    };
+
+    private Runnable mResetBTAdapterRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mBluetoothAdapter.enable();
+            mBluetoothAdapter.startDiscovery();
         }
     };
 
@@ -329,6 +338,12 @@ public class ControlService extends Service {
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", getIsRecording());
                     messageClient(MSG_GET_STATUS, status);
+                    break;
+
+                case MSG_RESET_BT:
+                    mBluetoothAdapter.cancelDiscovery();
+                    mBluetoothAdapter.disable();
+                    mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
                     break;
 
                 case MSG_START_COUNTDOWN:
