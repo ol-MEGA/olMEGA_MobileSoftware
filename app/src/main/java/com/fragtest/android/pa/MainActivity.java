@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     private Messenger mServiceMessenger;
-    private Handler mTaskHandler = new Handler();
+    public Handler mTaskHandler = new Handler();
 
     public ViewPager mViewPager;
     private QuestionnairePagerAdapter mAdapter;

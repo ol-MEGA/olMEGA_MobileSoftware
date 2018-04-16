@@ -52,6 +52,8 @@ public class StateRunning implements AppState {
 
     @Override
     public void countdownFinish() {
+        mainActivity.mTaskHandler.post(qpa.mSetProgressBarFullRunnable);
+        mainActivity.mTaskHandler.removeCallbacks(qpa.mSetProgressBarFullRunnable);
         mainActivity.setState(mainActivity.getStateProposing());
         mainActivity.mAppState.setInterface();
     }

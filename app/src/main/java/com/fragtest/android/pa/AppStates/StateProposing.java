@@ -1,6 +1,5 @@
 package com.fragtest.android.pa.AppStates;
 
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
@@ -16,7 +15,6 @@ public class StateProposing implements AppState {
     private final String LOG = "StateProposing";
     private MainActivity mainActivity;
     private QuestionnairePagerAdapter qpa;
-    private Handler mTaskHandler = new Handler();
 
     public StateProposing(MainActivity context, QuestionnairePagerAdapter qpa) {
         this.mainActivity = context;
@@ -25,17 +23,13 @@ public class StateProposing implements AppState {
 
     @Override
     public void setInterface() {
-        //qpa.setQuestionnaireProgressBar(1.0f);
         qpa.stopCountDown();
         qpa.getMenuPage().proposeQuestionnaire();
         qpa.getMenuPage().hideCountdownText();
-        mTaskHandler.post(qpa.mSetProgressBarFullRunnable);
-        //mTaskHandler.removeCallbacks(qpa.mSetProgressBarFullRunnable);
-
+        qpa.fillQuestionnaireProgressBar();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
 
         Log.e(LOG, LOG);
-
     }
 
     @Override
@@ -98,7 +92,6 @@ public class StateProposing implements AppState {
 
     @Override
     public void startQuest() {
-        qpa.setQuestionnaireProgressBar(0);
         qpa.createQuestionnaire();
         mainActivity.setState(mainActivity.getStateQuest());
         mainActivity.mAppState.setInterface();

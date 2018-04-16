@@ -1,6 +1,5 @@
 package com.fragtest.android.pa.AppStates;
 
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 
@@ -24,7 +23,6 @@ public class StateConnecting implements AppState {
     private String[] mStringDots = {"   ", "•  ", "•• ", "•••"};
     private int iDot = 0;
     private boolean blockError;
-    private Handler mTaskHandler = new Handler();
 
     private Runnable mConnectingRunnable = new Runnable() {
         @Override
@@ -37,7 +35,7 @@ public class StateConnecting implements AppState {
         @Override
         public void run() {
             mainActivity.messageService(ControlService.MSG_RESET_BT);
-            mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
+            mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
         }
     };
 
@@ -46,7 +44,7 @@ public class StateConnecting implements AppState {
         public void run() {
             qpa.getMenuPage().mDots.setText(mStringDots[iDot%4]);
             iDot++;
-            mTaskHandler.postDelayed(mDotRunnable, mDelayDots);
+            mainActivity.mTaskHandler.postDelayed(mDotRunnable, mDelayDots);
         }
     };
 
@@ -71,8 +69,8 @@ public class StateConnecting implements AppState {
         mainActivity.setBTLogoDisconnected();
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
         mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
-        mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
-        mTaskHandler.post(mDotRunnable);
+        mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
+        mainActivity.mTaskHandler.post(mDotRunnable);
         // Have to run tests whether this is necessary
         //mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
@@ -185,9 +183,9 @@ public class StateConnecting implements AppState {
 
     private void stopConnecting() {
         qpa.getMenuPage().mDots.setVisibility(View.INVISIBLE);
-        mTaskHandler.removeCallbacks(mConnectingRunnable);
-        mTaskHandler.removeCallbacks(mDotRunnable);
-        mTaskHandler.removeCallbacks(mPollBTRunnable);
+        mainActivity.mTaskHandler.removeCallbacks(mConnectingRunnable);
+        mainActivity.mTaskHandler.removeCallbacks(mDotRunnable);
+        mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
         mainActivity.setState(mainActivity.getStateError());

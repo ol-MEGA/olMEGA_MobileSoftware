@@ -113,7 +113,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public final Runnable mSetProgressBarFullRunnable = new Runnable() {
         @Override
         public void run() {
-                setQuestionnaireProgressBar(2f);
+                setQuestionnaireProgressBar(0.9999f);
         }
     };
 
@@ -380,6 +380,28 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         float nProgress = 0;
         float nRegress = 1;
+
+        LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nRegress
+        );
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                nProgress
+        );
+
+        progress.setLayoutParams(progParams);
+        regress.setLayoutParams(regParams);
+    }
+
+    public void fillQuestionnaireProgressBar() {
+        View progress = mMainActivity.mProgress;
+        View regress = mMainActivity.mRegress;
+
+        float nProgress = 1;
+        float nRegress = 0;
 
         LinearLayout.LayoutParams progParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
