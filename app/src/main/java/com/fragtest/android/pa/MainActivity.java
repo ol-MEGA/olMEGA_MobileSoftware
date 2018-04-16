@@ -14,8 +14,10 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -63,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     private boolean USE_DEVELOPER_MODE = false;
-    private String LANGUAGE_CODE = "de";
+    private Locale LANGUAGE_CODE = Locale.GERMANY;
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -122,8 +124,8 @@ public class MainActivity extends AppCompatActivity {
     private StateQuest mStateQuest;
     private StateRunning mStateRunning;
 
+    // Context
     private static Context mStatContext;
-
     public static Context getContext(){
         return mStatContext;
     }
@@ -212,14 +214,21 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void setSystemLanguage() {
-        // Change system language
-        Resources res = this.getResources();
-        DisplayMetrics dm = this.getResources().getDisplayMetrics();
-        android.content.res.Configuration conf = res.getConfiguration();
-        conf.setLocale(new Locale(LANGUAGE_CODE.toLowerCase()));
-        res.updateConfiguration(conf, dm);
-
+    @SuppressWarnings("deprecation")
+    private void setSystemLocale() {
+        Resources resources = getResources();
+        Configuration configuration = resources.getConfiguration();
+        DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
+            configuration.setLocale(LANGUAGE_CODE);
+        } else{
+            configuration.locale = LANGUAGE_CODE;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            getApplicationContext().createConfigurationContext(configuration);
+        } else {
+            resources.updateConfiguration(configuration,displayMetrics);
+        }
     }
 
     private boolean isServiceRunning() {
@@ -390,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
 
         mStatContext = this;
 
-        setSystemLanguage();
+        setSystemLocale();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -438,7 +447,6 @@ public class MainActivity extends AppCompatActivity {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
             this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
 
             handleNewPagerAdapter();
 
