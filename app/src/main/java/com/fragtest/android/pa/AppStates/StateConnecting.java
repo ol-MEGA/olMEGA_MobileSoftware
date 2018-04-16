@@ -18,7 +18,7 @@ public class StateConnecting implements AppState {
     private final String LOG = "StateConnecting";
     private MainActivity mainActivity;
     private QuestionnairePagerAdapter qpa;
-    private int mDelayConnecting = 90*1000;
+    private int mDelayConnecting = 5*1000;
     private int mDelayDots = 500;
     private String[] mStringDots = {"   ", "•  ", "•• ", "•••"};
     private int iDot = 0;
@@ -59,7 +59,9 @@ public class StateConnecting implements AppState {
         qpa.getMenuPage().hideCountdownText();
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
+        mainActivity.setBTLogoDisconnected();
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+        mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
         mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
         mTaskHandler.post(mDotRunnable);
 
@@ -79,6 +81,8 @@ public class StateConnecting implements AppState {
     @Override
     public void noQuest() {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
+        mainActivity.setBTLogoDisconnected();
+        stopConnecting();
     }
 
     @Override
@@ -97,12 +101,14 @@ public class StateConnecting implements AppState {
     public void bluetoothPresent() {
         stopConnecting();
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.setBTLogoConnected();
         mainActivity.setState(mainActivity.getStateRunning());
         mainActivity.mAppState.setInterface();
     }
 
     @Override
     public void bluetoothNotPresent() {
+        mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         // No error message during startup
         if (!blockError) {
@@ -169,11 +175,13 @@ public class StateConnecting implements AppState {
         mTaskHandler.removeCallbacks(mDotRunnable);
         blockError = false;
 
-        if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL)) {
+        /*if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT.getErrorMessage()) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
-        }
+        }*/
+        mainActivity.setState(mainActivity.getStateError());
+        mainActivity.mAppState.setInterface();
     }
 }

@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import android.os.RemoteException;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -547,24 +549,20 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
     }
 
-    /*
-    private void setBTLogoConnected() {
-        //showRecordingButton = true;
-        setRecordingVisibility();
+
+    public void setBTLogoConnected() {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                         R.color.BatteryGreen, null)));
     }
 
-    private void setBTLogoDisconnected() {
-        //showRecordingButton = false;
-        setRecordingVisibility();
+    public void setBTLogoDisconnected() {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        darker_gray, null)));
+                        R.color.darkerGray, null)));
     }
 
-*/
+
 /** KIOSK MODE RELATED STUFF */
 
 

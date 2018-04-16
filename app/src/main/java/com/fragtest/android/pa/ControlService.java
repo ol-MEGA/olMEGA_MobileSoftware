@@ -313,7 +313,7 @@ public class ControlService extends Service {
 
                 case MSG_GET_STATUS:
                     Bundle status = new Bundle();
-                    status.putBoolean("isRecording", isRecording);
+                    status.putBoolean("isRecording", getIsRecording());
                     messageClient(MSG_GET_STATUS, status);
                     break;
 
@@ -369,24 +369,27 @@ public class ControlService extends Service {
 
 
                 case MSG_CHECK_FOR_PREFERENCES:
-                    Bundle prefs = msg.getData();
-                    updatePreferences(prefs);
+                    Log.i(LOG, "XXX get Data: " + msg.getData());
+                    if (!msg.getData().isEmpty()) {
+                        Bundle prefs = msg.getData();
+                        updatePreferences(prefs);
+                    }
                     checkForPreferences();
                     break;
 
-                case MSG_START_RECORDING:
+                /*case MSG_START_RECORDING:
                     startRecording();
                     break;
 
                 case MSG_STOP_RECORDING:
                     stopRecording();
                     break;
-
+*/
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
                     Logger.info("Stop caching audio");
                     audioRecorder.close();
-                    isRecording = false;
+                    setIsRecording(false);
                     messageClient(MSG_GET_STATUS);
                     break;
 
@@ -480,8 +483,9 @@ public class ControlService extends Service {
                 case MSG_CHARGING_ON:
                     isCharging = true;
                     Logger.info("Charging: active");
-                    stopRecording();
+
                     if (mBluetoothAdapter.isEnabled()) {
+                        stopRecording();
                         mBluetoothAdapter.disable();
                     }
                     mVibration.singleBurst();
@@ -701,27 +705,31 @@ public class ControlService extends Service {
     }
 
     private void startRecording() {
-        if (isQuestionnairePresent) {
-            Log.d(LOG, "Start caching audio");
-            Logger.info("Start caching audio");
-
+        //if (isQuestionnairePresent) {
+        Log.d(LOG, "Start caching audio");
+        Logger.info("Start caching audio");
+        if (!getIsRecording()) {
             audioRecorder = new AudioRecorder(
                     serviceMessenger,
                     Integer.parseInt(chunklengthInS),
                     Integer.parseInt(samplerate),
                     isWave);
-
             audioRecorder.start();
-            isRecording = true;
+            setIsRecording(true);
             messageClient(MSG_START_RECORDING);
         }
+        //}
     }
 
     private void stopRecording() {
-        Log.d(LOG, "Requesting stop caching audio");
-        Logger.info("Requesting stop caching audio");
-        if (isRecording) {
+
+        if (getIsRecording()) {
+            Log.d(LOG, "Requesting stop caching audio");
+            Logger.info("Requesting stop caching audio");
+
             audioRecorder.stop();
+            //audioRecorder.close();
+            setIsRecording(false);
         }
     }
 
@@ -904,6 +912,8 @@ public class ControlService extends Service {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
+        Log.i(LOG, "XXX Q present: "+isQuestionnairePresent);
+
         //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // recording
@@ -920,7 +930,7 @@ public class ControlService extends Service {
             String[] fileList = mFileIO.scanQuestOptions();
 
             if (fileList.length == 0) {
-                Log.e(LOG, "No Questionnaires available.");
+                Log.e(LOG, "XXX - No Questionnaires available.");
                 messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
                 isQuestionnairePresent = false;
             } else {
@@ -930,6 +940,8 @@ public class ControlService extends Service {
                 if (mTempQuestionnaire == null || mTempQuestionnaire.isEmpty()) {
                     mTempQuestionnaire = "";
                 }
+
+                Log.i(LOG, "XXX choosing: "+mSelectQuestionnaire);
 
                 if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
                     mSelectQuestionnaire = fileList[0];

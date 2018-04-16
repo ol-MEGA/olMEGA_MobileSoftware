@@ -110,10 +110,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     };
 
-    private final Runnable mHideProgressBarRunnable = new Runnable() {
+    public final Runnable mSetProgressBarFullRunnable = new Runnable() {
         @Override
         public void run() {
-                hideQuestionnaireProgressBar();
+                setQuestionnaireProgressBar(1.1f);
 
         }
     };
@@ -583,6 +583,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 if (isMenu) {
                     createHelpScreen();
                 } else {
+                    mMainActivity.mAppState.finishQuest();
                     //createMenu();
                     //startCountDown();
                 }

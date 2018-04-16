@@ -35,6 +35,7 @@ public class StateError implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+        mainActivity.setBTLogoDisconnected();
 
         Log.e(LOG, LOG);
     }
@@ -56,7 +57,6 @@ public class StateError implements AppState {
 
     @Override
     public void chargeOn() {
-       // mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.setState(mainActivity.getStateCharging());
         mainActivity.mAppState.setInterface();
     }
@@ -121,7 +121,7 @@ public class StateError implements AppState {
 
     @Override
     public void closeHelp() {
-        // Don't care for now -> later might make Help a state
+        setInterface();
     }
 
     @Override

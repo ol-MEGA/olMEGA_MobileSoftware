@@ -73,6 +73,7 @@ public class StateRunning implements AppState {
 
     @Override
     public void bluetoothNotPresent() {
+        mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.setState(mainActivity.getStateConnecting());
         mainActivity.mAppState.setInterface();

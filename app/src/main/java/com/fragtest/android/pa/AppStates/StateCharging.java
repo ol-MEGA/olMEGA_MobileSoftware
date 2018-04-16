@@ -33,9 +33,11 @@ public class StateCharging implements AppState {
         qpa.getMenuPage().hideErrorList();
         qpa.getMenuPage().hideCountdownText();
         qpa.getMenuPage().clearQuestionnaireCallback();
+        mainActivity.setBTLogoDisconnected();
 
         mainActivity.mCharging.setVisibility(View.VISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+        mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
 
         Log.e(LOG, LOG);
     }
@@ -57,14 +59,19 @@ public class StateCharging implements AppState {
 
     @Override
     public void chargeOn() {
-        //mainActivity.mCharging.setVisibility(View.VISIBLE);
+        // Already charging
     }
 
     @Override
     public void chargeOff() {
-        //mainActivity.mCharging.setVisibility(View.INVISIBLE);
-        mainActivity.setState(mainActivity.getStateConnecting());
-        mainActivity.mAppState.setInterface();
+        if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage()) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage())) {
+            mainActivity.setState(mainActivity.getStateError());
+            mainActivity.mAppState.setInterface();
+        } else {
+            mainActivity.setState(mainActivity.getStateConnecting());
+            mainActivity.mAppState.setInterface();
+        }
     }
 
     @Override

@@ -69,11 +69,13 @@ public class StateQuest implements AppState {
     @Override
     public void bluetoothPresent() {
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.setBTLogoConnected();
     }
 
     @Override
     public void bluetoothNotPresent() {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.setBTLogoDisconnected();
     }
 
     @Override
@@ -104,11 +106,11 @@ public class StateQuest implements AppState {
 
         qpa.backToMenu();
 
-        if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST)) {
+        if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage()) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage())) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
-        } else if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT)) {
+        } else if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT.getErrorMessage())) {
                 mainActivity.setState(mainActivity.getStateConnecting());
                 mainActivity.mAppState.setInterface();
         } else {
