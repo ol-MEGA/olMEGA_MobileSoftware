@@ -287,6 +287,8 @@ public class ControlService extends Service {
                     setupApplication();
                     mTaskHandler.post(mDateTimeRunnable);
 
+                    AudioFileIO.setChunkId(getChunkId());
+
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
                     // running transmitter
@@ -1016,6 +1018,10 @@ public class ControlService extends Service {
             processingBuffer[idx] = null;
         }
     }
+
+    /**
+     * BT optional
+     */
 
     private String getBTMajorDeviceClass(int major){
         switch(major){
