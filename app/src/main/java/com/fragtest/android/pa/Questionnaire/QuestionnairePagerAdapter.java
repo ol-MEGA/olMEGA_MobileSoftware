@@ -233,8 +233,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMotivation = motivation;
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot,
-                mSurveyURI, mMotivation, mVersion, this);
+        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI,
+                mMotivation, mVersion, this);
         mQuestionnaire.setUp(questionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -257,8 +257,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void createQuestionnaire() {
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
-        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI, mVersion,
-                mMotivation, this);
+        mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI,
+                mMotivation, mVersion, this);
 
         mQuestionnaire.setUp(mQuestionList);
 
