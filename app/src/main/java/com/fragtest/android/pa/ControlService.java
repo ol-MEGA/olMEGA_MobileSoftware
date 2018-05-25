@@ -43,6 +43,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
@@ -312,6 +313,7 @@ public class ControlService extends Service {
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null;
+                    stopAlarmAndCountdown();
                     Logger.info("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
@@ -342,13 +344,13 @@ public class ControlService extends Service {
 
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
-                        startQuestionnaire("manual");
+                    startQuestionnaire("manual");
                     break;
 
                 case MSG_PROPOSITION_ACCEPTED:
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
-                        startQuestionnaire("auto");
+                    startQuestionnaire("auto");
                     break;
 
                 case MSG_ISMENU:
@@ -364,7 +366,6 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHECK_FOR_PREFERENCES:
-                    Log.i(LOG, "XXX get Data: " + msg.getData());
                     if (!msg.getData().isEmpty()) {
                         Bundle prefs = msg.getData();
                         updatePreferences(prefs);
@@ -593,15 +594,24 @@ public class ControlService extends Service {
     private boolean checkTime() {
         // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
 
-        if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
+        long prefTime = sharedPreferences.getLong("timeStamp",0);
+        long systemTime = new Date(System.currentTimeMillis()).getTime();
+
+        if (systemTime < prefTime) {
             messageClient(MSG_TIME_INCORRECT);
             Logger.info("Device Time false: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;
+        /*}
+        if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
+            messageClient(MSG_TIME_INCORRECT);
+            Logger.info("Device Time false: " + Calendar.getInstance().getTime());
+            Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
+            return false;*/
         } else {
             messageClient(MSG_TIME_CORRECT);
-            Logger.info("Device Time reset: " + Calendar.getInstance().getTime());
-            Log.e(LOG, "Device Time reset: " + Calendar.getInstance().getTime());
+            Logger.info("Device Time: " + Calendar.getInstance().getTime());
+            Log.e(LOG, "Device Time: " + Calendar.getInstance().getTime());
             return true;
         }
     }
@@ -707,6 +717,12 @@ public class ControlService extends Service {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         if (sharedPreferences.getInt("chunkId", 0) == 0) {
             sharedPreferences.edit().putInt("chunkId", 1).apply();
+        }
+
+        // If no Date representation is
+        Date dateTime = new Date(System.currentTimeMillis());
+        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
+            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
         }
 
         initialiseValues();
