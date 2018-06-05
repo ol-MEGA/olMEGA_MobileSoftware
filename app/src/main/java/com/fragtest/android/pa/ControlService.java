@@ -83,7 +83,7 @@ public class ControlService extends Service {
     public static final int MSG_SET_COUNTDOWN_TIME = 24;
 
     // 3* - questionnaire
-    public static final int MSG_RESET_MENU = 30;
+    public static final int MSG_QUESTIONNAIRE_FINISHED = 30;
     public static final int MSG_ISMENU = 31;
     public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
     public static final int MSG_START_QUESTIONNAIRE = 33;
@@ -345,12 +345,18 @@ public class ControlService extends Service {
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
                     startQuestionnaire("manual");
+                    Logger.info("Taking Questionnaire: manual");
                     break;
 
                 case MSG_PROPOSITION_ACCEPTED:
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
                     startQuestionnaire("auto");
+                    Logger.info("Taking Questionnaire: auto");
+                    break;
+
+                case MSG_QUESTIONNAIRE_FINISHED:
+                    Logger.info("Questionnaire finished");
                     break;
 
                 case MSG_ISMENU:
@@ -442,6 +448,7 @@ public class ControlService extends Service {
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
+                    Logger.info("Shutdown");
                     break;
 
                 case MSG_BATTERY_LEVEL_INFO:
@@ -732,6 +739,10 @@ public class ControlService extends Service {
 
         Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
         mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
+
+        mEventTimer.setTimer(10);
+        mEventTimer.stopTimer();
+
         mVibration = new Vibration(this);
         mVibration.singleBurst();
 

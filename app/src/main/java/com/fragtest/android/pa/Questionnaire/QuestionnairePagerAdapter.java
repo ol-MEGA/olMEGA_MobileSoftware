@@ -472,7 +472,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 ContextCompat.getColor(mMainActivity, R.color.JadeRed));
         mMainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mMainActivity, R.color.JadeGray));
-        mMainActivity.mLogo.setEnabled(true);
+        if (MainActivity.USE_DEVELOPER_MODE) {
+            mMainActivity.mLogo.setEnabled(true);
+        } else {
+            mMainActivity.mLogo.setEnabled(false);
+        }
     }
 
     // Inserts contents into questionnaire and appoints recycler

@@ -49,6 +49,8 @@ import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
+import org.pmw.tinylog.Logger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +66,7 @@ import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
-    private boolean USE_DEVELOPER_MODE = false;
+    public static boolean USE_DEVELOPER_MODE = false;
     private Locale LANGUAGE_CODE = Locale.GERMANY;
 
     static final String LOG = "MainActivity";
@@ -368,6 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void finishQuestionnaire() {
         mAppState.finishQuest();
+        messageService(ControlService.MSG_QUESTIONNAIRE_FINISHED);
     }
 
     public void setBTLogoConnected() {
@@ -620,7 +623,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } catch (Exception e) {
-            // TODO: Log and handle appropriately
+            Logger.info("Unable to start KIOSK mode");
         }
     }
 
