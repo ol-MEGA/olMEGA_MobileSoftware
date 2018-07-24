@@ -143,6 +143,7 @@ public class ControlService extends Service {
     private Calendar dateTime;
     private Handler mTaskHandler = new Handler();
     private int mDelayDateTime = 10*1000;
+    private int mLogCheckTime = 5*60*1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -206,6 +207,14 @@ public class ControlService extends Service {
         public void run() {
             checkTime();
             mTaskHandler.postDelayed(mDateTimeRunnable, mDelayDateTime);
+        }
+    };
+
+    private Runnable mLogCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            checkLog();
+            mTaskHandler.postDelayed(mLogCheckRunnable, mLogCheckTime);
         }
     };
 
@@ -287,6 +296,7 @@ public class ControlService extends Service {
 
                     setupApplication();
                     mTaskHandler.post(mDateTimeRunnable);
+                    mTaskHandler.post(mLogCheckRunnable);
 
                     AudioFileIO.setChunkId(getChunkId());
 
@@ -320,6 +330,9 @@ public class ControlService extends Service {
                     } else {
                         mBluetoothAdapter.disable();
                     }
+                    mTaskHandler.removeCallbacks(mDateTimeRunnable);
+                    mTaskHandler.removeCallbacks(mLogCheckRunnable);
+                    mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
                     break;
 
                 case MSG_GET_STATUS:
@@ -598,6 +611,12 @@ public class ControlService extends Service {
         return chunkId;
     }
 
+    private boolean checkLog() {
+        File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
+        new SingleMediaScanner(context, fLog);
+        return true;
+    }
+
     private boolean checkTime() {
         // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
 
@@ -691,6 +710,8 @@ public class ControlService extends Service {
 
             audioRecorder.stop();
             setIsRecording(false);
+            // TODO: Experimental
+            mTaskHandler.removeCallbacks(mStartRecordingRunnable);
 
             messageClient(MSG_STOP_RECORDING);
         }
