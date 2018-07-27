@@ -167,9 +167,9 @@ public class MetaData extends AppCompatActivity {
                         ANSWER_DATA += "/>";
                         break;
                     case "text":
-                        ANSWER_DATA += ">";
+                        ANSWER_DATA += " option_ids=\"";
                         ANSWER_DATA += mEvaluationList.getTextFromQuestionId(questionId);
-                        ANSWER_DATA += KEY_VALUE_CLOSE;
+                        ANSWER_DATA += "\"/>";
                         break;
                     case "id":
                         ArrayList<String> listOfIds =
