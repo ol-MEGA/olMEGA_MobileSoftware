@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
+import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Processing.Preprocessing.CResampling;
 import com.fragtest.android.pa.Processing.Preprocessing.FilterHP;
 
@@ -199,6 +200,7 @@ public class BasicProcessingThread extends Thread {
             	featureFiles.add(featureFile);
 				if (featureFile != null) {
 					Logger.info("New feature:\t{}", featureFile);
+					LogIHAB.log("New feature:\t" +  featureFile);
 				}
             	isFinished();
             	break;

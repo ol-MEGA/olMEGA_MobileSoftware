@@ -47,6 +47,7 @@ public class Vibration {
                 mVibrator.vibrate(mVibrationDuration_ms);
                 if (ControlService.useLogMode) {
                     Logger.info("Vibration: " + mVibrationDuration_ms);
+                    LogIHAB.log("Vibration: " + mVibrationDuration_ms);
                 }
                 mNumberOfBursts++;
                 Log.e(LOG, "Ring.");
@@ -76,6 +77,7 @@ public class Vibration {
         wakeLock.acquire(mLengthWakeLock_ms);
         if (ControlService.useLogMode) {
             Logger.info("Vibration: " + mVibrationDuration_ms);
+            LogIHAB.log("Vibration: " + mVibrationDuration_ms);
         }
     }
 

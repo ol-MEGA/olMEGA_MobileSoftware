@@ -27,6 +27,7 @@ import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
@@ -39,6 +40,7 @@ import org.pmw.tinylog.writers.FileWriter;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -125,7 +127,8 @@ public class ControlService extends Service {
     private String mSelectQuestionnaire, mTempQuestionnaire;
     private static boolean isCharging = false;
 
-    public static final String FILENAME_LOG = "log.txt";
+    public static final String FILENAME_LOG = "log2.txt";
+    public static final String FILENAME_LOG_tmp = "log.txt";
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
@@ -244,9 +247,11 @@ public class ControlService extends Service {
             switch (action) {
                 case "android.intent.action.SCREEN_ON":
                     Logger.info("Display: on");
+                    LogIHAB.log("Display: on");
                     break;
                 case "android.intent.action.SCREEN_OFF":
                     Logger.info("Display: off");
+                    LogIHAB.log("Display: off");
                     break;
             }
         }
@@ -264,6 +269,7 @@ public class ControlService extends Service {
             else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                 announceBTConnected();
                 Logger.info("Bluetooth: connected");
+                LogIHAB.log("Bluetooth: connected");
             }
             else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 Log.e(LOG, "BTDEVICES finished.");
@@ -274,6 +280,7 @@ public class ControlService extends Service {
             else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 announceBTDisconnected();
                 Logger.info("Bluetooth: disconnected");
+                LogIHAB.log("Bluetooth: disconnected");
             }
         }
     };
@@ -289,9 +296,15 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
 
+                    Configurator.defaultConfig()
+                            .writer(new FileWriter(FILENAME_LOG_tmp))
+                            .level(Level.INFO)
+                            .activate();
+
                     Log.e(LOG,"msg: "+msg);
                     Log.i(LOG, "Client registered to service");
                     Logger.info("Client registered to service");
+                    LogIHAB.log("Client registered to service");
                     mClientMessenger = msg.replyTo;
 
                     setupApplication();
@@ -302,7 +315,7 @@ public class ControlService extends Service {
 
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
-                    // running transmitter
+                    // active transmitter
                     mBluetoothAdapter.disable();
                     messageClient(MSG_BT_DISCONNECTED);
 
@@ -319,12 +332,14 @@ public class ControlService extends Service {
                     }
 
                     checkTime();
+                    checkLog();
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
                     mClientMessenger = null;
                     stopAlarmAndCountdown();
                     Logger.info("Client unregistered from service");
+                    LogIHAB.log("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
                     } else {
@@ -359,6 +374,7 @@ public class ControlService extends Service {
                     // User has initiated questionnaire manually without/before timer
                     startQuestionnaire("manual");
                     Logger.info("Taking Questionnaire: manual");
+                    LogIHAB.log("Taking Questionnaire: manual");
                     break;
 
                 case MSG_PROPOSITION_ACCEPTED:
@@ -366,10 +382,12 @@ public class ControlService extends Service {
                     // "Start Questionnaire" item in User Menu
                     startQuestionnaire("auto");
                     Logger.info("Taking Questionnaire: auto");
+                    LogIHAB.log("Taking Questionnaire: auto");
                     break;
 
                 case MSG_QUESTIONNAIRE_FINISHED:
                     Logger.info("Questionnaire finished");
+                    LogIHAB.log("Questionnaire finished");
                     break;
 
                 case MSG_ISMENU:
@@ -395,6 +413,7 @@ public class ControlService extends Service {
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
                     Logger.info("Stop caching audio");
+                    LogIHAB.log("Stop caching audio");
                     audioRecorder.close();
                     setIsRecording(false);
                     messageClient(MSG_GET_STATUS);
@@ -422,6 +441,7 @@ public class ControlService extends Service {
 
                     Log.d(LOG, "New cache: " + filename);
                     Logger.info("New cache:\t{}", filename);
+                    LogIHAB.log("New cache:\t" + filename);
 
                     break;
 
@@ -462,17 +482,20 @@ public class ControlService extends Service {
                         mBluetoothAdapter.disable();
                     }
                     Logger.info("Shutdown");
+                    LogIHAB.log("Shutdown");
                     break;
 
                 case MSG_BATTERY_LEVEL_INFO:
                     float batteryLevel = msg.getData().getFloat("batteryLevel");
                     Logger.info("battery level: " + batteryLevel);
+                    LogIHAB.log("battery level: " + batteryLevel);
                     Log.e(LOG, "Battery Level Info: "+batteryLevel);
                     break;
 
                 case MSG_BATTERY_CRITICAL:
                     //TODO: Test this case
                     Logger.info("CRITICAL battery level: active");
+                    LogIHAB.log("CRITICAL battery level: active");
                     if (mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.disable();
                     }
@@ -480,6 +503,7 @@ public class ControlService extends Service {
 
                 case MSG_CHARGING_OFF:
                     Logger.info("Charging: inactive");
+                    LogIHAB.log("Charging: inactive");
                     isCharging = false;
                     if (!mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.enable();
@@ -491,6 +515,7 @@ public class ControlService extends Service {
                 case MSG_CHARGING_ON:
                     isCharging = true;
                     Logger.info("Charging: active");
+                    LogIHAB.log("Charging: active");
 
                     if (mBluetoothAdapter.isEnabled()) {
                         stopRecording();
@@ -519,12 +544,13 @@ public class ControlService extends Service {
 
         // log file
         Configurator.currentConfig()
-                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG, false, true))
+                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
                 .level(Level.INFO)
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();
 
         Logger.info("Service onCreate");
+        LogIHAB.log("Service onCreate");
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
@@ -536,6 +562,7 @@ public class ControlService extends Service {
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
         Logger.info("Service started");
+        LogIHAB.log("Service started");
         return START_STICKY;
     }
 
@@ -567,6 +594,8 @@ public class ControlService extends Service {
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
         Logger.info("Service stopped");
+        LogIHAB.log("Service stopped");
+        super.onDestroy();
     }
 
     @Override
@@ -612,8 +641,39 @@ public class ControlService extends Service {
     }
 
     private boolean checkLog() {
+
+        // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
+        File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
+
+        if (!fLog_tmp.exists()) {
+            try{
+                fLog_tmp.createNewFile();
+                Log.d(LOG, "Log file created");
+            } catch (IOException e) {
+                Log.d(LOG, "Error creating Log file");
+            }
+        }
+
+        new SingleMediaScanner(context, fLog_tmp);
+        Log.d(LOG, "Log file checked.");
+
+
+
+
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
+
+        if (!fLog.exists()) {
+            try{
+                fLog.createNewFile();
+                Log.d(LOG, "Log file created");
+            } catch (IOException e) {
+                Log.d(LOG, "Error creating Log file");
+            }
+        }
+
         new SingleMediaScanner(context, fLog);
+        Log.d(LOG, "Log file checked.");
+
         return true;
     }
 
@@ -626,17 +686,20 @@ public class ControlService extends Service {
         if (systemTime < prefTime) {
             messageClient(MSG_TIME_INCORRECT);
             Logger.info("Device Time false: " + Calendar.getInstance().getTime());
+            LogIHAB.log("Device Time false: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;
         /*}
         if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
             messageClient(MSG_TIME_INCORRECT);
             Logger.info("Device Time false: " + Calendar.getInstance().getTime());
+            LogIHAB.log("Device Time false: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;*/
         } else {
             messageClient(MSG_TIME_CORRECT);
             Logger.info("Device Time: " + Calendar.getInstance().getTime());
+            LogIHAB.log("Device Time: " + Calendar.getInstance().getTime());
             Log.e(LOG, "Device Time: " + Calendar.getInstance().getTime());
             return true;
         }
@@ -696,6 +759,7 @@ public class ControlService extends Service {
     private void startRecording() {
         Log.d(LOG, "Start caching audio");
         Logger.info("Start caching audio");
+        LogIHAB.log("Start caching audio");
         // A delay before starting a new recording prevents initialisation bug
         if (!getIsRecording()) {
             mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
@@ -707,6 +771,7 @@ public class ControlService extends Service {
         if (getIsRecording()) {
             Log.d(LOG, "Requesting stop caching audio");
             Logger.info("Requesting stop caching audio");
+            LogIHAB.log("Requesting stop caching audio");
 
             audioRecorder.stop();
             setIsRecording(false);
@@ -788,6 +853,7 @@ public class ControlService extends Service {
         // It is safe to say, that the display is illuminated on system/application startup
         if (useLogMode) {
             Logger.info("Display: on");
+            LogIHAB.log("Display: on");
         }
 
         checkForPreferences();
