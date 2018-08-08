@@ -5,9 +5,9 @@
     <string name="infoTextSave">Daten wurden gespeichert</string>
     <string name="infoError">Fehler</string>
     <string name="infoCharging">Laden</string>
-    <string name="infoConnecting">Verbindung wird hergestellt</string>
+    <string name="infoConnecting">Verbindungsaufbau</string>
     <string name="hintTextAnswer">Bitte hier klicken.</string>
-    <string name="buttonTextOkay">Absenden</string>
+    <string name="buttonTextOkay">Weiter</string>
     <string name="timeRemaining">Nächster Fragebogen geplant in %m %s</string>
     <string name="menuText">Starte Frage-bogen</string>
     <string name="noQuestionnaires">• Fragebogen kann nicht geladen werden.</string>

@@ -64,11 +64,11 @@ public class EventTimer {
             Log.i(LOG, "AlarmManager: "+mAlarmManager);
         }
 
-        if (isSet) {
+        //if (isSet) {
             mAlarmManager.cancel(mAlarmIntent);
-        }
+        //}
 
-        isSet = false;
+        //isSet = false;
 
         if (BuildConfig.DEBUG) {
             Log.i(LOG,"Timer cancelled.");

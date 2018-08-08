@@ -27,7 +27,7 @@ public class MetaData extends AppCompatActivity {
             KEY_SURVEY_URI, KEY_RECORD_OPEN, KEY_RECORD_CLOSE, KEY_DATA, KEY_VERSION,
             KEY_QUESTID, FILE_NAME, KEY_MOTIVATION, KEY_NEW_LINE, KEY_SHORT_CLOSE;
 
-    private SimpleDateFormat DATE_FORMAT;
+    private SimpleDateFormat DATE_FORMAT, DATE_FORMAT_FILENAME;
 
     private int mTimeQuery = 0;
     private int mTimeQueryUTC = 0;
@@ -48,6 +48,7 @@ public class MetaData extends AppCompatActivity {
         KEY_VERSION = version;
         mQuestionList = new ArrayList<>();
         DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
+        DATE_FORMAT_FILENAME = new SimpleDateFormat(Timestamp.getTimestamp(3), Locale.ROOT);
 
         KEY_RECORD_OPEN = "<record";
         KEY_RECORD_CLOSE = "</record>";
@@ -108,7 +109,7 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += " uri=\"";
         KEY_DATA += KEY_SURVEY_URI.substring(0, KEY_SURVEY_URI.length() - 4);        // loose ".xml"
         KEY_DATA += "/";
-        KEY_DATA += KEY_QUESTID;
+        KEY_DATA += FILE_NAME;
         KEY_DATA += ".xml\"";
         KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += " survey_uri=\"";
@@ -167,9 +168,9 @@ public class MetaData extends AppCompatActivity {
                         ANSWER_DATA += "/>";
                         break;
                     case "text":
-                        ANSWER_DATA += ">";
+                        ANSWER_DATA += " option_ids=\"";
                         ANSWER_DATA += mEvaluationList.getTextFromQuestionId(questionId);
-                        ANSWER_DATA += KEY_VALUE_CLOSE;
+                        ANSWER_DATA += "\"/>";
                         break;
                     case "id":
                         ArrayList<String> listOfIds =
@@ -222,7 +223,7 @@ public class MetaData extends AppCompatActivity {
     }
 
     private String generateFileName() {
-        return getQuestId() + ".xml";
+        return getDeviceId() + "_" + generateTimeNowFilename() + ".xml";
     }
 
     private String generateQuestId() {
@@ -231,6 +232,11 @@ public class MetaData extends AppCompatActivity {
 
     private String generateDeviceId() {
         return Secure.getString(mContext.getContentResolver(), Secure.ANDROID_ID);
+    }
+
+    private String generateTimeNowFilename() {
+        Calendar dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
+        return DATE_FORMAT_FILENAME.format(dateTime.getTime());
     }
 
     private String generateTimeNow() {

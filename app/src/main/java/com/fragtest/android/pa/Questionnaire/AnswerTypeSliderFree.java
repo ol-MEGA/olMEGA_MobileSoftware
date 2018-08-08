@@ -25,17 +25,12 @@ public class AnswerTypeSliderFree extends AnswerType {
 
     public static String LOG_STRING = "AnswerTypeSliderFree";
     private static final int mMinProgress = 10;
-    //public final AnswerLayout parent;
-    //private final Context mContext;
-    //private final List<StringAndInteger> mListOfAnswers;
     private final LinearLayout mHorizontalContainer;
     private final LinearLayout mAnswerListContainer;
     private final View mResizeView;
     private final View mRemainView;
     private final int width;
     private final int mUsableHeight;
-    //private final int mQuestionId;
-    //private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
     private boolean isImmersive = false;
@@ -51,11 +46,6 @@ public class AnswerTypeSliderFree extends AnswerType {
 
         //TODO: Resolve magic numbers
 
-        //mContext = context;
-        //parent = qParent;
-        //mQuestionnaire = questionnaire;
-        //mListOfAnswers = new ArrayList<>();
-        //mQuestionId = nQuestionId;
         isImmersive = immersive;
 
         // Slider Layout is predefined in XML
