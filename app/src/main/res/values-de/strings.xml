@@ -17,7 +17,18 @@
 
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>
-    <string name="helpHinweis"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
+
+    <string name="help_headline">Bedienung des\nFragebogens</string>
+    <string name="help_intro">Innerhalb des Fragebogens begegnen Ihnen hauptsächlich zwei Arten von Antworten:</string>
+    <string name="help_head_singl">Einfachantworten</string>
+    <string name="help_text_single_01">Dieses Symbol bedeutet, dass Sie nur eine Möglichkeit auswählen können</string>
+    <string name="help_text_single_02">Versuchen Sie es!</string>
+    <string name="help_head_multi">Mehrfachantworten</string>
+    <string name="help_text_multi_01">Bei diesem Symbol dürfen Sie mehrere Optionen auswählen</string>
+    <string name="help_text_multi_02">Zum Beispiel diese</string>
+    <string name="help_text_multi_03">Oder diese</string>
+    <string name="help_hint"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
         Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
         automatisch eine Antwort wieder ab.</string>
+    <string name="help_button_ready">Fertig</string>
 </resources>

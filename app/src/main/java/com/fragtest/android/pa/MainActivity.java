@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     public static boolean USE_DEVELOPER_MODE = false;
-    private Locale LANGUAGE_CODE = Locale.GERMANY;
-    //private Locale LANGUAGE_CODE = Locale.ENGLISH;
+    //private Locale LANGUAGE_CODE = Locale.GERMANY;
+    private Locale LANGUAGE_CODE = Locale.ENGLISH;
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -472,6 +472,7 @@ public class MainActivity extends AppCompatActivity {
         // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        mDevicePolicyManager.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
         mAdminComponentName = deviceAdmin;
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -621,7 +622,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
                     startLockTask();
                 } else {
-                    Toast.makeText(this, "Kiosk not permitted.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_SHORT).show();
                 }
             }
         } catch (Exception e) {

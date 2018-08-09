@@ -59,7 +59,7 @@ public class Help extends AppCompatActivity {
 
         bt1 = (Button) view.findViewById(R.id.button);
 
-        tv2.setText(R.string.helpHinweis);
+        tv2.setText(R.string.help_hint);
 
         setRadioPrefs(rb1);
         setRadioPrefs(rb2);

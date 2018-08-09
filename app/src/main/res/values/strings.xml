@@ -18,7 +18,15 @@
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>
 
-    <string name="helpHinweis"><b>Hinweis:</b> Hin und wieder kommt es vor, dass bestimmte
-        Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
-        automatisch eine Antwort wieder ab.</string>
+    <string name="help_headline">Handling of the\nQuestionnaire</string>
+    <string name="help_intro">Most of our questions feature one of these two formats:</string>
+    <string name="help_head_singl">Single choice</string>
+    <string name="help_text_single_01">This Symbol means an exclusive options.</string>
+    <string name="help_text_single_02">Try it!</string>
+    <string name="help_head_multi">Multiple choice</string>
+    <string name="help_text_multi_01">This symbol means you can choose more than one option.</string>
+    <string name="help_text_multi_02">For example this one</string>
+    <string name="help_text_multi_03">Or this one</string>
+    <string name="help_hint"><b>Hint:</b> Sometimes two or more answers will contradict each other. In that case, checking one will automatically uncheck the other(s).</string>
+    <string name="help_button_ready">Close</string>
 </resources>
