@@ -223,11 +223,15 @@ public class MainActivity extends AppCompatActivity {
         Resources resources = getResources();
         Configuration configuration = resources.getConfiguration();
         DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+
+        // Automatically set to specific language
+        /*
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1){
             configuration.setLocale(LANGUAGE_CODE);
         } else{
             configuration.locale = LANGUAGE_CODE;
         }
+        */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             getApplicationContext().createConfigurationContext(configuration);
         } else {

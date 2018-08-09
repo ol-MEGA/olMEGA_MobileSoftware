@@ -1164,4 +1164,23 @@ public class ControlService extends Service {
             default: return "unknown!";
         }
     }
+
+
+    /**
+     * RFCOMM
+     */
+
+    /*
+    protected void initBluetooth() {
+        BA = BluetoothAdapter.getDefaultAdapter();
+        if (BA != null) {
+            if (!BA.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                int REQUEST_ENABLE_BT = 1;
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+        }
+    }
+*/
+
 }
