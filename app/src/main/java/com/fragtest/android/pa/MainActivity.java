@@ -27,6 +27,7 @@ import android.os.RemoteException;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -68,8 +69,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     public static boolean USE_DEVELOPER_MODE = false;
-    //private Locale LANGUAGE_CODE = Locale.GERMANY;
-    private Locale LANGUAGE_CODE = Locale.ENGLISH;
+    private Locale LANGUAGE_CODE = Locale.GERMANY;
+    //private Locale LANGUAGE_CODE = Locale.ENGLISH;
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
 
     // States
-    public  AppState mAppState;
+    public AppState mAppState;
     private StateCharging mStateCharging;
     private StateConnecting mStateConnecting;
     private StateError mStateError;
@@ -130,7 +131,8 @@ public class MainActivity extends AppCompatActivity {
 
     // Context
     private static Context mStatContext;
-    public static Context getContext(){
+
+    public static Context getContext() {
         return mStatContext;
     }
 
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
         ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST;
 
         public String getErrorMessage() {
-            switch(this) {
+            switch (this) {
                 case ERROR_NO_BT:
                     return mStatContext.getResources().getString(R.string.noBluetooth);
                 case ERROR_BATT_LOW:
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     public ArrayList<String> mErrorList = new ArrayList<>();
 
     public void addError(AppErrors error) {
@@ -168,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Battery Status Receiver
-    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver(){
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
             int tempPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
@@ -179,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
                 mAppState.chargeOn();
                 // a change towards charging
                 messageService(ControlService.MSG_CHARGING_ON);
-            } else if (!plugged && isCharging){
+            } else if (!plugged && isCharging) {
                 mAppState.chargeOff();
                 // a change towards not charging
                 messageService(ControlService.MSG_CHARGING_OFF);
@@ -232,10 +235,10 @@ public class MainActivity extends AppCompatActivity {
             configuration.locale = LANGUAGE_CODE;
         }
         */
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getApplicationContext().createConfigurationContext(configuration);
         } else {
-            resources.updateConfiguration(configuration,displayMetrics);
+            resources.updateConfiguration(configuration, displayMetrics);
         }
     }
 
@@ -316,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void incrementPage() {
-        mViewPager.setCurrentItem(mViewPager.getCurrentItem()+1, true);
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
     }
 
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
@@ -339,7 +342,9 @@ public class MainActivity extends AppCompatActivity {
             };
 
 
-    /** State Affairs **/
+    /**
+     * State Affairs
+     **/
 
 
     public void setState(AppState newAppState) {
@@ -371,7 +376,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /** QPA Modifiers **/
+    /**
+     * QPA Modifiers
+     **/
 
 
     public void finishQuestionnaire() {
@@ -400,7 +407,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /** Lifecycle methods */
+    /**
+     * Lifecycle methods
+     */
 
 
     @Override
@@ -409,6 +418,8 @@ public class MainActivity extends AppCompatActivity {
         mStatContext = this;
 
         setSystemLocale();
+
+        checkForPermissions();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -444,13 +455,13 @@ public class MainActivity extends AppCompatActivity {
             setConfigVisibility();
 
             mConfig.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
-                        isPrefsInForeGround = true;
-                        mAdapter.setPrefsInForeGround(isPrefsInForeGround);
-                    }
-                });
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+                    isPrefsInForeGround = true;
+                    mAdapter.setPrefsInForeGround(isPrefsInForeGround);
+                }
+            });
 
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -554,25 +565,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-/** KIOSK MODE RELATED STUFF */
+    /**
+     * KIOSK MODE RELATED STUFF
+     */
 
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         // Little hack since the Power button seems to be inaccessible at this point
         super.onWindowFocusChanged(hasFocus);
-        if(!hasFocus && USE_KIOSK_MODE) {
+        if (!hasFocus && USE_KIOSK_MODE) {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
             enableKioskMode(true);
         }
     }
+
     // This disables the Volume Buttons
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
 
-    Log.e(LOG,"EVENT: "+event.getKeyCode());
+        Log.e(LOG, "EVENT: " + event.getKeyCode());
 
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
             Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
@@ -599,15 +613,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setDefaultCosuPolicies(boolean active) {
-    // set user restrictions
-    setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
-    setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
-    setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, active);
-    setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
-    Log.i(LOG, "KIOSK MODE: "+active);
-    // disable keyguard and status bar - needs API 23 (Damnit!)
-    //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
-    //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
+        // set user restrictions
+        setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
+        setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, active);
+        setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, false);
+        setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
+        Log.i(LOG, "KIOSK MODE: " + active);
+        // disable keyguard and status bar - needs API 23 (Damnit!)
+        //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
+        //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
     }
 
     private void setUserRestriction(String restriction, boolean disallow) {
@@ -652,8 +666,54 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /** PERMISSION STUFF (ANDROID 6+)  */
+    /**
+     * PERMISSION STUFF (ANDROID 6+)
+     */
 
+    public void checkForPermissions() {
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_RECORD_AUDIO);
+        }
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+        }
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+        }
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_VIBRATE);
+        }
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WAKE_LOCK)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_WAKE_LOCK);
+        }
+
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_BOOT_COMPLETED)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+        }
+    }
 
     public void requestPermissions(int iPermission) {
 
@@ -664,43 +724,36 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
                 break;
-
             case 1:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
                 break;
-
             case 2:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.RECEIVE_BOOT_COMPLETED},
                         MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
                 break;
-
             case 3:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         MY_PERMISSIONS_RECORD_AUDIO);
                 break;
-
             case 4:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.VIBRATE},
                         MY_PERMISSIONS_VIBRATE);
                 break;
-
             case 5:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WAKE_LOCK},
                         MY_PERMISSIONS_WAKE_LOCK);
                 break;
-
             case 6:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.DISABLE_KEYGUARD},
                         MY_PERMISSIONS_DISABLE_KEYGUARD);
                 break;
-
             case 7:
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.CAMERA},
@@ -711,18 +764,52 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
         requestString = getResources().getStringArray(R.array.permissionMessages);
         switch (requestCode) {
-            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE : {
+
+            case MY_PERMISSIONS_RECORD_AUDIO: {
+                //Toast.makeText(this, "Thanks for permission to record audio.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED: {
+                //Toast.makeText(this, "Thanks for permission to receive boot completed.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_VIBRATE: {
+                //Toast.makeText(this, "Thanks for permission to vibrate.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_WAKE_LOCK: {
+                //Toast.makeText(this, "Thanks for permission for wake lock.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE: {
+                //Toast.makeText(this, "Thanks for permission to write external storage.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_DISABLE_KEYGUARD: {
+                //Toast.makeText(this, "Thanks for permission to disable keyguard.", Toast.LENGTH_SHORT).show();
+
+                break;
+            }
+            case MY_PERMISSIONS_READ_EXTERNAL_STORAGE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     permissionGranted = true;
+                    //Toast.makeText(this, "Thanks for permission to read external storage.", Toast.LENGTH_SHORT).show();
                     doBindService();
                 } else {
-                    Toast.makeText(this, requestString[requestIterator%(requestString.length)], Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, requestString[requestIterator % (requestString.length)], Toast.LENGTH_SHORT).show();
                     requestPermissions(iPermission);
                     requestIterator++;
                 }
+                break;
             }
         }
     }

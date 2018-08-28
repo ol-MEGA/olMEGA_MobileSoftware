@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,6 +9,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -126,6 +129,7 @@ public class ControlService extends Service {
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
     private static boolean isCharging = false;
+    private static boolean isActivityRunning = true;
 
     public static final String FILENAME_LOG = "log2.txt";
     public static final String FILENAME_LOG_tmp = "log.txt";
@@ -145,8 +149,9 @@ public class ControlService extends Service {
     private SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
     private Calendar dateTime;
     private Handler mTaskHandler = new Handler();
-    private int mDelayDateTime = 10*1000;
+    private int mDelayDateTime = 5*60*1000;
     private int mLogCheckTime = 5*60*1000;
+    private int mActivityCheckTime = 10*1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -220,6 +225,33 @@ public class ControlService extends Service {
             mTaskHandler.postDelayed(mLogCheckRunnable, mLogCheckTime);
         }
     };
+
+    // Check if Activity is running
+    private Runnable mActivityCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+
+            if (isActivityRunning != isActivityRunning(getPackageName())) {
+                LogIHAB.log("Activity running: " + isActivityRunning);
+            }
+
+            isActivityRunning = isActivityRunning(getPackageName());
+            mTaskHandler.postDelayed(mActivityCheckRunnable, mActivityCheckTime);
+        }
+    };
+
+    public boolean isActivityRunning(String myPackage) {
+    ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+    List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
+        for (int iActivity = 0; iActivity < runningTaskInfo.size(); iActivity++) {
+            ComponentName componentInfo = runningTaskInfo.get(iActivity).topActivity;
+            if (componentInfo.getPackageName().equals(myPackage)) {
+                return true;
+            }
+        }
+        mBluetoothAdapter.disable();
+        return false;
+    }
 
     private EventReceiver mAlarmReceiver = new EventReceiver() {
         @Override
@@ -310,6 +342,7 @@ public class ControlService extends Service {
                     setupApplication();
                     mTaskHandler.post(mDateTimeRunnable);
                     mTaskHandler.post(mLogCheckRunnable);
+                    mTaskHandler.post(mActivityCheckRunnable);
 
                     AudioFileIO.setChunkId(getChunkId());
 
@@ -420,6 +453,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHUNK_RECORDED:
+
+                    LogIHAB.log("CHUNK RECORDED!");
 
                     AudioFileIO.setChunkId(getChunkId());
                     String filename = msg.getData().getString("filename");
@@ -976,8 +1011,12 @@ public class ControlService extends Service {
                 // Load questionnaire if selected, otherwise load default
                 mSelectQuestionnaire = sharedPreferences.getString("whichQuest", fileList[0]);
 
-                if (mTempQuestionnaire == null || mTempQuestionnaire.isEmpty()) {
+                if (mTempQuestionnaire == null || mTempQuestionnaire.isEmpty() ) {
                     mTempQuestionnaire = "";
+                }
+
+                if (!mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
+                    mSelectQuestionnaire = null;
                 }
 
                 Log.i(LOG, "XXX choosing: "+mSelectQuestionnaire);

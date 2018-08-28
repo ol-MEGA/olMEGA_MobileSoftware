@@ -80,8 +80,43 @@ public class FileIO {
         return fileConfig.delete();
     }
 
+    public boolean scanForQuestionnaire(String questName) {
+
+        // Scan quest folder (not the nicest way)
+        try {
+            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/IHAB/quest");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Obtain working Directory
+        File dir = new File(getFolderPath() + File.separator + FOLDER_QUEST);
+
+        File[] files = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith(FORMAT_QUESTIONNAIRE);
+            }
+        });
+
+        for (int iFile = 0; iFile < files.length; iFile++) {
+            if (files[iFile].getName() == questName) {
+                Log.e(LOG, "Quest file found: " + files[iFile].getName());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // Scan "quest" directory for present questionnaires
     public String[] scanQuestOptions() {
+
+        // Scan quest folder (not the nicest way)
+        try {
+            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/IHAB/quest");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //TODO: Validate files
         // Obtain working Directory
@@ -94,12 +129,7 @@ public class FileIO {
             new SingleMediaScanner(mContext, tmp);
             File fileLog = new File(getFolderPath() + File.separator + ControlService.FILENAME_LOG);
             new SingleMediaScanner(mContext, fileLog);
-            //Log.i(LOG, "Temporary file created.");
-        } /*else {
-            if (tmp.delete()) {
-                Log.i(LOG, "Temporary file deleted.");
-            }
-        }*/
+        }
 
         // Scan for files of type XML
         File[] files = dir.listFiles(new FilenameFilter() {

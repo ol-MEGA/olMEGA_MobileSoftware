@@ -63,7 +63,6 @@ public class XMLReader {
         String[] questionnaire = rawInput.split("<question|</question>|<finish>|</finish>");
         mHead = extractHead(rawInput);
         mFoot = extractFoot(rawInput);
-        //mSurveyURI = extractSurveyURI(rawInput);
         mSurveyURI = extractSurveyURI(fileName);
 
         mQuestionList = stringArrayToListString(questionnaire);
@@ -81,8 +80,6 @@ public class XMLReader {
         head +="<";
         head += tempHead[3];
         head += ">";
-
-        Log.e(LOG, "HEAD: "+head);
 
         return head;
     }
