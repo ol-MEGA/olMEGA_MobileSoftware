@@ -99,7 +99,7 @@ public class FileIO {
         });
 
         for (int iFile = 0; iFile < files.length; iFile++) {
-            if (files[iFile].getName() == questName) {
+            if (files[iFile].getName().equals(questName)) {
                 Log.e(LOG, "Quest file found: " + files[iFile].getName());
                 return true;
             }
