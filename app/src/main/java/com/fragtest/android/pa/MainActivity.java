@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isPrefsInForeGround = false;
     private boolean isActivityRunning = false;
     private boolean isQuestionnairePresent = true;
-    private boolean isCharging = false;
+    //private boolean isCharging = false;
     private boolean isTimer = false;
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
@@ -178,16 +178,17 @@ public class MainActivity extends AppCompatActivity {
             boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
-            if (plugged && !isCharging) {
+            // only announce on change
+            if (plugged && !ControlService.isCharging) {
                 mAppState.chargeOn();
                 // a change towards charging
                 messageService(ControlService.MSG_CHARGING_ON);
-            } else if (!plugged && isCharging) {
+            } else if (!plugged && ControlService.isCharging) {
                 mAppState.chargeOff();
                 // a change towards not charging
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
-            isCharging = plugged;
+            ControlService.isCharging = plugged;
         }
     };
 
@@ -199,14 +200,17 @@ public class MainActivity extends AppCompatActivity {
 
             mServiceMessenger = new Messenger(service);
 
+            //TODO: Experimental - Grant permission and suppress "Bluetooth Permission" - problem
+            //mDevicePolicyManager.setPermissionPolicy(mAdminComponentName, DevicePolicyManager.PERMISSION_POLICY_AUTO_GRANT);
+
             IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = registerReceiver(null, batteryFilter);
 
             // Are we plugged in?
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_STATUS_FULL;
-            if (isCharging) {
+            ControlService.isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_PLUGGED_USB;
+            if (ControlService.isCharging) {
                 messageService(ControlService.MSG_CHARGING_ON_PRE);
                 mAppState.chargeOn();
             }

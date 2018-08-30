@@ -128,7 +128,7 @@ public class ControlService extends Service {
     private XMLReader mXmlReader;
     private Vibration mVibration;
     private String mSelectQuestionnaire, mTempQuestionnaire;
-    private static boolean isCharging = false;
+    public static boolean isCharging = false;
     private static boolean isActivityRunning = true;
 
     public static final String FILENAME_LOG = "log2.txt";
@@ -152,6 +152,7 @@ public class ControlService extends Service {
     private int mDelayDateTime = 5*60*1000;
     private int mLogCheckTime = 5*60*1000;
     private int mActivityCheckTime = 10*1000;
+    private int mDisableBTTime = 10*1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -195,10 +196,12 @@ public class ControlService extends Service {
                     Integer.parseInt(chunklengthInS),
                     Integer.parseInt(samplerate),
                     isWave);
-            audioRecorder.start();
-            setIsRecording(true);
-            messageClient(MSG_START_RECORDING);
-            mVibration.singleBurst();
+            if (!isCharging) {
+                audioRecorder.start();
+                setIsRecording(true);
+                messageClient(MSG_START_RECORDING);
+                mVibration.singleBurst();
+            }
         }
     };
 
@@ -207,6 +210,16 @@ public class ControlService extends Service {
         public void run() {
             mBluetoothAdapter.enable();
             mBluetoothAdapter.startDiscovery();
+        }
+    };
+
+    private Runnable mDisableBT = new Runnable() {
+        @Override
+        public void run() {
+            if (isCharging) {
+                mBluetoothAdapter.disable();
+                mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
+            }
         }
     };
 
@@ -351,6 +364,10 @@ public class ControlService extends Service {
                     // active transmitter
                     mBluetoothAdapter.disable();
                     messageClient(MSG_BT_DISCONNECTED);
+
+
+                    IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                    Intent batteryStatus = registerReceiver(null, batteryFilter);
 
                     if (!isCharging) {
                         if (!mBluetoothAdapter.isEnabled()) {
@@ -540,6 +557,7 @@ public class ControlService extends Service {
                     Logger.info("Charging: inactive");
                     LogIHAB.log("Charging: inactive");
                     isCharging = false;
+                    mTaskHandler.removeCallbacks(mDisableBT);
                     if (!mBluetoothAdapter.isEnabled()) {
                         mBluetoothAdapter.enable();
                     }
@@ -557,6 +575,7 @@ public class ControlService extends Service {
                         mBluetoothAdapter.disable();
                     }
                     mVibration.singleBurst();
+                    mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     break;
 
                 case MSG_CHARGING_ON_PRE:
@@ -751,6 +770,7 @@ public class ControlService extends Service {
         Log.e(LOG, "BTDEVICES connected.");
         startRecording();
         isBluetoothPresent = true;
+        mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
     }
 
     // Send message to connected client with additional data
@@ -782,9 +802,6 @@ public class ControlService extends Service {
         }
     }
 
-    public static void setCharging(boolean charging) {
-        isCharging = charging;
-    }
 
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
@@ -796,7 +813,8 @@ public class ControlService extends Service {
         Logger.info("Start caching audio");
         LogIHAB.log("Start caching audio");
         // A delay before starting a new recording prevents initialisation bug
-        if (!getIsRecording()) {
+        if (!getIsRecording() && !isCharging) {
+            Log.e(LOG, "STARRRRRRTTTTT REEEECCCOOORRRDDIIINNGGG!!");
             mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
         }
     }

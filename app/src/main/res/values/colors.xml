@@ -13,7 +13,7 @@
     <color name="BackgroundColor">#FFFFFF</color>
 
     <color name="BatteryGreen">#5ec800</color>
-    <color name="BatteryYellow">#ffd200</color>
+    <color name="BatteryYellow">#5ec800</color> <!-- #ffd200 -->
 
     <color name="lighterBlue">#AAAAFF</color>
 </resources>
