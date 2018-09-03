@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -56,6 +57,7 @@ public class StateConnecting implements AppState {
 
     @Override
     public void setInterface() {
+        LogIHAB.log(LOG + ":" + "setInterface()");
         qpa.hideQuestionnaireProgressBar();
         qpa.stopCountDown();
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
@@ -79,16 +81,19 @@ public class StateConnecting implements AppState {
 
     @Override
     public void countdownStart() {
+        LogIHAB.log(LOG + ":" + "countdownStart()");
         // No countdown during connecting state
     }
 
     @Override
     public void countdownFinish() {
+        LogIHAB.log(LOG + ":" + "countdownFinish()");
         // No countdown during connecting state
     }
 
     @Override
     public void noQuest() {
+        LogIHAB.log(LOG + ":" + "NoQuest()");
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
         mainActivity.setBTLogoDisconnected();
         stopConnecting();
@@ -96,6 +101,7 @@ public class StateConnecting implements AppState {
 
     @Override
     public void chargeOn() {
+        LogIHAB.log(LOG + ":" + "chargeOn()");
         stopConnecting();
         mainActivity.setState(mainActivity.getStateCharging());
         mainActivity.mAppState.setInterface();
@@ -103,11 +109,13 @@ public class StateConnecting implements AppState {
 
     @Override
     public void chargeOff() {
+        LogIHAB.log(LOG + ":" + "chargeOff()");
         // Already not charging
     }
 
     @Override
     public void bluetoothPresent() {
+        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
         stopConnecting();
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.setBTLogoConnected();
@@ -117,18 +125,21 @@ public class StateConnecting implements AppState {
 
     @Override
     public void bluetoothNotPresent() {
+        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
         mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 
     @Override
     public void batteryLow() {
+        LogIHAB.log(LOG + ":" + "batteryLow()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_BATT_CRITICAL);
         mainActivity.addError(MainActivity.AppErrors.ERROR_BATT_LOW);
     }
 
     @Override
     public void batteryCritical() {
+        LogIHAB.log(LOG + ":" + "batteryCritical()");
         stopConnecting();
         mainActivity.removeError(MainActivity.AppErrors.ERROR_BATT_LOW);
         mainActivity.addError(MainActivity.AppErrors.ERROR_BATT_CRITICAL);
@@ -138,49 +149,57 @@ public class StateConnecting implements AppState {
 
     @Override
     public void batteryNormal() {
+        LogIHAB.log(LOG + ":" + "batteryNormal()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_BATT_CRITICAL);
         mainActivity.removeError(MainActivity.AppErrors.ERROR_BATT_LOW);
     }
 
     @Override
     public void startQuest() {
+        LogIHAB.log(LOG + ":" + "startQuest()");
         // No quest during connecting state
     }
 
     @Override
     public void finishQuest() {
+        LogIHAB.log(LOG + ":" + "finishQuest()");
         qpa.backToMenu();
         setInterface();
     }
 
     @Override
     public void openHelp() {
+        LogIHAB.log(LOG + ":" + "openHelp()");
         qpa.createHelpScreen();
     }
 
     @Override
     public void closeHelp() {
+        LogIHAB.log(LOG + ":" + "closeHelp()");
         setInterface();
     }
 
     @Override
     public void timeCorrect() {
+        LogIHAB.log(LOG + ":" + "timeCorrect()");
         qpa.getMenuPage().showTime();
     }
 
     @Override
     public void timeIncorrect() {
+        LogIHAB.log(LOG + ":" + "timeIncorrect()");
         qpa.getMenuPage().hideTime();
     }
 
     private void stopConnecting() {
+        LogIHAB.log(LOG + ":" + "stopConnecting()");
         qpa.getMenuPage().mDots.setVisibility(View.INVISIBLE);
         mainActivity.mTaskHandler.removeCallbacks(mConnectingRunnable);
         mainActivity.mTaskHandler.removeCallbacks(mDotRunnable);
         mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
-        Log.e(LOG, "State Connecting going on to Error..");
+        Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
 
         mainActivity.setState(mainActivity.getStateError());
         mainActivity.mAppState.setInterface();
