@@ -134,6 +134,8 @@ public class ControlService extends Service {
     public static final String FILENAME_LOG = "log2.txt";
     public static final String FILENAME_LOG_tmp = "log.txt";
 
+    private int mChunkId = 1;
+
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
             showConfigButton, showRecordingButton, questionnaireHasTimer;
@@ -357,8 +359,6 @@ public class ControlService extends Service {
                     mTaskHandler.post(mLogCheckRunnable);
                     mTaskHandler.post(mActivityCheckRunnable);
 
-                    AudioFileIO.setChunkId(getChunkId());
-
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
                     // active transmitter
@@ -471,15 +471,22 @@ public class ControlService extends Service {
 
                 case MSG_CHUNK_RECORDED:
 
-                    LogIHAB.log("CHUNK RECORDED!");
+                    LogIHAB.log("CHUNK RECORDED");
 
                     AudioFileIO.setChunkId(getChunkId());
+
                     String filename = msg.getData().getString("filename");
                     addProccessingBuffer(idxRecording, filename);
                     idxRecording = (idxRecording + 1) % processingBufferSize;
 
+                    LogIHAB.log("isProcessing: "+getIsProcessing()+", isRecording: "+getIsRecording());
+
                     if (!getIsProcessing()) {
+
+                        LogIHAB.log("Start Processing");
+
                         Bundle settings = getPreferences();
+
                         settings.putString("filename", processingBuffer[idxProcessing]);
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
@@ -517,6 +524,7 @@ public class ControlService extends Service {
 
                     if (processingBuffer[idxProcessing] != null) {
                         Bundle settings = getPreferences();
+
                         settings.putString("filename", processingBuffer[idxProcessing]);
                         MainProcessingThread processingThread =
                                 new MainProcessingThread(serviceMessenger, settings);
@@ -685,13 +693,14 @@ public class ControlService extends Service {
 
     private int getChunkId() {
         // Returns the current chunk ID and increments
-        int chunkId = sharedPreferences.getInt("chunkId", 0);
-        if (chunkId < 999999) {
-            sharedPreferences.edit().putInt("chunkId", chunkId + 1).apply();
+        if (mChunkId < 999999) {
+            mChunkId += 1;
         } else {
-            sharedPreferences.edit().putInt("chunkId", 1).apply();
+            mChunkId = 1;
         }
-        return chunkId;
+        sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        LogIHAB.log("Returning chunk id: "+ mChunkId);
+        return mChunkId;
     }
 
     private boolean checkLog() {
@@ -802,7 +811,6 @@ public class ControlService extends Service {
         }
     }
 
-
     public void startActivity() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
@@ -812,9 +820,9 @@ public class ControlService extends Service {
         Log.d(LOG, "Start caching audio");
         Logger.info("Start caching audio");
         LogIHAB.log("Start caching audio");
+        AudioFileIO.setChunkId(mChunkId);
         // A delay before starting a new recording prevents initialisation bug
         if (!getIsRecording() && !isCharging) {
-            Log.e(LOG, "STARRRRRRTTTTT REEEECCCOOORRRDDIIINNGGG!!");
             mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
         }
     }
@@ -859,10 +867,13 @@ public class ControlService extends Service {
 
     private void setupApplication() {
 
-        // If no chunk Id in present shared preferences, initialise with 1
+        // If no chunk Id in present shared preferences, initialise with 1, else fetch
+        // Important for the first initialisation
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         if (sharedPreferences.getInt("chunkId", 0) == 0) {
-            sharedPreferences.edit().putInt("chunkId", 1).apply();
+            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        } else {
+            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
         }
 
         // If no Date representation is
@@ -934,15 +945,6 @@ public class ControlService extends Service {
         mTimerInterval = InitValues.timerInterval;
     }
 
-    private void setSinglePreference(String key, boolean value) {
-        Bundle data = new Bundle();
-        data.putString("type", "boolean");
-        data.putString("key", key);
-        data.putBoolean(key, value);
-        sharedPreferences.edit().putBoolean(key, value).apply();
-        messageClient(MSG_CHANGE_PREFERENCE, data);
-    }
-
     private void updatePreferences(Bundle dataPreferences) {
 
         // Extract preferences from data Bundle
@@ -1006,8 +1008,6 @@ public class ControlService extends Service {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
-        Log.i(LOG, "XXX Q present: "+isQuestionnairePresent);
-
         // recording
         samplerate = sharedPreferences.getString("samplerate","16000");
         chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
@@ -1055,9 +1055,16 @@ public class ControlService extends Service {
             messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
         }
 
+
+
         // processing
-       HashSet<String> activeFeatures =
-                (HashSet<String>) sharedPreferences.getStringSet("features", null);
+        HashSet<String> tempFeatures = new HashSet<>();
+        tempFeatures.add("PSD");
+        tempFeatures.add("RMS");
+        tempFeatures.add("ZCR");
+
+        HashSet<String> activeFeatures =
+              (HashSet<String>) sharedPreferences.getStringSet("features", tempFeatures);
 
         filterHp = sharedPreferences.getBoolean("filterHp", true);
 
