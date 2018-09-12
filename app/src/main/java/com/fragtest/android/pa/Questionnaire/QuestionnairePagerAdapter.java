@@ -598,7 +598,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         if (batteryLevel < mBatteryLevelWarning && batteryLevel > mBatteryLevelCritical && !isCharging) {
             if (!bBatteryCritical) {
-                bBatteryCritical = true;
+                bBatteryCritical = false;
                 announceBatteryWarning();
             }
         } else if (batteryLevel <= mBatteryLevelCritical){
@@ -607,7 +607,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 announceBatteryCritical();
             }
         } else if (isCharging) {
-            if (bBatteryCritical) {
+            if (bBatteryCritical && batteryLevel >= (mBatteryLevelCritical + 0.02f)) {
                 bBatteryCritical = false;
                 announceBatteryNormal();
             }

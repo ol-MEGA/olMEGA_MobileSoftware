@@ -151,7 +151,7 @@ public class ControlService extends Service {
     private SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT);
     private Calendar dateTime;
     private Handler mTaskHandler = new Handler();
-    private int mDelayDateTime = 5*60*1000;
+    private int mDateCheckTime = 5*60*1000;
     private int mLogCheckTime = 5*60*1000;
     private int mActivityCheckTime = 10*1000;
     private int mDisableBTTime = 10*1000;
@@ -229,7 +229,7 @@ public class ControlService extends Service {
         @Override
         public void run() {
             checkTime();
-            mTaskHandler.postDelayed(mDateTimeRunnable, mDelayDateTime);
+            mTaskHandler.postDelayed(mDateTimeRunnable, mDateCheckTime);
         }
     };
 

@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Messenger;
 import android.util.Log;
 
+import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Processing.Features.Loop;
 import com.fragtest.android.pa.Processing.Features.PSD;
 import com.fragtest.android.pa.Processing.Features.RMS;
@@ -33,6 +34,10 @@ public class MainProcessingThread extends BasicProcessingThread{
 	@Override
 	public void mainRoutine() {
 		super.mainRoutine();
+
+		LogIHAB.log("Processing");
+
+
 
 		int nProcSamples, nHop, nFeatures, nProcOutSamples;
 		double nProcSeconds, nOutSeconds;

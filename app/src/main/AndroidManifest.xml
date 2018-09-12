@@ -45,6 +45,11 @@
         <receiver android:name=".Core.EventReceiver"
             android:enabled="true"/>
 
+        <!-- Receiver needed to prevent BT crashes -->
+        <receiver android:name=".Bluetooth.StartupBroadcastReceiver"
+            android:enabled="true"/>
+      
+        
         <!-- Receiver needed for DEVICE OWNERSHIP -->
         <receiver
             android:name=".AdminReceiver"
