@@ -47,7 +47,6 @@ import com.fragtest.android.pa.AppStates.StateError;
 import com.fragtest.android.pa.AppStates.StateProposing;
 import com.fragtest.android.pa.AppStates.StateQuest;
 import com.fragtest.android.pa.AppStates.StateRunning;
-import com.fragtest.android.pa.Bluetooth.BluetoothCrashResolver;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
@@ -120,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Preferences
     private SharedPreferences sharedPreferences;
-
-    private BluetoothCrashResolver mBluetoothCrashResolver = null;
 
     // States
     public AppState mAppState;
@@ -349,10 +346,6 @@ public class MainActivity extends AppCompatActivity {
             };
 
 
-    public BluetoothCrashResolver getBluetoothCrashResolver() {
-        return mBluetoothCrashResolver;
-    }
-
     /**
      * State Affairs
      **/
@@ -505,9 +498,6 @@ public class MainActivity extends AppCompatActivity {
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
-        mBluetoothCrashResolver = new BluetoothCrashResolver(this);
-        mBluetoothCrashResolver.start();
-
     }
 
     @Override
@@ -518,8 +508,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
-
-        mBluetoothCrashResolver.stop();
     }
 
     @Override
