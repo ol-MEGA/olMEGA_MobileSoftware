@@ -470,7 +470,7 @@ public class MainActivity extends AppCompatActivity {
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
             handleNewPagerAdapter();
 
@@ -508,6 +508,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
+        unregisterReceiver(mBatInfoReceiver);
     }
 
     @Override
