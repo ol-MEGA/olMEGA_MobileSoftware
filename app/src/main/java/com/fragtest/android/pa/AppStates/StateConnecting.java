@@ -58,25 +58,30 @@ public class StateConnecting implements AppState {
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":" + "setInterface()");
-        qpa.hideQuestionnaireProgressBar();
-        qpa.stopCountDown();
-        qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
-        qpa.getMenuPage().makeTextSizeNormal();
-        qpa.getMenuPage().makeFontWeightNormal();
-        qpa.getMenuPage().mDots.setVisibility(View.VISIBLE);
-        qpa.getMenuPage().hideErrorList();
-        qpa.getMenuPage().hideCountdownText();
-        qpa.getMenuPage().clearQuestionnaireCallback();
-        mainActivity.mCharging.setVisibility(View.INVISIBLE);
-        mainActivity.setBTLogoDisconnected();
-        mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-        mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
-        mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
-        mainActivity.mTaskHandler.post(mDotRunnable);
-        // Have to run tests whether this is necessary
-        mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
+        if (!ControlService.isStandalone) {
+            qpa.hideQuestionnaireProgressBar();
+            qpa.stopCountDown();
+            qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
+            qpa.getMenuPage().makeTextSizeNormal();
+            qpa.getMenuPage().makeFontWeightNormal();
+            qpa.getMenuPage().mDots.setVisibility(View.VISIBLE);
+            qpa.getMenuPage().hideErrorList();
+            qpa.getMenuPage().hideCountdownText();
+            qpa.getMenuPage().clearQuestionnaireCallback();
+            mainActivity.mCharging.setVisibility(View.INVISIBLE);
+            mainActivity.setBTLogoDisconnected();
+            mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
+            mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
+            mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
+            mainActivity.mTaskHandler.post(mDotRunnable);
+            // Have to run tests whether this is necessary
+            mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
-        Log.e(LOG, LOG);
+            Log.e(LOG, LOG);
+        } else {
+            mainActivity.setState(mainActivity.getStateRunning());
+            mainActivity.mAppState.setInterface();
+        }
     }
 
     @Override

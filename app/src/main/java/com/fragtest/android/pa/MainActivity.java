@@ -49,6 +49,7 @@ import com.fragtest.android.pa.AppStates.StateQuest;
 import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.Core.MessageList;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import org.pmw.tinylog.Logger;
@@ -93,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     private Messenger mServiceMessenger;
     public Handler mTaskHandler = new Handler();
+    private MessageList mMessageList;
 
     public ViewPager mViewPager;
     private QuestionnairePagerAdapter mAdapter;
@@ -160,7 +162,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
-            mErrorList.add(error.getErrorMessage());
+            // In case of Standalone Mode, no BT error is needed
+            if (!(ControlService.isStandalone && error == AppErrors.ERROR_NO_BT)) {
+                mErrorList.add(error.getErrorMessage());
+            }
         }
     }
 
@@ -217,6 +222,9 @@ public class MainActivity extends AppCompatActivity {
 
             messageService(ControlService.MSG_REGISTER_CLIENT);
             messageService(ControlService.MSG_GET_STATUS);
+
+            LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
+            mMessageList.work();
         }
 
         @Override
@@ -391,15 +399,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setBTLogoConnected() {
-        mRecord.setBackgroundTintList(
-                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        R.color.BatteryGreen, null)));
+        if (!ControlService.isStandalone) {
+            mRecord.setBackgroundTintList(
+                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                            R.color.BatteryGreen, null)));
+        } else {
+            setBTLogoAirplaneMode();
+        }
     }
 
     public void setBTLogoDisconnected() {
+        if (!ControlService.isStandalone) {
+            mRecord.setBackgroundTintList(
+                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                            R.color.darkerGray, null)));
+        } else {
+            setBTLogoAirplaneMode();
+        }
+    }
+
+    public void setBTLogoAirplaneMode() {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        R.color.darkerGray, null)));
+                        R.color.AirplaneBlue, null)));
     }
 
     private void setConfigVisibility() {
@@ -420,6 +442,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         mStatContext = this;
+        mMessageList = new MessageList(this);
+
+        LogIHAB.log("Standalone Mode: " + ControlService.isStandalone);
 
         setSystemLocale();
 
@@ -482,8 +507,17 @@ public class MainActivity extends AppCompatActivity {
             mStateQuest = new StateQuest(this, mAdapter);
             mStateRunning = new StateRunning(this, mAdapter);
             mStateConnecting = new StateConnecting(this, mAdapter);
-            mAppState = mStateConnecting;
+
+            if (ControlService.isStandalone) {
+                mAppState = mStateRunning;
+            } else {
+                mAppState = mStateConnecting;
+            }
             mAppState.setInterface();
+
+            if (ControlService.isStandalone) {
+                setBTLogoAirplaneMode();
+            }
 
             isActivityRunning = true;
         }
@@ -827,35 +861,39 @@ public class MainActivity extends AppCompatActivity {
     // Send message to connected client
     public void messageService(int what) {
 
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
+        if (mServiceIsBound) {
 
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
+            if (mServiceMessenger != null) {
+                try {
+                    Message msg = Message.obtain(null, what);
+                    msg.replyTo = mMessageHandler;
+                    mServiceMessenger.send(msg);
+                } catch (RemoteException e) {
+                }
             }
+        } else {
+            mMessageList.addMessage(what);
+            LogIHAB.log("Message was added to MessageList: " + what);
         }
     }
 
     // Send message to connected client
     public void messageService(int what, Bundle data) {
 
-        if (BuildConfig.DEBUG) {
-            Log.e(LOG, "Sending Message: " + what);
-        }
+        if (mServiceIsBound) {
 
-        if (mServiceMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.setData(data);
-                msg.replyTo = mMessageHandler;
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
+            if (mServiceMessenger != null) {
+                try {
+                    Message msg = Message.obtain(null, what);
+                    msg.setData(data);
+                    msg.replyTo = mMessageHandler;
+                    mServiceMessenger.send(msg);
+                } catch (RemoteException e) {
+                }
             }
+        } else {
+            mMessageList.addMessage(what, data);
+            LogIHAB.log("Message was added to MessageList with data: " + what);
         }
     }
 
@@ -924,9 +962,9 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
-                    if (isBluetoothPresent) {
+                    if (isBluetoothPresent && !ControlService.isStandalone) {
                         mAppState.bluetoothPresent();
-                    } else {
+                    } else if (!ControlService.isStandalone) {
                         mAppState.bluetoothNotPresent();
                     }
 
@@ -939,15 +977,19 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_RECORDING:
 
-                    mAppState.bluetoothPresent();
-                    isBluetoothPresent = true;
+                    if (!ControlService.isStandalone) {
+                        mAppState.bluetoothPresent();
+                        isBluetoothPresent = true;
+                    }
 
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    mAppState.bluetoothNotPresent();
-                    isBluetoothPresent = false;
+                    if (!ControlService.isStandalone) {
+                        mAppState.bluetoothNotPresent();
+                        isBluetoothPresent = false;
+                    }
 
                     break;
 

@@ -63,7 +63,7 @@ import java.util.Set;
 public class ControlService extends Service {
 
     static final String LOG = "ControlService";
-    static final boolean needsBluetooth = true;
+    public static final boolean isStandalone = true;
     static final int CURRENT_YEAR = 2018;
 
     /**
@@ -310,24 +310,22 @@ public class ControlService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                Log.e(LOG, "BTDEVICES found.");
-            }
-            else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                announceBTConnected();
-                Logger.info("Bluetooth: connected");
-                LogIHAB.log("Bluetooth: connected");
-            }
-            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                Log.e(LOG, "BTDEVICES finished.");
-            }
-            else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
-                Log.e(LOG, "BTDEVICES about to disconnect.");
-            }
-            else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                announceBTDisconnected();
-                Logger.info("Bluetooth: disconnected");
-                LogIHAB.log("Bluetooth: disconnected");
+            if (!isStandalone) {
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    Log.e(LOG, "BTDEVICES found.");
+                } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                    announceBTConnected();
+                    Logger.info("Bluetooth: connected");
+                    LogIHAB.log("Bluetooth: connected");
+                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                    Log.e(LOG, "BTDEVICES finished.");
+                } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
+                    Log.e(LOG, "BTDEVICES about to disconnect.");
+                } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                    announceBTDisconnected();
+                    Logger.info("Bluetooth: disconnected");
+                    LogIHAB.log("Bluetooth: disconnected");
+                }
             }
         }
     };
@@ -362,12 +360,13 @@ public class ControlService extends Service {
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
                     // active transmitter
-                    mBluetoothAdapter.disable();
-                    messageClient(MSG_BT_DISCONNECTED);
+                    if (!isStandalone) {
+                        mBluetoothAdapter.disable();
+                        messageClient(MSG_BT_DISCONNECTED);
+                    }
 
-
-                    IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                    Intent batteryStatus = registerReceiver(null, batteryFilter);
+                    //IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                    //Intent batteryStatus = registerReceiver(null, batteryFilter);
 
                     if (!isCharging) {
                         if (!mBluetoothAdapter.isEnabled()) {
@@ -377,7 +376,8 @@ public class ControlService extends Service {
                         mVibration.singleBurst();
                     }
 
-                    if (!needsBluetooth) {
+                    if (isStandalone) {
+                        mBluetoothAdapter.disable();
                         announceBTConnected();
                     }
 
@@ -769,17 +769,21 @@ public class ControlService extends Service {
     }
 
     private void announceBTDisconnected() {
-        Log.e(LOG, "BTDEVICES not connected.");
-        stopRecording();
-        isBluetoothPresent = false;
-        mVibration.singleBurst();
+        if (!isStandalone) {
+            Log.e(LOG, "BTDEVICES not connected.");
+            stopRecording();
+            isBluetoothPresent = false;
+            mVibration.singleBurst();
+        }
     }
 
     private void announceBTConnected() {
-        Log.e(LOG, "BTDEVICES connected.");
-        startRecording();
-        isBluetoothPresent = true;
-        mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+        if (!isStandalone) {
+            Log.e(LOG, "BTDEVICES connected.");
+            startRecording();
+            isBluetoothPresent = true;
+            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+        }
     }
 
     // Send message to connected client with additional data
@@ -1087,6 +1091,8 @@ public class ControlService extends Service {
         mXmlReader = new XMLReader(this, mSelectQuestionnaire);
         mTimerInterval = mXmlReader.getNewTimerInterval();
         questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
+
+        LogIHAB.log("SETTING ALARM!");
 
         // Needed for the first run
         if (questionnaireHasTimer) {
