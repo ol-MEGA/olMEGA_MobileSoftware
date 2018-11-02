@@ -1028,7 +1028,7 @@ public class ControlService extends Service {
             String[] fileList = mFileIO.scanQuestOptions();
 
             if (fileList.length == 0) {
-                Log.e(LOG, "XXX - No Questionnaires available.");
+                Log.e(LOG, "No Questionnaires available.");
                 messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
                 isQuestionnairePresent = false;
             } else {
@@ -1091,11 +1091,13 @@ public class ControlService extends Service {
     private void setAlarmAndCountdown() {
 
         mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-            mTimerInterval = mXmlReader.getNewTimerInterval();
         questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
 
         // Needed for the first run
         if (questionnaireHasTimer) {
+
+            mTimerInterval = mXmlReader.getNewTimerInterval();
+
             if (!isTimerRunning) {
 
                 mEventTimer.stopTimer();

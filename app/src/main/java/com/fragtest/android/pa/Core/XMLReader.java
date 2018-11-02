@@ -58,24 +58,37 @@ public class XMLReader {
                 mTimerLayout = "single";
             }
 
-            if (timerTemp[1].split("date").length > 0) {
+            if (timerTemp[1].split("date").length > 1) {
                 try {
                     mDateList = new ArrayList<>();
-                    String[] tmp_entries = timerTemp[1].split("\"")[1].split(";");
 
-                    for (int iDate = 0; iDate < tmp_entries.length; iDate++) {
-                        Log.e(LOG, "entry no " + iDate + ": " + tmp_entries[iDate]);
-                        mDateList.add(tmp_entries[iDate]);
+                    String[] tmp_entries = timerTemp[1].split("\"")[1].split(";");
+                    // Sort list
+                    java.util.Arrays.sort(tmp_entries, 1, tmp_entries.length);
+
+                    if (tmp_entries.length > 1) {
+
+                        for (int iDate = 0; iDate < tmp_entries.length; iDate++) {
+
+                            if (Integer.parseInt(tmp_entries[iDate].split(":")[0]) > 23 ||
+                                    Integer.parseInt(tmp_entries[iDate].split(":")[1]) > 59) {
+                                Log.e(LOG, "Invalid entry: " + tmp_entries[iDate]);
+                            } else {
+                                Log.e(LOG, "Entry added: " + tmp_entries[iDate]);
+                                mDateList.add(tmp_entries[iDate]);
+                            }
+                        }
+                        mTimerMean = -255;
+                    } else {
+                        mTimerMean = 0;
+                        mTimerDeviation = 0;
                     }
 
                 } catch (Exception e) {
                     Log.e(LOG, "Invalid date specified.");
                 }
                 mTimerLayout = "multi";
-                mTimerMean = -255;
             }
-
-
         } else {
             mTimerMean = 0;
             mTimerDeviation = 0;
@@ -155,7 +168,6 @@ public class XMLReader {
             if (mTimerInterval <= 0) {
                 mTimerInterval +=  + 24 * 60 * 60 + 60 * 60;
             }
-
 
         }
 
