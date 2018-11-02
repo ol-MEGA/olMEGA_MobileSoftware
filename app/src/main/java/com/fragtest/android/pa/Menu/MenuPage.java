@@ -41,10 +41,7 @@ public class MenuPage extends AppCompatActivity {
     private ArrayList<String> mErrorList;
     private ArrayAdapter<String> mErrorAdapter;
     private ListView mErrorView;
-    private boolean isCharging = true;
-    private String mOriginalText = "";
     public Handler mTaskHandler = new Handler();
-    private int mConnectingDelay = 90*1000;
     private boolean isTimePlausible = true;
     private boolean showErrors = true;
 
@@ -52,13 +49,6 @@ public class MenuPage extends AppCompatActivity {
     private int iDot = 0;
     private int mDelayDots = 500;
 
-    /*
-    public final int ERROR_NOBT = 0;
-    public final int ERROR_NOQUEST = 1;
-    public final int ERROR_BATT = 2;
-    public final int ERROR_BATT_CRIT = 3;
-    public final int ERROR_BATT_CHARGING = 4;
-*/
     private Runnable mDotRunnable = new Runnable() {
         @Override
         public void run() {
@@ -79,15 +69,6 @@ public class MenuPage extends AppCompatActivity {
             mTaskHandler.removeCallbacks(mErrorViewRunnable);
         }
     };
-
-    /*
-    private Runnable mConnectingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            stopConnecting();
-        }
-    };
-    */
 
     private Runnable mDateViewRunnable = new Runnable() {
         @Override
@@ -114,92 +95,16 @@ public class MenuPage extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //stopConnecting();
-        //mTaskHandler.removeCallbacks(mConnectingRunnable);
     }
 
-    /*
-    private String getMessage(int error) {
-        switch(error) {
-            case ERROR_BATT:
-                return mMainActivity.getResources().getString(R.string.batteryWarning);
-            case ERROR_NOBT:
-                return mMainActivity.getResources().getString(R.string.noBluetooth);
-            case ERROR_NOQUEST:
-                return mMainActivity.getResources().getString(R.string.noQuestionnaires);
-            case ERROR_BATT_CRIT:
-                return mMainActivity.getResources().getString(R.string.batteryCritical);
-            case ERROR_BATT_CHARGING:
-                return mMainActivity.getResources().getString(R.string.infoCharging);
-            default:
-                return null;
-        }
-    }
-*/
-    /*
-    private void reactToErrors() {
-        if (mErrorList.contains(getMessage(ERROR_NOBT)) ||
-                mErrorList.contains(getMessage(ERROR_NOQUEST)) ||
-                mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
-            disableQuestionnaire();
-        } else {
-            enableQuestionnaire();
-            stopConnecting();
-        }
-    }
-
-    public void addError(int error) {
-        if (!mErrorList.contains(getMessage(error))) {
-            mErrorList.add(getMessage(error));
-            mErrorAdapter.notifyDataSetChanged();
-        }
-        reactToErrors();
-    }
-
-    public void removeError(int error) {
-        if (mErrorList.contains(getMessage(error))) {
-            mErrorList.remove(getMessage(error));
-            mErrorAdapter.notifyDataSetChanged();
-        }
-        reactToErrors();
-    }
-
-    public void rehashErrors() {
-        mErrorAdapter.notifyDataSetChanged();
-    }
-
-*/
-/*
-    private void enableQuestionnaire() {
-        setText(mContext.getResources().getString(R.string.menuText));
-        mStartQuestionnaire.setEnabled(true);
-    }
-
-    private void disableQuestionnaire() {
-        if (!isCharging) {
-            setText(mContext.getResources().getString(R.string.infoError));
-            mStartQuestionnaire.setEnabled(false);
-            mCountDownRemaining.setText("");
-        }
-        resetStartTextSize();
-    }
-*/
     public void hideErrorList() {
         mErrorAdapter.notifyDataSetChanged();
-        //showErrors = false;
-        //mTaskHandler.post(mErrorViewRunnable);
         mErrorView.setVisibility(View.INVISIBLE);
     }
 
     public void showErrorList() {
         mErrorAdapter.notifyDataSetChanged();
-        //showErrors = true;
-        //mTaskHandler.post(mErrorViewRunnable);
         mErrorView.setVisibility(View.VISIBLE);
-    }
-
-    public void makeTextSizeBig() {
-        mStartQuestionnaire.setTextSize(mMainActivity.getResources().getDimension(R.dimen.textSizeProposed));
     }
 
     public void makeTextSizeNormal() {
@@ -224,7 +129,6 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //resetStartTextSize();
                 mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
@@ -233,51 +137,6 @@ public class MenuPage extends AppCompatActivity {
     public void clearQuestionnaireCallback() {
         mStartQuestionnaire.setOnClickListener(null);
     }
-
-    /*
-    public void startConnecting() {
-        if (mErrorList.contains(getMessage(ERROR_NOBT)) && !mErrorList.contains(getMessage(ERROR_BATT_CRIT))) {
-            mStartQuestionnaire.setVisibility(View.GONE);
-            mConnecting.setVisibility(View.VISIBLE);
-            mDots.setVisibility(View.VISIBLE);
-            mErrorView.setVisibility(View.INVISIBLE);
-            mTaskHandler.postDelayed(mConnectingRunnable, mConnectingDelay);
-            mTaskHandler.post(mDotRunnable);
-        }
-    }
-
-    public void stopConnecting() {
-        mConnecting.setVisibility(View.GONE);
-        mDots.setVisibility(View.GONE);
-        mStartQuestionnaire.setVisibility(View.VISIBLE);
-        mTaskHandler.removeCallbacks(mConnectingRunnable);
-        mTaskHandler.removeCallbacks(mDotRunnable);
-        mErrorView.setVisibility(View.VISIBLE);
-    }
-*/
-    /*
-    public void setNotCharging() {
-        isCharging = false;
-        resetStartTextSize();
-        reactToErrors();
-        startConnecting();
-    }
-
-    public void setCharging() {
-        isCharging = true;
-        stopConnecting();
-        setText(mContext.getResources().getString(R.string.infoCharging));
-        mStartQuestionnaire.setEnabled(false);
-        resetStartTextSize();
-        mCountDownRemaining.setText("");
-        mErrorView.setVisibility(View.INVISIBLE);
-    }
-    */
-
-    /*public void setTimePlausible(boolean isPlausible) {
-        isTimePlausible = isPlausible;
-        mTaskHandler.post(mDateViewRunnable);
-    }*/
 
     public void showTime() {
         mDate.setVisibility(View.VISIBLE);
@@ -295,10 +154,6 @@ public class MenuPage extends AppCompatActivity {
         mCountDownRemaining.setVisibility(View.INVISIBLE);
     }
 
-    public void makeFontWeightBold() {
-        mStartQuestionnaire.setTypeface(null, Typeface.BOLD);
-    }
-
     public void makeFontWeightNormal() {
         mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
     }
@@ -309,7 +164,6 @@ public class MenuPage extends AppCompatActivity {
         LinearLayout menuLayout = new LinearLayout(mMainActivity);
         menuLayout.setBackgroundColor(ContextCompat.getColor(mMainActivity,R.color.BackgroundColor));
         menuLayout.setOrientation(LinearLayout.VERTICAL);
-        //menuLayout.setBackgroundColor(Color.GREEN);
 
         // Top View carrying countdown
         mCountDownRemaining = new TextView(mMainActivity);
@@ -342,7 +196,6 @@ public class MenuPage extends AppCompatActivity {
         mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //resetStartTextSize();
                 mContextQPA.sendMessage(ControlService.MSG_MANUAL_QUESTIONNAIRE);
             }
         });
@@ -400,25 +253,6 @@ public class MenuPage extends AppCompatActivity {
         return menuLayout;
     }
 
-
-    /*
-    // Simply increases text size of "Start Questionnaire" item in user menu
-    public void increaseStartTextSize() {
-
-        mStartQuestionnaire.setText(formatString(StartText));
-        mStartQuestionnaire.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        mStartQuestionnaire.setTextSize(mContext.getResources().
-                getDimension(R.dimen.textSizeProposed));
-        mStartQuestionnaire.setTypeface(null, Typeface.BOLD);
-        mStartQuestionnaire.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mContextQPA.sendMessage(ControlService.MSG_PROPOSITION_ACCEPTED);
-            }
-        });
-    }
-    */
-
     public void setTime() {
         Calendar dateTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
         mDate.setText(mDateFormat.format(dateTime.getTime()));
@@ -435,7 +269,6 @@ public class MenuPage extends AppCompatActivity {
     }
 
     public void resetStartTextSize() {
-        //mStartQuestionnaire.setText(cleanUpString(StartText));
         mStartQuestionnaire.setTextSize(mMainActivity.getResources().
                 getDimension(R.dimen.textSizeAnswer));
         mStartQuestionnaire.setTypeface(Typeface.DEFAULT);
@@ -443,10 +276,17 @@ public class MenuPage extends AppCompatActivity {
 
     // Handles update of visible text countdown
     public void updateCountdownText(int seconds) {
-        int minutesRemaining = seconds / 60;
-        int secondsRemaining = seconds - minutesRemaining * 60;
-        mCountDownRemaining.setText("" + mTempTextCountDownRemaining[0] + minutesRemaining +
-                mTempTextCountDownRemaining[1] + secondsRemaining + mTempTextCountDownRemaining[2]);
+        int hoursRemaining = seconds / 60 / 60;
+        int minutesRemaining = (seconds  - hoursRemaining * 60 * 60) / 60;
+        int secondsRemaining = seconds - hoursRemaining * 60 * 60 - minutesRemaining * 60;
+
+        String tmp_text = String.format("%s%d%s%d%s%d%s",
+                mTempTextCountDownRemaining[0], hoursRemaining,
+                mTempTextCountDownRemaining[1], minutesRemaining,
+                mTempTextCountDownRemaining[2], secondsRemaining,
+                mTempTextCountDownRemaining[3]);
+
+        mCountDownRemaining.setText(tmp_text);
     }
 
     private String cleanUpString(String inString) {

@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -21,6 +22,8 @@ public class XMLReader {
     // List containing all questions (including attached information)
     private ArrayList<String> mQuestionList;
     private int nDefaultTimerMean = 30, nDefaultTimerDeviation = 5, nSecondsInMinute = 60;
+    private ArrayList<String> mDateList;
+    private String mTimerLayout = "";
 
     public XMLReader(Context context, String fileName) {
 
@@ -35,8 +38,6 @@ public class XMLReader {
         // timerTemp.length == 0 means no timer information can be found
         if (timerTemp.length > 1) {
 
-            //isTimerPresent = true;
-
             if (timerTemp[1].split("mean").length > 1) {
                 try {
                     mTimerMean = Integer.parseInt(timerTemp[1].split("\"")[1]);
@@ -44,6 +45,7 @@ public class XMLReader {
                     mTimerMean = nDefaultTimerMean * nSecondsInMinute;
                     Log.e(LOG, "Invalid entry. Timer mean set to " + mTimerMean + " seconds.");
                 }
+                mTimerLayout = "single";
             }
 
             if (timerTemp[1].split("deviation").length > 1) {
@@ -53,7 +55,27 @@ public class XMLReader {
                     mTimerDeviation = nDefaultTimerDeviation * nSecondsInMinute;
                     Log.e(LOG, "Invalid entry. Timer mean set to 300 seconds.");
                 }
+                mTimerLayout = "single";
             }
+
+            if (timerTemp[1].split("date").length > 0) {
+                try {
+                    mDateList = new ArrayList<>();
+                    String[] tmp_entries = timerTemp[1].split("\"")[1].split(";");
+
+                    for (int iDate = 0; iDate < tmp_entries.length; iDate++) {
+                        Log.e(LOG, "entry no " + iDate + ": " + tmp_entries[iDate]);
+                        mDateList.add(tmp_entries[iDate]);
+                    }
+
+                } catch (Exception e) {
+                    Log.e(LOG, "Invalid date specified.");
+                }
+                mTimerLayout = "multi";
+                mTimerMean = -255;
+            }
+
+
         } else {
             mTimerMean = 0;
             mTimerDeviation = 0;
@@ -98,9 +120,44 @@ public class XMLReader {
     }
 
     public int getNewTimerInterval() {
-        mTimerInterval = ThreadLocalRandom.current().nextInt(
-                mTimerMean - mTimerDeviation,
-                mTimerMean + mTimerDeviation + 1);
+
+        if (mTimerLayout.equalsIgnoreCase("single")) {
+
+            mTimerInterval = ThreadLocalRandom.current().nextInt(
+                    mTimerMean - mTimerDeviation,
+                    mTimerMean + mTimerDeviation + 1);
+
+        } else if (mTimerLayout.equalsIgnoreCase("multi")) {
+
+            Date tmp_date = new Date();
+            int tmp_dateTime = tmp_date.getHours() * 60 * 60 + tmp_date.getMinutes() * 60 +
+                    tmp_date.getSeconds();
+            int tmp_result;
+            int nextTimer = 0;
+
+            for (int iDate = 0; iDate < mDateList.size(); iDate ++) {
+                int tmp_hours = Integer.parseInt(mDateList.get(iDate).split(":")[0]);
+                int tmp_minutes = Integer.parseInt(mDateList.get(iDate).split(":")[1]);
+                int tmp_time = tmp_hours * 60 * 60 + tmp_minutes * 60;
+
+                tmp_result = tmp_time > tmp_dateTime ? +1 : tmp_time < tmp_dateTime ? -1 : 0;
+
+                if (tmp_result == 1) {
+                    nextTimer = iDate;
+                    break;
+                }
+            }
+
+            mTimerInterval = Integer.parseInt(mDateList.get(nextTimer).split(":")[0]) * 60 * 60 +
+                    Integer.parseInt(mDateList.get(nextTimer).split(":")[1]) * 60 -
+                    tmp_dateTime;
+
+            if (mTimerInterval <= 0) {
+                mTimerInterval +=  + 24 * 60 * 60 + 60 * 60;
+            }
+
+
+        }
 
         return mTimerInterval;
     }

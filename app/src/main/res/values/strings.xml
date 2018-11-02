@@ -8,7 +8,7 @@
     <string name="infoConnecting">Connecting</string>
     <string name="hintTextAnswer">Please enter text here.</string>
     <string name="buttonTextOkay">OK</string>
-    <string name="timeRemaining">Next Questionnaire scheduled in %m %s</string>
+    <string name="timeRemaining">Next Questionnaire scheduled in %h %m %s</string>
     <string name="menuText">Take Ques-tionnaire</string>
     <string name="noQuestionnaires">• Unable to load Questionnaire.</string>
     <string name="noBluetooth">• Unable to connect to device.</string>

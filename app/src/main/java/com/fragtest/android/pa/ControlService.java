@@ -141,6 +141,8 @@ public class ControlService extends Service {
             showConfigButton, showRecordingButton, questionnaireHasTimer;
 
     private int mFinalCountDown, mTimerInterval;
+    private ArrayList<String> mTimerList;
+    private int mTimerNumber = 0;
 
     private String samplerate, chunklengthInS, filterHpFrequency;
 
@@ -1089,10 +1091,8 @@ public class ControlService extends Service {
     private void setAlarmAndCountdown() {
 
         mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-        mTimerInterval = mXmlReader.getNewTimerInterval();
+            mTimerInterval = mXmlReader.getNewTimerInterval();
         questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
-
-        LogIHAB.log("SETTING ALARM!");
 
         // Needed for the first run
         if (questionnaireHasTimer) {
