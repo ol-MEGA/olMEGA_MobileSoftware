@@ -42,7 +42,6 @@ import android.widget.Toast;
 
 import com.fragtest.android.pa.AppStates.AppState;
 import com.fragtest.android.pa.AppStates.StateCharging;
-import com.fragtest.android.pa.AppStates.StateConnecting;
 import com.fragtest.android.pa.AppStates.StateError;
 import com.fragtest.android.pa.AppStates.StateProposing;
 import com.fragtest.android.pa.AppStates.StateQuest;
@@ -103,15 +102,12 @@ public class MainActivity extends AppCompatActivity {
             mBatteryReg, mBatteryProg, mCharging;
 
     private boolean mServiceIsBound;
-    private boolean mServiceIsRecording;
     private boolean isPrefsInForeGround = false;
     private boolean isActivityRunning = false;
     private boolean isQuestionnairePresent = true;
     //private boolean isCharging = false;
     private boolean isTimer = false;
     private boolean showConfigButton = false;
-    private boolean showRecordingButton = true;
-    private boolean isBluetoothPresent = false;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
@@ -125,7 +121,6 @@ public class MainActivity extends AppCompatActivity {
     // States
     public AppState mAppState;
     private StateCharging mStateCharging;
-    private StateConnecting mStateConnecting;
     private StateError mStateError;
     private StateProposing mStateProposing;
     private StateQuest mStateQuest;
@@ -144,8 +139,6 @@ public class MainActivity extends AppCompatActivity {
 
         public String getErrorMessage() {
             switch (this) {
-                case ERROR_NO_BT:
-                    return mStatContext.getResources().getString(R.string.noBluetooth);
                 case ERROR_BATT_LOW:
                     return mStatContext.getResources().getString(R.string.batteryWarning);
                 case ERROR_BATT_CRITICAL:
@@ -163,9 +156,7 @@ public class MainActivity extends AppCompatActivity {
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
             // In case of Standalone Mode, no BT error is needed
-            if (!(ControlService.isStandalone && error == AppErrors.ERROR_NO_BT)) {
-                mErrorList.add(error.getErrorMessage());
-            }
+            mErrorList.add(error.getErrorMessage());
         }
     }
 
@@ -367,10 +358,6 @@ public class MainActivity extends AppCompatActivity {
         return mStateCharging;
     }
 
-    public AppState getStateConnecting() {
-        return mStateConnecting;
-    }
-
     public AppState getStateError() {
         return mStateError;
     }
@@ -398,26 +385,6 @@ public class MainActivity extends AppCompatActivity {
         messageService(ControlService.MSG_QUESTIONNAIRE_FINISHED);
     }
 
-    public void setBTLogoConnected() {
-        if (!ControlService.isStandalone) {
-            mRecord.setBackgroundTintList(
-                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                            R.color.BatteryGreen, null)));
-        } else {
-            setBTLogoAirplaneMode();
-        }
-    }
-
-    public void setBTLogoDisconnected() {
-        if (!ControlService.isStandalone) {
-            mRecord.setBackgroundTintList(
-                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                            R.color.darkerGray, null)));
-        } else {
-            setBTLogoAirplaneMode();
-        }
-    }
-
     public void setBTLogoAirplaneMode() {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
@@ -443,8 +410,6 @@ public class MainActivity extends AppCompatActivity {
 
         mStatContext = this;
         mMessageList = new MessageList(this);
-
-        LogIHAB.log("Standalone Mode: " + ControlService.isStandalone);
 
         setSystemLocale();
 
@@ -506,18 +471,12 @@ public class MainActivity extends AppCompatActivity {
             mStateProposing = new StateProposing(this, mAdapter);
             mStateQuest = new StateQuest(this, mAdapter);
             mStateRunning = new StateRunning(this, mAdapter);
-            mStateConnecting = new StateConnecting(this, mAdapter);
 
-            if (ControlService.isStandalone) {
-                mAppState = mStateRunning;
-            } else {
-                mAppState = mStateConnecting;
-            }
+
+            mAppState = mStateRunning;
             mAppState.setInterface();
 
-            if (ControlService.isStandalone) {
-                setBTLogoAirplaneMode();
-            }
+            setBTLogoAirplaneMode();
 
             isActivityRunning = true;
         }
@@ -712,13 +671,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkForPermissions() {
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_RECORD_AUDIO);
-        }
-
         if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 !=PackageManager.PERMISSION_GRANTED)
         {
@@ -808,11 +760,6 @@ public class MainActivity extends AppCompatActivity {
         requestString = getResources().getStringArray(R.array.permissionMessages);
         switch (requestCode) {
 
-            case MY_PERMISSIONS_RECORD_AUDIO: {
-                //Toast.makeText(this, "Thanks for permission to record audio.", Toast.LENGTH_SHORT).show();
-
-                break;
-            }
             case MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED: {
                 //Toast.makeText(this, "Thanks for permission to receive boot completed.", Toast.LENGTH_SHORT).show();
 
@@ -954,45 +901,11 @@ public class MainActivity extends AppCompatActivity {
 
                     break;
 
-                case ControlService.MSG_GET_STATUS:
-
-                    // Set UI to match ControlService's state
-                    Bundle status = msg.getData();
-                    mServiceIsRecording = status.getBoolean("isRecording");
-
-                    Log.d(LOG, "recording state: " + mServiceIsRecording);
-
-                    if (isBluetoothPresent && !ControlService.isStandalone) {
-                        mAppState.bluetoothPresent();
-                    } else if (!ControlService.isStandalone) {
-                        mAppState.bluetoothNotPresent();
-                    }
-
-                    break;
-
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
 
                     isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
                     break;
 
-                    /*
-                case ControlService.MSG_START_RECORDING:
-
-                    if (!ControlService.isStandalone) {
-                        mAppState.bluetoothPresent();
-                        isBluetoothPresent = true;
-                    }
-
-                    break;
-
-                case ControlService.MSG_STOP_RECORDING:
-
-                    if (!ControlService.isStandalone) {
-                        mAppState.bluetoothNotPresent();
-                        isBluetoothPresent = false;
-                    }
-
-                    break;*/
 
                 case ControlService.MSG_TIME_CORRECT:
 

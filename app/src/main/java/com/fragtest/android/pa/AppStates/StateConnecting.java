@@ -58,7 +58,7 @@ public class StateConnecting implements AppState {
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":" + "setInterface()");
-        if (!ControlService.isStandalone) {
+
             qpa.hideQuestionnaireProgressBar();
             qpa.stopCountDown();
             qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
@@ -69,7 +69,6 @@ public class StateConnecting implements AppState {
             qpa.getMenuPage().hideCountdownText();
             qpa.getMenuPage().clearQuestionnaireCallback();
             mainActivity.mCharging.setVisibility(View.INVISIBLE);
-            mainActivity.setBTLogoDisconnected();
             mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
             mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
             mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
@@ -78,10 +77,6 @@ public class StateConnecting implements AppState {
             mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
             Log.e(LOG, LOG);
-        } else {
-            mainActivity.setState(mainActivity.getStateRunning());
-            mainActivity.mAppState.setInterface();
-        }
     }
 
     @Override
@@ -100,7 +95,6 @@ public class StateConnecting implements AppState {
     public void noQuest() {
         LogIHAB.log(LOG + ":" + "NoQuest()");
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
-        mainActivity.setBTLogoDisconnected();
         stopConnecting();
     }
 
@@ -119,21 +113,10 @@ public class StateConnecting implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        stopConnecting();
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
-        mainActivity.setState(mainActivity.getStateRunning());
-        mainActivity.mAppState.setInterface();
-    }
+    public void bluetoothPresent() { }
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.setBTLogoDisconnected();
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-    }
+    public void bluetoothNotPresent() {}
 
     @Override
     public void batteryLow() {

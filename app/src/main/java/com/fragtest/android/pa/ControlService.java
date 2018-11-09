@@ -5,9 +5,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,7 +22,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
@@ -33,7 +29,6 @@ import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
-import com.fragtest.android.pa.Processing.MainProcessingThread;
 
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -63,7 +58,6 @@ import java.util.Set;
 public class ControlService extends Service {
 
     static final String LOG = "ControlService";
-    public static final boolean isStandalone = true;
     static final int CURRENT_YEAR = 2018;
 
     /**
@@ -76,10 +70,7 @@ public class ControlService extends Service {
     public static final int MSG_GET_STATUS = 13;
     public static final int MSG_RESET_BT = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
-    public static final int MSG_NO_TIMER = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
-    public static final int MSG_BT_CONNECTED = 18;
-    public static final int MSG_BT_DISCONNECTED = 19;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -123,7 +114,6 @@ public class ControlService extends Service {
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
     private boolean isQuestionnairePresent = false;
-    private boolean isBluetoothPresent = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
@@ -134,7 +124,6 @@ public class ControlService extends Service {
     public static final String FILENAME_LOG = "log2.txt";
     public static final String FILENAME_LOG_tmp = "log.txt";
 
-    private int mChunkId = 1;
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
@@ -156,76 +145,22 @@ public class ControlService extends Service {
     private int mDateCheckTime = 5*60*1000;
     private int mLogCheckTime = 5*60*1000;
     private int mActivityCheckTime = 10*1000;
-    private int mDisableBTTime = 10*1000;
+
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
     private FileIO mFileIO;
-
     // Messenger to clients
     private Messenger mClientMessenger;
     // Messenger to pass to threads
     final Messenger serviceMessenger = new Messenger(new MessageHandler());
-
-    // Audio recording
-    private AudioRecorder audioRecorder;
-
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
-
-    // recording/processing buffer
-    int idxRecording = 0;
-    int idxProcessing = 0;
-    int processingBufferSize = 100;
-    String[] processingBuffer = new String[processingBufferSize];
-
-    // thread-safety
-    static boolean isRecording = false;
-    static boolean isProcessing = false;
-    static final Object recordingLock = new Object();
-    static final Object processingLock = new Object();
-
-    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    private int mDelayResetBT = 500;
 
     public static final boolean useLogMode = true;
 
     Context context = this;
 
-    private Runnable mStartRecordingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            audioRecorder = new AudioRecorder(
-                    serviceMessenger,
-                    Integer.parseInt(chunklengthInS),
-                    Integer.parseInt(samplerate),
-                    isWave);
-            if (!isCharging) {
-                audioRecorder.start();
-                setIsRecording(true);
-                messageClient(MSG_START_RECORDING);
-                mVibration.singleBurst();
-            }
-        }
-    };
-
-    private Runnable mResetBTAdapterRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mBluetoothAdapter.enable();
-            mBluetoothAdapter.startDiscovery();
-        }
-    };
-
-    private Runnable mDisableBT = new Runnable() {
-        @Override
-        public void run() {
-            if (isCharging) {
-                mBluetoothAdapter.disable();
-                mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
-            }
-        }
-    };
 
     private Runnable mDateTimeRunnable = new Runnable() {
         @Override
@@ -266,7 +201,6 @@ public class ControlService extends Service {
                 return true;
             }
         }
-        mBluetoothAdapter.disable();
         return false;
     }
 
@@ -306,32 +240,6 @@ public class ControlService extends Service {
         }
     };
 
-    //The BroadcastReceiver that listens for bluetooth broadcasts
-    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (!isStandalone) {
-                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                    Log.e(LOG, "BTDEVICES found.");
-                } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                    announceBTConnected();
-                    Logger.info("Bluetooth: connected");
-                    LogIHAB.log("Bluetooth: connected");
-                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES finished.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES about to disconnect.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                    announceBTDisconnected();
-                    Logger.info("Bluetooth: disconnected");
-                    LogIHAB.log("Bluetooth: disconnected");
-                }
-            }
-        }
-    };
-
     class MessageHandler extends Handler {
 
         @Override
@@ -359,30 +267,6 @@ public class ControlService extends Service {
                     mTaskHandler.post(mLogCheckRunnable);
                     mTaskHandler.post(mActivityCheckRunnable);
 
-                    // Set and announce bluetooth disabled - then enable it to force recognition via
-                    // broadcast receiver. This way, a connection can be made with an already
-                    // active transmitter
-                    if (!isStandalone) {
-                        mBluetoothAdapter.disable();
-                        messageClient(MSG_BT_DISCONNECTED);
-                    }
-
-                    //IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                    //Intent batteryStatus = registerReceiver(null, batteryFilter);
-
-                    if (!isCharging) {
-                        if (!mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.enable();
-                        }
-                    } else {
-                        mVibration.singleBurst();
-                    }
-
-                    if (isStandalone) {
-                        mBluetoothAdapter.disable();
-                        announceBTConnected();
-                    }
-
                     checkTime();
                     checkLog();
                     break;
@@ -394,24 +278,9 @@ public class ControlService extends Service {
                     LogIHAB.log("Client unregistered from service");
                     if (restartActivity) {
                         startActivity();
-                    } else {
-                        mBluetoothAdapter.disable();
                     }
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
-                    mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-                    break;
-
-                case MSG_GET_STATUS:
-                    Bundle status = new Bundle();
-                    status.putBoolean("isRecording", getIsRecording());
-                    messageClient(MSG_GET_STATUS, status);
-                    break;
-
-                case MSG_RESET_BT:
-                    mBluetoothAdapter.cancelDiscovery();
-                    mBluetoothAdapter.disable();
-                    mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
                     break;
 
                 case MSG_START_COUNTDOWN:
@@ -462,87 +331,7 @@ public class ControlService extends Service {
                     checkForPreferences();
                     break;
 
-                case MSG_RECORDING_STOPPED:
-                    Log.d(LOG, "Stop caching audio");
-                    Logger.info("Stop caching audio");
-                    LogIHAB.log("Stop caching audio");
-                    audioRecorder.close();
-                    setIsRecording(false);
-                    messageClient(MSG_GET_STATUS);
-                    break;
-
-                case MSG_CHUNK_RECORDED:
-
-                    LogIHAB.log("CHUNK RECORDED");
-
-                    AudioFileIO.setChunkId(getChunkId());
-
-                    String filename = msg.getData().getString("filename");
-                    addProccessingBuffer(idxRecording, filename);
-                    idxRecording = (idxRecording + 1) % processingBufferSize;
-
-                    LogIHAB.log("isProcessing: "+getIsProcessing()+", isRecording: "+getIsRecording());
-
-                    if (!getIsProcessing()) {
-
-                        LogIHAB.log("Start Processing");
-
-                        Bundle settings = getPreferences();
-
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    }
-
-                    if (keepAudioCache) {
-                        new SingleMediaScanner(context, new File(filename));
-                    }
-
-                    Log.d(LOG, "New cache: " + filename);
-                    Logger.info("New cache:\t{}", filename);
-                    LogIHAB.log("New cache:\t" + filename);
-
-                    break;
-
-                case MSG_CHUNK_PROCESSED:
-
-                    ArrayList<String> featureFiles = msg.getData().
-                            getStringArrayList("featureFiles");
-
-                    if (!keepAudioCache) {
-                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
-                    }
-
-                    for (String file : featureFiles) {
-                        if (file != null) {
-                            new SingleMediaScanner(context, new File(file));
-                        }
-                    }
-
-                    deleteProccessingBuffer(idxProcessing);
-                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
-
-                    if (processingBuffer[idxProcessing] != null) {
-                        Bundle settings = getPreferences();
-
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    } else {
-                        setIsProcessing(false);
-                    }
-
-                    break;
-
                 case MSG_APPLICATION_SHUTDOWN:
-                    //stopRecording() is called by receiver
-                    if (mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.disable();
-                    }
                     Logger.info("Shutdown");
                     LogIHAB.log("Shutdown");
                     break;
@@ -558,19 +347,12 @@ public class ControlService extends Service {
                     //TODO: Test this case
                     Logger.info("CRITICAL battery level: active");
                     LogIHAB.log("CRITICAL battery level: active");
-                    if (mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.disable();
-                    }
                     break;
 
                 case MSG_CHARGING_OFF:
                     Logger.info("Charging: inactive");
                     LogIHAB.log("Charging: inactive");
                     isCharging = false;
-                    mTaskHandler.removeCallbacks(mDisableBT);
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
-                    }
                     mVibration.singleBurst();
                     // startRecording() is invoked by receiver upon completion
                     break;
@@ -580,12 +362,7 @@ public class ControlService extends Service {
                     Logger.info("Charging: active");
                     LogIHAB.log("Charging: active");
 
-                    if (mBluetoothAdapter.isEnabled()) {
-                        stopRecording();
-                        mBluetoothAdapter.disable();
-                    }
                     mVibration.singleBurst();
-                    mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     break;
 
                 case MSG_CHARGING_ON_PRE:
@@ -647,13 +424,10 @@ public class ControlService extends Service {
         Log.d(LOG, "onDestroy");
         stopAlarmAndCountdown();
 
-        mBluetoothAdapter.disable();
-
         mNotificationManager.cancel(NOTIFICATION_ID);
 
         // Unregister broadcast listeners
         this.unregisterReceiver(mAlarmReceiver);
-        this.unregisterReceiver(mBluetoothStateReceiver);
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
@@ -691,18 +465,6 @@ public class ControlService extends Service {
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         Log.e(LOG,"onDump");
         super.dump(fd, writer, args);
-    }
-
-    private int getChunkId() {
-        // Returns the current chunk ID and increments
-        if (mChunkId < 999999) {
-            mChunkId += 1;
-        } else {
-            mChunkId = 1;
-        }
-        sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
-        LogIHAB.log("Returning chunk id: "+ mChunkId);
-        return mChunkId;
     }
 
     private boolean checkLog() {
@@ -770,24 +532,6 @@ public class ControlService extends Service {
         }
     }
 
-    private void announceBTDisconnected() {
-        if (!isStandalone) {
-            Log.e(LOG, "BTDEVICES not connected.");
-            stopRecording();
-            isBluetoothPresent = false;
-            mVibration.singleBurst();
-        }
-    }
-
-    private void announceBTConnected() {
-        if (!isStandalone) {
-            Log.e(LOG, "BTDEVICES connected.");
-            startRecording();
-            isBluetoothPresent = true;
-            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-        }
-    }
-
     // Send message to connected client with additional data
     private void messageClient(int what, Bundle data) {
 
@@ -822,33 +566,6 @@ public class ControlService extends Service {
         startActivity(intent);
     }
 
-    private void startRecording() {
-        Log.d(LOG, "Start caching audio");
-        Logger.info("Start caching audio");
-        LogIHAB.log("Start caching audio");
-        AudioFileIO.setChunkId(mChunkId);
-        // A delay before starting a new recording prevents initialisation bug
-        if (!getIsRecording() && !isCharging) {
-            mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
-        }
-    }
-
-    private void stopRecording() {
-
-        if (getIsRecording()) {
-            Log.d(LOG, "Requesting stop caching audio");
-            Logger.info("Requesting stop caching audio");
-            LogIHAB.log("Requesting stop caching audio");
-
-            audioRecorder.stop();
-            setIsRecording(false);
-            // TODO: Experimental
-            mTaskHandler.removeCallbacks(mStartRecordingRunnable);
-
-            messageClient(MSG_STOP_RECORDING);
-        }
-    }
-
     private void showNotification() {
 
         // Launch activity when notification is selected
@@ -873,14 +590,8 @@ public class ControlService extends Service {
 
     private void setupApplication() {
 
-        // If no chunk Id in present shared preferences, initialise with 1, else fetch
-        // Important for the first initialisation
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (sharedPreferences.getInt("chunkId", 0) == 0) {
-            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
-        } else {
-            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
-        }
 
         // If no Date representation is
         Date dateTime = new Date(System.currentTimeMillis());
@@ -913,12 +624,6 @@ public class ControlService extends Service {
         // Register receiver for alarm
         this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
 
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        this.registerReceiver(mBluetoothStateReceiver, filter);
 
         // It is safe to say, that the display is illuminated on system/application startup
         if (useLogMode) {
@@ -1164,95 +869,5 @@ public class ControlService extends Service {
             isQuestionnairePending = false;
         }
     }
-
-    /**
-     * Thread-safe status variables
-     */
-
-    static void setIsRecording(boolean status) {
-        synchronized (recordingLock) {
-            isRecording = status;
-        }
-    }
-
-    static boolean getIsRecording() {
-        synchronized (recordingLock) {
-            return isRecording;
-        }
-    }
-
-    static void setIsProcessing(boolean status) {
-        synchronized (processingLock) {
-            isProcessing = status;
-        }
-    }
-
-    static boolean getIsProcessing() {
-        synchronized (processingLock) {
-            return isProcessing;
-        }
-    }
-
-    void addProccessingBuffer(int idx, String filename) {
-        synchronized (processingLock) {
-            processingBuffer[idx] = filename;
-        }
-    }
-
-    void deleteProccessingBuffer(int idx) {
-        synchronized (processingLock) {
-            processingBuffer[idx] = null;
-        }
-    }
-
-    /**
-     * BT optional
-     */
-
-    private String getBTMajorDeviceClass(int major){
-        switch(major){
-            case BluetoothClass.Device.Major.AUDIO_VIDEO:
-                return "AUDIO_VIDEO";
-            case BluetoothClass.Device.Major.COMPUTER:
-                return "COMPUTER";
-            case BluetoothClass.Device.Major.HEALTH:
-                return "HEALTH";
-            case BluetoothClass.Device.Major.IMAGING:
-                return "IMAGING";
-            case BluetoothClass.Device.Major.MISC:
-                return "MISC";
-            case BluetoothClass.Device.Major.NETWORKING:
-                return "NETWORKING";
-            case BluetoothClass.Device.Major.PERIPHERAL:
-                return "PERIPHERAL";
-            case BluetoothClass.Device.Major.PHONE:
-                return "PHONE";
-            case BluetoothClass.Device.Major.TOY:
-                return "TOY";
-            case BluetoothClass.Device.Major.UNCATEGORIZED:
-                return "UNCATEGORIZED";
-            case BluetoothClass.Device.Major.WEARABLE:
-                return "AUDIO_VIDEO";
-            default: return "unknown!";
-        }
-    }
-
-
-    /**
-     * RFCOMM
-     */
-
-    /*
-    protected void initBluetooth() {
-        BA = BluetoothAdapter.getDefaultAdapter();
-        if (BA != null) {
-            if (!BA.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                int REQUEST_ENABLE_BT = 1;
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-        }
-    }
-*/
 
 }

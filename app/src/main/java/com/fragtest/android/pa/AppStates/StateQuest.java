@@ -75,18 +75,10 @@ public class StateQuest implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
-    }
+    public void bluetoothPresent() {}
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoDisconnected();
-    }
+    public void bluetoothNotPresent() {}
 
     @Override
     public void batteryLow() {
@@ -126,7 +118,7 @@ public class StateQuest implements AppState {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
         } else if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT.getErrorMessage())) {
-                mainActivity.setState(mainActivity.getStateConnecting());
+                mainActivity.setState(mainActivity.getStateRunning());
                 mainActivity.mAppState.setInterface();
         } else {
             mainActivity.setState(mainActivity.getStateRunning());

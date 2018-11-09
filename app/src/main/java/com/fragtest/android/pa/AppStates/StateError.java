@@ -37,7 +37,6 @@ public class StateError implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-        mainActivity.setBTLogoDisconnected();
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
@@ -75,24 +74,10 @@ public class StateError implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
-
-        if (!mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) &&
-                !mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
-            mainActivity.setState(mainActivity.getStateRunning());
-            mainActivity.mAppState.setInterface();
-        }
-    }
+    public void bluetoothPresent() {}
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        // Already in error state
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-    }
+    public void bluetoothNotPresent() {}
 
     @Override
     public void batteryLow() {

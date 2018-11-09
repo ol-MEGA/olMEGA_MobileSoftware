@@ -67,18 +67,10 @@ public class StateProposing implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-    }
+    public void bluetoothPresent() {}
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setState(mainActivity.getStateConnecting());
-        mainActivity.mAppState.setInterface();
-    }
+    public void bluetoothNotPresent() {}
 
     @Override
     public void batteryLow() {
