@@ -975,6 +975,7 @@ public class MainActivity extends AppCompatActivity {
                     isPrefsInForeGround = msg.getData().getBoolean(KEY_PREFS_IN_FOREGROUND);
                     break;
 
+                    /*
                 case ControlService.MSG_START_RECORDING:
 
                     if (!ControlService.isStandalone) {
@@ -991,7 +992,7 @@ public class MainActivity extends AppCompatActivity {
                         isBluetoothPresent = false;
                     }
 
-                    break;
+                    break;*/
 
                 case ControlService.MSG_TIME_CORRECT:
 
