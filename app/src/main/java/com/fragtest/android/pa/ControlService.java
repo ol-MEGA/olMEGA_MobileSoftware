@@ -795,31 +795,34 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-        questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
+        if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
 
-        // Needed for the first run
-        if (questionnaireHasTimer) {
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
 
-            mTimerInterval = mXmlReader.getNewTimerInterval();
+            // Needed for the first run
+            if (questionnaireHasTimer) {
 
-            if (!isTimerRunning) {
+                mTimerInterval = mXmlReader.getNewTimerInterval();
 
-                mEventTimer.stopTimer();
-                mVibration.repeatingBurstOff();
-                mEventTimer.setTimer(mTimerInterval);
-                mFinalCountDown = mEventTimer.getFinalCountDown();
-                isTimerRunning = true;
+                if (!isTimerRunning) {
 
-                Bundle dataCountdown = new Bundle();
-                dataCountdown.putInt("finalCountDown", mFinalCountDown);
-                dataCountdown.putInt("countDownInterval", mTimerInterval);
-                messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
+                    mEventTimer.stopTimer();
+                    mVibration.repeatingBurstOff();
+                    mEventTimer.setTimer(mTimerInterval);
+                    mFinalCountDown = mEventTimer.getFinalCountDown();
+                    isTimerRunning = true;
 
-            } else {
-                // Usually when app is restarted
-                if (BuildConfig.DEBUG) {
-                    Log.i(LOG, "Final Timer already set. Reinstating countdown");
+                    Bundle dataCountdown = new Bundle();
+                    dataCountdown.putInt("finalCountDown", mFinalCountDown);
+                    dataCountdown.putInt("countDownInterval", mTimerInterval);
+                    messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
+
+                } else {
+                    // Usually when app is restarted
+                    if (BuildConfig.DEBUG) {
+                        Log.i(LOG, "Final Timer already set. Reinstating countdown");
+                    }
                 }
             }
         }

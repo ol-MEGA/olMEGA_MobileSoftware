@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Errors
     public enum AppErrors {
-        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST;
+        ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST;
 
         public String getErrorMessage() {
             switch (this) {
@@ -155,7 +155,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
-            // In case of Standalone Mode, no BT error is needed
             mErrorList.add(error.getErrorMessage());
         }
     }
@@ -185,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
             ControlService.isCharging = plugged;
+            mAdapter.setIsCharging(plugged);
         }
     };
 
@@ -476,6 +476,8 @@ public class MainActivity extends AppCompatActivity {
             mAppState = mStateRunning;
             mAppState.setInterface();
 
+            mAdapter.checkBatteryCritical();
+
             setBTLogoAirplaneMode();
 
             isActivityRunning = true;
@@ -588,7 +590,7 @@ public class MainActivity extends AppCompatActivity {
         Log.e(LOG, "EVENT: " + event.getKeyCode());
 
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
-            Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
             return true;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && USE_KIOSK_MODE) {
             Log.e(LOG, "POWER BUTTON WAS PRESSED");

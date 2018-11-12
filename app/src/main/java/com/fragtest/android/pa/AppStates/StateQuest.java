@@ -117,9 +117,6 @@ public class StateQuest implements AppState {
                 mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage())) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
-        } else if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_BT.getErrorMessage())) {
-                mainActivity.setState(mainActivity.getStateRunning());
-                mainActivity.mAppState.setInterface();
         } else {
             mainActivity.setState(mainActivity.getStateRunning());
             mainActivity.mAppState.setInterface();

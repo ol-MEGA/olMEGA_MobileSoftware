@@ -110,7 +110,7 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += KEY_SURVEY_URI.substring(0, KEY_SURVEY_URI.length() - 4);        // loose ".xml"
         KEY_DATA += "/";
         KEY_DATA += FILE_NAME;
-        KEY_DATA += ".xml\"";
+        KEY_DATA += "\"";
         KEY_DATA += KEY_NEW_LINE;
         KEY_DATA += " survey_uri=\"";
         KEY_DATA += KEY_SURVEY_URI;
@@ -187,8 +187,9 @@ public class MetaData extends AppCompatActivity {
                         ANSWER_DATA += "\"/>";
                         break;
                     case "value":
+                        ANSWER_DATA += " option_ids=\"";
                         ANSWER_DATA += mEvaluationList.getValueFromQuestionId(questionId);
-                        ANSWER_DATA += KEY_VALUE_CLOSE;
+                        ANSWER_DATA += "\"/>";
                         break;
                     default:
                         Log.e(LOG, "Unknown element found during evaluation: " +
