@@ -64,6 +64,7 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     public static final boolean isStandalone = false;
+    public static final boolean isRFCOMM = true;
     static final int CURRENT_YEAR = 2018;
 
     /**
