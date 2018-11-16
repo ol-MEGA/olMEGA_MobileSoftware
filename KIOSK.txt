@@ -1,0 +1,13 @@
+
+
+1) App installieren!
+adb install -r app-release.apk
+
+2) Setzt die App als Device Owner 
+adb shell dpm set-device-owner com.fragtest.android.pa/.AdminReceiver
+
+3) Unterdrückt alle System Toast Messages
+adb shell appops set android TOAST_WINDOW deny
+
+4) Neustart
+adb reboot

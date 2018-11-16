@@ -1,19 +1,17 @@
 package com.fragtest.android.pa.Questionnaire;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.Toast;
 
 import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.Core.EvaluationList;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.MandatoryInfo;
 import com.fragtest.android.pa.Core.MetaData;
-import com.fragtest.android.pa.R;
+import com.fragtest.android.pa.MainActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +29,7 @@ public class Questionnaire {
     // Context of QuestionnairePageAdapter for visibility
     private final QuestionnairePagerAdapter mContextQPA;
     // Context of MainActivity()
-    private final Context mContext;
+    private final MainActivity mMainActivity;
     // Basic information about all available questions
     private final ArrayList<QuestionInfo> mQuestionInfo;
     private final MandatoryInfo mMandatoryInfo;
@@ -46,10 +44,10 @@ public class Questionnaire {
     private String mHead, mFoot, mSurveyURI, mMotivation, mVersion;
     private boolean isImmersive = false;
 
-    public Questionnaire(Context context, String head, String foot, String surveyUri,
+    public Questionnaire(MainActivity mainActivity, String head, String foot, String surveyUri,
                          String motivation, String version, QuestionnairePagerAdapter contextQPA) {
 
-        mContext = context;
+        mMainActivity = mainActivity;
         mContextQPA = contextQPA;
         mHead = head;
         mFoot = foot;
@@ -61,7 +59,6 @@ public class Questionnaire {
         mQuestionInfo = new ArrayList<>();
         mMandatoryInfo = new MandatoryInfo();
         mVersion = version;
-
     }
 
     public void setUp(ArrayList<String> questionList) {
@@ -69,7 +66,7 @@ public class Questionnaire {
         // offline version
         //String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
-        mMetaData = new MetaData(mContext, mHead, mFoot, mSurveyURI, mMotivation, mVersion);
+        mMetaData = new MetaData(mMainActivity, mHead, mFoot, mSurveyURI, mMotivation, mVersion);
         mMetaData.initialise();
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
@@ -79,7 +76,7 @@ public class Questionnaire {
     Question createQuestion(int position) {
 
         String sQuestionBlueprint = mQuestionList.get(position);
-        Question question = new Question(sQuestionBlueprint, mContext);
+        Question question = new Question(sQuestionBlueprint, mMainActivity);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
                 question.getFilterId(), position,
                 question.isHidden(), question.isMandatory(), question.getAnswerIds()));
@@ -104,7 +101,7 @@ public class Questionnaire {
         boolean isFinish = false;
         boolean isPhotograph = false;
 
-        LinearLayout answerContainer = new LinearLayout(mContext);
+        LinearLayout answerContainer = new LinearLayout(mMainActivity);
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
@@ -113,47 +110,47 @@ public class Questionnaire {
         answerContainer.setBackgroundColor(Color.WHITE);
 
         // TextView carrying the Question
-        QuestionText questionText = new QuestionText(mContext, question.getQuestionId(),
+        QuestionText questionText = new QuestionText(mMainActivity, question.getQuestionId(),
                 question.getQuestionText(), answerContainer);
         questionText.addQuestion();
 
         // Creates a Canvas for the Answer Layout
-        final AnswerLayout answerLayout = new AnswerLayout(mContext);
+        final AnswerLayout answerLayout = new AnswerLayout(mMainActivity);
         answerContainer.addView(answerLayout.scrollContent);
 
         // Format of Answer e.g. "radio", "checkbox", ...
         String sType = question.getTypeAnswer();
 
         final AnswerTypeRadio answerTypeRadio = new AnswerTypeRadio(
-                mContext, this, answerLayout, question.getQuestionId());
+                mMainActivity, this, answerLayout, question.getQuestionId());
 
         // In case of checkbox type
         final AnswerTypeCheckBox answerTypeCheckBox = new AnswerTypeCheckBox(
-                mContext, this, answerLayout, question.getQuestionId());
+                mMainActivity, this, answerLayout, question.getQuestionId());
 
         // In case of emoji type
         final AnswerTypeEmoji answerTypeEmoji = new AnswerTypeEmoji(
-                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
-                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
-                mContext, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
-                mContext, this, answerLayout);
+                mMainActivity, this, answerLayout);
 
         /*final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
                 mContext, this, question.getQuestionId());*/
 
         final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
-                mContext, answerLayout);
+                mMainActivity, answerLayout);
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -302,8 +299,7 @@ public class Questionnaire {
 
     boolean finaliseEvaluation() {
         mMetaData.finalise(mEvaluationList);
-        mFileIO.saveDataToFile(mContext, mMetaData.getFileName(), mMetaData.getData());
-        Toast.makeText(mContext, R.string.infoTextSave, Toast.LENGTH_SHORT).show();
+        mFileIO.saveDataToFile(mMainActivity, mMetaData.getFileName(), mMetaData.getData());
         returnToMenu();
         return true;
     }
@@ -435,6 +431,8 @@ public class Questionnaire {
     }
 
     private void returnToMenu() {
-        mContextQPA.createMenu();
+        //mContextQPA.createMenu();
+        //mMainActivity.setState(mMainActivity.getStateConnecting());
+        mMainActivity.finishQuestionnaire();
     }
 }

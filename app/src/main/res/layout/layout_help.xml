@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/TextColor"
-        android:text="\nBedienung des Fragebogens\n"
+        android:text="@string/help_headline"
         android:textSize="24sp"
         android:gravity="center_horizontal"
         android:background="@color/lighterGray"
@@ -40,14 +40,15 @@
         android:paddingLeft="32dp"
         android:paddingRight="32dp">
 
-    <TextView
-        android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:textColor="@color/TextColor"
-        android:layout_marginTop="24dp"
-        android:text="Innerhalb des Fragebogens begegnen Ihnen hauptsächlich zwei Arten von Antworten:" />
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="24dp"
+            android:text="@string/help_intro"
+            android:textColor="@color/TextColor" />
 
     <TextView
         android:id="@+id/textView4"
@@ -58,7 +59,7 @@
         android:layout_below="@id/textView3"
         android:textColor="@color/JadeGray"
         android:textSize="24sp"
-        android:text="Einfachantworten" />
+        android:text="@string/help_head_singl" />
 
 
 
@@ -78,7 +79,7 @@
             android:layout_gravity="center_vertical"
             android:layout_marginBottom="8dp"
             android:textSize="16sp"
-            android:text="Dieses Symbol bedeutet, dass Sie nur eine Möglichkeit auswählen können" />
+            android:text="@string/help_text_single_01" />
 
         <RadioButton
             android:id="@+id/radioButton2"
@@ -87,7 +88,7 @@
             android:layout_gravity="center_vertical"
 
             android:textSize="16sp"
-            android:text="Versuchen Sie es!" />
+            android:text="@string/help_text_single_02" />
 
     </RadioGroup>
 
@@ -100,7 +101,7 @@
             android:layout_below="@id/radioGroup"
             android:textColor="@color/JadeGray"
             android:textSize="24sp"
-            android:text="Mehrfachantworten" />
+            android:text="@string/help_head_multi" />
 
     <CheckBox
         android:id="@+id/checkBox"
@@ -111,7 +112,7 @@
         android:layout_marginTop="16dp"
 
         android:textSize="16sp"
-        android:text="Bei diesem Symbol dürfen Sie mehrere Optionen auswählen" />
+        android:text="@string/help_text_multi_01" />
 
     <CheckBox
         android:id="@+id/checkBox2"
@@ -121,7 +122,7 @@
         android:layout_below="@+id/checkBox"
         android:layout_marginTop="13dp"
         android:textSize="16sp"
-        android:text="Zum Beispiel diese" />
+        android:text="@string/help_text_multi_02" />
 
     <CheckBox
         android:id="@+id/checkBox3"
@@ -130,7 +131,7 @@
         android:textSize="16sp"
         android:layout_below="@+id/checkBox2"
         android:layout_marginTop="12dp"
-        android:text="Oder diese" />
+        android:text="@string/help_text_multi_03"/>
 
     <TextView
         android:id="@+id/textView2"
@@ -140,7 +141,7 @@
         android:layout_below="@+id/checkBox3"
         android:textColor="@color/TextColor"
         android:layout_marginTop="16dp"
-        android:text="Hinweis" />
+        android:text="@string/help_hint" />
 
 
       <Button
@@ -151,7 +152,7 @@
           android:layout_marginTop="32dp"
           android:layout_marginBottom="32dp"
           android:layout_centerHorizontal="true"
-          android:text="Fertig"/>
+          android:text="@string/help_button_ready"/>
 
     </RelativeLayout>
 

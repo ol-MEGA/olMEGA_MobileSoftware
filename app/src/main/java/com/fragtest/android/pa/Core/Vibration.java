@@ -33,21 +33,21 @@ public class Vibration {
     private boolean isActive = false;
     private Vibrator mVibrator;
 
+    private PowerManager mPowerManager;
+    private PowerManager.WakeLock mWakeLock;
+
     private final Runnable loop = new Runnable() {
         @Override
         public void run() {
             if (isActive && (mNumberOfBursts < mMaxNumberOfBursts)) {
 
-                if (mNumberOfBursts == 0) {
-                    PowerManager pm = (PowerManager) mContext.getSystemService(
-                            Context.POWER_SERVICE);
-                    PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                            PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-                    wakeLock.acquire(mLengthWakeLock_ms);
+                if (mNumberOfBursts%(mLengthWakeLock_ms/1000) == 0) {
+                    mWakeLock.acquire(mLengthWakeLock_ms);
                 }
                 mVibrator.vibrate(mVibrationDuration_ms);
                 if (ControlService.useLogMode) {
                     Logger.info("Vibration: " + mVibrationDuration_ms);
+                    LogIHAB.log("Vibration: " + mVibrationDuration_ms);
                 }
                 mNumberOfBursts++;
                 Log.e(LOG, "Ring.");
@@ -63,6 +63,9 @@ public class Vibration {
         mContext = context;
         mMaxNumberOfBursts = mMaxVibrationDuration_ms / mVibrationInterval_ms;
         mVibrator = ((Vibrator) mContext.getSystemService(VIBRATOR_SERVICE));
+        mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        mWakeLock = mPowerManager.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
     }
 
     public void singleBurst() {
@@ -74,17 +77,13 @@ public class Vibration {
         wakeLock.acquire(mLengthWakeLock_ms);
         if (ControlService.useLogMode) {
             Logger.info("Vibration: " + mVibrationDuration_ms);
+            LogIHAB.log("Vibration: " + mVibrationDuration_ms);
         }
     }
 
     public void repeatingBurstOn() {
         if (!isActive) { // ensure that only one alarm is annoying us at any given time
             mTimerHandler.post(loop);
-            /*PowerManager pm = (PowerManager) mContext.getSystemService(
-                    Context.POWER_SERVICE);
-            PowerManager.WakeLock wakeLock = pm.newWakeLock((PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                    PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP), "TAG");
-            wakeLock.acquire(mLengthWakeLock_ms);*/
         }
         mNumberOfBursts = 0;
         isActive = true;

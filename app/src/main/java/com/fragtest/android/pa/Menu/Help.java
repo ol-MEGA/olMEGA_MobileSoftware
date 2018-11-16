@@ -1,6 +1,5 @@
 package com.fragtest.android.pa.Menu;
 
-import android.content.Context;
 import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
@@ -16,6 +15,7 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.fragtest.android.pa.Core.Units;
+import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
@@ -27,7 +27,7 @@ public class Help extends AppCompatActivity {
 
 
     private final static String LOG_STRING = "Help";
-    private Context mContext;
+    private MainActivity mMainActivity;
     private QuestionnairePagerAdapter mContextQPA;
     private LayoutInflater inflater;
     private RadioButton rb1, rb2;
@@ -36,11 +36,11 @@ public class Help extends AppCompatActivity {
     private Button bt1;
     private Units mUnits;
 
-    public Help(Context context, QuestionnairePagerAdapter contextQPA) {
-        mContext = context;
+    public Help(MainActivity context, QuestionnairePagerAdapter contextQPA) {
+        mMainActivity = context;
         mContextQPA = contextQPA;
         inflater = LayoutInflater.from(context);
-        mUnits = new Units(mContext);
+        mUnits = new Units(mMainActivity);
     }
 
     public LinearLayout generateView() {
@@ -59,7 +59,7 @@ public class Help extends AppCompatActivity {
 
         bt1 = (Button) view.findViewById(R.id.button);
 
-        tv2.setText(R.string.helpHinweis);
+        tv2.setText(R.string.help_hint);
 
         setRadioPrefs(rb1);
         setRadioPrefs(rb2);
@@ -76,6 +76,7 @@ public class Help extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mContextQPA.backToMenu();
+                mMainActivity.mAppState.closeHelp();
             }
         });
 
@@ -83,40 +84,40 @@ public class Help extends AppCompatActivity {
     }
 
     private void setRadioPrefs(RadioButton radiobutton) {
-        radiobutton.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswerHelp));
+        radiobutton.setTextSize(mMainActivity.getResources().getDimension(R.dimen.textSizeAnswerHelp));
         radiobutton.setGravity(Gravity.CENTER_VERTICAL);
-        radiobutton.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
-        radiobutton.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
+        radiobutton.setTextColor(ContextCompat.getColor(mMainActivity, R.color.TextColor));
+        radiobutton.setBackgroundColor(ContextCompat.getColor(mMainActivity, R.color.BackgroundColor));
         int states[][] = {{android.R.attr.state_checked}, {}};
-        int colors[] = {ContextCompat.getColor(mContext, R.color.JadeRed),
-                ContextCompat.getColor(mContext, R.color.JadeRed)};
+        int colors[] = {ContextCompat.getColor(mMainActivity, R.color.JadeRed),
+                ContextCompat.getColor(mMainActivity, R.color.JadeRed)};
         CompoundButtonCompat.setButtonTintList(radiobutton, new ColorStateList(states, colors));
-        radiobutton.setMinHeight((int) mContext.getResources().getDimension(R.dimen.radioMinHeight));
+        radiobutton.setMinHeight((int) mMainActivity.getResources().getDimension(R.dimen.radioMinHeight));
         radiobutton.setPadding(24, 24, 24, 24);
     }
 
     private void setCheckPrefs(CheckBox checkBox) {
-        checkBox.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswerHelp));
+        checkBox.setTextSize(mMainActivity.getResources().getDimension(R.dimen.textSizeAnswerHelp));
         checkBox.setChecked(false);
         checkBox.setGravity(Gravity.CENTER_VERTICAL);
         checkBox.setPadding(24, 24, 24, 24);
-        checkBox.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
-        checkBox.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
+        checkBox.setTextColor(ContextCompat.getColor(mMainActivity, R.color.TextColor));
+        checkBox.setBackgroundColor(ContextCompat.getColor(mMainActivity, R.color.BackgroundColor));
         int states[][] = {{android.R.attr.state_checked}, {}};
-        int colors[] = {ContextCompat.getColor(mContext, R.color.JadeRed),
-                ContextCompat.getColor(mContext, R.color.JadeRed)};
+        int colors[] = {ContextCompat.getColor(mMainActivity, R.color.JadeRed),
+                ContextCompat.getColor(mMainActivity, R.color.JadeRed)};
         CompoundButtonCompat.setButtonTintList(checkBox, new ColorStateList(states, colors));
     }
 
     private void setHeadLinePrefs(TextView textView) {
-        textView.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
-        textView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.lighterGray));
-        textView.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeQuestion));
+        textView.setTextColor(ContextCompat.getColor(mMainActivity, R.color.TextColor));
+        textView.setBackgroundColor(ContextCompat.getColor(mMainActivity, R.color.lighterGray));
+        textView.setTextSize(mMainActivity.getResources().getDimension(R.dimen.textSizeQuestion));
     }
 
     private void setTextPrefs(TextView textView) {
-        textView.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
-        textView.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswerHelp));
+        textView.setTextColor(ContextCompat.getColor(mMainActivity, R.color.TextColor));
+        textView.setTextSize(mMainActivity.getResources().getDimension(R.dimen.textSizeAnswerHelp));
     }
 
     private void setTextHTML(TextView textView) {
@@ -127,7 +128,7 @@ public class Help extends AppCompatActivity {
     private void setButtonPrefs(Button button) {
         button.setScaleX(1.2f);
         button.setScaleY(1.2f);
-        button.setTextColor(ContextCompat.getColor(mContext, R.color.TextColor));
-        button.setBackground(ContextCompat.getDrawable(mContext, R.drawable.button));
+        button.setTextColor(ContextCompat.getColor(mMainActivity, R.color.TextColor));
+        button.setBackground(ContextCompat.getDrawable(mMainActivity, R.drawable.button));
     }
 }

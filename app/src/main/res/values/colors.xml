@@ -5,6 +5,8 @@
     <color name="colorAccent">#c2102a</color>
     <color name="Canvas">#FFFFFF</color>
     <color name="lighterGray">#EEEEEE</color>
+    <color name="darkerGray">#888888</color>
+    <color name="AirplaneBlue">#59BEDF</color>
     <color name="JadeRed">#c2102a</color>
     <color name="JadeGray">#8F9092</color>
     <color name="TextColor">#000000</color>
@@ -12,7 +14,7 @@
     <color name="BackgroundColor">#FFFFFF</color>
 
     <color name="BatteryGreen">#5ec800</color>
-    <color name="BatteryYellow">#ffd200</color>
+    <color name="BatteryYellow">#ffd200</color> <!-- #ffd200 -->
 
     <color name="lighterBlue">#AAAAFF</color>
 </resources>
