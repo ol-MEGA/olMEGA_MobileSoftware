@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/IHAB-rl.iml" filepath="$PROJECT_DIR$/IHAB-rl.iml" />
+      <module fileurl="file://E:\IHAB_MobileSoftware\IHAB-rl.iml" filepath="E:\IHAB_MobileSoftware\IHAB-rl.iml" />
+      <module fileurl="file://$PROJECT_DIR$/IHAB_MobileSoftware.iml" filepath="$PROJECT_DIR$/IHAB_MobileSoftware.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

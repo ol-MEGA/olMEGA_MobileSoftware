@@ -62,10 +62,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private Vibration mVibration;
     private float batteryPlaceholderWeight;
     private int[] batteryStates;
-    private float mBatteryLevelWarning = 0.10f;
-    private float mBatteryLevelCritical = 0.05f;
     private boolean bBatteryCritical = false;
     private boolean isCharging = false;
+    private int mBatteryState = -1;
     private float batteryLevel = 1.0f;
     private String mMotivation = "";
     private ArrayList<String> mQuestionList;
@@ -121,6 +120,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         batteryStates = mMainActivity.getResources().getIntArray(R.array.batteryStates);
         mVibration =  new Vibration(mMainActivity);
         handleControls();
+    }
+
+    public void setIsCharging(boolean val) {
+        isCharging = val;
     }
 
     public MenuPage getMenuPage() {
@@ -187,7 +190,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         onResume();
 
         mCountDownHandler.post(mTimeRunnable);
-        checkBatteryCritical();
     }
 
     public void createHelpScreen() {
@@ -582,35 +584,33 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             sendMessage(ControlService.MSG_BATTERY_LEVEL_INFO, batteryLevelBundle);
         }
     }
-
     private void setBatteryColor() {
 
-        if (batteryLevel*100 > batteryStates[0]) {
-            mMainActivity.mBatteryProg.setBackgroundColor(mMainActivity.getResources().getColor(R.color.BatteryGreen));
-        } else if (batteryLevel*100 <= batteryStates[0] && batteryLevel*100 > batteryStates[1]) {
-            mMainActivity.mBatteryProg.setBackgroundColor(mMainActivity.getResources().getColor(R.color.BatteryYellow));
-        } else {
+        if (batteryLevel*100 <= batteryStates[1]) {
             mMainActivity.mBatteryProg.setBackgroundColor(mMainActivity.getResources().getColor(R.color.JadeRed));
+        } else if (batteryLevel*100 >= batteryStates[1] && batteryLevel*100 <= batteryStates[0]) {
+            mMainActivity.mBatteryProg.setBackgroundColor(mMainActivity.getResources().getColor(R.color.BatteryYellow));
+        } else if (batteryLevel*100 > batteryStates[0]) {
+            mMainActivity.mBatteryProg.setBackgroundColor(mMainActivity.getResources().getColor(R.color.BatteryGreen));
         }
     }
 
-    private void checkBatteryCritical() {
+    public void checkBatteryCritical() {
 
-        if (batteryLevel < mBatteryLevelWarning && batteryLevel > mBatteryLevelCritical && !isCharging) {
-            if (!bBatteryCritical) {
-                bBatteryCritical = false;
-                announceBatteryWarning();
-            }
-        } else if (batteryLevel <= mBatteryLevelCritical){
-            if (!bBatteryCritical) {
-                bBatteryCritical = true;
-                announceBatteryCritical();
-            }
-        } else if (isCharging) {
-            if (bBatteryCritical && batteryLevel >= (mBatteryLevelCritical + 0.02f)) {
-                bBatteryCritical = false;
-                announceBatteryNormal();
-            }
+        if (batteryLevel*100 <= batteryStates[1] && mBatteryState != 2) {
+            bBatteryCritical = true;
+            mBatteryState = 2;
+            announceBatteryCritical();
+            mMenuPage.showErrorList();
+        } else if (batteryLevel*100 > batteryStates[1] && batteryLevel*100 <= batteryStates[0] && mBatteryState != 1) {
+            bBatteryCritical = false;
+            mBatteryState = 1;
+            announceBatteryWarning();
+            mMenuPage.showErrorList();
+        } else if (batteryLevel*100 > batteryStates[0] && mBatteryState != 0) {
+            bBatteryCritical = false;
+            mBatteryState = 0;
+            announceBatteryNormal();
         }
     }
 
@@ -628,6 +628,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity.mAppState.batteryNormal();
         mVibration.singleBurst();
     }
+
 
 
     /**

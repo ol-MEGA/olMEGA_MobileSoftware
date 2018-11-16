@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
             ControlService.isCharging = plugged;
+            mAdapter.setIsCharging(plugged);
         }
     };
 
@@ -515,6 +516,8 @@ public class MainActivity extends AppCompatActivity {
             }
             mAppState.setInterface();
 
+            mAdapter.checkBatteryCritical();
+
             if (ControlService.isStandalone) {
                 setBTLogoAirplaneMode();
             }
@@ -629,7 +632,6 @@ public class MainActivity extends AppCompatActivity {
         Log.e(LOG, "EVENT: " + event.getKeyCode());
 
         if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
-            Toast.makeText(getApplicationContext(), "VOL", Toast.LENGTH_SHORT).show();
             return true;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && USE_KIOSK_MODE) {
             Log.e(LOG, "POWER BUTTON WAS PRESSED");

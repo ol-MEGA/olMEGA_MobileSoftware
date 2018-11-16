@@ -5,7 +5,6 @@ import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.Toast;
 
 import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.Core.EvaluationList;
@@ -13,7 +12,6 @@ import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.MandatoryInfo;
 import com.fragtest.android.pa.Core.MetaData;
 import com.fragtest.android.pa.MainActivity;
-import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -302,7 +300,6 @@ public class Questionnaire {
     boolean finaliseEvaluation() {
         mMetaData.finalise(mEvaluationList);
         mFileIO.saveDataToFile(mMainActivity, mMetaData.getFileName(), mMetaData.getData());
-        Toast.makeText(mMainActivity, R.string.infoTextSave, Toast.LENGTH_SHORT).show();
         returnToMenu();
         return true;
     }
