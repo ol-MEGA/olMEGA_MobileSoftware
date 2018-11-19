@@ -535,6 +535,13 @@ public class MainActivity extends AppCompatActivity {
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
+
+
+
+        // ONLY Needed in case of uninstall!!!
+        //mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+
+
     }
 
     @Override
@@ -653,6 +660,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
+    /*
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_POWER) {
+            // Do something here...
+            //event.startTracking(); // Needed to track long presses
+            return true;
+        }
+        return true;
+        //return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_POWER) {
+            // Do something here...
+            return true;
+        }
+        return true;
+        //return super.onKeyLongPress(keyCode, event);
+    }
+*/
 
     private void setDefaultCosuPolicies(boolean active) {
         // set user restrictions

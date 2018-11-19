@@ -30,6 +30,7 @@ import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.Core.ShutdownReceiver;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
@@ -76,7 +77,7 @@ public class ControlService extends Service {
     public static final int MSG_GET_STATUS = 13;
     public static final int MSG_RESET_BT = 14;
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
-    public static final int MSG_NO_TIMER = 16;
+    public static final int MSG_SHUTDOWN_RECEIVED = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
     public static final int MSG_BT_CONNECTED = 18;
     public static final int MSG_BT_DISCONNECTED = 19;
@@ -213,6 +214,14 @@ public class ControlService extends Service {
         @Override
         public void run() {
             mBluetoothAdapter.enable();
+
+            if (sharedPreferences.contains("BTDevice")) {
+                String btdevice = sharedPreferences.getString("BTDevice", null);
+                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                device.createBond();
+                LogIHAB.log("Connecting to device: " + device.getAddress());
+            }
+
             mBluetoothAdapter.startDiscovery();
         }
     };
@@ -267,6 +276,7 @@ public class ControlService extends Service {
             }
         }
         mBluetoothAdapter.disable();
+        Log.e(LOG, "ACTIVITY NOT RUNNING!");
         return false;
     }
 
@@ -286,6 +296,17 @@ public class ControlService extends Service {
             }
             isTimerRunning = false;
             isQuestionnairePending = true;
+        }
+    };
+
+    private ShutdownReceiver mShutdownReceiver = new ShutdownReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            messageClient(MSG_SHUTDOWN_RECEIVED);
+
+            LogIHAB.log("Shutting down!!!");
+
         }
     };
 
@@ -319,6 +340,13 @@ public class ControlService extends Service {
                     announceBTConnected();
                     Logger.info("Bluetooth: connected");
                     LogIHAB.log("Bluetooth: connected");
+
+                    // Save list of paired devices
+                    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                    for(BluetoothDevice bt : pairedDevices) {
+                        sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
+                    }
+
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     Log.e(LOG, "BTDEVICES finished.");
                 } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
@@ -373,6 +401,14 @@ public class ControlService extends Service {
                     if (!isCharging) {
                         if (!mBluetoothAdapter.isEnabled()) {
                             mBluetoothAdapter.enable();
+
+                            if (sharedPreferences.contains("BTDevice")) {
+                                String btdevice = sharedPreferences.getString("BTDevice", null);
+                                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                                device.createBond();
+                                LogIHAB.log("Connecting to device: " + device.getAddress());
+                            }
+
                         }
                     } else {
                         mVibration.singleBurst();
@@ -653,6 +689,7 @@ public class ControlService extends Service {
 
         // Unregister broadcast listeners
         this.unregisterReceiver(mAlarmReceiver);
+        this.unregisterReceiver(mShutdownReceiver);
         this.unregisterReceiver(mBluetoothStateReceiver);
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
@@ -912,6 +949,7 @@ public class ControlService extends Service {
 
         // Register receiver for alarm
         this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
+        this.registerReceiver(mShutdownReceiver, new IntentFilter("ShutdownReveived"));
 
         // Register broadcasts receiver for bluetooth state change
         IntentFilter filter = new IntentFilter();
