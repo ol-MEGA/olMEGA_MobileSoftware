@@ -535,6 +535,9 @@ public class MainActivity extends AppCompatActivity {
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
+        // ONLY Needed in case of uninstall!!!
+        //mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+
     }
 
     @Override

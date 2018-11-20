@@ -65,6 +65,14 @@
             </intent-filter>
         </receiver>
 
+        <!-- Receiver needed to intercept shutdown (not operational yet) -->
+        <receiver android:name=".Core.ShutdownReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_SHUTDOWN" />
+                <action android:name="android.intent.action.QUICKBOOT_POWEROFF" />
+            </intent-filter>
+        </receiver>
+
         <service android:name=".ControlService"
                 android:process=":remote" />
 
