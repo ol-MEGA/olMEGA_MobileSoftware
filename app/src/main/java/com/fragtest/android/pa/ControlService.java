@@ -248,7 +248,9 @@ public class ControlService extends Service {
         public void run() {
             if (isCharging) {
                 if (isRFCOMM) {
-                    mConnectedThread.cancel();
+                    if (mConnectedThread != null) {
+                        mConnectedThread.cancel();
+                    }
                 } else {
                     mBluetoothAdapter.disable();
                 }
@@ -297,7 +299,9 @@ public class ControlService extends Service {
             }
         }
         if (isRFCOMM) {
-            mConnectedThread.cancel();
+            if (mConnectedThread != null) {
+                mConnectedThread.cancel();
+            }
         } else {
             mBluetoothAdapter.disable();
         }
@@ -362,6 +366,7 @@ public class ControlService extends Service {
                     Log.e(LOG, "BTDEVICES found.");
                 } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
                     announceBTConnected();
+                    Log.i(LOG, "Bluetooth: connected");
                     Logger.info("Bluetooth: connected");
                     LogIHAB.log("Bluetooth: connected");
 
@@ -464,7 +469,9 @@ public class ControlService extends Service {
                         startActivity();
                     } else {
                         if (isRFCOMM) {
-                            mConnectedThread.cancel();
+                            if (mConnectedThread != null) {
+                                mConnectedThread.cancel();
+                            }
                         } else {
                             mBluetoothAdapter.disable();
                         }
@@ -483,7 +490,9 @@ public class ControlService extends Service {
                 case MSG_RESET_BT:
                     mBluetoothAdapter.cancelDiscovery();
                     if (isRFCOMM) {
-                        mConnectedThread.cancel();
+                        if (mConnectedThread != null) {
+                            mConnectedThread.cancel();
+                        }
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -618,7 +627,9 @@ public class ControlService extends Service {
 
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (isRFCOMM) {
-                        mConnectedThread.cancel();
+                        if (mConnectedThread != null) {
+                            mConnectedThread.cancel();
+                        }
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -641,7 +652,9 @@ public class ControlService extends Service {
 
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (isRFCOMM) {
-                        mConnectedThread.cancel();
+                        if (mConnectedThread != null) {
+                            mConnectedThread.cancel();
+                        }
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -672,7 +685,9 @@ public class ControlService extends Service {
                     LogIHAB.log("Charging: active");
 
                     if (isRFCOMM) {
-                        mConnectedThread.cancel();
+                        if (mConnectedThread != null) {
+                            mConnectedThread.cancel();
+                        }
                     } else {
                         if (mBluetoothAdapter.isEnabled()) {
                             mBluetoothAdapter.disable();
@@ -743,7 +758,9 @@ public class ControlService extends Service {
         stopAlarmAndCountdown();
 
         if (isRFCOMM) {
-            mConnectedThread.cancel();
+            if (mConnectedThread != null) {
+                mConnectedThread.cancel();
+            }
         } else {
             mBluetoothAdapter.disable();
         }
@@ -870,7 +887,12 @@ public class ControlService extends Service {
     private void announceBTDisconnected() {
         if (!isStandalone) {
             Log.e(LOG, "BTDEVICES not connected.");
-            stopRecording();
+
+            if (isRFCOMM) {
+                stopRecordingRFCOMM();
+            } else {
+                stopRecording();
+            }
             isBluetoothPresent = false;
             mVibration.singleBurst();
         }
@@ -879,7 +901,12 @@ public class ControlService extends Service {
     private void announceBTConnected() {
         if (!isStandalone) {
             Log.e(LOG, "BTDEVICES connected.");
-            startRecording();
+
+            if (isRFCOMM) {
+                startRecordingRFCOMM();
+            } else {
+                startRecording();
+            }
             isBluetoothPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
@@ -918,6 +945,18 @@ public class ControlService extends Service {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
+
+    private void startRecordingRFCOMM() {
+
+    }
+
+
+    private void stopRecordingRFCOMM() {
+
+    }
+
+
+
 
     private void startRecording() {
         Log.d(LOG, "Start caching audio");
