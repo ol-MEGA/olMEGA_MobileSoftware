@@ -6,8 +6,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,6 +26,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
+import com.fragtest.android.pa.Core.ConnectedThread;
 import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * The brains of the operation.
@@ -194,6 +196,12 @@ public class ControlService extends Service {
 
     Context context = this;
 
+    // RFCOMM-specific
+    private ConnectedThread mConnectedThread = null;
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+
+
     private Runnable mStartRecordingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -214,16 +222,24 @@ public class ControlService extends Service {
     private Runnable mResetBTAdapterRunnable = new Runnable() {
         @Override
         public void run() {
-            mBluetoothAdapter.enable();
-
-            if (sharedPreferences.contains("BTDevice")) {
-                String btdevice = sharedPreferences.getString("BTDevice", null);
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                device.createBond();
-                LogIHAB.log("Connecting to device: " + device.getAddress());
+            if (!mBluetoothAdapter.isEnabled()) {
+                mBluetoothAdapter.enable();
             }
 
-            mBluetoothAdapter.startDiscovery();
+            if (isRFCOMM) {
+                if (sharedPreferences.contains("BTDevice")) {
+                    String btdevice = sharedPreferences.getString("BTDevice", null);
+                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                    device.createBond();
+                    LogIHAB.log("Connecting to device: " + device.getAddress());
+
+                    //TODO: is this needed for RFCOMM as well?
+                    mBluetoothAdapter.startDiscovery();
+                }
+            } else {
+                connectBtDevice();
+            }
+
         }
     };
 
@@ -231,7 +247,11 @@ public class ControlService extends Service {
         @Override
         public void run() {
             if (isCharging) {
-                mBluetoothAdapter.disable();
+                if (isRFCOMM) {
+                    mConnectedThread.cancel();
+                } else {
+                    mBluetoothAdapter.disable();
+                }
                 mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
             }
         }
@@ -276,7 +296,11 @@ public class ControlService extends Service {
                 return true;
             }
         }
-        mBluetoothAdapter.disable();
+        if (isRFCOMM) {
+            mConnectedThread.cancel();
+        } else {
+            mBluetoothAdapter.disable();
+        }
         return false;
     }
 
@@ -345,6 +369,7 @@ public class ControlService extends Service {
                     Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
                     for(BluetoothDevice bt : pairedDevices) {
                         sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
+                        Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
                     }
 
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
@@ -389,26 +414,33 @@ public class ControlService extends Service {
 
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
-                    // active transmitter
-                    if (!isStandalone) {
+                    // active transmitter.
+                    // RFCOMM, however, initialises in a different way and does not need this procedure.
+                    if (!isStandalone && !isRFCOMM) {
                         mBluetoothAdapter.disable();
                         messageClient(MSG_BT_DISCONNECTED);
                     }
 
-                    //IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                    //Intent batteryStatus = registerReceiver(null, batteryFilter);
-
                     if (!isCharging) {
-                        if (!mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.enable();
 
-                            if (sharedPreferences.contains("BTDevice")) {
-                                String btdevice = sharedPreferences.getString("BTDevice", null);
-                                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                                device.createBond();
-                                LogIHAB.log("Connecting to device: " + device.getAddress());
+                        if (isRFCOMM) {
+                            if (mBluetoothAdapter != null) {
+                                if (!mBluetoothAdapter.isEnabled()) {
+                                    mBluetoothAdapter.enable();
+                                }
+                                connectBtDevice();
                             }
+                        } else {
+                            if (!mBluetoothAdapter.isEnabled()) {
+                                mBluetoothAdapter.enable();
 
+                                if (sharedPreferences.contains("BTDevice")) {
+                                    String btdevice = sharedPreferences.getString("BTDevice", null);
+                                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                                    device.createBond();
+                                    LogIHAB.log("Connecting to device: " + device.getAddress());
+                                }
+                            }
                         }
                     } else {
                         mVibration.singleBurst();
@@ -431,7 +463,11 @@ public class ControlService extends Service {
                     if (restartActivity) {
                         startActivity();
                     } else {
-                        mBluetoothAdapter.disable();
+                        if (isRFCOMM) {
+                            mConnectedThread.cancel();
+                        } else {
+                            mBluetoothAdapter.disable();
+                        }
                     }
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
@@ -446,7 +482,11 @@ public class ControlService extends Service {
 
                 case MSG_RESET_BT:
                     mBluetoothAdapter.cancelDiscovery();
-                    mBluetoothAdapter.disable();
+                    if (isRFCOMM) {
+                        mConnectedThread.cancel();
+                    } else {
+                        mBluetoothAdapter.disable();
+                    }
                     mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
                     break;
 
@@ -575,10 +615,14 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-                    //stopRecording() is called by receiver
-                    if (mBluetoothAdapter.isEnabled()) {
+
+                    //if (mBluetoothAdapter.isEnabled()) {
+                    if (isRFCOMM) {
+                        mConnectedThread.cancel();
+                    } else {
                         mBluetoothAdapter.disable();
                     }
+                    //}
                     Logger.info("Shutdown");
                     LogIHAB.log("Shutdown");
                     break;
@@ -594,9 +638,14 @@ public class ControlService extends Service {
                     //TODO: Test this case
                     Logger.info("CRITICAL battery level: active");
                     LogIHAB.log("CRITICAL battery level: active");
-                    if (mBluetoothAdapter.isEnabled()) {
+
+                    //if (mBluetoothAdapter.isEnabled()) {
+                    if (isRFCOMM) {
+                        mConnectedThread.cancel();
+                    } else {
                         mBluetoothAdapter.disable();
                     }
+                    //}
                     break;
 
                 case MSG_CHARGING_OFF:
@@ -604,11 +653,17 @@ public class ControlService extends Service {
                     LogIHAB.log("Charging: inactive");
                     isCharging = false;
                     mTaskHandler.removeCallbacks(mDisableBT);
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
+
+
+                    if (isRFCOMM) {
+                        connectBtDevice();
+                    } else {
+                        if (!mBluetoothAdapter.isEnabled()) {
+                            mBluetoothAdapter.enable();
+                        }
                     }
+
                     mVibration.singleBurst();
-                    // startRecording() is invoked by receiver upon completion
                     break;
 
                 case MSG_CHARGING_ON:
@@ -616,10 +671,14 @@ public class ControlService extends Service {
                     Logger.info("Charging: active");
                     LogIHAB.log("Charging: active");
 
-                    if (mBluetoothAdapter.isEnabled()) {
-                        stopRecording();
-                        mBluetoothAdapter.disable();
+                    if (isRFCOMM) {
+                        mConnectedThread.cancel();
+                    } else {
+                        if (mBluetoothAdapter.isEnabled()) {
+                            mBluetoothAdapter.disable();
+                        }
                     }
+                    stopRecording();
                     mVibration.singleBurst();
                     mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     break;
@@ -683,7 +742,11 @@ public class ControlService extends Service {
         Log.d(LOG, "onDestroy");
         stopAlarmAndCountdown();
 
-        mBluetoothAdapter.disable();
+        if (isRFCOMM) {
+            mConnectedThread.cancel();
+        } else {
+            mBluetoothAdapter.disable();
+        }
 
         mNotificationManager.cancel(NOTIFICATION_ID);
 
@@ -758,9 +821,6 @@ public class ControlService extends Service {
 
         new SingleMediaScanner(context, fLog_tmp);
         Log.d(LOG, "Log file checked.");
-
-
-
 
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
 
@@ -879,7 +939,7 @@ public class ControlService extends Service {
 
             audioRecorder.stop();
             setIsRecording(false);
-            // TODO: Experimental
+
             mTaskHandler.removeCallbacks(mStartRecordingRunnable);
 
             messageClient(MSG_STOP_RECORDING);
@@ -1080,8 +1140,6 @@ public class ControlService extends Service {
                     mSelectQuestionnaire = null;
                 }
 
-                Log.i(LOG, "XXX choosing: "+mSelectQuestionnaire);
-
                 if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
                     mSelectQuestionnaire = fileList[0];
                     if (BuildConfig.DEBUG) {
@@ -1245,42 +1303,50 @@ public class ControlService extends Service {
         }
     }
 
-    /**
-     * BT optional
-     */
-
-    private String getBTMajorDeviceClass(int major){
-        switch(major){
-            case BluetoothClass.Device.Major.AUDIO_VIDEO:
-                return "AUDIO_VIDEO";
-            case BluetoothClass.Device.Major.COMPUTER:
-                return "COMPUTER";
-            case BluetoothClass.Device.Major.HEALTH:
-                return "HEALTH";
-            case BluetoothClass.Device.Major.IMAGING:
-                return "IMAGING";
-            case BluetoothClass.Device.Major.MISC:
-                return "MISC";
-            case BluetoothClass.Device.Major.NETWORKING:
-                return "NETWORKING";
-            case BluetoothClass.Device.Major.PERIPHERAL:
-                return "PERIPHERAL";
-            case BluetoothClass.Device.Major.PHONE:
-                return "PHONE";
-            case BluetoothClass.Device.Major.TOY:
-                return "TOY";
-            case BluetoothClass.Device.Major.UNCATEGORIZED:
-                return "UNCATEGORIZED";
-            case BluetoothClass.Device.Major.WEARABLE:
-                return "AUDIO_VIDEO";
-            default: return "unknown!";
-        }
-    }
-
 
     /**
      * RFCOMM
      */
+
+
+    private void connectBtDevice() {
+
+        if (mBluetoothAdapter.isEnabled()) {
+
+            String deviceAddress = sharedPreferences.getString("BTDevice", "");
+            if (!deviceAddress.equals("")) {
+
+                if (mConnectedThread != null) {
+                    mConnectedThread.cancel();
+                    mConnectedThread = null;
+                }
+
+                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
+                BluetoothSocket socket = null;
+                try {
+                    socket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                    try {
+                        // This is a blocking call and will only return on a successful connection or an exception
+                        socket.connect();
+                        mConnectedThread = new ConnectedThread(socket);
+                        mConnectedThread.setPriority(Thread.MAX_PRIORITY);
+                        //mConnectedThread.start();
+                    } catch (IOException e) {
+                        Log.e(LOG, "ConnectedThread creation failed " + e.toString());
+                        mConnectedThread = null;
+                    }
+                } catch (IOException e) {
+                    Log.e(LOG, "Socket create() failed " + e.toString());
+                    mConnectedThread = null;
+                }
+            } else
+                Log.e(LOG, "no Device selected. Please open Settings!");
+        } else {
+            Log.e(LOG, "Bluetooth not activated.");
+            mBluetoothAdapter.enable();
+        }
+    }
+
 
     /*
     protected void initBluetooth() {
