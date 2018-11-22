@@ -199,11 +199,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             resultValue *= resultArray[iRes];
         }
 
-        if (resultValue == 0) {
-            return false;
-        } else {
-            return true;
-        }
+        return resultValue != 0;
     }
 
     public String getTextFromQuestionId(int id) {

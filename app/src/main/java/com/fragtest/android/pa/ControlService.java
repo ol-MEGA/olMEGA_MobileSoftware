@@ -248,9 +248,7 @@ public class ControlService extends Service {
         public void run() {
             if (isCharging) {
                 if (isRFCOMM) {
-                    if (mConnectedThread != null) {
-                        mConnectedThread.cancel();
-                    }
+                    stopRecordingRFCOMM();
                 } else {
                     mBluetoothAdapter.disable();
                 }
@@ -299,9 +297,7 @@ public class ControlService extends Service {
             }
         }
         if (isRFCOMM) {
-            if (mConnectedThread != null) {
-                mConnectedThread.cancel();
-            }
+            stopRecordingRFCOMM();
         } else {
             mBluetoothAdapter.disable();
         }
@@ -469,9 +465,7 @@ public class ControlService extends Service {
                         startActivity();
                     } else {
                         if (isRFCOMM) {
-                            if (mConnectedThread != null) {
-                                mConnectedThread.cancel();
-                            }
+                            stopRecordingRFCOMM();
                         } else {
                             mBluetoothAdapter.disable();
                         }
@@ -490,9 +484,7 @@ public class ControlService extends Service {
                 case MSG_RESET_BT:
                     mBluetoothAdapter.cancelDiscovery();
                     if (isRFCOMM) {
-                        if (mConnectedThread != null) {
-                            mConnectedThread.cancel();
-                        }
+                        stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -627,9 +619,7 @@ public class ControlService extends Service {
 
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (isRFCOMM) {
-                        if (mConnectedThread != null) {
-                            mConnectedThread.cancel();
-                        }
+                        stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -652,9 +642,7 @@ public class ControlService extends Service {
 
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (isRFCOMM) {
-                        if (mConnectedThread != null) {
-                            mConnectedThread.cancel();
-                        }
+                        stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
                     }
@@ -759,9 +747,7 @@ public class ControlService extends Service {
         stopAlarmAndCountdown();
 
         if (isRFCOMM) {
-            if (mConnectedThread != null) {
-                mConnectedThread.cancel();
-            }
+            stopRecordingRFCOMM();
         } else {
             mBluetoothAdapter.disable();
         }
@@ -1356,7 +1342,8 @@ public class ControlService extends Service {
                     try {
                         // This is a blocking call and will only return on a successful connection or an exception
                         socket.connect();
-                        mConnectedThread = new ConnectedThread(socket);
+                        mConnectedThread = new ConnectedThread(socket, serviceMessenger,
+                                Integer.parseInt(chunklengthInS), isWave);
                         mConnectedThread.setPriority(Thread.MAX_PRIORITY);
                         //mConnectedThread.start();
                     } catch (IOException e) {
@@ -1399,7 +1386,7 @@ public class ControlService extends Service {
 
         Log.e(LOG, "mConnectedThread: " + mConnectedThread);
         if (mConnectedThread != null) {
-            mConnectedThread.cancel();
+            mConnectedThread.stopRecording();
         }
 
     }
