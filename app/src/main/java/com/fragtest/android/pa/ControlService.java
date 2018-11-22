@@ -686,14 +686,15 @@ public class ControlService extends Service {
 
                     if (isRFCOMM) {
                         if (mConnectedThread != null) {
-                            mConnectedThread.cancel();
+                            stopRecordingRFCOMM();
                         }
                     } else {
                         if (mBluetoothAdapter.isEnabled()) {
                             mBluetoothAdapter.disable();
                         }
+                        stopRecording();
                     }
-                    stopRecording();
+
                     mVibration.singleBurst();
                     mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     break;
@@ -945,18 +946,6 @@ public class ControlService extends Service {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
-
-    private void startRecordingRFCOMM() {
-
-    }
-
-
-    private void stopRecordingRFCOMM() {
-
-    }
-
-
-
 
     private void startRecording() {
         Log.d(LOG, "Start caching audio");
@@ -1386,18 +1375,33 @@ public class ControlService extends Service {
         }
     }
 
+    private void startRecordingRFCOMM() {
 
-    /*
-    protected void initBluetooth() {
-        BA = BluetoothAdapter.getDefaultAdapter();
-        if (BA != null) {
-            if (!BA.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                int REQUEST_ENABLE_BT = 1;
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
+        Log.e(LOG, "mConnectedThread: " + mConnectedThread);
+
+        AudioFileIO.setChunkId(mChunkId);
+
+
+        if (!isCharging) {
+
+            mConnectedThread.start();
+
+            setIsRecording(true);
+            messageClient(MSG_START_RECORDING);
+            mVibration.singleBurst();
         }
+
+
+
     }
-*/
+
+    private void stopRecordingRFCOMM() {
+
+        Log.e(LOG, "mConnectedThread: " + mConnectedThread);
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+        }
+
+    }
 
 }

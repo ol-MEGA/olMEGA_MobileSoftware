@@ -117,7 +117,8 @@ public class ConnectedThread extends Thread {
                             mConnectedThread.OutputFile = null;
                         }
                     } else {
-                        audioTrack.write(lastAudioBlock, 0, buffer_size);
+                        Log.e(LOG, "Output File is null");
+                     //   audioTrack.write(lastAudioBlock, 0, buffer_size);
                     }
 
                 }
