@@ -55,7 +55,7 @@ public class ConnectedThread extends Thread {
 
     // Sampling Rate is fixed for now
     public ConnectedThread(BluetoothSocket socket, Messenger _messenger, int _chunkLengthInS,
-                    boolean isWave) {
+                           boolean isWave) {
 
         this.mMessenger = _messenger;
         this.chunklengthInS = _chunkLengthInS;
@@ -179,9 +179,9 @@ public class ConnectedThread extends Thread {
                                     outputStream.write((byte)(int32));
                                 } else {
 */
-                                    outputStream.write(int16 >> 8);
-                                    outputStream.write(int16);
-                                    bytesWritten += 4;
+                                outputStream.write(int16 >> 8);
+                                outputStream.write(int16);
+                                bytesWritten += 4;
                                 //}
                             }
 
@@ -200,7 +200,7 @@ public class ConnectedThread extends Thread {
                         }
 
 
-            }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -222,7 +222,6 @@ public class ConnectedThread extends Thread {
                 }
             }
 /*
-
             while (run) {
                 try {
                     ringBuffer.addByte((byte) bis.read());
@@ -274,7 +273,6 @@ public class ConnectedThread extends Thread {
                             Log.e(LOG, "Output File is null");
                             //   audioTrack.write(lastAudioBlock, 0, buffer_size);
                         }
-
                     }
                 } catch (IOException e) {
                     this.cancel();

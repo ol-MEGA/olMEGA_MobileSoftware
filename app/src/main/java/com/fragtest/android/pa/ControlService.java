@@ -36,6 +36,7 @@ import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
+import com.fragtest.android.pa.DataTypes.*;
 
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -63,12 +64,16 @@ import java.util.UUID;
  * Based on https://developer.android.com/reference/android/app/Service.html
  */
 
+
 public class ControlService extends Service {
 
+
     static final String LOG = "ControlService";
-    public static final boolean isStandalone = false;
-    public static final boolean isRFCOMM = true;
-    static final int CURRENT_YEAR = 2018;
+    //public static final boolean isStandalone = false;
+    //public static final boolean isRFCOMM = false;
+    static final int CURRENT_YEAR = 2019;
+    public static INPUT_CONFIG INPUT = INPUT_CONFIG.A2DP;
+
 
     /**
      * Constants for messaging. Should(!) be self-explanatory.
@@ -226,7 +231,7 @@ public class ControlService extends Service {
                 mBluetoothAdapter.enable();
             }
 
-            if (isRFCOMM) {
+            if (INPUT == INPUT_CONFIG.RFCOMM) {
                 if (sharedPreferences.contains("BTDevice")) {
                     String btdevice = sharedPreferences.getString("BTDevice", null);
                     BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
@@ -236,7 +241,7 @@ public class ControlService extends Service {
                     //TODO: is this needed for RFCOMM as well?
                     mBluetoothAdapter.startDiscovery();
                 }
-            } else {
+            } else  {
                 connectBtDevice();
             }
 
@@ -246,10 +251,11 @@ public class ControlService extends Service {
     private Runnable mDisableBT = new Runnable() {
         @Override
         public void run() {
-            if (isCharging) {
-                if (isRFCOMM) {
+            if (isCharging && getIsRecording()) {
+                if (INPUT == INPUT_CONFIG.RFCOMM) {
                     stopRecordingRFCOMM();
                 } else {
+                    // Bluetooth receiver handles stopRecording()
                     mBluetoothAdapter.disable();
                 }
                 mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
@@ -296,7 +302,7 @@ public class ControlService extends Service {
                 return true;
             }
         }
-        if (isRFCOMM) {
+        if (INPUT == INPUT_CONFIG.RFCOMM) {
             stopRecordingRFCOMM();
         } else {
             mBluetoothAdapter.disable();
@@ -357,10 +363,11 @@ public class ControlService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (!isStandalone) {
+            if (INPUT != INPUT_CONFIG.STANDALONE) {
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     Log.e(LOG, "BTDEVICES found.");
                 } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                    Log.e(LOG, "Number 2");
                     announceBTConnected();
                     Log.i(LOG, "Bluetooth: connected");
                     Logger.info("Bluetooth: connected");
@@ -372,6 +379,7 @@ public class ControlService extends Service {
                         sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
                         Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
                     }
+
 
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     Log.e(LOG, "BTDEVICES finished.");
@@ -417,14 +425,14 @@ public class ControlService extends Service {
                     // broadcast receiver. This way, a connection can be made with an already
                     // active transmitter.
                     // RFCOMM, however, initialises in a different way and does not need this procedure.
-                    if (!isStandalone && !isRFCOMM) {
+                    if (INPUT != INPUT_CONFIG.STANDALONE && INPUT != INPUT_CONFIG.RFCOMM) {
                         mBluetoothAdapter.disable();
                         messageClient(MSG_BT_DISCONNECTED);
                     }
 
                     if (!isCharging) {
 
-                        if (isRFCOMM) {
+                        if (INPUT == INPUT_CONFIG.RFCOMM) {
                             if (mBluetoothAdapter != null) {
                                 if (!mBluetoothAdapter.isEnabled()) {
                                     mBluetoothAdapter.enable();
@@ -447,7 +455,7 @@ public class ControlService extends Service {
                         mVibration.singleBurst();
                     }
 
-                    if (isStandalone) {
+                    if (INPUT == INPUT_CONFIG.STANDALONE) {
                         mBluetoothAdapter.disable();
                         announceBTConnected();
                     }
@@ -464,7 +472,7 @@ public class ControlService extends Service {
                     if (restartActivity) {
                         startActivity();
                     } else {
-                        if (isRFCOMM) {
+                        if (INPUT == INPUT_CONFIG.RFCOMM) {
                             stopRecordingRFCOMM();
                         } else {
                             mBluetoothAdapter.disable();
@@ -483,7 +491,7 @@ public class ControlService extends Service {
 
                 case MSG_RESET_BT:
                     mBluetoothAdapter.cancelDiscovery();
-                    if (isRFCOMM) {
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
@@ -543,7 +551,13 @@ public class ControlService extends Service {
                     Log.d(LOG, "Stop caching audio");
                     Logger.info("Stop caching audio");
                     LogIHAB.log("Stop caching audio");
-                    audioRecorder.close();
+
+
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
+                        mConnectedThread.stopRecording();
+                    } else {
+                        audioRecorder.close();
+                    }
                     setIsRecording(false);
                     messageClient(MSG_GET_STATUS);
                     break;
@@ -618,7 +632,7 @@ public class ControlService extends Service {
                 case MSG_APPLICATION_SHUTDOWN:
 
                     //if (mBluetoothAdapter.isEnabled()) {
-                    if (isRFCOMM) {
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
@@ -641,7 +655,7 @@ public class ControlService extends Service {
                     LogIHAB.log("CRITICAL battery level: active");
 
                     //if (mBluetoothAdapter.isEnabled()) {
-                    if (isRFCOMM) {
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
@@ -656,7 +670,7 @@ public class ControlService extends Service {
                     mTaskHandler.removeCallbacks(mDisableBT);
 
 
-                    if (isRFCOMM) {
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
                         connectBtDevice();
                     } else {
                         if (!mBluetoothAdapter.isEnabled()) {
@@ -672,7 +686,7 @@ public class ControlService extends Service {
                     Logger.info("Charging: active");
                     LogIHAB.log("Charging: active");
 
-                    if (isRFCOMM) {
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
                         if (mConnectedThread != null) {
                             stopRecordingRFCOMM();
                         }
@@ -681,14 +695,28 @@ public class ControlService extends Service {
                             mBluetoothAdapter.disable();
                         }
                         stopRecording();
+                        mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     }
 
                     mVibration.singleBurst();
-                    mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     break;
 
                 case MSG_CHARGING_ON_PRE:
                     isCharging = true;
+                    Logger.info("Charging: active");
+                    LogIHAB.log("Charging: active");
+
+                    if (INPUT == INPUT_CONFIG.RFCOMM) {
+                        if (mConnectedThread != null) {
+                            stopRecordingRFCOMM();
+                        }
+                    } else {
+                        if (mBluetoothAdapter.isEnabled()) {
+                            mBluetoothAdapter.disable();
+                        }
+                        stopRecording();
+                        mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
+                    }
                     break;
 
                 default:
@@ -746,7 +774,7 @@ public class ControlService extends Service {
         Log.d(LOG, "onDestroy");
         stopAlarmAndCountdown();
 
-        if (isRFCOMM) {
+        if (INPUT == INPUT_CONFIG.RFCOMM) {
             stopRecordingRFCOMM();
         } else {
             mBluetoothAdapter.disable();
@@ -872,10 +900,10 @@ public class ControlService extends Service {
     }
 
     private void announceBTDisconnected() {
-        if (!isStandalone) {
+        if (INPUT != INPUT_CONFIG.STANDALONE) {
             Log.e(LOG, "BTDEVICES not connected.");
 
-            if (isRFCOMM) {
+            if (INPUT == INPUT_CONFIG.RFCOMM) {
                 stopRecordingRFCOMM();
             } else {
                 stopRecording();
@@ -886,10 +914,11 @@ public class ControlService extends Service {
     }
 
     private void announceBTConnected() {
-        if (!isStandalone) {
+        if (INPUT != INPUT_CONFIG.STANDALONE) {
             Log.e(LOG, "BTDEVICES connected.");
+            Log.e(LOG, "Number 3");
 
-            if (isRFCOMM) {
+            if (INPUT == INPUT_CONFIG.RFCOMM) {
                 startRecordingRFCOMM();
             } else {
                 startRecording();
@@ -897,6 +926,7 @@ public class ControlService extends Service {
             isBluetoothPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
+
     }
 
     // Send message to connected client with additional data
@@ -1335,6 +1365,8 @@ public class ControlService extends Service {
                     mConnectedThread = null;
                 }
 
+                Log.e(LOG, "Device Address: " + deviceAddress);
+
                 BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
                 BluetoothSocket socket = null;
                 try {
@@ -1346,6 +1378,7 @@ public class ControlService extends Service {
                                 Integer.parseInt(chunklengthInS), isWave);
                         mConnectedThread.setPriority(Thread.MAX_PRIORITY);
                         //mConnectedThread.start();
+                        Log.e(LOG, "Number 1");
                     } catch (IOException e) {
                         Log.e(LOG, "ConnectedThread creation failed " + e.toString());
                         mConnectedThread = null;
@@ -1364,31 +1397,28 @@ public class ControlService extends Service {
 
     private void startRecordingRFCOMM() {
 
-        Log.e(LOG, "mConnectedThread: " + mConnectedThread);
-
+        Log.e(LOG, "mConnectedThread - start: " + mConnectedThread);
+        Log.e(LOG, "Number 4");
         AudioFileIO.setChunkId(mChunkId);
-
 
         if (!isCharging) {
 
-            mConnectedThread.start();
-
             setIsRecording(true);
+            mConnectedThread.start();
             messageClient(MSG_START_RECORDING);
             mVibration.singleBurst();
         }
-
-
 
     }
 
     private void stopRecordingRFCOMM() {
 
-        Log.e(LOG, "mConnectedThread: " + mConnectedThread);
+        Log.e(LOG, "mConnectedThread - stop: " + mConnectedThread);
         if (mConnectedThread != null) {
             mConnectedThread.stopRecording();
+            mConnectedThread.cancel();
+            mConnectedThread = null;
         }
-
     }
 
 }

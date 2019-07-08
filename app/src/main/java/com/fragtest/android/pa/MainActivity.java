@@ -51,6 +51,7 @@ import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.MessageList;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
+import com.fragtest.android.pa.DataTypes.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -70,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     public static boolean USE_DEVELOPER_MODE = false;
-    private Locale LANGUAGE_CODE = Locale.GERMANY;
-    //private Locale LANGUAGE_CODE = Locale.ENGLISH;
+    //private Locale LANGUAGE_CODE = Locale.GERMANY;
+    private Locale LANGUAGE_CODE = Locale.ENGLISH;
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -163,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
             // In case of Standalone Mode, no BT error is needed
-            if (!(ControlService.isStandalone && error == AppErrors.ERROR_NO_BT)) {
+            if (!(ControlService.INPUT == INPUT_CONFIG.STANDALONE && error == AppErrors.ERROR_NO_BT)) {
                 mErrorList.add(error.getErrorMessage());
             }
         }
@@ -400,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setBTLogoConnected() {
-        if (!ControlService.isStandalone) {
+        if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
             mRecord.setBackgroundTintList(
                     ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                             R.color.BatteryGreen, null)));
@@ -410,7 +411,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setBTLogoDisconnected() {
-        if (!ControlService.isStandalone) {
+        if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
             mRecord.setBackgroundTintList(
                     ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                             R.color.darkerGray, null)));
@@ -445,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
         mStatContext = this;
         mMessageList = new MessageList(this);
 
-        LogIHAB.log("Standalone Mode: " + ControlService.isStandalone);
+        LogIHAB.log("Standalone Mode: " + (ControlService.INPUT == INPUT_CONFIG.STANDALONE));
 
         setSystemLocale();
 
@@ -509,7 +510,7 @@ public class MainActivity extends AppCompatActivity {
             mStateRunning = new StateRunning(this, mAdapter);
             mStateConnecting = new StateConnecting(this, mAdapter);
 
-            if (ControlService.isStandalone) {
+            if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
                 mAppState = mStateRunning;
             } else {
                 mAppState = mStateConnecting;
@@ -518,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
 
             mAdapter.checkBatteryCritical();
 
-            if (ControlService.isStandalone) {
+            if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
                 setBTLogoAirplaneMode();
             }
 
@@ -967,9 +968,9 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
-                    if (isBluetoothPresent && !ControlService.isStandalone) {
+                    if (isBluetoothPresent && ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
                         mAppState.bluetoothPresent();
-                    } else if (!ControlService.isStandalone) {
+                    } else if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
                         mAppState.bluetoothNotPresent();
                     }
 
@@ -982,7 +983,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_RECORDING:
 
-                    if (!ControlService.isStandalone) {
+                    if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
                         mAppState.bluetoothPresent();
                         isBluetoothPresent = true;
                     }
@@ -991,7 +992,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (!ControlService.isStandalone) {
+                    if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
                         mAppState.bluetoothNotPresent();
                         isBluetoothPresent = false;
                     }
