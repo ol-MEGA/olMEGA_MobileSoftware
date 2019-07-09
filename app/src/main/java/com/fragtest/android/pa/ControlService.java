@@ -69,10 +69,8 @@ public class ControlService extends Service {
 
 
     static final String LOG = "ControlService";
-    //public static final boolean isStandalone = false;
-    //public static final boolean isRFCOMM = false;
     static final int CURRENT_YEAR = 2019;
-    public static INPUT_CONFIG INPUT = INPUT_CONFIG.A2DP;
+    public static INPUT_CONFIG INPUT = INPUT_CONFIG.USB;
 
 
     /**
@@ -80,52 +78,61 @@ public class ControlService extends Service {
      */
 
     // 1* - general
-    public static final int MSG_REGISTER_CLIENT = 11;
-    public static final int MSG_UNREGISTER_CLIENT = 12;
-    public static final int MSG_GET_STATUS = 13;
-    public static final int MSG_RESET_BT = 14;
-    public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
-    public static final int MSG_SHUTDOWN_RECEIVED = 16;
-    public static final int MSG_CHANGE_PREFERENCE = 17;
-    public static final int MSG_BT_CONNECTED = 18;
-    public static final int MSG_BT_DISCONNECTED = 19;
+    public static final int MSG_REGISTER_CLIENT         = 11;
+    public static final int MSG_UNREGISTER_CLIENT       = 12;
+    public static final int MSG_GET_STATUS              = 13;
+    public static final int MSG_RESET_BT                = 14;
+    public static final int MSG_NO_QUESTIONNAIRE_FOUND  = 15;
+    public static final int MSG_SHUTDOWN_RECEIVED       = 16;
+    public static final int MSG_CHANGE_PREFERENCE       = 17;
+    public static final int MSG_BT_CONNECTED            = 18;
+    public static final int MSG_BT_DISCONNECTED         = 19;
 
     // 2* - alarm
-    public static final int MSG_ALARM_RECEIVED = 21;
-    public static final int MSG_START_COUNTDOWN = 22;
-    public static final int MSG_STOP_COUNTDOWN = 23;
-    public static final int MSG_SET_COUNTDOWN_TIME = 24;
+    public static final int MSG_ALARM_RECEIVED          = 21;
+    public static final int MSG_START_COUNTDOWN         = 22;
+    public static final int MSG_STOP_COUNTDOWN          = 23;
+    public static final int MSG_SET_COUNTDOWN_TIME      = 24;
 
     // 3* - questionnaire
-    public static final int MSG_QUESTIONNAIRE_FINISHED = 30;
-    public static final int MSG_ISMENU = 31;
-    public static final int MSG_QUESTIONNAIRE_INACTIVE = 32;
-    public static final int MSG_START_QUESTIONNAIRE = 33;
-    public static final int MSG_PROPOSE_QUESTIONNAIRE = 34;
-    public static final int MSG_PROPOSITION_ACCEPTED = 35;
-    public static final int MSG_MANUAL_QUESTIONNAIRE = 36;
-    public static final int MSG_QUESTIONNAIRE_ACTIVE = 37;
-    public static final int MSG_CHECK_FOR_PREFERENCES = 38;
-    public static final int MSG_PREFS_IN_FOREGROUND = 39;
+    public static final int MSG_QUESTIONNAIRE_FINISHED  = 30;
+    public static final int MSG_ISMENU                  = 31;
+    public static final int MSG_QUESTIONNAIRE_INACTIVE  = 32;
+    public static final int MSG_START_QUESTIONNAIRE     = 33;
+    public static final int MSG_PROPOSE_QUESTIONNAIRE   = 34;
+    public static final int MSG_PROPOSITION_ACCEPTED    = 35;
+    public static final int MSG_MANUAL_QUESTIONNAIRE    = 36;
+    public static final int MSG_QUESTIONNAIRE_ACTIVE    = 37;
+    public static final int MSG_CHECK_FOR_PREFERENCES   = 38;
+    public static final int MSG_PREFS_IN_FOREGROUND     = 39;
 
     // 4* - recording
-    public static final int MSG_START_RECORDING = 41;
-    public static final int MSG_STOP_RECORDING = 42;
-    public static final int MSG_RECORDING_STOPPED = 43;
-    public static final int MSG_CHUNK_RECORDED = 44;
+    public static final int MSG_START_RECORDING         = 41;
+    public static final int MSG_STOP_RECORDING          = 42;
+    public static final int MSG_RECORDING_STOPPED       = 43;
+    public static final int MSG_CHUNK_RECORDED          = 44;
 
     // 5* - processing
-    public static final int MSG_CHUNK_PROCESSED = 51;
+    public static final int MSG_CHUNK_PROCESSED         = 51;
 
     // 6* - application
-    public static final int MSG_APPLICATION_SHUTDOWN = 61;
-    public static final int MSG_BATTERY_CRITICAL = 62;
-    public static final int MSG_BATTERY_LEVEL_INFO = 63;
-    public static final int MSG_CHARGING_OFF = 64;
-    public static final int MSG_CHARGING_ON = 65;
-    public static final int MSG_CHARGING_ON_PRE = 66;
-    public static final int MSG_TIME_CORRECT = 67;
-    public static final int MSG_TIME_INCORRECT = 68;
+    public static final int MSG_APPLICATION_SHUTDOWN    = 61;
+    public static final int MSG_BATTERY_CRITICAL        = 62;
+    public static final int MSG_BATTERY_LEVEL_INFO      = 63;
+    public static final int MSG_CHARGING_OFF            = 64;
+    public static final int MSG_CHARGING_ON             = 65;
+    public static final int MSG_CHARGING_ON_PRE         = 66;
+    public static final int MSG_TIME_CORRECT            = 67;
+    public static final int MSG_TIME_INCORRECT          = 68;
+
+    // 7* - USB
+    public static final int MSG_USB_DEVICE              = 70;
+    public static final int MSG_USB_NO_DEVICE           = 71;
+    public static final int MSG_USB_CONNECT 		    = 72;
+    public static final int MSG_USB_DISCONNECT 		    = 73;
+    public static final int MSG_USB_PERMISSION 		    = 74;
+    public static final int MSG_USB_NO_PERMISSION 	    = 75;
+
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
@@ -133,6 +140,7 @@ public class ControlService extends Service {
     private boolean isQuestionnairePending = false;
     private boolean isQuestionnairePresent = false;
     private boolean isBluetoothPresent = false;
+    private boolean isUSBPresent = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
@@ -363,7 +371,7 @@ public class ControlService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (INPUT != INPUT_CONFIG.STANDALONE) {
+            if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     Log.e(LOG, "BTDEVICES found.");
                 } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
@@ -379,8 +387,6 @@ public class ControlService extends Service {
                         sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
                         Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
                     }
-
-
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     Log.e(LOG, "BTDEVICES finished.");
                 } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
@@ -425,13 +431,12 @@ public class ControlService extends Service {
                     // broadcast receiver. This way, a connection can be made with an already
                     // active transmitter.
                     // RFCOMM, however, initialises in a different way and does not need this procedure.
-                    if (INPUT != INPUT_CONFIG.STANDALONE && INPUT != INPUT_CONFIG.RFCOMM) {
+                    if (INPUT == INPUT_CONFIG.A2DP) {
                         mBluetoothAdapter.disable();
                         messageClient(MSG_BT_DISCONNECTED);
                     }
 
                     if (!isCharging) {
-
                         if (INPUT == INPUT_CONFIG.RFCOMM) {
                             if (mBluetoothAdapter != null) {
                                 if (!mBluetoothAdapter.isEnabled()) {
@@ -555,7 +560,7 @@ public class ControlService extends Service {
 
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         mConnectedThread.stopRecording();
-                    } else {
+                    } else if (INPUT == INPUT_CONFIG.A2DP) {
                         audioRecorder.close();
                     }
                     setIsRecording(false);
