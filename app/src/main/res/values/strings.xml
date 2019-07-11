@@ -14,6 +14,7 @@
     <string name="noBluetooth">• Unable to connect to device.</string>
     <string name="batteryWarning">• Please charge the smartphone.</string>
     <string name="batteryCritical">• Battery level critical - Application stopped.</string>
+    <string name="noUSB">• Unable to find USB device.</string>
 
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>

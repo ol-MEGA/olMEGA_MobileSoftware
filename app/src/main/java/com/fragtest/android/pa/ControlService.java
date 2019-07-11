@@ -15,6 +15,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -51,6 +53,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -149,7 +152,7 @@ public class ControlService extends Service {
     private static boolean isActivityRunning = true;
 
     public static final String FILENAME_LOG = "log2.txt";
-    public static final String FILENAME_LOG_tmp = "log.txt";
+    //public static final String FILENAME_LOG_tmp = "log.txt";
 
     private int mChunkId = 1;
 
@@ -214,20 +217,20 @@ public class ControlService extends Service {
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
 
-
     private Runnable mStartRecordingRunnable = new Runnable() {
         @Override
         public void run() {
+
             audioRecorder = new AudioRecorder(
                     serviceMessenger,
                     Integer.parseInt(chunklengthInS),
                     Integer.parseInt(samplerate),
                     isWave);
+
             if (!isCharging) {
                 audioRecorder.start();
                 setIsRecording(true);
                 messageClient(MSG_START_RECORDING);
-                mVibration.singleBurst();
             }
         }
     };
@@ -365,6 +368,38 @@ public class ControlService extends Service {
         }
     };
 
+    // This BroadcastReceiver listens to attachment of a USB device
+    private final BroadcastReceiver mUsbAttachReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
+                isUSBPresent = true;
+                // TODO: Do some announcement
+                if (INPUT == INPUT_CONFIG.USB) {
+                    mVibration.singleBurst();
+                    announceUSBConnected();
+                }
+            }
+        }
+    };
+
+    // This BroadcastReceiver listens to detachment of a USB device
+    private final BroadcastReceiver mUsbDetachReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
+                isUSBPresent = false;
+                // TODO: Do some announcement
+                if (INPUT == INPUT_CONFIG.USB) {
+                    mVibration.singleBurst();
+                    announceUSBDisconnected();
+                }
+            }
+        }
+    };
+
     //The BroadcastReceiver that listens for bluetooth broadcasts
     private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
         @Override
@@ -411,10 +446,10 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
 
-                    Configurator.defaultConfig()
+                    /*Configurator.defaultConfig()
                             .writer(new FileWriter(FILENAME_LOG_tmp))
                             .level(Level.INFO)
-                            .activate();
+                            .activate();*/
 
                     Log.e(LOG,"msg: "+msg);
                     Log.i(LOG, "Client registered to service");
@@ -444,7 +479,7 @@ public class ControlService extends Service {
                                 }
                                 connectBtDevice();
                             }
-                        } else {
+                        } else if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.STANDALONE) {
                             if (!mBluetoothAdapter.isEnabled()) {
                                 mBluetoothAdapter.enable();
 
@@ -465,6 +500,16 @@ public class ControlService extends Service {
                         announceBTConnected();
                     }
 
+                    UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+                    HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+                    if (deviceList.size() == 0) {
+                        isUSBPresent = false;
+                        messageClient(MSG_USB_DISCONNECT);
+                    } else {
+                        isUSBPresent = true;
+                        messageClient(MSG_USB_CONNECT);
+                    }
+
                     checkTime();
                     checkLog();
                     break;
@@ -483,9 +528,24 @@ public class ControlService extends Service {
                             mBluetoothAdapter.disable();
                         }
                     }
+
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
-                    mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+
+                    if (INPUT == INPUT_CONFIG.RFCOMM || INPUT == INPUT_CONFIG.A2DP) {
+                        mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+                        unregisterReceiver(mBluetoothStateReceiver);
+                    }
+
+                    if (INPUT == INPUT_CONFIG.USB) {
+                        unregisterReceiver(mUsbAttachReceiver);
+                        unregisterReceiver(mUsbDetachReceiver);
+                    }
+
+                    // Unregister broadcast listeners
+                    unregisterReceiver(mAlarmReceiver);
+                    unregisterReceiver(mShutdownReceiver);
+
                     break;
 
                 case MSG_GET_STATUS:
@@ -556,7 +616,6 @@ public class ControlService extends Service {
                     Log.d(LOG, "Stop caching audio");
                     Logger.info("Stop caching audio");
                     LogIHAB.log("Stop caching audio");
-
 
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         mConnectedThread.stopRecording();
@@ -639,7 +698,7 @@ public class ControlService extends Service {
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
-                    } else {
+                    } else if (INPUT == INPUT_CONFIG.A2DP){
                         mBluetoothAdapter.disable();
                     }
                     //}
@@ -662,7 +721,7 @@ public class ControlService extends Service {
                     //if (mBluetoothAdapter.isEnabled()) {
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
-                    } else {
+                    } else if (INPUT == INPUT_CONFIG.A2DP) {
                         mBluetoothAdapter.disable();
                     }
                     //}
@@ -672,15 +731,15 @@ public class ControlService extends Service {
                     Logger.info("Charging: inactive");
                     LogIHAB.log("Charging: inactive");
                     isCharging = false;
-                    mTaskHandler.removeCallbacks(mDisableBT);
-
+                    // TODO: Check whether it is necessary to make this dependent
+                    if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
+                        mTaskHandler.removeCallbacks(mDisableBT);
+                    }
 
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         connectBtDevice();
-                    } else {
-                        if (!mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.enable();
-                        }
+                    } else if (INPUT == INPUT_CONFIG.A2DP && !mBluetoothAdapter.isEnabled()) {
+                        mBluetoothAdapter.enable();
                     }
 
                     mVibration.singleBurst();
@@ -696,10 +755,11 @@ public class ControlService extends Service {
                             stopRecordingRFCOMM();
                         }
                     } else {
-                        if (mBluetoothAdapter.isEnabled()) {
+                        if (INPUT == INPUT_CONFIG.A2DP && mBluetoothAdapter.isEnabled()) {
                             mBluetoothAdapter.disable();
                         }
                         stopRecording();
+                        // TODO: Check whether it is necessary to make this dependent
                         mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
                     }
 
@@ -715,7 +775,7 @@ public class ControlService extends Service {
                         if (mConnectedThread != null) {
                             stopRecordingRFCOMM();
                         }
-                    } else {
+                    } else if (INPUT == INPUT_CONFIG.A2DP){
                         if (mBluetoothAdapter.isEnabled()) {
                             mBluetoothAdapter.disable();
                         }
@@ -739,11 +799,11 @@ public class ControlService extends Service {
         Log.e(LOG, "onCreate");
 
         // log file
-        Configurator.currentConfig()
+        /*Configurator.currentConfig()
                 .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
                 .level(Level.INFO)
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
-                .activate();
+                .activate();*/
 
         Logger.info("Service onCreate");
         LogIHAB.log("Service onCreate");
@@ -781,16 +841,11 @@ public class ControlService extends Service {
 
         if (INPUT == INPUT_CONFIG.RFCOMM) {
             stopRecordingRFCOMM();
-        } else {
+        } else if (INPUT == INPUT_CONFIG.A2DP){
             mBluetoothAdapter.disable();
         }
 
         mNotificationManager.cancel(NOTIFICATION_ID);
-
-        // Unregister broadcast listeners
-        this.unregisterReceiver(mAlarmReceiver);
-        this.unregisterReceiver(mShutdownReceiver);
-        this.unregisterReceiver(mBluetoothStateReceiver);
 
         Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
         Log.e(LOG,"ControlService stopped");
@@ -845,9 +900,9 @@ public class ControlService extends Service {
     private boolean checkLog() {
 
         // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
-        File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
+        //File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
 
-        if (!fLog_tmp.exists()) {
+        /*if (!fLog_tmp.exists()) {
             try{
                 fLog_tmp.createNewFile();
                 Log.d(LOG, "Log file created");
@@ -858,6 +913,7 @@ public class ControlService extends Service {
 
         new SingleMediaScanner(context, fLog_tmp);
         Log.d(LOG, "Log file checked.");
+        */
 
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
 
@@ -905,7 +961,7 @@ public class ControlService extends Service {
     }
 
     private void announceBTDisconnected() {
-        if (INPUT != INPUT_CONFIG.STANDALONE) {
+        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES not connected.");
 
             if (INPUT == INPUT_CONFIG.RFCOMM) {
@@ -919,7 +975,7 @@ public class ControlService extends Service {
     }
 
     private void announceBTConnected() {
-        if (INPUT != INPUT_CONFIG.STANDALONE) {
+        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES connected.");
             Log.e(LOG, "Number 3");
 
@@ -931,7 +987,20 @@ public class ControlService extends Service {
             isBluetoothPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
+    }
 
+    private void announceUSBConnected() {
+        if (INPUT == INPUT_CONFIG.USB) {
+            messageClient(MSG_USB_CONNECT);
+            startRecording();
+        }
+    }
+
+    private void announceUSBDisconnected() {
+        if (INPUT == INPUT_CONFIG.USB) {
+            messageClient(MSG_USB_DISCONNECT);
+            stopRecording();
+        }
     }
 
     // Send message to connected client with additional data
@@ -1048,6 +1117,13 @@ public class ControlService extends Service {
         mVibration = new Vibration(this);
         mVibration.singleBurst();
 
+        if (INPUT == INPUT_CONFIG.USB) {
+            IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+            registerReceiver(mUsbAttachReceiver , filter);
+            filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
+            registerReceiver(mUsbDetachReceiver , filter);
+        }
+
         if (useLogMode) {
             // Register receiver for display activity (if used in log mode)
             IntentFilter displayFilter = new IntentFilter();
@@ -1059,12 +1135,14 @@ public class ControlService extends Service {
         // Register receiver for alarm
         this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
 
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        this.registerReceiver(mBluetoothStateReceiver, filter);
+        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
+            // Register broadcasts receiver for bluetooth state change
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            this.registerReceiver(mBluetoothStateReceiver, filter);
+        }
 
         // It is safe to say, that the display is illuminated on system/application startup
         if (useLogMode) {
