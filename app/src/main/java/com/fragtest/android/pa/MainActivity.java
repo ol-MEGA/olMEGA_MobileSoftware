@@ -321,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        //dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
@@ -469,8 +470,6 @@ public class MainActivity extends AppCompatActivity {
 
         mStatContext = this;
         mMessageList = new MessageList(this);
-
-        LogIHAB.log("Operation Mode: " + ControlService.INPUT.toString());
 
         setSystemLocale();
 

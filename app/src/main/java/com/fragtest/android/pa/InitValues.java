@@ -23,6 +23,8 @@ public class InitValues {
             finalCountDown = -255,
             timerInterval = -255;
 
+    public static String operationMode = "Standalone";
+
     Bundle initBundle;
 
     // Load initial values
@@ -43,6 +45,8 @@ public class InitValues {
         initBundle.putInt("finalCountDown", finalCountDown);
         initBundle.putInt("timerInterval", timerInterval);
 
+        initBundle.putString("operationMode", operationMode);
+
     }
 
     public Bundle getInitBundle() {
@@ -56,4 +60,6 @@ public class InitValues {
     public boolean getInitBoolean(String string) {
         return initBundle.getBoolean(string);
     }
+
+    public String getInitString(String string) { return initBundle.getString(string); }
 }

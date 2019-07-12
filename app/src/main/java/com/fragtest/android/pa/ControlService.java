@@ -73,7 +73,7 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     static final int CURRENT_YEAR = 2019;
-    public static INPUT_CONFIG INPUT = INPUT_CONFIG.USB;
+    public static INPUT_CONFIG INPUT;// = INPUT_CONFIG.USB;
 
 
     /**
@@ -150,6 +150,8 @@ public class ControlService extends Service {
     private String mSelectQuestionnaire, mTempQuestionnaire;
     public static boolean isCharging = false;
     private static boolean isActivityRunning = true;
+
+    private String operationModeStatus = "";
 
     public static final String FILENAME_LOG = "log2.txt";
     //public static final String FILENAME_LOG_tmp = "log.txt";
@@ -519,15 +521,15 @@ public class ControlService extends Service {
                     stopAlarmAndCountdown();
                     Logger.info("Client unregistered from service");
                     LogIHAB.log("Client unregistered from service");
-                    if (restartActivity) {
-                        startActivity();
-                    } else {
+                    //if (restartActivity) {
+                    //    startActivity();
+                    //} else {
                         if (INPUT == INPUT_CONFIG.RFCOMM) {
                             stopRecordingRFCOMM();
                         } else {
                             mBluetoothAdapter.disable();
                         }
-                    }
+                    //}
 
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
@@ -1103,6 +1105,9 @@ public class ControlService extends Service {
             sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
         }
 
+        String operationMode = sharedPreferences.getString("operationMode", "Standalone");
+        changeOperationMode(operationMode);
+
         initialiseValues();
 
         mFileIO = new FileIO();
@@ -1151,6 +1156,27 @@ public class ControlService extends Service {
         }
 
         checkForPreferences();
+    }
+
+    private void changeOperationMode(String operationMode) {
+        if (!operationMode.equals(operationModeStatus)) {
+            switch (operationMode) {
+                case "A2DP":
+                    INPUT = INPUT_CONFIG.A2DP;
+                    break;
+                case "RFCOMM":
+                    INPUT = INPUT_CONFIG.RFCOMM;
+                    break;
+                case "USB":
+                    INPUT = INPUT_CONFIG.USB;
+                    break;
+                case "Standalone":
+                    INPUT = INPUT_CONFIG.STANDALONE;
+                    break;
+            }
+            operationModeStatus = operationMode;
+            LogIHAB.log("Operation Mode changed to: " + operationMode);
+        }
     }
 
     // Load preset values from shared preferences, default values from external class InitValues
@@ -1283,7 +1309,9 @@ public class ControlService extends Service {
             messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
         }
 
-
+        // Operation Mode
+        String operationMode = sharedPreferences.getString("operationMode", "Standalone");
+        changeOperationMode(operationMode);
 
         // processing
         HashSet<String> tempFeatures = new HashSet<>();
