@@ -14,6 +14,7 @@
     <string name="noBluetooth">• Sendebox kann nicht gefunden werden.</string>
     <string name="batteryWarning">• Bitte laden Sie das Smartphone.</string>
     <string name="batteryCritical">• Batteriestand kritisch - Aufnahme unterbrochen.</string>
+    <string name="noUSB">• USB-Gerät nicht angeschlossen.</string>
 
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>

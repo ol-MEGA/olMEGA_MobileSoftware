@@ -5,6 +5,7 @@ import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
@@ -156,5 +157,29 @@ public class StateQuest implements AppState {
     public void timeIncorrect() {
         LogIHAB.log(LOG + ":" + "timeIncorrect()");
         qpa.getMenuPage().hideTime();
+    }
+
+    @Override
+    public void usbPresent() {
+        LogIHAB.log(LOG + ":" + "usbPresent()");
+        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+            //stopConnecting();
+            //mainActivity.setState(mainActivity.getStateRunning());
+            //mainActivity.mAppState.setInterface();
+        }
+    }
+
+    @Override
+    public void usbNotPresent() {
+        LogIHAB.log(LOG + ":" + "usbNotPresent()");
+        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+            // TODO: See if this is needed
+            //mainActivity.setState(mainActivity.getStateError());
+            //mainActivity.mAppState.setInterface();
+            mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
+            mainActivity.setState(mainActivity.getStateError());
+            qpa.backToMenu();
+            mainActivity.mAppState.setInterface();
+        }
     }
 }

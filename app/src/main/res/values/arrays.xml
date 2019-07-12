@@ -20,6 +20,13 @@
         <item>16000</item>
     </string-array>
 
+    <string-array name="operationMode">
+        <item>A2DP</item>
+        <item>RFCOMM</item>
+        <item>USB</item>
+        <item>Standalone</item>
+    </string-array>
+
     <integer-array name="batteryStates">
         <item>10</item>
         <item>5</item>

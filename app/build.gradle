@@ -10,13 +10,16 @@ android {
         }
     }
     compileSdkVersion 25
-    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.fragtest.android.pa"
         minSdkVersion 22
         targetSdkVersion 25
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.config
+
+        //ndk {
+        //    moduleName "libusbaudio109"
+        //}
     }
     buildTypes {
         release {
@@ -42,4 +45,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'org.tinylog:tinylog:1.2'
     compile 'com.github.wendykierp:JTransforms:3.1'
+    //compile files('libs/usbaudiolibraryjadehochschule_20140223.jar')
 }

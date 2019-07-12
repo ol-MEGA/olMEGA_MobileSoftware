@@ -7,11 +7,17 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.provider.MediaStore;
+import com.fragtest.android.pa.Core.LogIHAB;
+
 
 import com.fragtest.android.pa.Core.AudioFileIO;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ResourceBundle;
+
 
 /**
  * Record audio using Android's AudioRecorder
@@ -31,6 +37,7 @@ public class AudioRecorder {
     private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
     private int samplerate;
+    private int source;
 
     AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
 
@@ -44,7 +51,6 @@ public class AudioRecorder {
                 AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT
         );
-
 
         audioRecord = new AudioRecord(
                 MediaRecorder.AudioSource.DEFAULT,

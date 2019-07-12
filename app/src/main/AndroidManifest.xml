@@ -15,8 +15,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BATTERY_STATS"/>
     <uses-permission android:name="android.permission.REORDER_TASKS" />
-
     <uses-permission android:name="android.permission.PREVENT_POWER_KEY" />
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
+    <uses-feature android:name="android.hardware.usb.host" />
 
     <application
         android:allowBackup="true"
@@ -65,15 +66,13 @@
             </intent-filter>
         </receiver>
 
-
+        <!-- Receiver needed to intercept shutdown (not operational yet) -->
         <receiver android:name=".Core.ShutdownReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />
                 <action android:name="android.intent.action.QUICKBOOT_POWEROFF" />
             </intent-filter>
         </receiver>
-
-
 
         <service android:name=".ControlService"
                 android:process=":remote" />

@@ -5,6 +5,7 @@ import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -37,7 +38,10 @@ public class StateCharging implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.setBTLogoDisconnected();
 
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+        if (ControlService.INPUT == INPUT_CONFIG.RFCOMM || ControlService.INPUT == INPUT_CONFIG.A2DP) {
+            mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+        }
+
         mainActivity.mCharging.setVisibility(View.VISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
         mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
@@ -74,7 +78,8 @@ public class StateCharging implements AppState {
     public void chargeOff() {
         LogIHAB.log(LOG + ":" + "chargeOff()");
         if (mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage()) ||
-                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage())) {
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) ||
+                mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_USB.getErrorMessage())) {
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
         } else {
@@ -152,5 +157,15 @@ public class StateCharging implements AppState {
     public void timeIncorrect() {
         LogIHAB.log(LOG + ":" + "timeIncorrect()");
         qpa.getMenuPage().hideTime();
+    }
+
+    @Override
+    public void usbPresent() {
+        LogIHAB.log(LOG + ":" + "usbPresent()");
+    }
+
+    @Override
+    public void usbNotPresent() {
+        LogIHAB.log(LOG + ":" + "usbNotPresent()");
     }
 }

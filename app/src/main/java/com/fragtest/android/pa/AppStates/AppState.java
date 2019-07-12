@@ -40,4 +40,8 @@ public interface AppState {
 
     void timeIncorrect();
 
+    void usbPresent();
+
+    void usbNotPresent();
+
 }

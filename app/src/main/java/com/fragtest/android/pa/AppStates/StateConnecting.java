@@ -5,9 +5,12 @@ import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
+
+import java.util.ResourceBundle;
 
 /**
  * Created by ul1021 on 15.04.2018.
@@ -58,7 +61,7 @@ public class StateConnecting implements AppState {
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":" + "setInterface()");
-        if (!ControlService.isStandalone) {
+        if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
             qpa.hideQuestionnaireProgressBar();
             qpa.stopCountDown();
             qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
@@ -78,8 +81,15 @@ public class StateConnecting implements AppState {
             mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
             Log.e(LOG, LOG);
-        } else {
+        } else if (ControlService.INPUT == INPUT_CONFIG.USB && mainActivity.getIsUSBPresent()) {
+            // Check whether USB needs different behaviour
             mainActivity.setState(mainActivity.getStateRunning());
+            mainActivity.mAppState.setInterface();
+        } else if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
+            mainActivity.setState(mainActivity.getStateRunning());
+            mainActivity.mAppState.setInterface();
+        } else {
+            mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
         }
     }
@@ -208,5 +218,28 @@ public class StateConnecting implements AppState {
 
         mainActivity.setState(mainActivity.getStateError());
         mainActivity.mAppState.setInterface();
+    }
+
+    @Override
+    public void usbPresent() {
+        LogIHAB.log(LOG + ":" + "usbPresent()");
+        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+            stopConnecting();
+            mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_USB);
+            mainActivity.setState(mainActivity.getStateRunning());
+            mainActivity.mAppState.setInterface();
+        }
+    }
+
+    @Override
+    public void usbNotPresent() {
+        LogIHAB.log(LOG + ":" + "usbNotPresent()");
+        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+            // TODO: See if this is needed
+            mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
+            //mainActivity.setState(mainActivity.getStateError());
+            //mainActivity.mAppState.setInterface();
+
+        }
     }
 }

@@ -51,6 +51,7 @@ import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.MessageList;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
+import com.fragtest.android.pa.DataTypes.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -58,8 +59,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.Set;
 
+import static com.fragtest.android.pa.ControlService.INPUT;
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
@@ -70,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
     public static boolean USE_DEVELOPER_MODE = false;
-    private Locale LANGUAGE_CODE = Locale.GERMANY;
-    //private Locale LANGUAGE_CODE = Locale.ENGLISH;
+    //private Locale LANGUAGE_CODE = Locale.GERMANY;
+    private Locale LANGUAGE_CODE = Locale.ENGLISH;
 
     static final String LOG = "MainActivity";
     private static final String KEY_PREFS_IN_FOREGROUND = "prefsInForeGround";
@@ -90,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
     private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
     private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
     private final static int MY_PERMISSIONS_CAMERA = 7;
+    private final static int MY_PERMISSIONS_USB = 8;
 
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     private Messenger mServiceMessenger;
@@ -112,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
+    private boolean isUSBPresent = false;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
@@ -140,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Errors
     public enum AppErrors {
-        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST;
+        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST, ERROR_NO_USB;
 
         public String getErrorMessage() {
             switch (this) {
@@ -152,6 +157,8 @@ public class MainActivity extends AppCompatActivity {
                     return mStatContext.getResources().getString(R.string.batteryCritical);
                 case ERROR_NO_QUEST:
                     return mStatContext.getResources().getString(R.string.noQuestionnaires);
+                case ERROR_NO_USB:
+                    return mStatContext.getResources().getString(R.string.noUSB);
                 default:
                     return "generic error message";
             }
@@ -163,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
             // In case of Standalone Mode, no BT error is needed
-            if (!(ControlService.isStandalone && error == AppErrors.ERROR_NO_BT)) {
+            if (!(ControlService.INPUT == INPUT_CONFIG.STANDALONE && error == AppErrors.ERROR_NO_BT)) {
                 mErrorList.add(error.getErrorMessage());
             }
         }
@@ -195,8 +202,18 @@ public class MainActivity extends AppCompatActivity {
             }
             ControlService.isCharging = plugged;
             mAdapter.setIsCharging(plugged);
+
         }
     };
+
+
+    public void setUSBPresent(boolean isPresent) {
+        isUSBPresent = isPresent;
+    }
+
+    public boolean getIsUSBPresent() {
+        return isUSBPresent;
+    }
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -226,6 +243,8 @@ public class MainActivity extends AppCompatActivity {
 
             LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
             mMessageList.work();
+
+            mAppState.usbNotPresent();
         }
 
         @Override
@@ -302,6 +321,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        //dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
@@ -400,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setBTLogoConnected() {
-        if (!ControlService.isStandalone) {
+        if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
             mRecord.setBackgroundTintList(
                     ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                             R.color.BatteryGreen, null)));
@@ -410,7 +430,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setBTLogoDisconnected() {
-        if (!ControlService.isStandalone) {
+        if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
             mRecord.setBackgroundTintList(
                     ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                             R.color.darkerGray, null)));
@@ -423,6 +443,12 @@ public class MainActivity extends AppCompatActivity {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                         R.color.AirplaneBlue, null)));
+    }
+
+    public void setBTLogoUSB() {
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        R.color.JadeRed, null)));
     }
 
     private void setConfigVisibility() {
@@ -444,8 +470,6 @@ public class MainActivity extends AppCompatActivity {
 
         mStatContext = this;
         mMessageList = new MessageList(this);
-
-        LogIHAB.log("Standalone Mode: " + ControlService.isStandalone);
 
         setSystemLocale();
 
@@ -509,7 +533,7 @@ public class MainActivity extends AppCompatActivity {
             mStateRunning = new StateRunning(this, mAdapter);
             mStateConnecting = new StateConnecting(this, mAdapter);
 
-            if (ControlService.isStandalone) {
+            if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
                 mAppState = mStateRunning;
             } else {
                 mAppState = mStateConnecting;
@@ -518,8 +542,12 @@ public class MainActivity extends AppCompatActivity {
 
             mAdapter.checkBatteryCritical();
 
-            if (ControlService.isStandalone) {
+            if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
                 setBTLogoAirplaneMode();
+            }
+
+            if (ControlService.INPUT == INPUT_CONFIG.USB) {
+                setBTLogoUSB();
             }
 
             isActivityRunning = true;
@@ -535,12 +563,8 @@ public class MainActivity extends AppCompatActivity {
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
 
-
-
-
         // ONLY Needed in case of uninstall!!!
         //mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
-
 
     }
 
@@ -661,30 +685,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    /*
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_POWER) {
-            // Do something here...
-            //event.startTracking(); // Needed to track long presses
-            return true;
-        }
-        return true;
-        //return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_POWER) {
-            // Do something here...
-            return true;
-        }
-        return true;
-        //return super.onKeyLongPress(keyCode, event);
-    }
-*/
-
     private void setDefaultCosuPolicies(boolean active) {
         // set user restrictions
         setUserRestriction(UserManager.DISALLOW_ADD_USER, active);
@@ -745,47 +745,48 @@ public class MainActivity extends AppCompatActivity {
 
     public void checkForPermissions() {
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_RECORD_AUDIO);
         }
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
         }
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
         }
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_VIBRATE);
         }
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WAKE_LOCK)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WAKE_LOCK)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_WAKE_LOCK);
         }
 
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_BOOT_COMPLETED)
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_BOOT_COMPLETED)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
         }
+
     }
 
     public void requestPermissions(int iPermission) {
@@ -995,10 +996,12 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
-                    if (isBluetoothPresent && !ControlService.isStandalone) {
-                        mAppState.bluetoothPresent();
-                    } else if (!ControlService.isStandalone) {
-                        mAppState.bluetoothNotPresent();
+                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
+                        if (isBluetoothPresent) {
+                            mAppState.bluetoothPresent();
+                        } else {
+                            mAppState.bluetoothNotPresent();
+                        }
                     }
 
                     break;
@@ -1010,7 +1013,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_RECORDING:
 
-                    if (!ControlService.isStandalone) {
+                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothPresent();
                         isBluetoothPresent = true;
                     }
@@ -1019,7 +1022,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (!ControlService.isStandalone) {
+                    if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
                         mAppState.bluetoothNotPresent();
                         isBluetoothPresent = false;
                     }
@@ -1035,6 +1038,18 @@ public class MainActivity extends AppCompatActivity {
 
                     mAppState.timeIncorrect();
 
+                    break;
+
+                case ControlService.MSG_USB_CONNECT:
+                    mAppState.usbPresent();
+                    setUSBPresent(true);
+                    break;
+
+                case ControlService.MSG_USB_DISCONNECT:
+                    mAppState.usbNotPresent();
+                    setUSBPresent(false);
+                    setBTLogoDisconnected();
+                    addError(AppErrors.ERROR_NO_USB);
                     break;
 
                 default:

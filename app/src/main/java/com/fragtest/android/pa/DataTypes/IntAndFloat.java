@@ -1,6 +1,5 @@
 package com.fragtest.android.pa.DataTypes;
 
-import static android.R.attr.id;
 
 /**
  * Created by ulrikkowalk on 03.05.17.

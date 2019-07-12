@@ -50,20 +50,12 @@ public class FileIO {
         mContext = context;
 
         String[] string = scanQuestOptions();
-        if (string == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return string != null;
     }
 
     public boolean checkConfigFile() {
         // If for whatever reason rules.ini exists, preferences are shown
-        if (scanConfigMode()) {
-            //deleteConfigFile();
-            return true;
-        }
-        return false;
+        return scanConfigMode();
     }
 
     // Check whether preferences unlock file is present in main directory
