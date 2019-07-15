@@ -15,7 +15,8 @@
 
     </PreferenceCategory>
 
-<!--
+
+    <!--
     <PreferenceCategory android:title="Hide Preferences">
 
         <SwitchPreference
@@ -29,6 +30,7 @@
 
     </PreferenceCategory>
     -->
+
 
     <PreferenceCategory android:title="General">
 

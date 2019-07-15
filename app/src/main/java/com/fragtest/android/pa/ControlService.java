@@ -73,7 +73,7 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     static final int CURRENT_YEAR = 2019;
-    public static INPUT_CONFIG INPUT;// = INPUT_CONFIG.USB;
+    public static INPUT_CONFIG INPUT = INPUT_CONFIG.STANDALONE;// = INPUT_CONFIG.USB;
 
 
     /**
@@ -151,7 +151,7 @@ public class ControlService extends Service {
     public static boolean isCharging = false;
     private static boolean isActivityRunning = true;
 
-    private String operationModeStatus = "";
+    private INPUT_CONFIG operationModeStatus = INPUT;
 
     public static final String FILENAME_LOG = "log2.txt";
     //public static final String FILENAME_LOG_tmp = "log.txt";
@@ -459,21 +459,87 @@ public class ControlService extends Service {
                     LogIHAB.log("Client registered to service");
                     mClientMessenger = msg.replyTo;
 
-                    setupApplication();
-                    mTaskHandler.post(mDateTimeRunnable);
-                    mTaskHandler.post(mLogCheckRunnable);
-                    mTaskHandler.post(mActivityCheckRunnable);
+                    //setOperationMode(INPUT);
+
+
 
                     // Set and announce bluetooth disabled - then enable it to force recognition via
                     // broadcast receiver. This way, a connection can be made with an already
                     // active transmitter.
                     // RFCOMM, however, initialises in a different way and does not need this procedure.
-                    if (INPUT == INPUT_CONFIG.A2DP) {
-                        mBluetoothAdapter.disable();
-                        messageClient(MSG_BT_DISCONNECTED);
+
+                    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+                    String operationMode = sharedPreferences.getString("operationMode", INPUT.toString());
+                    setOperationMode(operationMode);
+
+                    Log.e(LOG, "OperationMMMM: " + INPUT);
+
+                    setupApplication();
+                    mTaskHandler.post(mDateTimeRunnable);
+                    mTaskHandler.post(mLogCheckRunnable);
+                    mTaskHandler.post(mActivityCheckRunnable);
+
+                    switch (INPUT) {
+
+                        case A2DP:
+                            mBluetoothAdapter.disable();
+                            messageClient(MSG_BT_DISCONNECTED);
+
+                            if (!mBluetoothAdapter.isEnabled()) {
+                                mBluetoothAdapter.enable();
+
+                                if (sharedPreferences.contains("BTDevice")) {
+                                    String btdevice = sharedPreferences.getString("BTDevice", null);
+                                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                                    device.createBond();
+                                    LogIHAB.log("Connecting to device: " + device.getAddress());
+                                }
+                            }
+                            if (isCharging) {
+                                mVibration.singleBurst();
+                            }
+                            break;
+
+                        case RFCOMM:
+                            if (!isCharging) {
+                                if (mBluetoothAdapter != null) {
+                                    if (!mBluetoothAdapter.isEnabled()) {
+                                        mBluetoothAdapter.enable();
+                                    }
+                                    connectBtDevice();
+                                }
+                            } else {
+                                mVibration.singleBurst();
+                            }
+                            break;
+
+                        case USB:
+                            UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+                            HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+                            if (deviceList.size() == 0) {
+                                isUSBPresent = false;
+                                messageClient(MSG_USB_DISCONNECT);
+                            } else {
+                                isUSBPresent = true;
+                                messageClient(MSG_USB_CONNECT);
+                            }
+                            break;
+
+                        case STANDALONE:
+                            isUSBPresent = true;
+                            mBluetoothAdapter.disable();
+                            announceBTConnected();
+                            break;
                     }
 
-                    if (!isCharging) {
+                    /*if (INPUT == INPUT_CONFIG.A2DP) {
+                        //mBluetoothAdapter.disable();
+                        //messageClient(MSG_BT_DISCONNECTED);
+                    } else if (INPUT == INPUT_CONFIG.STANDALONE) {
+                        //isUSBPresent = true;
+                    }
+
+                    /*if (!isCharging) {
                         if (INPUT == INPUT_CONFIG.RFCOMM) {
                             if (mBluetoothAdapter != null) {
                                 if (!mBluetoothAdapter.isEnabled()) {
@@ -481,7 +547,7 @@ public class ControlService extends Service {
                                 }
                                 connectBtDevice();
                             }
-                        } else if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.STANDALONE) {
+                        } else if (INPUT == INPUT_CONFIG.A2DP) {
                             if (!mBluetoothAdapter.isEnabled()) {
                                 mBluetoothAdapter.enable();
 
@@ -496,21 +562,23 @@ public class ControlService extends Service {
                     } else {
                         mVibration.singleBurst();
                     }
-
-                    if (INPUT == INPUT_CONFIG.STANDALONE) {
+*/
+                    /*if (INPUT == INPUT_CONFIG.STANDALONE) {
                         mBluetoothAdapter.disable();
                         announceBTConnected();
-                    }
+                    }*/
 
-                    UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-                    HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-                    if (deviceList.size() == 0) {
-                        isUSBPresent = false;
-                        messageClient(MSG_USB_DISCONNECT);
-                    } else {
-                        isUSBPresent = true;
-                        messageClient(MSG_USB_CONNECT);
-                    }
+                    /*if (INPUT == INPUT_CONFIG.USB) {
+                        UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+                        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+                        if (deviceList.size() == 0) {
+                            isUSBPresent = false;
+                            messageClient(MSG_USB_DISCONNECT);
+                        } else {
+                            isUSBPresent = true;
+                            messageClient(MSG_USB_CONNECT);
+                        }
+                    }*/
 
                     checkTime();
                     checkLog();
@@ -524,29 +592,54 @@ public class ControlService extends Service {
                     //if (restartActivity) {
                     //    startActivity();
                     //} else {
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
+                    /*if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
                     } else {
                         mBluetoothAdapter.disable();
-                    }
+                    }*/
                     //}
+
+                    switch (INPUT) {
+                        case A2DP:
+                            mBluetoothAdapter.disable();
+                            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+                            unregisterReceiver(mBluetoothStateReceiver);
+                            break;
+
+                        case RFCOMM:
+                            stopRecordingRFCOMM();
+                            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
+                            unregisterReceiver(mBluetoothStateReceiver);
+                            break;
+
+                        case USB:
+                            unregisterReceiver(mUsbAttachReceiver);
+                            unregisterReceiver(mUsbDetachReceiver);
+                            break;
+
+                        case STANDALONE:
+
+                            break;
+                    }
 
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
 
-                    if (INPUT == INPUT_CONFIG.RFCOMM || INPUT == INPUT_CONFIG.A2DP) {
+                    /*if (INPUT == INPUT_CONFIG.RFCOMM || INPUT == INPUT_CONFIG.A2DP) {
                         mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
                         unregisterReceiver(mBluetoothStateReceiver);
-                    }
+                    }*/
 
-                    if (INPUT == INPUT_CONFIG.USB) {
+                    /*if (INPUT == INPUT_CONFIG.USB) {
                         unregisterReceiver(mUsbAttachReceiver);
                         unregisterReceiver(mUsbDetachReceiver);
-                    }
+                    }*/
 
                     // Unregister broadcast listeners
                     unregisterReceiver(mAlarmReceiver);
-                    unregisterReceiver(mShutdownReceiver);
+                    //unregisterReceiver(mShutdownReceiver);
+
+                    stopSelf();
 
                     break;
 
@@ -563,7 +656,9 @@ public class ControlService extends Service {
                     } else {
                         mBluetoothAdapter.disable();
                     }
-                    mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
+                    if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
+                        mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
+                    }
                     break;
 
                 case MSG_START_COUNTDOWN:
@@ -1038,33 +1133,6 @@ public class ControlService extends Service {
         startActivity(intent);
     }
 
-    private void startRecording() {
-        Log.d(LOG, "Start caching audio");
-        Logger.info("Start caching audio");
-        LogIHAB.log("Start caching audio");
-        AudioFileIO.setChunkId(mChunkId);
-        // A delay before starting a new recording prevents initialisation bug
-        if (!getIsRecording() && !isCharging) {
-            mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
-        }
-    }
-
-    private void stopRecording() {
-
-        if (getIsRecording()) {
-            Log.d(LOG, "Requesting stop caching audio");
-            Logger.info("Requesting stop caching audio");
-            LogIHAB.log("Requesting stop caching audio");
-
-            audioRecorder.stop();
-            setIsRecording(false);
-
-            mTaskHandler.removeCallbacks(mStartRecordingRunnable);
-
-            messageClient(MSG_STOP_RECORDING);
-        }
-    }
-
     private void showNotification() {
 
         // Launch activity when notification is selected
@@ -1104,8 +1172,8 @@ public class ControlService extends Service {
             sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
         }
 
-        String operationMode = sharedPreferences.getString("operationMode", "Standalone");
-        changeOperationMode(operationMode);
+        //String operationMode = sharedPreferences.getString("operationMode", "Standalone");
+        //setOperationMode(operationMode);
 
         initialiseValues();
 
@@ -1157,24 +1225,37 @@ public class ControlService extends Service {
         checkForPreferences();
     }
 
-    private void changeOperationMode(String operationMode) {
-        if (!operationMode.equals(operationModeStatus)) {
-            switch (operationMode) {
-                case "A2DP":
-                    INPUT = INPUT_CONFIG.A2DP;
-                    break;
-                case "RFCOMM":
-                    INPUT = INPUT_CONFIG.RFCOMM;
-                    break;
-                case "USB":
-                    INPUT = INPUT_CONFIG.USB;
-                    break;
-                case "Standalone":
-                    INPUT = INPUT_CONFIG.STANDALONE;
-                    break;
-            }
+    private void setOperationMode(INPUT_CONFIG operationMode) {
+        if (operationMode != operationModeStatus) {
+            INPUT = operationMode;
             operationModeStatus = operationMode;
             LogIHAB.log("Operation Mode changed to: " + operationMode);
+        } else {
+            LogIHAB.log("Operation Mode: " + operationMode);
+        }
+    }
+
+    private void setOperationMode(String operationMode) {
+        if (operationMode != operationModeStatus.toString()) {
+            switch (operationMode) {
+                case "A2DP":
+                    operationModeStatus = INPUT_CONFIG.A2DP;
+                    break;
+                case "RFCOMM":
+                    operationModeStatus = INPUT_CONFIG.RFCOMM;
+                    break;
+                case "USB":
+                    operationModeStatus = INPUT_CONFIG.USB;
+                    break;
+                case "STANDALONE":
+                    operationModeStatus = INPUT_CONFIG.STANDALONE;
+                    break;
+            }
+
+            INPUT = operationModeStatus;
+            LogIHAB.log("Operation Mode changed to: " + operationMode);
+        } else {
+            LogIHAB.log("Operation Mode: " + operationMode);
         }
     }
 
@@ -1309,8 +1390,8 @@ public class ControlService extends Service {
         }
 
         // Operation Mode
-        String operationMode = sharedPreferences.getString("operationMode", "Standalone");
-        changeOperationMode(operationMode);
+        //String operationMode = sharedPreferences.getString("operationMode", "Standalone");
+        //setOperationMode(operationMode);
 
         // processing
         HashSet<String> tempFeatures = new HashSet<>();
@@ -1377,7 +1458,9 @@ public class ControlService extends Service {
         Log.e(LOG, "Cancelling Alarm.");
 
         isTimerRunning = false;
-        mEventTimer.stopTimer();
+        if (mEventTimer != null) {
+            mEventTimer.stopTimer();
+        }
         mVibration.repeatingBurstOff();
     }
 
@@ -1502,6 +1585,39 @@ public class ControlService extends Service {
         } else {
             Log.e(LOG, "Bluetooth not activated.");
             mBluetoothAdapter.enable();
+        }
+    }
+
+
+    /**
+     *  Recording
+     */
+
+
+    private void startRecording() {
+        Log.d(LOG, "Start caching audio");
+        Logger.info("Start caching audio");
+        LogIHAB.log("Start caching audio");
+        AudioFileIO.setChunkId(mChunkId);
+        // A delay before starting a new recording prevents initialisation bug
+        if (!getIsRecording() && !isCharging) {
+            mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
+        }
+    }
+
+    private void stopRecording() {
+
+        if (getIsRecording()) {
+            Log.d(LOG, "Requesting stop caching audio");
+            Logger.info("Requesting stop caching audio");
+            LogIHAB.log("Requesting stop caching audio");
+
+            audioRecorder.stop();
+            setIsRecording(false);
+
+            mTaskHandler.removeCallbacks(mStartRecordingRunnable);
+
+            messageClient(MSG_STOP_RECORDING);
         }
     }
 

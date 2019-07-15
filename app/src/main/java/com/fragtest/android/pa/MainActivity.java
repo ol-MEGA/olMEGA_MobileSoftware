@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
             LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
             mMessageList.work();
 
-            mAppState.usbNotPresent();
+            //mAppState.usbNotPresent();
         }
 
         @Override
@@ -743,6 +743,8 @@ public class MainActivity extends AppCompatActivity {
      * PERMISSION STUFF (ANDROID 6+)
      */
 
+    // TODO: Need to implement this
+
     public void checkForPermissions() {
 
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
@@ -1022,7 +1024,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
+                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothNotPresent();
                         isBluetoothPresent = false;
                     }
@@ -1041,15 +1043,19 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_USB_CONNECT:
-                    mAppState.usbPresent();
-                    setUSBPresent(true);
+                    if (INPUT == INPUT_CONFIG.USB) {
+                        mAppState.usbPresent();
+                        setUSBPresent(true);
+                    }
                     break;
 
                 case ControlService.MSG_USB_DISCONNECT:
-                    mAppState.usbNotPresent();
-                    setUSBPresent(false);
-                    setBTLogoDisconnected();
-                    addError(AppErrors.ERROR_NO_USB);
+                    if (INPUT == INPUT_CONFIG.USB) {
+                        mAppState.usbNotPresent();
+                        setUSBPresent(false);
+                        setBTLogoDisconnected();
+                        addError(AppErrors.ERROR_NO_USB);
+                    }
                     break;
 
                 default:

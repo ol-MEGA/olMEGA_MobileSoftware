@@ -10,7 +10,7 @@ buildscript {
 
     dependencies {
 
-        classpath 'com.android.tools.build:gradle:3.3.2'  //Minimum supported Gradle version is 4.6
+        classpath 'com.android.tools.build:gradle:3.4.2'  //Minimum supported Gradle version is 4.6
     }
 }
 
