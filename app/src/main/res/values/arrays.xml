@@ -24,7 +24,7 @@
         <item>A2DP</item>
         <item>RFCOMM</item>
         <item>USB</item>
-        <item>Standalone</item>
+        <item>STANDALONE</item>
     </string-array>
 
     <integer-array name="batteryStates">

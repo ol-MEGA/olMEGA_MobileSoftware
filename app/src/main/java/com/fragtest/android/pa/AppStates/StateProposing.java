@@ -146,7 +146,7 @@ public class StateProposing implements AppState {
     @Override
     public void usbPresent() {
         LogIHAB.log(LOG + ":" + "usbPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             //stopConnecting();
             //mainActivity.setState(mainActivity.getStateRunning());
             //mainActivity.mAppState.setInterface();
@@ -156,13 +156,14 @@ public class StateProposing implements AppState {
     @Override
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             // TODO: See if this is needed
             //mainActivity.setState(mainActivity.getStateError());
             //mainActivity.mAppState.setInterface();
             mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
+            mainActivity.setLogoInactive();
         }
     }
 }

@@ -79,14 +79,14 @@ public class StateQuest implements AppState {
     public void bluetoothPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothPresent()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
+        mainActivity.setLogoActive();
     }
 
     @Override
     public void bluetoothNotPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoDisconnected();
+        mainActivity.setLogoActive();
     }
 
     @Override
@@ -162,7 +162,7 @@ public class StateQuest implements AppState {
     @Override
     public void usbPresent() {
         LogIHAB.log(LOG + ":" + "usbPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             //stopConnecting();
             //mainActivity.setState(mainActivity.getStateRunning());
             //mainActivity.mAppState.setInterface();
@@ -172,7 +172,7 @@ public class StateQuest implements AppState {
     @Override
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             // TODO: See if this is needed
             //mainActivity.setState(mainActivity.getStateError());
             //mainActivity.mAppState.setInterface();
@@ -180,6 +180,7 @@ public class StateQuest implements AppState {
             mainActivity.setState(mainActivity.getStateError());
             qpa.backToMenu();
             mainActivity.mAppState.setInterface();
+            mainActivity.setLogoInactive();
         }
     }
 }

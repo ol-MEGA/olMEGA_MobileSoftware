@@ -23,7 +23,7 @@ public class InitValues {
             finalCountDown = -255,
             timerInterval = -255;
 
-    public static String operationMode = "Standalone";
+    public static String operationMode = "STANDALONE";
 
     Bundle initBundle;
 

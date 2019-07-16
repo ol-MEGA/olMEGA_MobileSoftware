@@ -38,7 +38,7 @@ public class StateError implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-        mainActivity.setBTLogoDisconnected();
+        mainActivity.setLogoInactive();
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
@@ -79,7 +79,7 @@ public class StateError implements AppState {
     public void bluetoothPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothPresent()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
+        mainActivity.setLogoActive();
 
         if (!mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) &&
                 !mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {
@@ -156,7 +156,7 @@ public class StateError implements AppState {
     @Override
     public void usbPresent() {
         LogIHAB.log(LOG + ":" + "usbPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_USB);
             mainActivity.setState(mainActivity.getStateRunning());
             mainActivity.mAppState.setInterface();
@@ -166,7 +166,7 @@ public class StateError implements AppState {
     @Override
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             // TODO: See if this is needed
             mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
         }

@@ -39,6 +39,11 @@ import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
 import com.fragtest.android.pa.DataTypes.*;
+import com.fragtest.android.pa.ServiceStates.ServiceState;
+import com.fragtest.android.pa.ServiceStates.StateA2DP;
+import com.fragtest.android.pa.ServiceStates.StateRFCOMM;
+import com.fragtest.android.pa.ServiceStates.StateSTANDALONE;
+import com.fragtest.android.pa.ServiceStates.StateUSB;
 
 import org.pmw.tinylog.Configurator;
 import org.pmw.tinylog.Level;
@@ -73,7 +78,7 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     static final int CURRENT_YEAR = 2019;
-    public static INPUT_CONFIG INPUT = INPUT_CONFIG.STANDALONE;// = INPUT_CONFIG.USB;
+    public static INPUT_CONFIG INPUT;// = INPUT_CONFIG.USB;
 
 
     /**
@@ -127,6 +132,7 @@ public class ControlService extends Service {
     public static final int MSG_CHARGING_ON_PRE         = 66;
     public static final int MSG_TIME_CORRECT            = 67;
     public static final int MSG_TIME_INCORRECT          = 68;
+    public static final int MSG_STATE_CHANGE            = 69;
 
     // 7* - USB
     public static final int MSG_USB_DEVICE              = 70;
@@ -136,14 +142,17 @@ public class ControlService extends Service {
     public static final int MSG_USB_PERMISSION 		    = 74;
     public static final int MSG_USB_NO_PERMISSION 	    = 75;
 
+    // 8* - Preferences
+    public static final int MSG_PREFS_CLOSED            = 80;
+
 
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
     private boolean isQuestionnairePresent = false;
-    private boolean isBluetoothPresent = false;
-    private boolean isUSBPresent = false;
+    public boolean isBluetoothPresent = false;
+    public boolean isUSBPresent = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
@@ -153,8 +162,15 @@ public class ControlService extends Service {
 
     private INPUT_CONFIG operationModeStatus = INPUT;
 
+    // States
+    public ServiceState mServiceState;
+    private StateA2DP mStateA2DP;
+    private StateRFCOMM mStateRFCOMM;
+    private StateUSB mStateUSB;
+    private StateSTANDALONE mStateSTANDALONE;
+
+
     public static final String FILENAME_LOG = "log2.txt";
-    //public static final String FILENAME_LOG_tmp = "log.txt";
 
     private int mChunkId = 1;
 
@@ -178,7 +194,7 @@ public class ControlService extends Service {
     private int mDateCheckTime = 5*60*1000;
     private int mLogCheckTime = 5*60*1000;
     private int mActivityCheckTime = 10*1000;
-    private int mDisableBTTime = 10*1000;
+    public int mDisableBTTime = 10*1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -190,7 +206,7 @@ public class ControlService extends Service {
     final Messenger serviceMessenger = new Messenger(new MessageHandler());
 
     // Audio recording
-    private AudioRecorder audioRecorder;
+    public AudioRecorder audioRecorder;
 
     // ID to access our notification
     private int NOTIFICATION_ID = 1;
@@ -215,11 +231,40 @@ public class ControlService extends Service {
     Context context = this;
 
     // RFCOMM-specific
-    private ConnectedThread mConnectedThread = null;
+    public ConnectedThread mConnectedThread = null;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
 
-    private Runnable mStartRecordingRunnable = new Runnable() {
+    /**
+     * State Affairs
+     **/
+
+
+    public void setState(ServiceState newServiceState) {
+        mServiceState = newServiceState;
+    }
+
+    public ServiceState getStateA2DP() {
+        return mStateA2DP;
+    }
+
+    public ServiceState getStateRFCOMM() {
+        return mStateRFCOMM;
+    }
+
+    public ServiceState getStateUSB() {
+        return mStateUSB;
+    }
+
+    public ServiceState getStateStandalone() {
+        return mStateSTANDALONE;
+    }
+
+
+    /** Runnables **/
+
+
+    public Runnable mStartRecordingRunnable = new Runnable() {
         @Override
         public void run() {
 
@@ -237,7 +282,7 @@ public class ControlService extends Service {
         }
     };
 
-    private Runnable mResetBTAdapterRunnable = new Runnable() {
+    public Runnable mResetBTAdapterRunnable = new Runnable() {
         @Override
         public void run() {
             if (!mBluetoothAdapter.isEnabled()) {
@@ -261,7 +306,7 @@ public class ControlService extends Service {
         }
     };
 
-    private Runnable mDisableBT = new Runnable() {
+    public Runnable mDisableBT = new Runnable() {
         @Override
         public void run() {
             if (isCharging && getIsRecording()) {
@@ -276,7 +321,7 @@ public class ControlService extends Service {
         }
     };
 
-    private Runnable mDateTimeRunnable = new Runnable() {
+    public Runnable mDateTimeRunnable = new Runnable() {
         @Override
         public void run() {
             checkTime();
@@ -284,7 +329,7 @@ public class ControlService extends Service {
         }
     };
 
-    private Runnable mLogCheckRunnable = new Runnable() {
+    public Runnable mLogCheckRunnable = new Runnable() {
         @Override
         public void run() {
             checkLog();
@@ -293,35 +338,20 @@ public class ControlService extends Service {
     };
 
     // Check if Activity is running
-    private Runnable mActivityCheckRunnable = new Runnable() {
+    public Runnable mActivityCheckRunnable = new Runnable() {
         @Override
         public void run() {
-
             if (isActivityRunning != isActivityRunning(getPackageName())) {
                 LogIHAB.log("Activity running: " + isActivityRunning);
             }
-
             isActivityRunning = isActivityRunning(getPackageName());
             mTaskHandler.postDelayed(mActivityCheckRunnable, mActivityCheckTime);
         }
     };
 
-    public boolean isActivityRunning(String myPackage) {
-        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
-        for (int iActivity = 0; iActivity < runningTaskInfo.size(); iActivity++) {
-            ComponentName componentInfo = runningTaskInfo.get(iActivity).topActivity;
-            if (componentInfo.getPackageName().equals(myPackage)) {
-                return true;
-            }
-        }
-        if (INPUT == INPUT_CONFIG.RFCOMM) {
-            stopRecordingRFCOMM();
-        } else {
-            mBluetoothAdapter.disable();
-        }
-        return false;
-    }
+
+    /** Receivers **/
+
 
     private EventReceiver mAlarmReceiver = new EventReceiver() {
         @Override
@@ -342,72 +372,125 @@ public class ControlService extends Service {
         }
     };
 
-    private ShutdownReceiver mShutdownReceiver = new ShutdownReceiver() {
+    /*private ShutdownReceiver mShutdownReceiver = new ShutdownReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             messageClient(MSG_SHUTDOWN_RECEIVED);
-
-            LogIHAB.log("Shutting down!!!");
-
+            LogIHAB.log("Shutting down.");
         }
-    };
+    };*/
 
+
+    /*
     private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             switch (action) {
                 case "android.intent.action.SCREEN_ON":
-                    Logger.info("Display: on");
                     LogIHAB.log("Display: on");
                     break;
                 case "android.intent.action.SCREEN_OFF":
-                    Logger.info("Display: off");
+                    LogIHAB.log("Display: off");
+                    break;
+            }
+        }
+    };
+*/
+
+    // This BroadcastReceiver listens to attachment of a USB device
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            Log.e(LOG, "SOMETHING COOL HAPPENED: " + action);
+
+            switch (action) {
+
+                case UsbManager.ACTION_USB_DEVICE_ATTACHED :
+                    mServiceState.usbAttached();
+                    break;
+
+                case UsbManager.ACTION_USB_DEVICE_DETACHED :
+                    mServiceState.usbDetached();
+                    break;
+
+                case BluetoothDevice.ACTION_FOUND :
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_CONNECTED :
+                    mServiceState.bluetoothReceived(action, sharedPreferences);
+                    break;
+
+                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED :
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED :
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_DISCONNECTED :
+                    mServiceState.bluetoothReceived(action, sharedPreferences);
+                    break;
+
+                case "android.intent.action.SCREEN_ON" :
+                    LogIHAB.log("Display: on");
+                    break;
+
+                case "android.intent.action.SCREEN_OFF" :
                     LogIHAB.log("Display: off");
                     break;
             }
         }
     };
 
+
+    /*
     // This BroadcastReceiver listens to attachment of a USB device
     private final BroadcastReceiver mUsbAttachReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
             if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
-                isUSBPresent = true;
+                mServiceState.usbAttached();
+
+                //isUSBPresent = true;
                 // TODO: Do some announcement
-                if (INPUT == INPUT_CONFIG.USB) {
-                    mVibration.singleBurst();
-                    announceUSBConnected();
-                }
+                //if (INPUT == INPUT_CONFIG.USB) {
+                //    mVibration.singleBurst();
+                //    announceUSBConnected();
+                //}
             }
         }
-    };
+    };*/
 
+    /*
     // This BroadcastReceiver listens to detachment of a USB device
     private final BroadcastReceiver mUsbDetachReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
             if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                isUSBPresent = false;
+                mServiceState.usbDetached();
+                //isUSBPresent = false;
                 // TODO: Do some announcement
-                if (INPUT == INPUT_CONFIG.USB) {
-                    mVibration.singleBurst();
-                    announceUSBDisconnected();
-                }
+                //if (INPUT == INPUT_CONFIG.USB) {
+                //    mVibration.singleBurst();
+                //    announceUSBDisconnected();
+                //}
             }
         }
     };
+    */
 
     //The BroadcastReceiver that listens for bluetooth broadcasts
-    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
+   // private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
+        //@Override
+        //public void onReceive(Context context, Intent intent) {
+            //String action = intent.getAction();
 
+            //mServiceState.bluetoothReceived(action, sharedPreferences);
+
+            /*
             if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     Log.e(LOG, "BTDEVICES found.");
@@ -429,13 +512,19 @@ public class ControlService extends Service {
                 } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
                     Log.e(LOG, "BTDEVICES about to disconnect.");
                 } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+
+
                     announceBTDisconnected();
                     Logger.info("Bluetooth: disconnected");
                     LogIHAB.log("Bluetooth: disconnected");
                 }
-            }
-        }
-    };
+            }*/
+        //}
+    //};
+
+
+    /** Communication between Service and Activity **/
+
 
     class MessageHandler extends Handler {
 
@@ -448,173 +537,34 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
 
-                    /*Configurator.defaultConfig()
-                            .writer(new FileWriter(FILENAME_LOG_tmp))
-                            .level(Level.INFO)
-                            .activate();*/
-
-                    Log.e(LOG,"msg: "+msg);
-                    Log.i(LOG, "Client registered to service");
-                    Logger.info("Client registered to service");
-                    LogIHAB.log("Client registered to service");
                     mClientMessenger = msg.replyTo;
+                    mServiceState.registerClient();
 
-                    //setOperationMode(INPUT);
+                    Bundle data = new Bundle();
+                    data.putString("operationMode", INPUT.toString());
+                    messageClient(MSG_STATE_CHANGE, data);
 
-
-
-                    // Set and announce bluetooth disabled - then enable it to force recognition via
-                    // broadcast receiver. This way, a connection can be made with an already
-                    // active transmitter.
-                    // RFCOMM, however, initialises in a different way and does not need this procedure.
-
-                    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-                    String operationMode = sharedPreferences.getString("operationMode", INPUT.toString());
-                    setOperationMode(operationMode);
-
-                    Log.e(LOG, "OperationMMMM: " + INPUT);
-
-                    setupApplication();
-                    mTaskHandler.post(mDateTimeRunnable);
-                    mTaskHandler.post(mLogCheckRunnable);
-                    mTaskHandler.post(mActivityCheckRunnable);
-
-                    switch (INPUT) {
-
-                        case A2DP:
-                            mBluetoothAdapter.disable();
-                            messageClient(MSG_BT_DISCONNECTED);
-
-                            if (!mBluetoothAdapter.isEnabled()) {
-                                mBluetoothAdapter.enable();
-
-                                if (sharedPreferences.contains("BTDevice")) {
-                                    String btdevice = sharedPreferences.getString("BTDevice", null);
-                                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                                    device.createBond();
-                                    LogIHAB.log("Connecting to device: " + device.getAddress());
-                                }
-                            }
-                            if (isCharging) {
-                                mVibration.singleBurst();
-                            }
-                            break;
-
-                        case RFCOMM:
-                            if (!isCharging) {
-                                if (mBluetoothAdapter != null) {
-                                    if (!mBluetoothAdapter.isEnabled()) {
-                                        mBluetoothAdapter.enable();
-                                    }
-                                    connectBtDevice();
-                                }
-                            } else {
-                                mVibration.singleBurst();
-                            }
-                            break;
-
-                        case USB:
-                            UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-                            HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-                            if (deviceList.size() == 0) {
-                                isUSBPresent = false;
-                                messageClient(MSG_USB_DISCONNECT);
-                            } else {
-                                isUSBPresent = true;
-                                messageClient(MSG_USB_CONNECT);
-                            }
-                            break;
-
-                        case STANDALONE:
-                            isUSBPresent = true;
-                            mBluetoothAdapter.disable();
-                            announceBTConnected();
-                            break;
-                    }
-
-                    /*if (INPUT == INPUT_CONFIG.A2DP) {
-                        //mBluetoothAdapter.disable();
-                        //messageClient(MSG_BT_DISCONNECTED);
-                    } else if (INPUT == INPUT_CONFIG.STANDALONE) {
-                        //isUSBPresent = true;
-                    }
-
-                    /*if (!isCharging) {
-                        if (INPUT == INPUT_CONFIG.RFCOMM) {
-                            if (mBluetoothAdapter != null) {
-                                if (!mBluetoothAdapter.isEnabled()) {
-                                    mBluetoothAdapter.enable();
-                                }
-                                connectBtDevice();
-                            }
-                        } else if (INPUT == INPUT_CONFIG.A2DP) {
-                            if (!mBluetoothAdapter.isEnabled()) {
-                                mBluetoothAdapter.enable();
-
-                                if (sharedPreferences.contains("BTDevice")) {
-                                    String btdevice = sharedPreferences.getString("BTDevice", null);
-                                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                                    device.createBond();
-                                    LogIHAB.log("Connecting to device: " + device.getAddress());
-                                }
-                            }
-                        }
-                    } else {
-                        mVibration.singleBurst();
-                    }
-*/
-                    /*if (INPUT == INPUT_CONFIG.STANDALONE) {
-                        mBluetoothAdapter.disable();
-                        announceBTConnected();
-                    }*/
-
-                    /*if (INPUT == INPUT_CONFIG.USB) {
-                        UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
-                        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-                        if (deviceList.size() == 0) {
-                            isUSBPresent = false;
-                            messageClient(MSG_USB_DISCONNECT);
-                        } else {
-                            isUSBPresent = true;
-                            messageClient(MSG_USB_CONNECT);
-                        }
-                    }*/
-
-                    checkTime();
-                    checkLog();
+                    LogIHAB.log("Client registered to service");
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
+
                     mClientMessenger = null;
-                    stopAlarmAndCountdown();
-                    Logger.info("Client unregistered from service");
-                    LogIHAB.log("Client unregistered from service");
-                    //if (restartActivity) {
-                    //    startActivity();
-                    //} else {
-                    /*if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        stopRecordingRFCOMM();
-                    } else {
-                        mBluetoothAdapter.disable();
-                    }*/
-                    //}
+                    mServiceState.unregisterClient();
 
                     switch (INPUT) {
                         case A2DP:
                             mBluetoothAdapter.disable();
                             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-                            unregisterReceiver(mBluetoothStateReceiver);
                             break;
 
                         case RFCOMM:
                             stopRecordingRFCOMM();
                             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-                            unregisterReceiver(mBluetoothStateReceiver);
                             break;
 
                         case USB:
-                            unregisterReceiver(mUsbAttachReceiver);
-                            unregisterReceiver(mUsbDetachReceiver);
+
                             break;
 
                         case STANDALONE:
@@ -622,26 +572,21 @@ public class ControlService extends Service {
                             break;
                     }
 
+                    // Remove Runnables
                     mTaskHandler.removeCallbacks(mDateTimeRunnable);
                     mTaskHandler.removeCallbacks(mLogCheckRunnable);
 
-                    /*if (INPUT == INPUT_CONFIG.RFCOMM || INPUT == INPUT_CONFIG.A2DP) {
-                        mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-                        unregisterReceiver(mBluetoothStateReceiver);
-                    }*/
-
-                    /*if (INPUT == INPUT_CONFIG.USB) {
-                        unregisterReceiver(mUsbAttachReceiver);
-                        unregisterReceiver(mUsbDetachReceiver);
-                    }*/
-
-                    // Unregister broadcast listeners
+                    // Unregister Receivers
                     unregisterReceiver(mAlarmReceiver);
-                    //unregisterReceiver(mShutdownReceiver);
+                    //unregisterReceiver(mDisplayReceiver);
+                    unregisterReceiver(mBroadcastReceiver);
+                    //unregisterReceiver(mBluetoothStateReceiver);
+                    //unregisterReceiver(mUsbAttachReceiver);
+                    //unregisterReceiver(mUsbDetachReceiver);
 
-                    stopSelf();
-
+                    LogIHAB.log("Client unregistered from service");
                     break;
+
 
                 case MSG_GET_STATUS:
                     Bundle status = new Bundle();
@@ -649,8 +594,14 @@ public class ControlService extends Service {
                     messageClient(MSG_GET_STATUS, status);
                     break;
 
+                case MSG_CHECK_FOR_PREFERENCES:
+                    updatePreferences(msg.getData());
+                    String operationMode = sharedPreferences.getString("operationMode", "STANDALONE");
+                    setOperationMode(operationMode);
+                    break;
+
                 case MSG_RESET_BT:
-                    mBluetoothAdapter.cancelDiscovery();
+                    /*mBluetoothAdapter.cancelDiscovery();
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
                     } else {
@@ -658,7 +609,7 @@ public class ControlService extends Service {
                     }
                     if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
                         mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
-                    }
+                    }*/
                     break;
 
                 case MSG_START_COUNTDOWN:
@@ -672,7 +623,6 @@ public class ControlService extends Service {
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
                     startQuestionnaire("manual");
-                    Logger.info("Taking Questionnaire: manual");
                     LogIHAB.log("Taking Questionnaire: manual");
                     break;
 
@@ -680,12 +630,10 @@ public class ControlService extends Service {
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
                     startQuestionnaire("auto");
-                    Logger.info("Taking Questionnaire: auto");
                     LogIHAB.log("Taking Questionnaire: auto");
                     break;
 
                 case MSG_QUESTIONNAIRE_FINISHED:
-                    Logger.info("Questionnaire finished");
                     LogIHAB.log("Questionnaire finished");
                     break;
 
@@ -701,24 +649,12 @@ public class ControlService extends Service {
                     Log.i(LOG, "Questionnaire active");
                     break;
 
-                case MSG_CHECK_FOR_PREFERENCES:
-                    if (!msg.getData().isEmpty()) {
-                        Bundle prefs = msg.getData();
-                        updatePreferences(prefs);
-                    }
-                    checkForPreferences();
-                    break;
-
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
-                    Logger.info("Stop caching audio");
                     LogIHAB.log("Stop caching audio");
 
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        mConnectedThread.stopRecording();
-                    } else if (INPUT == INPUT_CONFIG.A2DP) {
-                        audioRecorder.close();
-                    }
+                    mServiceState.recordingStopped();
+
                     setIsRecording(false);
                     messageClient(MSG_GET_STATUS);
                     break;
@@ -791,94 +727,37 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-
-                    //if (mBluetoothAdapter.isEnabled()) {
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        stopRecordingRFCOMM();
-                    } else if (INPUT == INPUT_CONFIG.A2DP){
-                        mBluetoothAdapter.disable();
-                    }
-                    //}
-                    Logger.info("Shutdown");
+                    mServiceState.applicationShutdown();
                     LogIHAB.log("Shutdown");
                     break;
 
                 case MSG_BATTERY_LEVEL_INFO:
                     float batteryLevel = msg.getData().getFloat("batteryLevel");
-                    Logger.info("battery level: " + batteryLevel);
                     LogIHAB.log("battery level: " + batteryLevel);
                     Log.e(LOG, "Battery Level Info: "+batteryLevel);
                     break;
 
                 case MSG_BATTERY_CRITICAL:
-                    //TODO: Test this case
-                    Logger.info("CRITICAL battery level: active");
                     LogIHAB.log("CRITICAL battery level: active");
-
-                    //if (mBluetoothAdapter.isEnabled()) {
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        stopRecordingRFCOMM();
-                    } else if (INPUT == INPUT_CONFIG.A2DP) {
-                        mBluetoothAdapter.disable();
-                    }
-                    //}
+                    mServiceState.batteryCritical();
                     break;
 
                 case MSG_CHARGING_OFF:
-                    Logger.info("Charging: inactive");
                     LogIHAB.log("Charging: inactive");
                     isCharging = false;
-                    // TODO: Check whether it is necessary to make this dependent
-                    if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
-                        mTaskHandler.removeCallbacks(mDisableBT);
-                    }
-
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        connectBtDevice();
-                    } else if (INPUT == INPUT_CONFIG.A2DP && !mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
-                    }
-
+                    mServiceState.chargingOff();
                     mVibration.singleBurst();
                     break;
 
                 case MSG_CHARGING_ON:
                     isCharging = true;
-                    Logger.info("Charging: active");
                     LogIHAB.log("Charging: active");
-
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        if (mConnectedThread != null) {
-                            stopRecordingRFCOMM();
-                        }
-                    } else {
-                        if (INPUT == INPUT_CONFIG.A2DP && mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.disable();
-                        }
-                        stopRecording();
-                        // TODO: Check whether it is necessary to make this dependent
-                        mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
-                    }
-
                     mVibration.singleBurst();
                     break;
 
                 case MSG_CHARGING_ON_PRE:
                     isCharging = true;
-                    Logger.info("Charging: active");
                     LogIHAB.log("Charging: active");
-
-                    if (INPUT == INPUT_CONFIG.RFCOMM) {
-                        if (mConnectedThread != null) {
-                            stopRecordingRFCOMM();
-                        }
-                    } else if (INPUT == INPUT_CONFIG.A2DP){
-                        if (mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.disable();
-                        }
-                        stopRecording();
-                        mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
-                    }
                     break;
 
                 default:
@@ -890,32 +769,126 @@ public class ControlService extends Service {
 
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
+    // Send message to connected client with additional data
+    public void messageClient(int what, Bundle data) {
+
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.setData(data);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null.");
+        }
+    }
+
+    // Send message to connected client
+    public void messageClient(int what) {
+
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null.");
+        }
+    }
+
+
+    /** Lifecycle **/
+
     @Override
     public void onCreate() {
-
         Log.e(LOG, "onCreate");
-
-        // log file
-        /*Configurator.currentConfig()
-                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
-                .level(Level.INFO)
-                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
-                .activate();*/
-
-        Logger.info("Service onCreate");
-        LogIHAB.log("Service onCreate");
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
 
-        Log.e(LOG,"ControlService started");
+        mStateA2DP          = new StateA2DP(this);
+        mStateRFCOMM        = new StateRFCOMM(this);
+        mStateUSB           = new StateUSB(this);
+        mStateSTANDALONE    = new StateSTANDALONE(this);
+
+        // Begin as Standalone
+        mServiceState = mStateSTANDALONE;
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String operationMode = sharedPreferences.getString("operationMode", "STANDALONE");
+        setOperationMode(operationMode);
+
+        // If Chunk ID is not included in Shared Preference, initialize it -- else obtain it.
+        if (sharedPreferences.getInt("chunkId", 0) == 0) {
+            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        } else {
+            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
+        }
+
+        // If no Date representation can be found in Shared Preferences, add it.
+        Date dateTime = new Date(System.currentTimeMillis());
+        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
+            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
+        }
+
+        // FileIO lets us read questionnaires
+        mFileIO = new FileIO();
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+
+        // Event Timer is used to schedule Alarms
+        mEventTimer = new EventTimer(this, serviceMessenger);
+        mEventTimer.setTimer(10);
+        mEventTimer.stopTimer();
+
+        // Vibration Device
+        mVibration = new Vibration(this);
+        mVibration.singleBurst();
+
+        // Start Monitoring Processes for 1) Correct Time, 2) Log keeping, 3) Activity Running
+        mTaskHandler.post(mDateTimeRunnable);
+        mTaskHandler.post(mLogCheckRunnable);
+        mTaskHandler.post(mActivityCheckRunnable);
+
+        Log.e(LOG, "HERE WE ARE");
+
+        // Register Event Receiver for Alarms
+        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
+
+        // Register Broadcast Receiver to keep a log of Display Activity ...
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        //this.registerReceiver(mDisplayReceiver, displayFilter);
+        // ... for USB Activity
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        //registerReceiver(mUsbAttachReceiver , filter);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        //registerReceiver(mUsbDetachReceiver , filter);
+
+        // ... and for Bluetooth Activity
+        //filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        //this.registerReceiver(mBluetoothStateReceiver, filter);
+
+        Log.e(LOG, "TEST");
+
+        this.registerReceiver(mBroadcastReceiver, filter);
+
+        Log.e(LOG, "RECEIVER REGISTERED WITH FILTERS: " + filter);
+
+        checkForPreferences();
+
+        LogIHAB.log("Service started");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
         Logger.info("Service started");
-        LogIHAB.log("Service started");
         return START_STICKY;
     }
 
@@ -934,26 +907,18 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
-        stopAlarmAndCountdown();
+        super.onDestroy();
 
-        if (INPUT == INPUT_CONFIG.RFCOMM) {
-            stopRecordingRFCOMM();
-        } else if (INPUT == INPUT_CONFIG.A2DP){
-            mBluetoothAdapter.disable();
-        }
-
+        mServiceState.onDestroy();
         mNotificationManager.cancel(NOTIFICATION_ID);
 
-        Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
-        Log.e(LOG,"ControlService stopped");
-        Logger.info("Service stopped");
         LogIHAB.log("Service stopped");
-        super.onDestroy();
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(LOG, "onBind");
+        LogIHAB.log("Service bound");
         return mMessengerHandler.getBinder();
     }
 
@@ -972,14 +937,63 @@ public class ControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         Log.e(LOG,"onTaskRemoved");
-        stopAlarmAndCountdown();
         super.onTaskRemoved(rootIntent);
+        stopSelf();
+        LogIHAB.log("Service closed");
     }
 
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         Log.e(LOG,"onDump");
         super.dump(fd, writer, args);
+    }
+
+
+    /** Custom Methods **/
+
+
+    public void startActivity() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    private void showNotification() {
+
+        // Launch activity when notification is selected
+        PendingIntent intent = PendingIntent.getActivity(this, 0,
+                new Intent(this, MainActivity.class), 0);
+
+        // Configure notification
+        Notification notification = new Notification.Builder(this)
+                .setSmallIcon(R.drawable.logo)
+                .setTicker(getString(R.string.app_name))
+                .setWhen(System.currentTimeMillis())
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(getString(R.string.app_name))
+                .setContentIntent(intent)
+                .build();
+
+        // Post notification to status bar, use startForeground() instead of
+        // NotificationManager.notify() to prevent service from being killed
+        // by ActivityManager when the Activity gets shut down.
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
+    public boolean isActivityRunning(String myPackage) {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
+        for (int iActivity = 0; iActivity < runningTaskInfo.size(); iActivity++) {
+            ComponentName componentInfo = runningTaskInfo.get(iActivity).topActivity;
+            if (componentInfo.getPackageName().equals(myPackage)) {
+                return true;
+            }
+        }
+        if (INPUT == INPUT_CONFIG.RFCOMM) {
+            stopRecordingRFCOMM();
+        } else {
+            mBluetoothAdapter.disable();
+        }
+        return false;
     }
 
     private int getChunkId() {
@@ -994,22 +1008,43 @@ public class ControlService extends Service {
         return mChunkId;
     }
 
+    public void enableBluetoothAdapter() {
+        mBluetoothAdapter.enable();
+    }
+
+    public void disableBluetoothAdapter() {
+        mBluetoothAdapter.disable();
+    }
+
+    public boolean getIsBluetoothAdapterEnabled() {
+        return mBluetoothAdapter.isEnabled();
+    }
+
+    public SharedPreferences getSharedPreferences() {
+        return sharedPreferences;
+    }
+
+    public BluetoothAdapter getBluetoothAdapter() {
+        return mBluetoothAdapter;
+    }
+
+    public boolean getIsCharging() {
+        return isCharging;
+    }
+
+    public Vibration getVibration() {
+        return mVibration;
+    }
+
+    public Handler getMTaskHandler() {
+        return mTaskHandler;
+    }
+
+    public Runnable getmResetBTAdapterRunnable() {
+        return mResetBTAdapterRunnable;
+    }
+
     private boolean checkLog() {
-
-        // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
-        //File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
-
-        /*if (!fLog_tmp.exists()) {
-            try{
-                fLog_tmp.createNewFile();
-                Log.d(LOG, "Log file created");
-            } catch (IOException e) {
-                Log.d(LOG, "Error creating Log file");
-            }
-        }
-        new SingleMediaScanner(context, fLog_tmp);
-        Log.d(LOG, "Log file checked.");
-        */
 
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
 
@@ -1056,7 +1091,11 @@ public class ControlService extends Service {
         }
     }
 
-    private void announceBTDisconnected() {
+
+    /** Functional Stuff **/
+
+
+    public void announceBTDisconnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES not connected.");
 
@@ -1070,7 +1109,7 @@ public class ControlService extends Service {
         }
     }
 
-    private void announceBTConnected() {
+    public void announceBTConnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES connected.");
             Log.e(LOG, "Number 3");
@@ -1085,77 +1124,157 @@ public class ControlService extends Service {
         }
     }
 
-    private void announceUSBConnected() {
-        if (INPUT == INPUT_CONFIG.USB) {
+    public void announceUSBConnected() {
             messageClient(MSG_USB_CONNECT);
             startRecording();
-        }
     }
 
-    private void announceUSBDisconnected() {
-        if (INPUT == INPUT_CONFIG.USB) {
+    public void announceUSBDisconnected() {
             messageClient(MSG_USB_DISCONNECT);
             stopRecording();
-        }
     }
 
-    // Send message to connected client with additional data
-    private void messageClient(int what, Bundle data) {
-
-        if (mClientMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.setData(data);
-                mClientMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
+    /*private void setOperationMode(INPUT_CONFIG operationMode) {
+        if (operationMode != operationModeStatus) {
+            INPUT = operationMode;
+            operationModeStatus = operationMode;
+            LogIHAB.log("Operation Mode changed to: " + operationMode);
         } else {
-            Log.d(LOG, "mClientMessenger is null.");
+            LogIHAB.log("Operation Mode: " + operationMode);
         }
-    }
+    }*/
 
-    // Send message to connected client
-    private void messageClient(int what) {
+    private void setOperationMode(String operationMode) {
 
-        if (mClientMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                mClientMessenger.send(msg);
-            } catch (RemoteException e) {
+        if ((operationModeStatus == null) || (!operationMode.equals(operationModeStatus.toString()))) {
+
+            switch (operationMode) {
+                case "A2DP":
+                    operationModeStatus = INPUT_CONFIG.A2DP;
+                    mServiceState = getStateA2DP();
+                    break;
+                case "RFCOMM":
+                    operationModeStatus = INPUT_CONFIG.RFCOMM;
+                    mServiceState = getStateRFCOMM();
+                    break;
+                case "USB":
+                    operationModeStatus = INPUT_CONFIG.USB;
+                    mServiceState = getStateUSB();
+                    break;
+                case "STANDALONE":
+                    operationModeStatus = INPUT_CONFIG.STANDALONE;
+                    mServiceState = getStateStandalone();
+                    break;
             }
+
+            mServiceState.setInterface();
+            INPUT = operationModeStatus;
+
+            LogIHAB.log("Operation Mode changed to: " + operationMode);
+            Log.e(LOG, "Operation Mode changed to: " + operationMode);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("operationMode", INPUT.toString());
+
+            messageClient(MSG_STATE_CHANGE, bundle);
         } else {
-            Log.d(LOG, "mClientMessenger is null.");
+            LogIHAB.log("Operation Mode: " + operationMode);
+            Log.e(LOG, "Operation Mode: " + operationMode);
         }
     }
 
-    public void startActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
+
+    public void setAlarmAndCountdown() {
+
+        if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
+
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
+
+            // Needed for the first run
+            if (questionnaireHasTimer) {
+
+                mTimerInterval = mXmlReader.getNewTimerInterval();
+
+                if (!isTimerRunning) {
+
+                    mEventTimer.stopTimer();
+                    mVibration.repeatingBurstOff();
+                    mEventTimer.setTimer(mTimerInterval);
+                    mFinalCountDown = mEventTimer.getFinalCountDown();
+                    isTimerRunning = true;
+
+                    Bundle dataCountdown = new Bundle();
+                    dataCountdown.putInt("finalCountDown", mFinalCountDown);
+                    dataCountdown.putInt("countDownInterval", mTimerInterval);
+                    messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
+
+                } else {
+                    // Usually when app is restarted
+                    if (BuildConfig.DEBUG) {
+                        Log.i(LOG, "Final Timer already set. Reinstating countdown");
+                    }
+                }
+            }
+        }
     }
 
-    private void showNotification() {
+    public void stopAlarmAndCountdown() {
 
-        // Launch activity when notification is selected
-        PendingIntent intent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), 0);
+        Log.e(LOG, "Cancelling Alarm.");
 
-        // Configure notification
-        Notification notification = new Notification.Builder(this)
-                .setSmallIcon(R.drawable.logo)
-                .setTicker(getString(R.string.app_name))
-                .setWhen(System.currentTimeMillis())
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText(getString(R.string.app_name))
-                .setContentIntent(intent)
-                .build();
-
-        // Post notification to status bar, use startForeground() instead of
-        // NotificationManager.notify() to prevent service from being killed
-        // by ActivityManager when the Activity gets shut down.
-        startForeground(NOTIFICATION_ID, notification);
+        isTimerRunning = false;
+        if (mEventTimer != null) {
+            mEventTimer.stopTimer();
+        }
+        mVibration.repeatingBurstOff();
     }
 
-    private void setupApplication() {
+    // Load new questionnaire (initiated after quest change in preferences)
+    public void renewQuestionnaire() {
+        if (isQuestionnairePresent) {
+            String[] questList = mFileIO.scanQuestOptions();
+
+            if (mSelectQuestionnaire.isEmpty() && questList.length > 0) {
+                mSelectQuestionnaire = questList[0];
+            }
+            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
+        }
+    }
+
+    // Starts a new questionnaire, motivation can be {"auto", "manual"}
+    public void startQuestionnaire(String motivation) {
+
+        if (isQuestionnairePresent) {
+            Bundle data = new Bundle();
+            ArrayList<String> questionList = mXmlReader.getQuestionList();
+            String head = mXmlReader.getHead();
+            String foot = mXmlReader.getFoot();
+            String surveyUri = mXmlReader.getSurveyURI();
+
+            data.putStringArrayList("questionList", questionList);
+            data.putString("head", head);
+            data.putString("foot", foot);
+            data.putString("surveyUri", surveyUri);
+            data.putString("motivation", "<motivation motivation =\"" + motivation + "\"/>");
+
+            messageClient(MSG_START_QUESTIONNAIRE, data);
+
+            Log.i(LOG, "Questionnaire initiated: " + motivation);
+
+            isQuestionnairePending = false;
+        }
+    }
+
+
+
+
+
+
+    /** Shit we need to think about **/
+
+
+    /*private void setupApplication() {
 
         // If no chunk Id in present shared preferences, initialise with 1, else fetch
         // Important for the first initialisation
@@ -1223,44 +1342,11 @@ public class ControlService extends Service {
         }
 
         checkForPreferences();
-    }
+    }*/
 
-    private void setOperationMode(INPUT_CONFIG operationMode) {
-        if (operationMode != operationModeStatus) {
-            INPUT = operationMode;
-            operationModeStatus = operationMode;
-            LogIHAB.log("Operation Mode changed to: " + operationMode);
-        } else {
-            LogIHAB.log("Operation Mode: " + operationMode);
-        }
-    }
-
-    private void setOperationMode(String operationMode) {
-        if (operationMode != operationModeStatus.toString()) {
-            switch (operationMode) {
-                case "A2DP":
-                    operationModeStatus = INPUT_CONFIG.A2DP;
-                    break;
-                case "RFCOMM":
-                    operationModeStatus = INPUT_CONFIG.RFCOMM;
-                    break;
-                case "USB":
-                    operationModeStatus = INPUT_CONFIG.USB;
-                    break;
-                case "STANDALONE":
-                    operationModeStatus = INPUT_CONFIG.STANDALONE;
-                    break;
-            }
-
-            INPUT = operationModeStatus;
-            LogIHAB.log("Operation Mode changed to: " + operationMode);
-        } else {
-            LogIHAB.log("Operation Mode: " + operationMode);
-        }
-    }
 
     // Load preset values from shared preferences, default values from external class InitValues
-    private void initialiseValues() {
+    /*private void initialiseValues() {
 
         //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -1279,7 +1365,7 @@ public class ControlService extends Service {
 
         mFinalCountDown = InitValues.finalCountDown;
         mTimerInterval = InitValues.timerInterval;
-    }
+    }*/
 
     private void updatePreferences(Bundle dataPreferences) {
 
@@ -1295,6 +1381,8 @@ public class ControlService extends Service {
 
         samplerate = dataPreferences.getString("samplerate", "" + samplerate);
         chunklengthInS = dataPreferences.getString("chunklengthInS", "" + chunklengthInS);
+
+        String operationMode = dataPreferences.getString("operationMode", "" + InitValues.operationMode);
 
         ArrayList<String> listActiveFeatures = dataPreferences.getStringArrayList("features");
         Set<String> activeFeatures = new HashSet<>();
@@ -1317,6 +1405,7 @@ public class ControlService extends Service {
         editor.putString("filterHpFrequency", "" + filterHpFrequency);
         editor.putString("samplerate", "" + samplerate);
         editor.putString("chunklengthInS", "" + chunklengthInS);
+        editor.putString("operationMode", operationMode);
         // Make changes permanent
         editor.apply();
     }
@@ -1389,10 +1478,6 @@ public class ControlService extends Service {
             messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
         }
 
-        // Operation Mode
-        //String operationMode = sharedPreferences.getString("operationMode", "Standalone");
-        //setOperationMode(operationMode);
-
         // processing
         HashSet<String> tempFeatures = new HashSet<>();
         tempFeatures.add("PSD");
@@ -1403,6 +1488,7 @@ public class ControlService extends Service {
                 (HashSet<String>) sharedPreferences.getStringSet("features", tempFeatures);
 
         filterHp = sharedPreferences.getBoolean("filterHp", true);
+        filterHpFrequency = sharedPreferences.getString("filterHPFrequency", "100");
 
         Bundle processingSettings = new Bundle();
         processingSettings.putBoolean("isTimer", isTimer);
@@ -1418,87 +1504,7 @@ public class ControlService extends Service {
         return processingSettings;
     }
 
-    private void setAlarmAndCountdown() {
 
-        if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
-
-            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-            questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
-
-            // Needed for the first run
-            if (questionnaireHasTimer) {
-
-                mTimerInterval = mXmlReader.getNewTimerInterval();
-
-                if (!isTimerRunning) {
-
-                    mEventTimer.stopTimer();
-                    mVibration.repeatingBurstOff();
-                    mEventTimer.setTimer(mTimerInterval);
-                    mFinalCountDown = mEventTimer.getFinalCountDown();
-                    isTimerRunning = true;
-
-                    Bundle dataCountdown = new Bundle();
-                    dataCountdown.putInt("finalCountDown", mFinalCountDown);
-                    dataCountdown.putInt("countDownInterval", mTimerInterval);
-                    messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
-
-                } else {
-                    // Usually when app is restarted
-                    if (BuildConfig.DEBUG) {
-                        Log.i(LOG, "Final Timer already set. Reinstating countdown");
-                    }
-                }
-            }
-        }
-    }
-
-    private void stopAlarmAndCountdown() {
-
-        Log.e(LOG, "Cancelling Alarm.");
-
-        isTimerRunning = false;
-        if (mEventTimer != null) {
-            mEventTimer.stopTimer();
-        }
-        mVibration.repeatingBurstOff();
-    }
-
-    // Load new questionnaire (initiated after quest change in preferences)
-    public void renewQuestionnaire() {
-        if (isQuestionnairePresent) {
-            String[] questList = mFileIO.scanQuestOptions();
-
-            if (mSelectQuestionnaire.isEmpty() && questList.length > 0) {
-                mSelectQuestionnaire = questList[0];
-            }
-            mXmlReader = new XMLReader(this, mSelectQuestionnaire);
-        }
-    }
-
-    // Starts a new questionnaire, motivation can be {"auto", "manual"}
-    private void startQuestionnaire(String motivation) {
-
-        if (isQuestionnairePresent) {
-            Bundle data = new Bundle();
-            ArrayList<String> questionList = mXmlReader.getQuestionList();
-            String head = mXmlReader.getHead();
-            String foot = mXmlReader.getFoot();
-            String surveyUri = mXmlReader.getSurveyURI();
-
-            data.putStringArrayList("questionList", questionList);
-            data.putString("head", head);
-            data.putString("foot", foot);
-            data.putString("surveyUri", surveyUri);
-            data.putString("motivation", "<motivation motivation =\"" + motivation + "\"/>");
-
-            messageClient(MSG_START_QUESTIONNAIRE, data);
-
-            Log.i(LOG, "Questionnaire initiated: " + motivation);
-
-            isQuestionnairePending = false;
-        }
-    }
 
     /**
      * Thread-safe status variables
@@ -1546,7 +1552,7 @@ public class ControlService extends Service {
      */
 
 
-    private void connectBtDevice() {
+    public void connectBtDevice() {
 
         if (mBluetoothAdapter.isEnabled()) {
 
@@ -1594,7 +1600,7 @@ public class ControlService extends Service {
      */
 
 
-    private void startRecording() {
+    public void startRecording() {
         Log.d(LOG, "Start caching audio");
         Logger.info("Start caching audio");
         LogIHAB.log("Start caching audio");
@@ -1605,7 +1611,7 @@ public class ControlService extends Service {
         }
     }
 
-    private void stopRecording() {
+    public void stopRecording() {
 
         if (getIsRecording()) {
             Log.d(LOG, "Requesting stop caching audio");
@@ -1621,7 +1627,7 @@ public class ControlService extends Service {
         }
     }
 
-    private void startRecordingRFCOMM() {
+    public void startRecordingRFCOMM() {
 
         Log.e(LOG, "mConnectedThread - start: " + mConnectedThread);
         Log.e(LOG, "Number 4");
@@ -1637,7 +1643,7 @@ public class ControlService extends Service {
 
     }
 
-    private void stopRecordingRFCOMM() {
+    public void stopRecordingRFCOMM() {
 
         Log.e(LOG, "mConnectedThread - stop: " + mConnectedThread);
         if (mConnectedThread != null) {

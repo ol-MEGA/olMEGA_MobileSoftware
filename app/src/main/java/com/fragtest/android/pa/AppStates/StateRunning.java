@@ -37,11 +37,7 @@ public class StateRunning implements AppState {
         qpa.getMenuPage().resetQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_START_COUNTDOWN);
-        if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-            mainActivity.setBTLogoConnected();
-        } else if (ControlService.INPUT == INPUT_CONFIG.USB) {
-            mainActivity.setBTLogoUSB();
-        }
+        mainActivity.setLogoActive();
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
@@ -93,7 +89,7 @@ public class StateRunning implements AppState {
     @Override
     public void bluetoothNotPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.setBTLogoDisconnected();
+        mainActivity.setLogoInactive();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.setState(mainActivity.getStateConnecting());
         mainActivity.mAppState.setInterface();
@@ -164,7 +160,7 @@ public class StateRunning implements AppState {
     @Override
     public void usbPresent() {
         LogIHAB.log(LOG + ":" + "usbPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             //stopConnecting();
             //mainActivity.setState(mainActivity.getStateRunning());
             //mainActivity.mAppState.setInterface();
@@ -174,12 +170,12 @@ public class StateRunning implements AppState {
     @Override
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
-        if (ControlService.INPUT == INPUT_CONFIG.USB) {
+        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             // TODO: See if this is needed
             mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
-
+            mainActivity.setLogoInactive();
         }
     }
 }

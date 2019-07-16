@@ -62,10 +62,11 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import static com.fragtest.android.pa.ControlService.INPUT;
+
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
+import static com.fragtest.android.pa.ControlService.MSG_PREFS_CLOSED;
 import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 
 
@@ -143,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
         return mStatContext;
     }
 
+    public INPUT_CONFIG mServiceState;
+
     // Errors
     public enum AppErrors {
         ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST, ERROR_NO_USB;
@@ -172,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
             // In case of Standalone Mode, no BT error is needed
             if (!(ControlService.INPUT == INPUT_CONFIG.STANDALONE && error == AppErrors.ERROR_NO_BT)) {
                 mErrorList.add(error.getErrorMessage());
+                LogIHAB.log("Error added: " + error.getErrorMessage());
             }
         }
     }
@@ -179,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
     public void removeError(AppErrors error) {
         if (mErrorList.contains(error.getErrorMessage())) {
             mErrorList.remove(error.getErrorMessage());
+            LogIHAB.log("Error removed: " + error.getErrorMessage());
         }
     }
 
@@ -321,7 +326,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
-        //dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
+        dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
@@ -419,6 +424,44 @@ public class MainActivity extends AppCompatActivity {
         messageService(ControlService.MSG_QUESTIONNAIRE_FINISHED);
     }
 
+    public void setLogoActive() {
+
+        switch (mServiceState) {
+
+            case A2DP:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.BatteryGreen, null)));
+                break;
+
+            case RFCOMM:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.BatteryGreen, null)));
+                break;
+
+            case USB:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.JadeRed, null)));
+                break;
+
+            case STANDALONE:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.AirplaneBlue, null)));
+                break;
+        }
+    }
+
+    public void setLogoInactive() {
+        mRecord.setBackgroundTintList(
+                ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                        R.color.darkerGray, null)));
+    }
+
+
+/*
     public void setBTLogoConnected() {
         if (ControlService.INPUT != INPUT_CONFIG.STANDALONE) {
             mRecord.setBackgroundTintList(
@@ -450,6 +493,7 @@ public class MainActivity extends AppCompatActivity {
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                         R.color.JadeRed, null)));
     }
+    */
 
     private void setConfigVisibility() {
         if (showConfigButton) {
@@ -473,7 +517,7 @@ public class MainActivity extends AppCompatActivity {
 
         setSystemLocale();
 
-        checkForPermissions();
+        //checkForPermissions();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -542,13 +586,14 @@ public class MainActivity extends AppCompatActivity {
 
             mAdapter.checkBatteryCritical();
 
-            if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
+            /*if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
                 setBTLogoAirplaneMode();
             }
 
             if (ControlService.INPUT == INPUT_CONFIG.USB) {
                 setBTLogoUSB();
-            }
+            }*/
+            //setLogoActive();
 
             isActivityRunning = true;
         }
@@ -629,8 +674,9 @@ public class MainActivity extends AppCompatActivity {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
-            //TODO: CHeck whether this still applies
+            Log.e(LOG, "HERE YOU GOT IT!!!");
             shipPreferencesToControlService();
+
         }
         mAdapter.onResume();
         super.onResume();
@@ -751,22 +797,73 @@ public class MainActivity extends AppCompatActivity {
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_RECORD_AUDIO);
-        }
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.RECORD_AUDIO)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_RECORD_AUDIO);
 
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+
         }
 
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
                 !=PackageManager.PERMISSION_GRANTED)
         {
             LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+                permissionGranted = true;
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
         }
+
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                !=PackageManager.PERMISSION_GRANTED)
+        {
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
+
 
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
                 !=PackageManager.PERMISSION_GRANTED)
@@ -790,6 +887,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
 
     public void requestPermissions(int iPermission) {
 
@@ -837,6 +935,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -950,7 +1049,7 @@ public class MainActivity extends AppCompatActivity {
 
                     break;
 
-                case MSG_CHANGE_PREFERENCE:
+                /*case MSG_CHANGE_PREFERENCE:
 
                     Bundle data = msg.getData();
                     if (data.getString("type").equals("boolean")) {
@@ -960,7 +1059,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     shipPreferencesToControlService();
 
-                    break;
+                    break;*/
 
                 case MSG_SET_COUNTDOWN_TIME:
 
@@ -1024,7 +1123,7 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
+                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothNotPresent();
                         isBluetoothPresent = false;
                     }
@@ -1043,19 +1142,43 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_USB_CONNECT:
-                    if (INPUT == INPUT_CONFIG.USB) {
                         mAppState.usbPresent();
                         setUSBPresent(true);
-                    }
                     break;
 
                 case ControlService.MSG_USB_DISCONNECT:
-                    if (INPUT == INPUT_CONFIG.USB) {
                         mAppState.usbNotPresent();
                         setUSBPresent(false);
-                        setBTLogoDisconnected();
+                        setLogoInactive();
                         addError(AppErrors.ERROR_NO_USB);
+                    break;
+
+                case ControlService.MSG_STATE_CHANGE:
+
+                    switch (msg.getData().getString("operationMode", "")) {
+                        case "A2DP":
+                            mServiceState = INPUT_CONFIG.A2DP;
+                            removeError(AppErrors.ERROR_NO_USB);
+                            break;
+                        case "RFCOMM":
+                            mServiceState = INPUT_CONFIG.RFCOMM;
+                            removeError(AppErrors.ERROR_NO_USB);
+                            break;
+                        case "USB":
+                            mServiceState = INPUT_CONFIG.USB;
+                            removeError(AppErrors.ERROR_NO_BT);
+                            setLogoActive();
+                            break;
+                        case "STANDALONE":
+                            mServiceState = INPUT_CONFIG.STANDALONE;
+                            removeError(AppErrors.ERROR_NO_BT);
+                            removeError(AppErrors.ERROR_NO_USB);
+                            setLogoActive();
+                            break;
                     }
+
+                    mAppState = mStateConnecting;
+                    mAppState.setInterface();
                     break;
 
                 default:
