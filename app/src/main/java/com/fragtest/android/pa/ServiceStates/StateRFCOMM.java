@@ -13,7 +13,7 @@ import java.util.Set;
 public class StateRFCOMM implements ServiceState {
 
     ControlService mService;
-    String LOG = "StateSTANDALONE";
+    String LOG = "StateR2DP";
 
     public StateRFCOMM(ControlService service) {
         this.mService = service;
@@ -24,6 +24,7 @@ public class StateRFCOMM implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
+        Log.e(LOG, "INTERNATL MODE: " + LOG);
     }
 
     @Override

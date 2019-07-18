@@ -153,6 +153,7 @@ public class ControlService extends Service {
     private boolean isQuestionnairePresent = false;
     public boolean isBluetoothPresent = false;
     public boolean isUSBPresent = false;
+    private boolean isRegistered = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
     private Vibration mVibration;
@@ -160,7 +161,7 @@ public class ControlService extends Service {
     public static boolean isCharging = false;
     private static boolean isActivityRunning = true;
 
-    private INPUT_CONFIG operationModeStatus = INPUT;
+    private String operationModeStatus = "";
 
     // States
     public ServiceState mServiceState;
@@ -267,17 +268,21 @@ public class ControlService extends Service {
     public Runnable mStartRecordingRunnable = new Runnable() {
         @Override
         public void run() {
+            if (isRegistered) {
 
-            audioRecorder = new AudioRecorder(
-                    serviceMessenger,
-                    Integer.parseInt(chunklengthInS),
-                    Integer.parseInt(samplerate),
-                    isWave);
+                audioRecorder = new AudioRecorder(
+                        serviceMessenger,
+                        Integer.parseInt(chunklengthInS),
+                        Integer.parseInt(samplerate),
+                        isWave);
 
-            if (!isCharging) {
-                audioRecorder.start();
-                setIsRecording(true);
-                messageClient(MSG_START_RECORDING);
+                if (!isCharging) {
+                    audioRecorder.start();
+                    setIsRecording(true);
+                    messageClient(MSG_START_RECORDING);
+                }
+            } else {
+                mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
             }
         }
     };
@@ -381,29 +386,13 @@ public class ControlService extends Service {
     };*/
 
 
-    /*
-    private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            switch (action) {
-                case "android.intent.action.SCREEN_ON":
-                    LogIHAB.log("Display: on");
-                    break;
-                case "android.intent.action.SCREEN_OFF":
-                    LogIHAB.log("Display: off");
-                    break;
-            }
-        }
-    };
-*/
-
     // This BroadcastReceiver listens to attachment of a USB device
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
             Log.e(LOG, "SOMETHING COOL HAPPENED: " + action);
+            Log.e(LOG, "MODE: " + mServiceState);
 
             switch (action) {
 
@@ -444,85 +433,6 @@ public class ControlService extends Service {
     };
 
 
-    /*
-    // This BroadcastReceiver listens to attachment of a USB device
-    private final BroadcastReceiver mUsbAttachReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (UsbManager.ACTION_USB_DEVICE_ATTACHED.equals(action)) {
-                mServiceState.usbAttached();
-
-                //isUSBPresent = true;
-                // TODO: Do some announcement
-                //if (INPUT == INPUT_CONFIG.USB) {
-                //    mVibration.singleBurst();
-                //    announceUSBConnected();
-                //}
-            }
-        }
-    };*/
-
-    /*
-    // This BroadcastReceiver listens to detachment of a USB device
-    private final BroadcastReceiver mUsbDetachReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (UsbManager.ACTION_USB_DEVICE_DETACHED.equals(action)) {
-                mServiceState.usbDetached();
-                //isUSBPresent = false;
-                // TODO: Do some announcement
-                //if (INPUT == INPUT_CONFIG.USB) {
-                //    mVibration.singleBurst();
-                //    announceUSBDisconnected();
-                //}
-            }
-        }
-    };
-    */
-
-    //The BroadcastReceiver that listens for bluetooth broadcasts
-   // private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        //@Override
-        //public void onReceive(Context context, Intent intent) {
-            //String action = intent.getAction();
-
-            //mServiceState.bluetoothReceived(action, sharedPreferences);
-
-            /*
-            if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
-                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                    Log.e(LOG, "BTDEVICES found.");
-                } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                    Log.e(LOG, "Number 2");
-                    announceBTConnected();
-                    Log.i(LOG, "Bluetooth: connected");
-                    Logger.info("Bluetooth: connected");
-                    LogIHAB.log("Bluetooth: connected");
-
-                    // Save list of paired devices
-                    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-                    for(BluetoothDevice bt : pairedDevices) {
-                        sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
-                        Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
-                    }
-                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES finished.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES about to disconnect.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-
-
-                    announceBTDisconnected();
-                    Logger.info("Bluetooth: disconnected");
-                    LogIHAB.log("Bluetooth: disconnected");
-                }
-            }*/
-        //}
-    //};
-
-
     /** Communication between Service and Activity **/
 
 
@@ -538,11 +448,14 @@ public class ControlService extends Service {
                 case MSG_REGISTER_CLIENT:
 
                     mClientMessenger = msg.replyTo;
-                    mServiceState.registerClient();
 
                     Bundle data = new Bundle();
                     data.putString("operationMode", INPUT.toString());
                     messageClient(MSG_STATE_CHANGE, data);
+
+                    mServiceState.registerClient();
+
+                    isRegistered = true;
 
                     LogIHAB.log("Client registered to service");
                     break;
@@ -613,6 +526,7 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_START_COUNTDOWN:
+                    checkForPreferences();
                     setAlarmAndCountdown();
                     break;
 
@@ -689,7 +603,6 @@ public class ControlService extends Service {
                     }
 
                     Log.d(LOG, "New cache: " + filename);
-                    Logger.info("New cache:\t{}", filename);
                     LogIHAB.log("New cache:\t" + filename);
 
                     break;
@@ -801,6 +714,7 @@ public class ControlService extends Service {
 
     /** Lifecycle **/
 
+
     @Override
     public void onCreate() {
         Log.e(LOG, "onCreate");
@@ -851,8 +765,6 @@ public class ControlService extends Service {
         mTaskHandler.post(mLogCheckRunnable);
         mTaskHandler.post(mActivityCheckRunnable);
 
-        Log.e(LOG, "HERE WE ARE");
-
         // Register Event Receiver for Alarms
         this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
 
@@ -860,27 +772,23 @@ public class ControlService extends Service {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
-        //this.registerReceiver(mDisplayReceiver, displayFilter);
         // ... for USB Activity
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        //registerReceiver(mUsbAttachReceiver , filter);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        //registerReceiver(mUsbDetachReceiver , filter);
-
         // ... and for Bluetooth Activity
-        //filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        //this.registerReceiver(mBluetoothStateReceiver, filter);
-
-        Log.e(LOG, "TEST");
 
         this.registerReceiver(mBroadcastReceiver, filter);
 
-        Log.e(LOG, "RECEIVER REGISTERED WITH FILTERS: " + filter);
-
         checkForPreferences();
+
+        UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+        if (deviceList.size() > 0) {
+            mServiceState.usbAttached();
+        }
 
         LogIHAB.log("Service started");
     }
@@ -1040,10 +948,6 @@ public class ControlService extends Service {
         return mTaskHandler;
     }
 
-    public Runnable getmResetBTAdapterRunnable() {
-        return mResetBTAdapterRunnable;
-    }
-
     private boolean checkLog() {
 
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
@@ -1112,7 +1016,6 @@ public class ControlService extends Service {
     public void announceBTConnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES connected.");
-            Log.e(LOG, "Number 3");
 
             if (INPUT == INPUT_CONFIG.RFCOMM) {
                 startRecordingRFCOMM();
@@ -1125,11 +1028,17 @@ public class ControlService extends Service {
     }
 
     public void announceUSBConnected() {
+
+        Log.e(LOG, "USB CONNECTED YOU BASTARD!");
+
             messageClient(MSG_USB_CONNECT);
             startRecording();
     }
 
     public void announceUSBDisconnected() {
+
+        Log.e(LOG, "USB DISCONNECTED YOU BASTARD!");
+
             messageClient(MSG_USB_DISCONNECT);
             stopRecording();
     }
@@ -1146,41 +1055,46 @@ public class ControlService extends Service {
 
     private void setOperationMode(String operationMode) {
 
-        if ((operationModeStatus == null) || (!operationMode.equals(operationModeStatus.toString()))) {
+        if (!operationMode.equals(operationModeStatus.toString()) || operationModeStatus.equals("")) {
 
             switch (operationMode) {
                 case "A2DP":
-                    operationModeStatus = INPUT_CONFIG.A2DP;
+                    operationModeStatus = INPUT_CONFIG.A2DP.toString();
                     mServiceState = getStateA2DP();
+                    INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
-                    operationModeStatus = INPUT_CONFIG.RFCOMM;
+                    operationModeStatus = INPUT_CONFIG.RFCOMM.toString();
                     mServiceState = getStateRFCOMM();
+                    INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "USB":
-                    operationModeStatus = INPUT_CONFIG.USB;
+                    operationModeStatus = INPUT_CONFIG.USB.toString();
                     mServiceState = getStateUSB();
+                    INPUT = INPUT_CONFIG.USB;
                     break;
                 case "STANDALONE":
-                    operationModeStatus = INPUT_CONFIG.STANDALONE;
+                    operationModeStatus = INPUT_CONFIG.STANDALONE.toString();
                     mServiceState = getStateStandalone();
+                    INPUT = INPUT_CONFIG.STANDALONE;
                     break;
             }
 
             mServiceState.setInterface();
-            INPUT = operationModeStatus;
 
-            LogIHAB.log("Operation Mode changed to: " + operationMode);
-            Log.e(LOG, "Operation Mode changed to: " + operationMode);
+            LogIHAB.log("Operation Mode changed to: " + INPUT.toString());
+            Log.e(LOG, "Operation Mode changed to: " + INPUT.toString());
 
             Bundle bundle = new Bundle();
             bundle.putString("operationMode", INPUT.toString());
 
             messageClient(MSG_STATE_CHANGE, bundle);
         } else {
-            LogIHAB.log("Operation Mode: " + operationMode);
-            Log.e(LOG, "Operation Mode: " + operationMode);
+            mServiceState.setInterface();
+            LogIHAB.log("OpMode: " + INPUT.toString());
+            Log.e(LOG, "OpMode: " + INPUT.toString());
         }
+
     }
 
 
@@ -1266,108 +1180,9 @@ public class ControlService extends Service {
         }
     }
 
-
-
-
-
-
-    /** Shit we need to think about **/
-
-
-    /*private void setupApplication() {
-
-        // If no chunk Id in present shared preferences, initialise with 1, else fetch
-        // Important for the first initialisation
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (sharedPreferences.getInt("chunkId", 0) == 0) {
-            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
-        } else {
-            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
-        }
-
-        // If no Date representation is
-        Date dateTime = new Date(System.currentTimeMillis());
-        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
-            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
-        }
-
-        //String operationMode = sharedPreferences.getString("operationMode", "Standalone");
-        //setOperationMode(operationMode);
-
-        initialiseValues();
-
-        mFileIO = new FileIO();
-        isQuestionnairePresent = mFileIO.setupFirstUse(this);
-
-        Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
-        mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
-
-        mEventTimer.setTimer(10);
-        mEventTimer.stopTimer();
-
-        mVibration = new Vibration(this);
-        mVibration.singleBurst();
-
-        if (INPUT == INPUT_CONFIG.USB) {
-            IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-            registerReceiver(mUsbAttachReceiver , filter);
-            filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
-            registerReceiver(mUsbDetachReceiver , filter);
-        }
-
-        if (useLogMode) {
-            // Register receiver for display activity (if used in log mode)
-            IntentFilter displayFilter = new IntentFilter();
-            displayFilter.addAction(Intent.ACTION_SCREEN_ON);
-            displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
-            this.registerReceiver(mDisplayReceiver, displayFilter);
-        }
-
-        // Register receiver for alarm
-        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
-
-        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
-            // Register broadcasts receiver for bluetooth state change
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-            this.registerReceiver(mBluetoothStateReceiver, filter);
-        }
-
-        // It is safe to say, that the display is illuminated on system/application startup
-        if (useLogMode) {
-            Logger.info("Display: on");
-            LogIHAB.log("Display: on");
-        }
-
-        checkForPreferences();
-    }*/
-
-
-    // Load preset values from shared preferences, default values from external class InitValues
-    /*private void initialiseValues() {
-
-        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-
-        // preferences
-        isTimer = sharedPreferences.getBoolean("isTimer", true);
-        isWave = sharedPreferences.getBoolean("isWave", false);
-        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
-        filterHp = sharedPreferences.getBoolean("filterHp", false);
-        downsample = sharedPreferences.getBoolean("downsample", true);
-        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", true);
-
-        // Cave: These are Strings
-        filterHpFrequency = sharedPreferences.getString("filterHpFrequency", "100");
-        samplerate = sharedPreferences.getString("samplerate", "16000");
-        chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
-
-        mFinalCountDown = InitValues.finalCountDown;
-        mTimerInterval = InitValues.timerInterval;
-    }*/
-
     private void updatePreferences(Bundle dataPreferences) {
+
+        sharedPreferences = getSharedPreferences();
 
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
@@ -1383,6 +1198,8 @@ public class ControlService extends Service {
         chunklengthInS = dataPreferences.getString("chunklengthInS", "" + chunklengthInS);
 
         String operationMode = dataPreferences.getString("operationMode", "" + InitValues.operationMode);
+
+        Log.e(LOG, "FOUND MODE: " + operationMode);
 
         ArrayList<String> listActiveFeatures = dataPreferences.getStringArrayList("features");
         Set<String> activeFeatures = new HashSet<>();
@@ -1417,9 +1234,7 @@ public class ControlService extends Service {
 
         if (!Objects.equals(mSelectQuestionnaire, mTempQuestionnaire) && !mSelectQuestionnaire.isEmpty()) {
 
-            if (BuildConfig.DEBUG) {
-                Log.i(LOG, "New Questionnaire selected.");
-            }
+            Log.i(LOG, "New Questionnaire selected.");
 
             mTempQuestionnaire = mSelectQuestionnaire;
             // Reads new XML file
@@ -1602,7 +1417,6 @@ public class ControlService extends Service {
 
     public void startRecording() {
         Log.d(LOG, "Start caching audio");
-        Logger.info("Start caching audio");
         LogIHAB.log("Start caching audio");
         AudioFileIO.setChunkId(mChunkId);
         // A delay before starting a new recording prevents initialisation bug
@@ -1652,5 +1466,104 @@ public class ControlService extends Service {
             mConnectedThread = null;
         }
     }
+
+
+
+
+    /** Shit we need to think about **/
+
+
+    /*private void setupApplication() {
+
+        // If no chunk Id in present shared preferences, initialise with 1, else fetch
+        // Important for the first initialisation
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        if (sharedPreferences.getInt("chunkId", 0) == 0) {
+            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        } else {
+            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
+        }
+
+        // If no Date representation is
+        Date dateTime = new Date(System.currentTimeMillis());
+        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
+            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
+        }
+
+        //String operationMode = sharedPreferences.getString("operationMode", "Standalone");
+        //setOperationMode(operationMode);
+
+        initialiseValues();
+
+        mFileIO = new FileIO();
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+
+        Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
+        mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
+
+        mEventTimer.setTimer(10);
+        mEventTimer.stopTimer();
+
+        mVibration = new Vibration(this);
+        mVibration.singleBurst();
+
+        if (INPUT == INPUT_CONFIG.USB) {
+            IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+            registerReceiver(mUsbAttachReceiver , filter);
+            filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
+            registerReceiver(mUsbDetachReceiver , filter);
+        }
+
+        if (useLogMode) {
+            // Register receiver for display activity (if used in log mode)
+            IntentFilter displayFilter = new IntentFilter();
+            displayFilter.addAction(Intent.ACTION_SCREEN_ON);
+            displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
+            this.registerReceiver(mDisplayReceiver, displayFilter);
+        }
+
+        // Register receiver for alarm
+        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
+
+        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
+            // Register broadcasts receiver for bluetooth state change
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+            filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            this.registerReceiver(mBluetoothStateReceiver, filter);
+        }
+
+        // It is safe to say, that the display is illuminated on system/application startup
+        if (useLogMode) {
+            Logger.info("Display: on");
+            LogIHAB.log("Display: on");
+        }
+
+        checkForPreferences();
+    }*/
+
+
+    // Load preset values from shared preferences, default values from external class InitValues
+    /*private void initialiseValues() {
+
+        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        // preferences
+        isTimer = sharedPreferences.getBoolean("isTimer", true);
+        isWave = sharedPreferences.getBoolean("isWave", false);
+        keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", false);
+        filterHp = sharedPreferences.getBoolean("filterHp", false);
+        downsample = sharedPreferences.getBoolean("downsample", true);
+        showRecordingButton = sharedPreferences.getBoolean("showRecordingButton", true);
+
+        // Cave: These are Strings
+        filterHpFrequency = sharedPreferences.getString("filterHpFrequency", "100");
+        samplerate = sharedPreferences.getString("samplerate", "16000");
+        chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
+
+        mFinalCountDown = InitValues.finalCountDown;
+        mTimerInterval = InitValues.timerInterval;
+    }*/
 
 }

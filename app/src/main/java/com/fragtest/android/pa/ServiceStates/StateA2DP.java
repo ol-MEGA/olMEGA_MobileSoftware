@@ -15,7 +15,7 @@ import java.util.Set;
 public class StateA2DP implements ServiceState {
 
     ControlService mService;
-    String LOG = "StateSTANDALONE";
+    String LOG = "StateA2DP";
 
     public StateA2DP(ControlService service) {
         this.mService = service;
@@ -26,6 +26,7 @@ public class StateA2DP implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
+        Log.e(LOG, "INTERNATL MODE: " + LOG);
     }
 
     @Override

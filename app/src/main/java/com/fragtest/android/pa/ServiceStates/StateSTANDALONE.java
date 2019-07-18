@@ -23,6 +23,7 @@ public class StateSTANDALONE implements ServiceState {
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":setInterface()");
+        Log.e(LOG, "INTERNATL MODE: " + LOG);
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.HashMap;
 public class StateUSB implements ServiceState {
 
     ControlService mService;
-    String LOG = "StateSTANDALONE";
+    String LOG = "StateUSB";
     private boolean mIsUSBPresent = false;
 
     public StateUSB(ControlService service) {
@@ -26,6 +26,7 @@ public class StateUSB implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
+        Log.e(LOG, "INTERNATL MODE: " + LOG);
     }
 
     @Override

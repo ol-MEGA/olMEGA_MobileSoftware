@@ -63,13 +63,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 
-import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
-import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
-import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
-import static com.fragtest.android.pa.ControlService.MSG_PREFS_CLOSED;
-import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
-
-
 public class MainActivity extends AppCompatActivity {
 
     private boolean USE_KIOSK_MODE = true;
@@ -619,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(LOG, "onDestroy");
         }
         super.onDestroy();
-        messageService(MSG_APPLICATION_SHUTDOWN);
+        messageService(ControlService.MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
         unregisterReceiver(mBatInfoReceiver);
     }
@@ -1043,7 +1036,7 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what) {
 
-                case MSG_NO_QUESTIONNAIRE_FOUND:
+                case ControlService.MSG_NO_QUESTIONNAIRE_FOUND:
 
                     mAppState.noQuest();
 
@@ -1061,12 +1054,14 @@ public class MainActivity extends AppCompatActivity {
 
                     break;*/
 
-                case MSG_SET_COUNTDOWN_TIME:
+                case ControlService.MSG_SET_COUNTDOWN_TIME:
 
                     int finalCountDown = msg.getData().getInt("finalCountDown");
                     int countDownInterval = msg.getData().getInt("countDownInterval");
                     mAdapter.setFinalCountDown(finalCountDown, countDownInterval);
                     mAppState.countdownStart();
+
+                    Log.e(LOG, "SETTING COUNTDOWN TIME TO: " + finalCountDown);
 
                     break;
 
@@ -1142,11 +1137,17 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_USB_CONNECT:
+
+                    Log.e(LOG, "USB PRESENT!!!");
+
                         mAppState.usbPresent();
                         setUSBPresent(true);
                     break;
 
                 case ControlService.MSG_USB_DISCONNECT:
+
+                    Log.e(LOG, "USB NOT PRESENT!!!");
+
                         mAppState.usbNotPresent();
                         setUSBPresent(false);
                         setLogoInactive();
