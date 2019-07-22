@@ -1028,17 +1028,11 @@ public class ControlService extends Service {
     }
 
     public void announceUSBConnected() {
-
-        Log.e(LOG, "USB CONNECTED YOU BASTARD!");
-
             messageClient(MSG_USB_CONNECT);
             startRecording();
     }
 
     public void announceUSBDisconnected() {
-
-        Log.e(LOG, "USB DISCONNECTED YOU BASTARD!");
-
             messageClient(MSG_USB_DISCONNECT);
             stopRecording();
     }
@@ -1431,12 +1425,10 @@ public class ControlService extends Service {
             Log.d(LOG, "Requesting stop caching audio");
             Logger.info("Requesting stop caching audio");
             LogIHAB.log("Requesting stop caching audio");
-
             audioRecorder.stop();
             setIsRecording(false);
-
             mTaskHandler.removeCallbacks(mStartRecordingRunnable);
-
+            audioRecorder.close();
             messageClient(MSG_STOP_RECORDING);
         }
     }

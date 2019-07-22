@@ -8,6 +8,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.util.Log;
+
 import com.fragtest.android.pa.Core.LogIHAB;
 
 
@@ -70,20 +72,12 @@ public class AudioRecorder {
 
 
     public void start() {
-        /*audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
-                samplerate,
-                AudioFormat.CHANNEL_IN_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
-        );*/
         stopRecording = false;
         recordingThread.start();
     }
 
 
     public void stop() {
-
         stopRecording = true;
     }
 
@@ -168,13 +162,17 @@ public class AudioRecorder {
             }
         }
 
-        audioRecord.stop();
+        if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+            audioRecord.release();
+        }
+
         Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
         try {
             messenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
+
     }
 
 }
