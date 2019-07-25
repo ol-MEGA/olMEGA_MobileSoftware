@@ -1,21 +1,15 @@
 package com.fragtest.android.pa.ServiceStates;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
-import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
-
-import java.util.HashMap;
 
 public class StateUSB implements ServiceState {
 
     ControlService mService;
     String LOG = "StateUSB";
-    private boolean mIsUSBPresent = false;
+    //private boolean mIsUSBPresent = false;
 
     public StateUSB(ControlService service) {
         this.mService = service;
@@ -26,19 +20,21 @@ public class StateUSB implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
-        Log.e(LOG, "INTERNATL MODE: " + LOG);
+
+        if (mService.checkUSB()) {
+            usbAttached();
+        } else {
+            usbDetached();
+        }
     }
 
     @Override
     public void registerClient() {
-        UsbManager manager = (UsbManager) mService.getSystemService(Context.USB_SERVICE);
-        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-        if (deviceList.size() == 0) {
-            mIsUSBPresent = false;
-            mService.messageClient(ControlService.MSG_USB_DISCONNECT);
+
+        if (mService.checkUSB()) {
+            usbAttached();
         } else {
-            mIsUSBPresent = true;
-            mService.messageClient(ControlService.MSG_USB_CONNECT);
+            usbDetached();
         }
     }
 
@@ -99,7 +95,7 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void recordingStopped() {
-        mService.audioRecorder.close();
+        //mService.audioRecorder.close();
     }
 
     @Override
@@ -146,17 +142,25 @@ public class StateUSB implements ServiceState {
     @Override
     public void usbAttached() {
         LogIHAB.log(LOG + ":" + "usbAttached()");
-        mService.isUSBPresent = true;
-        mService.getVibration().singleBurst();
-        mService.announceUSBConnected();
+        //mService.isUSBPresent = true;
+        if (mService.getVibration() != null) {
+            mService.getVibration().singleBurst();
+        }
+        //mService.announceUSBConnected();
+        mService.messageClient(ControlService.MSG_USB_CONNECT);
+        mService.startRecording();
     }
 
     @Override
     public void usbDetached() {
         LogIHAB.log(LOG + ":" + "usbDetached()");
-        mService.isUSBPresent = false;
-        mService.getVibration().singleBurst();
-        mService.announceUSBDisconnected();
+        //mService.isUSBPresent = false;
+        if (mService.getVibration() != null) {
+            mService.getVibration().singleBurst();
+        }
+        //mService.announceUSBDisconnected();
+        mService.messageClient(ControlService.MSG_USB_DISCONNECT);
+        mService.stopRecording();
     }
 
     @Override

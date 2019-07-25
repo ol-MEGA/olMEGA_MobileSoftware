@@ -7,18 +7,12 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.provider.MediaStore;
 import android.util.Log;
 
-import com.fragtest.android.pa.Core.LogIHAB;
-
-
 import com.fragtest.android.pa.Core.AudioFileIO;
-import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ResourceBundle;
 
 
 /**
@@ -47,6 +41,8 @@ public class AudioRecorder {
         isWave = _isWave;
         samplerate = _samplerate;
 
+        Log.e(LOG, "INITIALIZING NEW AUDIORECORD!");
+
         chunklengthInBytes = (_chunklengthInS * _samplerate * CHANNELS * BITS / 8);
 
         bufferSize = AudioRecord.getMinBufferSize(_samplerate,
@@ -70,7 +66,6 @@ public class AudioRecorder {
         }, "AudioRecorder Thread");
     }
 
-
     public void start() {
         stopRecording = false;
         recordingThread.start();
@@ -81,10 +76,12 @@ public class AudioRecorder {
         stopRecording = true;
     }
 
-
     public void close() {
-
         audioRecord.release();
+    }
+
+    public int getState() {
+        return audioRecord.getState();
     }
 
     private void recordAudio() {
@@ -162,8 +159,14 @@ public class AudioRecorder {
             }
         }
 
+        if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
+            audioRecord.stop();
+            Log.e(LOG, "INTERNALLY STOPPED");
+        }
+
         if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
             audioRecord.release();
+            Log.e(LOG, "INTERNALLY RELEASED");
         }
 
         Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
@@ -174,5 +177,4 @@ public class AudioRecorder {
         }
 
     }
-
 }

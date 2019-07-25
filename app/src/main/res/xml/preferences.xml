@@ -47,9 +47,18 @@
             android:layout_height="wrap_content"
             android:defaultValue="true"
             android:checked="true"
+            android:key="maxBrightness"
+            android:summary="Keep display brightness maximum"
+            android:title="Display always bright" />
+
+        <!--<SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="true"
+            android:checked="true"
             android:key="isTimer"
             android:title="Activate timer"
-            android:summary="Start questionnaire at defined intervals" />
+            android:summary="Start questionnaire at defined intervals" />-->
 
         <ListPreference
             android:layout_width="wrap_content"
@@ -58,7 +67,7 @@
             android:entries="@array/operationMode"
             android:entryValues="@array/operationMode"
             android:key="operationMode"
-            android:summary="Select Operation Mode"
+            android:summary="%s"
             android:title="Operation Mode" />
 
 

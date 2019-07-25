@@ -5,6 +5,7 @@ import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -16,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -50,8 +53,8 @@ import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.MessageList;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
-import com.fragtest.android.pa.DataTypes.*;
 
 import org.pmw.tinylog.Logger;
 
@@ -59,7 +62,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.Set;
 
 
@@ -79,15 +81,16 @@ public class MainActivity extends AppCompatActivity {
     private int nPermissions = 8;
     private int iPermission;
     private String[] requestString;
-    private final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
-    private final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
-    private final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
-    private final static int MY_PERMISSIONS_RECORD_AUDIO = 3;
-    private final static int MY_PERMISSIONS_VIBRATE = 4;
-    private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
-    private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
-    private final static int MY_PERMISSIONS_CAMERA = 7;
-    private final static int MY_PERMISSIONS_USB = 8;
+    public final static int MY_PERMISSIONS_READ_EXTERNAL_STORAGE = 0;
+    public final static int MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE = 1;
+    public final static int MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED = 2;
+    public final static int MY_PERMISSIONS_RECORD_AUDIO = 3;
+    public final static int MY_PERMISSIONS_VIBRATE = 4;
+    public final static int MY_PERMISSIONS_WAKE_LOCK = 5;
+    public final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
+    public final static int MY_PERMISSIONS_CAMERA = 7;
+    public final static int MY_PERMISSIONS_USB = 8;
+    public final static int MY_PERMISSIONS_WRITE_SETTINGS = 9;
 
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     private Messenger mServiceMessenger;
@@ -106,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isActivityRunning = false;
     private boolean isQuestionnairePresent = true;
     //private boolean isCharging = false;
-    private boolean isTimer = false;
+    //private boolean isTimer = false;
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
@@ -117,6 +120,10 @@ public class MainActivity extends AppCompatActivity {
     private ComponentName mAdminComponentName;
     private DevicePolicyManager mDevicePolicyManager;
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
+
+    private ContentResolver mResolver;
+    private Window mWindow;
+    private int mBrightness;
 
     // Preferences
     private SharedPreferences sharedPreferences;
@@ -322,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
-        dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
+        //dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
         //dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
         dataPreferences.putBoolean("keepAudioCache", sharedPreferences.getBoolean("keepAudioCache", InitValues.keepAudioCache));
         dataPreferences.putBoolean("downsample", sharedPreferences.getBoolean("downsample", InitValues.downsample));
@@ -510,8 +517,6 @@ public class MainActivity extends AppCompatActivity {
 
         setSystemLocale();
 
-        //checkForPermissions();
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         if (!isActivityRunning) {
@@ -579,17 +584,18 @@ public class MainActivity extends AppCompatActivity {
 
             mAdapter.checkBatteryCritical();
 
-            /*if (ControlService.INPUT == INPUT_CONFIG.STANDALONE) {
-                setBTLogoAirplaneMode();
-            }
-
-            if (ControlService.INPUT == INPUT_CONFIG.USB) {
-                setBTLogoUSB();
-            }*/
-            //setLogoActive();
-
             isActivityRunning = true;
         }
+
+        if (!Settings.System.canWrite(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + mStatContext.getPackageName()));
+            startActivity(intent);
+        }
+
+        // BRIGHTNESS ADJUSTMENT
+        mResolver = getContentResolver();
+        mWindow = getWindow();
 
         // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
@@ -675,6 +681,20 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         hideSystemUI(USE_KIOSK_MODE);
+
+
+        //Set the system brightness using the brightness variable value
+        boolean maxBrightness = sharedPreferences.getBoolean("maxBrightness", false);
+        if (maxBrightness) {
+            LogIHAB.log(LOG + ": Setting display brightness to maximum.");
+            //Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, 255);
+            //Get the current window attributes
+            WindowManager.LayoutParams layoutParams = mWindow.getAttributes();
+            //Set the brightness of this window
+            layoutParams.screenBrightness = 1f;//mBrightness / (float)255;
+            //Apply attribute changes to this window
+            mWindow.setAttributes(layoutParams);
+        }
     }
 
 
@@ -732,8 +752,9 @@ public class MainActivity extends AppCompatActivity {
         setUserRestriction(UserManager.DISALLOW_CREATE_WINDOWS, active);
         Log.i(LOG, "KIOSK MODE: " + active);
         // disable keyguard and status bar - needs API 23 (Damnit!)
-        //mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
-        //mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
+        // TODO: CHECK IF THIS APPLIES
+        mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, active);
+        mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, active);
     }
 
     private void setUserRestriction(String restriction, boolean disallow) {
@@ -857,6 +878,27 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_SETTINGS)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_SETTINGS},
+                        MY_PERMISSIONS_WRITE_SETTINGS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
 
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
                 !=PackageManager.PERMISSION_GRANTED)
@@ -878,6 +920,7 @@ public class MainActivity extends AppCompatActivity {
             LogIHAB.log("Requesting permission to record audio.");
             requestPermissions(MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
         }
+
 
     }
 
@@ -973,10 +1016,15 @@ public class MainActivity extends AppCompatActivity {
                     //Toast.makeText(this, "Thanks for permission to read external storage.", Toast.LENGTH_SHORT).show();
                     doBindService();
                 } else {
-                    Toast.makeText(this, requestString[requestIterator % (requestString.length)], Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, requestString[requestIterator % (requestString.length)], Toast.LENGTH_SHORT).show();
                     requestPermissions(iPermission);
                     requestIterator++;
                 }
+                break;
+            }
+            case MY_PERMISSIONS_WRITE_SETTINGS: {
+                //Toast.makeText(this, "Thanks for permission to record audio.", Toast.LENGTH_SHORT).show();
+
                 break;
             }
         }
@@ -1182,6 +1230,25 @@ public class MainActivity extends AppCompatActivity {
                     mAppState.setInterface();
                     break;
 
+                case ControlService.MSG_REQUEST_PERMISSION:
+
+                    Bundle bundle = msg.getData();
+                    int permissionName = bundle.getInt("permissionName");
+                    switch (permissionName) {
+                        case MY_PERMISSIONS_RECORD_AUDIO:
+                            Log.e(LOG, "Requesting permission to record Audio.");
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.RECORD_AUDIO},
+                                    MY_PERMISSIONS_RECORD_AUDIO);
+
+                            break;
+
+                        default:
+                            Log.e(LOG, "Unknown Permission requested: " + permissionName);
+                    }
+
+                    break;
+
                 default:
 
                     super.handleMessage(msg);
@@ -1190,4 +1257,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }
