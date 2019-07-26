@@ -95,7 +95,7 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void recordingStopped() {
-        //mService.audioRecorder.close();
+
     }
 
     @Override

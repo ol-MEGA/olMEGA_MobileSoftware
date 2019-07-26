@@ -292,27 +292,51 @@ public class ControlService extends Service {
 
     private boolean hasPermissionRecordAudio = false;
 
-    public Runnable mResetBTAdapterRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (!mBluetoothAdapter.isEnabled()) {
-                mBluetoothAdapter.enable();
+    // This BroadcastReceiver listens to attachment of a USB device
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            Log.e(LOG, "SOMETHING COOL HAPPENED: " + action);
+            Log.e(LOG, "MODE: " + mServiceState);
+
+            switch (action) {
+
+                case UsbManager.ACTION_USB_DEVICE_ATTACHED:
+                    mServiceState.usbAttached();
+                    break;
+
+                case UsbManager.ACTION_USB_DEVICE_DETACHED:
+                    mServiceState.usbDetached();
+                    break;
+
+                case BluetoothDevice.ACTION_FOUND:
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_CONNECTED:
+                    mServiceState.bluetoothReceived(action, sharedPreferences);
+                    messageClient(ControlService.MSG_BT_CONNECTED);
+                    break;
+
+                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED:
+                    break;
+
+                case BluetoothDevice.ACTION_ACL_DISCONNECTED:
+                    mServiceState.bluetoothReceived(action, sharedPreferences);
+                    messageClient(ControlService.MSG_BT_DISCONNECTED);
+                    break;
+
+                case "android.intent.action.SCREEN_ON":
+                    LogIHAB.log("Display: on");
+                    break;
+
+                case "android.intent.action.SCREEN_OFF":
+                    LogIHAB.log("Display: off");
+                    break;
             }
-
-            if (INPUT == INPUT_CONFIG.RFCOMM) {
-                if (sharedPreferences.contains("BTDevice")) {
-                    String btdevice = sharedPreferences.getString("BTDevice", null);
-                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                    device.createBond();
-                    LogIHAB.log("Connecting to device: " + device.getAddress());
-
-                    //TODO: is this needed for RFCOMM as well?
-                    mBluetoothAdapter.startDiscovery();
-                }
-            } else  {
-                connectBtDevice();
-            }
-
         }
     };
 
@@ -389,51 +413,32 @@ public class ControlService extends Service {
             LogIHAB.log("Shutting down.");
         }
     };*/
+    public Runnable mResetBTAdapterRunnable = new Runnable() {
+        @Override
+        public void run() {
 
-
-    // This BroadcastReceiver listens to attachment of a USB device
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            Log.e(LOG, "SOMETHING COOL HAPPENED: " + action);
-            Log.e(LOG, "MODE: " + mServiceState);
-
-            switch (action) {
-
-                case UsbManager.ACTION_USB_DEVICE_ATTACHED :
-                    mServiceState.usbAttached();
-                    break;
-
-                case UsbManager.ACTION_USB_DEVICE_DETACHED :
-                    mServiceState.usbDetached();
-                    break;
-
-                case BluetoothDevice.ACTION_FOUND :
-                    break;
-
-                case BluetoothDevice.ACTION_ACL_CONNECTED :
-                    mServiceState.bluetoothReceived(action, sharedPreferences);
-                    break;
-
-                case BluetoothAdapter.ACTION_DISCOVERY_FINISHED :
-                    break;
-
-                case BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED :
-                    break;
-
-                case BluetoothDevice.ACTION_ACL_DISCONNECTED :
-                    mServiceState.bluetoothReceived(action, sharedPreferences);
-                    break;
-
-                case "android.intent.action.SCREEN_ON" :
-                    LogIHAB.log("Display: on");
-                    break;
-
-                case "android.intent.action.SCREEN_OFF" :
-                    LogIHAB.log("Display: off");
-                    break;
+            if (mBluetoothAdapter == null) {
+                mBluetoothAdapter = getBluetoothAdapter();
             }
+
+            if (!mBluetoothAdapter.isEnabled()) {
+                mBluetoothAdapter.enable();
+            }
+
+            if (INPUT == INPUT_CONFIG.RFCOMM) {
+                if (sharedPreferences.contains("BTDevice")) {
+                    String btdevice = sharedPreferences.getString("BTDevice", null);
+                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
+                    device.createBond();
+                    LogIHAB.log("Connecting to device: " + device.getAddress());
+
+                    //TODO: is this needed for RFCOMM as well?
+                    mBluetoothAdapter.startDiscovery();
+                }
+            } else {
+                connectBtDevice();
+            }
+
         }
     };
 
@@ -791,7 +796,7 @@ public class ControlService extends Service {
         }
     }
 
-    public void announceBTConnected() {
+    /*public void announceBTConnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES connected.");
 
@@ -803,7 +808,7 @@ public class ControlService extends Service {
             isBluetoothPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
-    }
+    }*/
 
     /*public void announceUSBConnected() {
             messageClient(MSG_USB_CONNECT);
@@ -828,6 +833,10 @@ public class ControlService extends Service {
     private void setOperationMode(String operationMode) {
 
         if (!operationMode.equals(operationModeStatus) || operationModeStatus.equals("")) {
+
+            stopRecording();
+            audioRecorder = null;
+
 
             switch (operationMode) {
                 case "A2DP":
@@ -1322,15 +1331,16 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_RESET_BT:
-                    /*mBluetoothAdapter.cancelDiscovery();
+                    mBluetoothAdapter.cancelDiscovery();
                     if (INPUT == INPUT_CONFIG.RFCOMM) {
                         stopRecordingRFCOMM();
+
                     } else {
                         mBluetoothAdapter.disable();
                     }
                     if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
                         mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
-                    }*/
+                    }
                     break;
 
                 case MSG_START_COUNTDOWN:

@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     //private boolean isTimer = false;
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
-    private boolean isBluetoothPresent = false;
+    private boolean isBTPresent = false;
     private boolean isUSBPresent = false;
 
     // RELEVANT FOR KIOSK MODE
@@ -218,6 +218,14 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean getIsUSBPresent() {
         return isUSBPresent;
+    }
+
+    public boolean getBTPresent() {
+        return isBTPresent;
+    }
+
+    public void setBTPresent(boolean bluetoothPresent) {
+        isBTPresent = bluetoothPresent;
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -1141,7 +1149,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
                     if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                        if (isBluetoothPresent) {
+                        if (isBTPresent) {
                             mAppState.bluetoothPresent();
                         } else {
                             mAppState.bluetoothNotPresent();
@@ -1159,7 +1167,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothPresent();
-                        isBluetoothPresent = true;
+                        isBTPresent = true;
                     }
 
                     break;
@@ -1168,7 +1176,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothNotPresent();
-                        isBluetoothPresent = false;
+                        isBTPresent = false;
                     }
 
                     break;
@@ -1200,6 +1208,16 @@ public class MainActivity extends AppCompatActivity {
                         setUSBPresent(false);
                         setLogoInactive();
                         addError(AppErrors.ERROR_NO_USB);
+                    break;
+
+                case ControlService.MSG_BT_CONNECTED:
+                    setBTPresent(true);
+                    mAppState.bluetoothPresent();
+                    break;
+
+                case ControlService.MSG_BT_DISCONNECTED:
+                    setBTPresent(false);
+                    mAppState.bluetoothNotPresent();
                     break;
 
                 case ControlService.MSG_STATE_CHANGE:

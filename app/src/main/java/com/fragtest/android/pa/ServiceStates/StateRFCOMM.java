@@ -1,7 +1,6 @@
 package com.fragtest.android.pa.ServiceStates;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -168,10 +167,12 @@ public class StateRFCOMM implements ServiceState {
                     sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
                     Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
                 }
-                mService.announceBTConnected();
+                //TODO: SUBSITUTE
+                //mService.announceBTConnected();
                 break;
             case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                mService.announceBTDisconnected();
+                //TODO: SUBSITUTE
+                //mService.announceBTDisconnected();
                 LogIHAB.log("Bluetooth: disconnected");
                 break;
         }

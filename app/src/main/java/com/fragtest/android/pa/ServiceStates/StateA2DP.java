@@ -1,14 +1,11 @@
 package com.fragtest.android.pa.ServiceStates;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
-import com.fragtest.android.pa.PreferencesActivity;
 
 import java.util.Set;
 
@@ -26,7 +23,7 @@ public class StateA2DP implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
-        Log.e(LOG, "INTERNATL MODE: " + LOG);
+        Log.e(LOG, "INTERNAL MODE: " + LOG);
     }
 
     @Override
@@ -108,7 +105,10 @@ public class StateA2DP implements ServiceState {
 
     @Override
     public void recordingStopped() {
-        mService.audioRecorder.close();
+        // TODO: Check if necessary
+        if (mService.audioRecorder != null) {
+            mService.audioRecorder.close();
+        }
     }
 
     @Override
@@ -184,10 +184,19 @@ public class StateA2DP implements ServiceState {
                     sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
                     Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
                 }
-                mService.announceBTConnected();
+                //mService.announceBTConnected();
+                Log.e(LOG, "BTDEVICES CONNECTED!");
+                mService.startRecording();
+                mService.isBluetoothPresent = true;
+                mService.getMTaskHandler().removeCallbacks(mService.mResetBTAdapterRunnable);
+
                 break;
             case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                mService.announceBTDisconnected();
+
+                mService.stopRecording();
+                mService.isBluetoothPresent = false;
+                mService.getVibration().singleBurst();
+                //mService.announceBTDisconnected();
                 LogIHAB.log("Bluetooth: disconnected");
                 break;
         }
