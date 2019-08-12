@@ -220,12 +220,12 @@ public class MainActivity extends AppCompatActivity {
         return isUSBPresent;
     }
 
-    public boolean getBTPresent() {
+    public boolean getIsBTPresent() {
         return isBTPresent;
     }
 
-    public void setBTPresent(boolean bluetoothPresent) {
-        isBTPresent = bluetoothPresent;
+    public void setIsBTPresent(boolean isPresent) {
+        isBTPresent = isPresent;
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -1211,12 +1211,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case ControlService.MSG_BT_CONNECTED:
-                    setBTPresent(true);
+                    setIsBTPresent(true);
                     mAppState.bluetoothPresent();
                     break;
 
                 case ControlService.MSG_BT_DISCONNECTED:
-                    setBTPresent(false);
+                    setIsBTPresent(false);
                     mAppState.bluetoothNotPresent();
                     break;
 

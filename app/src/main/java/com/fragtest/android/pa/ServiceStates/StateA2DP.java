@@ -187,14 +187,14 @@ public class StateA2DP implements ServiceState {
                 //mService.announceBTConnected();
                 Log.e(LOG, "BTDEVICES CONNECTED!");
                 mService.startRecording();
-                mService.isBluetoothPresent = true;
+                mService.setIsBTPresent(true);
                 mService.getMTaskHandler().removeCallbacks(mService.mResetBTAdapterRunnable);
 
                 break;
             case BluetoothDevice.ACTION_ACL_DISCONNECTED:
 
                 mService.stopRecording();
-                mService.isBluetoothPresent = false;
+                mService.setIsBTPresent(false);
                 mService.getVibration().singleBurst();
                 //mService.announceBTDisconnected();
                 LogIHAB.log("Bluetooth: disconnected");

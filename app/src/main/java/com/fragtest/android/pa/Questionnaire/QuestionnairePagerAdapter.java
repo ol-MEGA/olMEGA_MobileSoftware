@@ -51,6 +51,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private boolean isPrefsInForeGround = false;
     private int mCountDownInterval = 30;
     private int mNUM_PAGES;
+    private int mMAX_ALLOWED = 1;
     private int mFinalCountdown = -255;
     private int mSecondsRemaining = 120;
     private String mHead, mFoot, mSurveyURI, mVersion;
@@ -120,6 +121,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         batteryStates = mMainActivity.getResources().getIntArray(R.array.batteryStates);
         mVibration =  new Vibration(mMainActivity);
         handleControls();
+
     }
 
     public void setIsCharging(boolean val) {
@@ -525,7 +527,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity.mArrowForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1) {
+                if ((mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1)) {
                     mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
                 }
             }
@@ -680,6 +682,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mNUM_PAGES = 0;
         }
         return mNUM_PAGES;
+    }
+
+    public int getMaxAllowed() {
+        return mMAX_ALLOWED;
     }
 
     @Override

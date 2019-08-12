@@ -421,6 +421,11 @@ public class Questionnaire {
         return true;
     }
 
+    // Returns answers given by user for specific question
+    public boolean getQuestionHasBeenAnswered(int id) {
+        return mEvaluationList.containsQuestionId(id);
+    }
+
     // Renews all the positions in information object gathered from actual order
     private void renewPositionsInPager() {
 

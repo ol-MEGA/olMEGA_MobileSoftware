@@ -151,7 +151,7 @@ public class ControlService extends Service {
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
     private boolean isQuestionnairePresent = false;
-    public boolean isBluetoothPresent = false;
+    private boolean isBTPresent = false;
     //public boolean isUSBPresent = false;
     private boolean isRegistered = false;
     private boolean isMenu = true;
@@ -708,6 +708,14 @@ public class ControlService extends Service {
         return mBluetoothAdapter;
     }
 
+    public boolean getIsBTPresent() {
+        return isBTPresent;
+    }
+
+    public void setIsBTPresent(boolean present) {
+        isBTPresent = present;
+    }
+
     public boolean getIsCharging() {
         return isCharging;
     }
@@ -778,11 +786,10 @@ public class ControlService extends Service {
         }
     }
 
-
     /** Functional Stuff **/
 
 
-    public void announceBTDisconnected() {
+    /*public void announceBTDisconnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
             Log.e(LOG, "BTDEVICES not connected.");
 
@@ -791,10 +798,10 @@ public class ControlService extends Service {
             } else {
                 stopRecording();
             }
-            isBluetoothPresent = false;
+            setIsBTPresent(false);
             mVibration.singleBurst();
         }
-    }
+    }*/
 
     /*public void announceBTConnected() {
         if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
@@ -805,7 +812,7 @@ public class ControlService extends Service {
             } else if (INPUT == INPUT_CONFIG.A2DP) {
                 startRecording();
             }
-            isBluetoothPresent = true;
+            isBTPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
     }*/
@@ -836,7 +843,6 @@ public class ControlService extends Service {
 
             stopRecording();
             audioRecorder = null;
-
 
             switch (operationMode) {
                 case "A2DP":

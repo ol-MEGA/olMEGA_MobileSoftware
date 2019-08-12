@@ -169,10 +169,16 @@ public class StateRFCOMM implements ServiceState {
                 }
                 //TODO: SUBSITUTE
                 //mService.announceBTConnected();
+                mService.startRecording();
+                mService.setIsBTPresent(true);
+                mService.getMTaskHandler().removeCallbacks(mService.mResetBTAdapterRunnable);
                 break;
             case BluetoothDevice.ACTION_ACL_DISCONNECTED:
                 //TODO: SUBSITUTE
                 //mService.announceBTDisconnected();
+                mService.stopRecordingRFCOMM();
+                mService.setIsBTPresent(false);
+                mService.getVibration().singleBurst();
                 LogIHAB.log("Bluetooth: disconnected");
                 break;
         }
