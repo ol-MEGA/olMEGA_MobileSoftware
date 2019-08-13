@@ -45,5 +45,6 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:25.3.1'
     implementation 'org.tinylog:tinylog:1.2'
     implementation 'com.github.wendykierp:JTransforms:3.1'
+    implementation 'com.android.support:appcompat-v7:25.1.0'
     //compile files('libs/usbaudiolibraryjadehochschule_20140223.jar')
 }

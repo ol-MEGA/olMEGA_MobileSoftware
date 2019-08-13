@@ -44,11 +44,12 @@
             android:screenOrientation="portrait" >
         </activity>
 
-        <activity
+        <!--<activity
             android:name=".SwipingActivity"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Dialog"></activity>
+            android:theme="@style/Theme.AppCompat.Dialog">
+            </activity>-->
 
 
         <!-- Receiver needed for Alarm function -->

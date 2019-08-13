@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -33,6 +34,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -419,8 +421,19 @@ public class MainActivity extends AppCompatActivity {
         falseSwipes = 0;
         //int currentItemBeforeMessage = mViewPager.getCurrentItem();
         //mAdapter.createSwipeMessage(currentItemBeforeMessage);
-        startActivity(new Intent(MainActivity.this, SwipingActivity.class));
+        //startActivity(new Intent(MainActivity.this, SwipingActivity.class));
         //overridePendingTransition(R.xml.enter_anim, R.xml.exit_anim);
+        new AlertDialog.Builder(this, R.style.SwipeDialogTheme)
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.swipeMessage)
+                .setPositiveButton(R.string.swipeOkay, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startRecordingFalseSwipes();
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
 
