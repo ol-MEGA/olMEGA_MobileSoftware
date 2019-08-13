@@ -30,4 +30,7 @@
     <string name="help_text_multi_03">Or this one</string>
     <string name="help_hint"><b>Hint:</b> Sometimes two or more answers will contradict each other. In that case, checking one will automatically uncheck the other(s).</string>
     <string name="help_button_ready">Close</string>
+
+    <string name="swipeMessage">Please answer the question first.</string>
+    <string name="swipeOkay">Okay</string>
 </resources>

@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -19,6 +20,7 @@ import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
+import com.fragtest.android.pa.Menu.SwipeMessage;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
@@ -69,6 +71,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private float batteryLevel = 1.0f;
     private String mMotivation = "";
     private ArrayList<String> mQuestionList;
+
+    private int mCurrentItemBeforeMessage;
 
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
@@ -192,6 +196,37 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         onResume();
 
         mCountDownHandler.post(mTimeRunnable);
+    }
+
+    public void createSwipeMessage(int currentItemBeforeMessage) {
+
+        mMainActivity.stopRecordingFalseSwipes();
+
+        mCurrentItemBeforeMessage = currentItemBeforeMessage;
+        Log.e(LOG, "CREATING SWIPE MESSAGE: " + mCurrentItemBeforeMessage);
+
+        SwipeMessage mSwipeMessage = new SwipeMessage(mMainActivity, this);
+        LinearLayout layout = mSwipeMessage.generateView();
+
+        Log.e(LOG, "Layout: " + layout);
+
+        layout.setId(0);
+        addView(layout, mCurrentItemBeforeMessage - 1, mCurrentItemBeforeMessage - 1, true, null);
+
+        notifyDataSetChanged();
+
+        mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
+
+    }
+
+    public void returnToQuestionnaire() {
+
+        Log.e(LOG, "RETURNING");
+        mViewPager.setCurrentItem(mCurrentItemBeforeMessage - 1);
+        mListOfActiveViews.remove(mCurrentItemBeforeMessage);
+        notifyDataSetChanged();
+        mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
+        mMainActivity.startRecordingFalseSwipes();
     }
 
     public void createHelpScreen() {
@@ -499,6 +534,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Adds the Layout to List storing ALL Views
             mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
                     iQuestion, question.isMandatory(), question.getAnswers()));
+        }
+    }
+
+    public boolean getHasQuestionBeenAnswered() {
+        if (mViewPager.getCurrentItem() > 0) {
+            return mQuestionnaire.getQuestionHasBeenAnswered(mListOfActiveViews.get(
+                    mViewPager.getCurrentItem() - 1).getId());
+        } else {
+            return true;
         }
     }
 

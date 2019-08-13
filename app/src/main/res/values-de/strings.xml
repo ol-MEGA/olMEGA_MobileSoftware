@@ -32,4 +32,7 @@
         Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
         automatisch eine Antwort wieder ab.</string>
     <string name="help_button_ready">Fertig</string>
+
+    <string name="swipeMessage">Bitte beantworten Sie zuerst die Frage.</string>
+    <string name="swipeOkay">Okay</string>
 </resources>

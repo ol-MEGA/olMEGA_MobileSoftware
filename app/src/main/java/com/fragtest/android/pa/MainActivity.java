@@ -125,6 +125,11 @@ public class MainActivity extends AppCompatActivity {
     private Window mWindow;
     private int mBrightness;
 
+    // Forced Answers (no answer no swipe)
+    private int falseSwipes = 0;
+    private int mCurrentItemBeforeMessage;
+    private boolean bRecordSwipes = true;
+
     // Preferences
     private SharedPreferences sharedPreferences;
 
@@ -363,11 +368,6 @@ public class MainActivity extends AppCompatActivity {
             return "";
         }
     }
-
-    public void incrementPage() {
-        mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
-    }
-
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
             new ViewPager.OnPageChangeListener() {
 
@@ -382,10 +382,43 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onPageSelected(int position) {
-                    mAdapter.setQuestionnaireProgressBar(position);
-                    mAdapter.setArrows(position);
+                    // If question has not been answered, no forward swiping is allowed
+                    if (mAdapter.getHasQuestionBeenAnswered()) {
+                        mAdapter.setQuestionnaireProgressBar(position);
+                        mAdapter.setArrows(position);
+                        mViewPager.setCurrentItem(position, true);
+                    } else {
+                        mAdapter.setQuestionnaireProgressBar(position - 1);
+                        mAdapter.setArrows(position - 1);
+                        mViewPager.setCurrentItem(position - 1, true);
+                        if (bRecordSwipes) {
+                            falseSwipes += 1;
+                        }
+                        Log.e(LOG, "False Swipes: " + falseSwipes);
+                        if (bRecordSwipes && falseSwipes > 2) {
+                            messageFalseSwipes();
+                        }
+                    }
                 }
             };
+
+    public void incrementPage() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
+    }
+
+    private void messageFalseSwipes() {
+        falseSwipes = 0;
+        mCurrentItemBeforeMessage = mViewPager.getCurrentItem();
+        mAdapter.createSwipeMessage(mCurrentItemBeforeMessage);
+    }
+
+    public void stopRecordingFalseSwipes() {
+        bRecordSwipes = false;
+    }
+
+    public void startRecordingFalseSwipes() {
+        bRecordSwipes = true;
+    }
 
 
     /**
