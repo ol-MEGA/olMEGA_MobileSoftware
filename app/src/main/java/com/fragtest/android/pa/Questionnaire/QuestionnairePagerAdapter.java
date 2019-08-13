@@ -200,17 +200,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void createSwipeMessage(int currentItemBeforeMessage) {
 
-        mMainActivity.stopRecordingFalseSwipes();
-
         mCurrentItemBeforeMessage = currentItemBeforeMessage;
         Log.e(LOG, "CREATING SWIPE MESSAGE: " + mCurrentItemBeforeMessage);
 
-        SwipeMessage mSwipeMessage = new SwipeMessage(mMainActivity, this);
-        LinearLayout layout = mSwipeMessage.generateView();
-
-        Log.e(LOG, "Layout: " + layout);
+        SwipeMessage swipeMessage = new SwipeMessage(mMainActivity, this);
+        LinearLayout layout = swipeMessage.generateView();
 
         layout.setId(0);
+
         addView(layout, mCurrentItemBeforeMessage - 1, mCurrentItemBeforeMessage - 1, true, null);
 
         notifyDataSetChanged();
@@ -223,7 +220,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         Log.e(LOG, "RETURNING");
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage - 1);
-        mListOfActiveViews.remove(mCurrentItemBeforeMessage);
+        removeView(mCurrentItemBeforeMessage);
+        //mListOfActiveViews.remove(mCurrentItemBeforeMessage);
         notifyDataSetChanged();
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
         mMainActivity.startRecordingFalseSwipes();

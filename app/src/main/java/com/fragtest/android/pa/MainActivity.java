@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     // Forced Answers (no answer no swipe)
     private int falseSwipes = 0;
     private int mCurrentItemBeforeMessage;
-    private boolean bRecordSwipes = true;
+    private static boolean bRecordSwipes = true;
 
     // Preferences
     private SharedPreferences sharedPreferences;
@@ -406,18 +406,21 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
     }
 
-    private void messageFalseSwipes() {
-        falseSwipes = 0;
-        mCurrentItemBeforeMessage = mViewPager.getCurrentItem();
-        mAdapter.createSwipeMessage(mCurrentItemBeforeMessage);
-    }
-
-    public void stopRecordingFalseSwipes() {
+    public static void stopRecordingFalseSwipes() {
         bRecordSwipes = false;
     }
 
-    public void startRecordingFalseSwipes() {
+    public static void startRecordingFalseSwipes() {
         bRecordSwipes = true;
+    }
+
+    private void messageFalseSwipes() {
+        stopRecordingFalseSwipes();
+        falseSwipes = 0;
+        //int currentItemBeforeMessage = mViewPager.getCurrentItem();
+        //mAdapter.createSwipeMessage(currentItemBeforeMessage);
+        startActivity(new Intent(MainActivity.this, SwipingActivity.class));
+        //overridePendingTransition(R.xml.enter_anim, R.xml.exit_anim);
     }
 
 
