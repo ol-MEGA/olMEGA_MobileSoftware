@@ -389,7 +389,7 @@ public class Questionnaire {
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
 
             mQuestionInfo.get(iPos).setInactive();
-            //mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
             // Remove checked answers on removed questions
             String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
@@ -412,7 +412,7 @@ public class Questionnaire {
             }
         }
 
-        mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+        //mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
 
         // Remove View from ActiveList
         mQuestionInfo.get(iPos).setInactive();
