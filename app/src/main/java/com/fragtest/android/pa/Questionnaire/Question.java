@@ -22,6 +22,7 @@ public class Question extends AppCompatActivity {
     private final int mNumAnswers;
     private final int mQuestionId;
     private final boolean mHidden;
+    private final boolean mIsForced;
     //private boolean mFilterCondition;
     private final boolean mMandatory;
     private final List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
@@ -44,6 +45,7 @@ public class Question extends AppCompatActivity {
             mTypeAnswer = "finish";
             mNumAnswers = 1;
             mHidden = false;
+            mIsForced = false;
             mAnswers = new ArrayList<>();
             mAnswers.add(new Answer(mContext.getResources().
                     getString(R.string.buttonTextFinish), -1, 99999));
@@ -60,6 +62,8 @@ public class Question extends AppCompatActivity {
             mTypeAnswer = extractTypeAnswers();
             // Obtain information whether question is mandatory
             mMandatory = extractMandatory();
+            // Obtain whether answer is forced (no answer - no forward swipe)
+            mIsForced = extractIsForced();
 
             // Create List of Answers
             mAnswers = extractAnswerList();
@@ -121,6 +125,10 @@ public class Question extends AppCompatActivity {
 
     private boolean extractMandatory() {
         return mQuestionBlueprint.contains("mandatory=\"true\"");
+    }
+
+    private boolean extractIsForced() {
+        return mQuestionBlueprint.contains("forceAnswer=\"true\"");
     }
 
     private int extractNumAnswers() {
@@ -216,6 +224,10 @@ public class Question extends AppCompatActivity {
 
     public boolean isHidden() {
         return mHidden;
+    }
+
+    public boolean getIsForced() {
+        return mIsForced;
     }
 
     public boolean isMandatory() {

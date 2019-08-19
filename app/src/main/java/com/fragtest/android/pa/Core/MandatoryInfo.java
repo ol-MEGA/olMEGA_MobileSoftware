@@ -1,6 +1,6 @@
 package com.fragtest.android.pa.Core;
 
-import com.fragtest.android.pa.DataTypes.IntegerBooleanAndBoolean;
+import com.fragtest.android.pa.DataTypes.IntegerBooleanBooleanAndBoolean;
 
 import java.util.ArrayList;
 
@@ -8,17 +8,17 @@ import java.util.ArrayList;
  * Created by ul1021 on 19.05.2017.
  */
 
-public class MandatoryInfo extends ArrayList<IntegerBooleanAndBoolean> {
+public class MandatoryInfo extends ArrayList<IntegerBooleanBooleanAndBoolean> {
 
     private String LOG_STRING = "MandatoryInfo";
-    private ArrayList<IntegerBooleanAndBoolean> mMandatoryInfo;
+    private ArrayList<IntegerBooleanBooleanAndBoolean> mMandatoryInfo;
 
     public MandatoryInfo(){
         mMandatoryInfo = new ArrayList<>();
     }
 
-    public boolean add(int id, boolean mandatory, boolean hidden) {
-        mMandatoryInfo.add(new IntegerBooleanAndBoolean(id, mandatory, hidden));
+    public boolean add(int id, boolean mandatory, boolean hidden, boolean isForced) {
+        mMandatoryInfo.add(new IntegerBooleanBooleanAndBoolean(id, mandatory, hidden, isForced));
         return true;
     }
 
@@ -26,6 +26,15 @@ public class MandatoryInfo extends ArrayList<IntegerBooleanAndBoolean> {
         for (int iItem = 0; iItem < mMandatoryInfo.size(); iItem++) {
             if (mMandatoryInfo.get(iItem).getId() == id) {
                 return mMandatoryInfo.get(iItem).isMandatory();
+            }
+        }
+        return false;
+    }
+
+    public boolean isForcedFromId(int id) {
+        for (int iItem = 0; iItem < mMandatoryInfo.size(); iItem++) {
+            if (mMandatoryInfo.get(iItem).getId() == id) {
+                return mMandatoryInfo.get(iItem).isForced();
             }
         }
         return false;
@@ -40,7 +49,7 @@ public class MandatoryInfo extends ArrayList<IntegerBooleanAndBoolean> {
         return false;
     }
 
-    public IntegerBooleanAndBoolean get(int item) {
+    public IntegerBooleanBooleanAndBoolean get(int item) {
         return mMandatoryInfo.get(item);
     }
 }

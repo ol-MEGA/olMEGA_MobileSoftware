@@ -78,10 +78,11 @@ public class Questionnaire {
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint, mMainActivity);
         mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), position,
-                question.isHidden(), question.isMandatory(), question.getAnswerIds()));
+                question.getFilterId(), position, question.isHidden(), question.isMandatory(),
+                question.getAnswerIds(), question.getIsForced()));
         mMetaData.addQuestion(question);
-        mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(), question.isHidden());
+        mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(),
+                question.isHidden(), question.getIsForced());
 
         return question;
     }
@@ -388,7 +389,7 @@ public class Questionnaire {
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
 
             mQuestionInfo.get(iPos).setInactive();
-            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+            //mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
             // Remove checked answers on removed questions
             String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
@@ -411,6 +412,8 @@ public class Questionnaire {
             }
         }
 
+        mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+
         // Remove View from ActiveList
         mQuestionInfo.get(iPos).setInactive();
         mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
@@ -424,6 +427,10 @@ public class Questionnaire {
     // Returns answers given by user for specific question
     public boolean getQuestionHasBeenAnswered(int id) {
         return mEvaluationList.containsQuestionId(id);
+    }
+
+    public boolean getIsForcedFromId(int id) {
+        return mMandatoryInfo.isForcedFromId(id);
     }
 
     // Renews all the positions in information object gathered from actual order

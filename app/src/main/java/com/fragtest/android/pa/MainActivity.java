@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Forced Answers (no answer no swipe)
     private int falseSwipes = 0;
-    private int mCurrentItemBeforeMessage;
+    private boolean isForcedAnswer, isForcedAnswerDialog;
     private static boolean bRecordSwipes = true;
 
     // Preferences
@@ -333,6 +333,51 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
     }
 
+    private ViewPager.OnPageChangeListener myOnPageChangeListener =
+            new ViewPager.OnPageChangeListener() {
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                }
+
+                @Override
+                public void onPageScrolled(int position,
+                                           float positionOffset, int positionOffsetPixels) {
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    // In case of forced answers, no forward swiping is allowed on unanswered questions
+
+                    if (!mAdapter.getHasQuestionBeenAnswered() && mAdapter.getHasQuestionForcedAnswer() && isForcedAnswer) {
+                        mAdapter.setQuestionnaireProgressBar(position - 1);
+                        mAdapter.setArrows(position - 1);
+                        mViewPager.setCurrentItem(position - 1, true);
+                        if (bRecordSwipes) {
+                            falseSwipes += 1;
+                        }
+                        Log.e(LOG, "False Swipes: " + falseSwipes);
+                        if (bRecordSwipes && isForcedAnswer && isForcedAnswerDialog && falseSwipes > 2) {
+                            messageFalseSwipes();
+                        }
+                    } else {
+                        mAdapter.setQuestionnaireProgressBar(position);
+                        mAdapter.setArrows(position);
+                        mViewPager.setCurrentItem(position, true);
+                    }
+                }
+            };
+
+    public String getVersion() {
+        try {
+            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
+            return pInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
     private void shipPreferencesToControlService() {
         // Load information from shared preferences and bundle them
         Bundle dataPreferences = new Bundle();
@@ -343,6 +388,8 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
         dataPreferences.putString("operationMode", sharedPreferences.getString("operationMode", "" + InitValues.operationMode));
         // Boolean
+        //dataPreferences.putBoolean("forceAnswer", sharedPreferences.getBoolean("forceAnswer", true));
+        //dataPreferences.putBoolean("forceAnswerDialog", sharedPreferences.getBoolean("forceAnswerDialog", true));
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         //dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
         //dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));
@@ -360,49 +407,6 @@ public class MainActivity extends AppCompatActivity {
 
         messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, dataPreferences);
     }
-
-    public String getVersion() {
-        try {
-            PackageInfo pInfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);
-            return pInfo.versionName;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-    private ViewPager.OnPageChangeListener myOnPageChangeListener =
-            new ViewPager.OnPageChangeListener() {
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                }
-
-                @Override
-                public void onPageScrolled(int position,
-                                           float positionOffset, int positionOffsetPixels) {
-                }
-
-                @Override
-                public void onPageSelected(int position) {
-                    // If question has not been answered, no forward swiping is allowed
-                    if (mAdapter.getHasQuestionBeenAnswered()) {
-                        mAdapter.setQuestionnaireProgressBar(position);
-                        mAdapter.setArrows(position);
-                        mViewPager.setCurrentItem(position, true);
-                    } else {
-                        mAdapter.setQuestionnaireProgressBar(position - 1);
-                        mAdapter.setArrows(position - 1);
-                        mViewPager.setCurrentItem(position - 1, true);
-                        if (bRecordSwipes) {
-                            falseSwipes += 1;
-                        }
-                        Log.e(LOG, "False Swipes: " + falseSwipes);
-                        if (bRecordSwipes && falseSwipes > 2) {
-                            messageFalseSwipes();
-                        }
-                    }
-                }
-            };
 
     public void incrementPage() {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
@@ -738,6 +742,9 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         hideSystemUI(USE_KIOSK_MODE);
+
+        isForcedAnswer = sharedPreferences.getBoolean("forceAnswer", true);
+        isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
 
 
         //Set the system brightness using the brightness variable value

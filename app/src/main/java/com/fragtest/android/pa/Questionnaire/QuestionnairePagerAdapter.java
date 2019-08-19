@@ -544,6 +544,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         }
     }
 
+    public boolean getHasQuestionForcedAnswer() {
+        if (mViewPager.getCurrentItem() > 0) {
+            return mQuestionnaire.getIsForcedFromId(mListOfActiveViews.get(
+                    mViewPager.getCurrentItem() - 1).getId());
+        } else {
+            return true;
+        }
+    }
+
     // Set up control elements on top menu
     private void handleControls() {
 

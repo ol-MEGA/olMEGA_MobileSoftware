@@ -13,6 +13,24 @@
             android:dialogTitle="Select questionnaire"
             android:summary="%s"/>
 
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:defaultValue="true"
+            android:key="forceAnswer"
+            android:summary="No Swiping without Answer"
+            android:title="Force answers" />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:defaultValue="true"
+            android:key="forceAnswerDialog"
+            android:summary="Inform User"
+            android:title="Force Dialog" />
+
     </PreferenceCategory>
 
 
@@ -69,7 +87,6 @@
             android:key="operationMode"
             android:summary="%s"
             android:title="Operation Mode" />
-
 
     </PreferenceCategory>
 

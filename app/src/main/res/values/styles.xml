@@ -9,12 +9,11 @@
     </style>
 
     <style name="SwipeDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <!--buttons color-->
         <item name="colorAccent">@android:color/black</item>
-        <!--title and message color-->
+        <item name="colorPrimary">@color/JadeGray</item>
         <item name="android:textColorPrimary">@android:color/black</item>
-        <!--dialog background-->
-        <!--<item name="android:windowBackground">@drawable/background_dialog</item>-->
+        <item name="android:topBright">@color/JadeGray</item>
     </style>
+
 
 </resources>

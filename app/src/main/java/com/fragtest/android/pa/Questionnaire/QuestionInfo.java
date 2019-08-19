@@ -18,10 +18,11 @@ class QuestionInfo {
     private final List<Integer> mListOfAnswerIds;
     private boolean mActive;
     private int mPositionInPager;
+    private boolean mIsForced;
 
     QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
                  int position, boolean hidden, boolean mandatory,
-                 List<Integer> answerIds) {
+                 List<Integer> answerIds, boolean isForced) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
@@ -29,10 +30,15 @@ class QuestionInfo {
         mPositionInPager = position;
         mHidden = hidden;
         mListOfAnswerIds = answerIds;
+        mIsForced = isForced;
     }
 
     boolean isActive() {
         return mActive;
+    }
+
+    boolean getIsForced() {
+        return mIsForced;
     }
 
     public int getId() {

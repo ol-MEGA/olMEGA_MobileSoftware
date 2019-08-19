@@ -22,24 +22,12 @@ public class AnswerTypeRadio extends AnswerType {
 
     private static String LOG_STRING = "AnswerTypeRadio";
     private final RadioGroup mRadioGroup;
-    /*private final AnswerLayout mParent;
-    private final Context mContext;
-    private final Questionnaire mQuestionnaire;
-    private final int mQuestionId;
-    private final List<StringAndInteger> mListOfAnswers;*/
     private int mDefault = -1;
 
 
     public AnswerTypeRadio(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
 
         super(context, questionnaire, qParent, nQuestionId);
-
-        //mContext = context;
-        //mQuestionnaire = questionnaire;
-        //mParent = parent;
-        //mQuestionId = Id;
-
-        //mListOfAnswers = new ArrayList<>();
 
         // Answer Buttons of type "radio" are grouped and handled together
         mRadioGroup = new RadioGroup(mContext);
