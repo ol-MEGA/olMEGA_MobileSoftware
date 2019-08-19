@@ -35,4 +35,32 @@
 
     <string name="swipeMessage">Bitte beantworten Sie zuerst die Frage.</string>
     <string name="swipeOkay">Okay</string>
+
+    <string name="pref_head_Questionnaire">Fragebogen</string>
+    <string name="pref_head_General">Generelles</string>
+    <string name="pref_head_Recording">Aufnahme</string>
+    <string name="pref_head_Processing">Processing</string>
+
+    <string name="pref_whichQuest_title">Auswahl Fragebogen</string>
+    <string name="pref_whichQuest_dialogTitle">Auswahl Fragebogen</string>
+    <string name="pref_forceAnswer_title">Antworten erzwingen</string>
+    <string name="pref_forceAnswer_summary">Antwort notwendig um fortzufahren</string>
+    <string name="pref_forceAnswerDialog_title">Dialog Erzwingen</string>
+    <string name="pref_forceAnswerDialog_summary">Nutzer durch Popup informieren</string>
+    <string name="pref_autostart_title">Autostart</string>
+    <string name="pref_autostart_summary">App automatisch starten</string>
+    <string name="pref_maxBrightness_title">Displayhelligkeit maximal</string>
+    <string name="pref_maxBrightness_summary">Display aufhellen</string>
+    <string name="pref_operationMode_title">Betriebsmodus</string>
+    <string name="pref_samplerate_title">Samplerate</string>
+    <string name="pref_samplerate_summary">Samplerate in Hz</string>
+    <string name="pref_chunklengthInS_title">Blockgröße in Sekunden</string>
+    <string name="pref_keepAudioCache_title">Aufgenommene Audiodaten behalten</string>
+    <string name="pref_features_title">Features</string>
+    <string name="pref_isWave_title">Aufnahme im WAVE Format</string>
+    <string name="pref_filterHp_title">Hochpass Filter</string>
+    <string name="pref_filterHpFrequency_title">Grenzfrequenz in Hz</string>
+    <string name="pref_downsample_title">Downsampling</string>
+    <string name="pref_downsample_summary">Audio unterabtasten (Faktor 2)</string>
+
 </resources>
