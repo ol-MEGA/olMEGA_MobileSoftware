@@ -389,13 +389,14 @@ public class Questionnaire {
         if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
 
             mQuestionInfo.get(iPos).setInactive();
-            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+
             // Remove checked answers on removed questions
             String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
 
             // Visually un-check checkboxes and radio buttons
             for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
+
                 if (sType.equals("checkbox") && mListOfAnswerIds.get(iAnswer) != 66666) {
                     CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
                             mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
@@ -410,9 +411,8 @@ public class Questionnaire {
                     }
                 }
             }
+            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
         }
-
-        //mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
 
         // Remove View from ActiveList
         mQuestionInfo.get(iPos).setInactive();
