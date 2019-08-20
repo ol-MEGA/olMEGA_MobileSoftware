@@ -10,21 +10,9 @@ import java.util.ArrayList;
 
 public class ListOfViews extends ArrayList<QuestionView> {
 
-    //private ArrayList<QuestionView> mList;
-
     public ListOfViews() {
 
-        //mList = new ArrayList<>();
-
     }
-
-    //public void add(QuestionView questionView) {
-    //    this.add(questionView);
-    //}
-
-    //public QuestionView get(int pos) {
-    //    return this.get(pos);
-    //}
 
     public QuestionView getFromId(int id) {
         for (int iItem = 0; iItem < this.size(); iItem++) {
@@ -51,12 +39,6 @@ public class ListOfViews extends ArrayList<QuestionView> {
         }
         return -1;
     }
-
-    //public int size() {
-    //    return this.size();
-    //}
-
-
 
     public int indexOf(Object object) {
         for (int iItem = 0; iItem < this.size(); iItem++) {

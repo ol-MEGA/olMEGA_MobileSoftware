@@ -110,8 +110,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean isPrefsInForeGround = false;
     private boolean isActivityRunning = false;
     private boolean isQuestionnairePresent = true;
-    //private boolean isCharging = false;
-    //private boolean isTimer = false;
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
     private boolean isBTPresent = false;
@@ -264,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
             LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
             mMessageList.work();
 
-            //mAppState.usbNotPresent();
         }
 
         @Override
@@ -356,7 +353,6 @@ public class MainActivity extends AppCompatActivity {
                         if (bRecordSwipes) {
                             falseSwipes += 1;
                         }
-                        Log.e(LOG, "False Swipes: " + falseSwipes);
                         if (bRecordSwipes && isForcedAnswer && isForcedAnswerDialog && falseSwipes > 2) {
                             messageFalseSwipes();
                         }

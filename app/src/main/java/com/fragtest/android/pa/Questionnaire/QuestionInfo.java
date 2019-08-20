@@ -84,14 +84,6 @@ class QuestionInfo {
         mActive = true;
     }
 
-    int getPositionInPager() {
-        return mPositionInPager;
-    }
-
-    void setPositionInPager(int position) {
-        mPositionInPager = position;
-    }
-
     public Question getQuestion() {
         return mQuestion;
     }

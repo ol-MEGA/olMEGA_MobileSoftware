@@ -150,6 +150,8 @@ public class MetaData extends AppCompatActivity {
         KEY_DATA += KEY_SHORT_CLOSE;
         KEY_DATA += KEY_NEW_LINE;
 
+        Log.d(LOG, "QuestionList: " + mQuestionList.size());
+
         /* Questionnaire Results */
         for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
 

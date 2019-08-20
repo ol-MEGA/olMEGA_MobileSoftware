@@ -116,10 +116,6 @@ public class Question extends AppCompatActivity {
         return listOfFilterIds;
     }
 
-    private boolean extractMandatory() {
-        return mQuestionBlueprint.contains("mandatory=\"true\"");
-    }
-
     private boolean extractIsForced() {
         return mQuestionBlueprint.contains("forceAnswer=\"true\"");
     }

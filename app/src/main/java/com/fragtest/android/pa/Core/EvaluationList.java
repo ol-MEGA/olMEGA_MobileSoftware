@@ -14,7 +14,7 @@ import java.util.List;
 
 public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
 
-    private String LOG_STRING = "EvaluationList";
+    private String LOG = "EvaluationList";
     private List<QuestionIdTypeAndValue> mEvaluationList;
     private boolean isVerbose = false;
 
@@ -26,9 +26,9 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
     public boolean add(int nQuestionId, int nAnswerId) {
         mEvaluationList.add(new QuestionIdTypeAndValue(
                 nQuestionId, "id", Integer.toString(nAnswerId)));
-        if (isVerbose) {
-            Log.i(LOG_STRING, "Entry added: " + nAnswerId);
-        }
+
+        Log.d(LOG, "Entry added: " + nAnswerId);
+
         return true;
     }
 
@@ -68,9 +68,9 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
                 }
             }
         }
-        if (isVerbose) {
-            Log.i(LOG_STRING, "Entries removed: " + nRemoved);
-        }
+
+        Log.d(LOG, "Entries removed: " + nRemoved);
+
         return true;
     }
 
@@ -84,9 +84,7 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isVerbose) {
-            Log.i(LOG_STRING, "Entries removed: " + nRemoved);
-        }
+        Log.d(LOG, "Entries removed: " + nRemoved);
 
         return true;
     }
@@ -101,9 +99,8 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isVerbose) {
-            Log.i(LOG_STRING, "Entries removed of Type " + sType + ":" + nRemoved);
-        }
+        Log.d(LOG, "Entries removed of Type " + sType + ":" + nRemoved);
+
         return true;
     }
 
@@ -118,9 +115,8 @@ public class EvaluationList extends ArrayList<QuestionIdTypeAndValue> {
             }
         }
 
-        if (isVerbose) {
-            Log.i(LOG_STRING, "Entries removed: " + nRemoved);
-        }
+        Log.d(LOG, "Entries removed: " + nRemoved);
+
         return true;
     }
 
