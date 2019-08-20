@@ -40,9 +40,9 @@ public class Loop extends BasicProcessRunnable {
 				out[kk * 2 + 1] = data[1][kk];
 		}
 		
-		float[] result = new float[out.length / 3]; 
+		float[] result = new float[out.length / 3];
 
-		// downsample from 48k to 16k -> get 4 bytes and discard the next 8
+        // downsample from 48k to 16k -> getFromId 4 bytes and discard the next 8
 		for ( int kk = 0; kk < out.length/12; kk++ ) {
 			for ( int ii = 0; ii < 4; ii++ ) {
 				result[kk*4 + ii] = out[kk*12 + ii];

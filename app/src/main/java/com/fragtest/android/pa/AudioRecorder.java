@@ -95,7 +95,7 @@ public class AudioRecorder {
         while (!stopRecording &&
                 (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING)) {
 
-            // get stream to write audio data to flash memory
+            // getFromId stream to write audio data to flash memory
             AudioFileIO fileIO = new AudioFileIO();
             DataOutputStream outputStream = fileIO.openDataOutStream(
                     audioRecord.getSampleRate(),

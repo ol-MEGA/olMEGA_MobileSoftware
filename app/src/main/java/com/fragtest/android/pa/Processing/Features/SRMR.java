@@ -102,7 +102,7 @@ public class SRMR extends BasicProcessRunnable{
 
             double[] envTemp = new double[envelope[0].length];
 
-            //get the n envelope signal
+            //getFromId the n envelope signal
             for(int j=0;j<envTemp.length;j++){
                 envTemp[j] = envelope[i][j];
             }
@@ -115,7 +115,7 @@ public class SRMR extends BasicProcessRunnable{
 
             for(int j=0;j<nModFilters;j++){
 
-                //get the n modulation output signal
+                //getFromId the n modulation output signal
                 for(int n=0;n<modOutTemp.length;n++){
                     modOutTemp[n] = modulationOutput[j][n];
                 }
@@ -238,14 +238,14 @@ public class SRMR extends BasicProcessRunnable{
         double[][] temp2 = new double[avg_energy.length][Kstar-4];
 
 
-        //get range t for temp1
+        //getFromId range t for temp1
         for(int i=0;i<temp1.length;i++){
             for(int j=0;j<temp1[0].length;j++){
                 temp1[i][j] = avg_energy[i][j];
             }
         }
 
-        //get range t for temp2
+        //getFromId range t for temp2
         for(int i=0;i<temp1.length;i++){
             for(int j=4, n=0;j<Kstar;j++,n++){
                 temp2[i][n] = avg_energy[i][j];

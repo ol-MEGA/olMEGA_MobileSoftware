@@ -18,7 +18,7 @@ public class SpeechProcessing{
 
     public static double[] voiceActivityDetect(double[] audioData, long fsamp){
         // method for simple energy-thresholding voice activity detection.
-        // remove silence parts of the speech signal
+        // removeFromId silence parts of the speech signal
         //----------------------------------------------------------------------
 
         //pre calculations to find the energy threshold

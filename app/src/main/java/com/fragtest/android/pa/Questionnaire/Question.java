@@ -11,6 +11,11 @@ import java.util.List;
 
 /**
  * Created by ulrikkowalk on 28.02.17.
+ *
+ * Question is the class that carries all information needed to fill a question view, i.e.,
+ * type of answer, answer options, filter ids, etc
+ * BUT: It does not generate the view, only provides contents
+ *
  */
 
 public class Question extends AppCompatActivity {
@@ -23,25 +28,22 @@ public class Question extends AppCompatActivity {
     private final int mQuestionId;
     private final boolean mHidden;
     private final boolean mIsForced;
-    //private boolean mFilterCondition;
-    private final boolean mMandatory;
     private final List<String> ListOfNonTypicalAnswerTypes = Arrays.asList("text", "date");
-    private final List<Integer> mListOfAnswerIds = new ArrayList<>();
+    private final ArrayList<Integer> mListOfAnswerIds = new ArrayList<>();
     private List<Answer> mAnswers;
-    private ArrayList<Integer> mFilterId;
+    private ArrayList<Integer> mFilterIds;
     private Context mContext;
 
     // Public Constructor
     public Question(String sQuestionBlueprint, Context context) {
 
         mQuestionBlueprint = sQuestionBlueprint;
-        mFilterId = new ArrayList<>();
+        mFilterIds = new ArrayList<>();
         mContext = context;
 
         if (isFinish()) {
             mQuestionId = 99999;
             mQuestionText = extractQuestionTextFinish();
-            mMandatory = true;
             mTypeAnswer = "finish";
             mNumAnswers = 1;
             mHidden = false;
@@ -57,11 +59,9 @@ public class Question extends AppCompatActivity {
             mQuestionText = extractQuestionText();
 
             // Obtain Filter Id
-            mFilterId = extractFilterId();
+            mFilterIds = extractFilterId();
             // Obtain Answer Type (e.g. Radio, Button, Slider,...)
             mTypeAnswer = extractTypeAnswers();
-            // Obtain information whether question is mandatory
-            mMandatory = extractMandatory();
             // Obtain whether answer is forced (no answer - no forward swipe)
             mIsForced = extractIsForced();
 
@@ -78,13 +78,6 @@ public class Question extends AppCompatActivity {
             // Determine whether Element is hidden
             mHidden = extractHidden();
 
-
-            /*Log.e(LOG, "----------------------");
-            Log.i(LOG, "Question id: "+getQuestionId());
-            Log.i(LOG, ""+mQuestionText);
-            for (int iId = 0; iId<mFilterId.size(); iId++) {
-                Log.e(LOG,"Filter id: "+mFilterId.get(iId));
-            }*/
         }
     }
 
@@ -230,10 +223,6 @@ public class Question extends AppCompatActivity {
         return mIsForced;
     }
 
-    public boolean isMandatory() {
-        return mMandatory;
-    }
-
     private boolean nonTypicalAnswer(String sTypeAnswer) {
         return ListOfNonTypicalAnswerTypes.contains(sTypeAnswer);
     }
@@ -246,8 +235,8 @@ public class Question extends AppCompatActivity {
         return mQuestionId;
     }
 
-    public ArrayList<Integer> getFilterId() {
-        return mFilterId;
+    public ArrayList<Integer> getFilterIds() {
+        return mFilterIds;
     }
 
     public String getTypeAnswer() {
@@ -262,7 +251,7 @@ public class Question extends AppCompatActivity {
         return mAnswers;
     }
 
-    public List<Integer> getAnswerIds() {
+    public ArrayList<Integer> getAnswerIds() {
         if (mNumAnswers > 0) {
             for (int iAnswer = 0; iAnswer < mNumAnswers; iAnswer++) {
                 mListOfAnswerIds.add(mAnswers.get(iAnswer).Id);

@@ -13,7 +13,6 @@ class QuestionInfo {
     private final int mId;
     private final ArrayList<Integer> mFilterId;
     private final boolean mHidden;
-    //private final boolean mMandatory;
     private final Question mQuestion;
     private final List<Integer> mListOfAnswerIds;
     private boolean mActive;
@@ -21,7 +20,7 @@ class QuestionInfo {
     private boolean mIsForced;
 
     QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
-                 int position, boolean hidden, boolean mandatory,
+                 int position, boolean hidden,
                  List<Integer> answerIds, boolean isForced) {
         mQuestion = question;
         mId = id;

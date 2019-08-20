@@ -2,9 +2,8 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.graphics.Color;
 import android.util.Log;
-import android.widget.CheckBox;
+import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 
 import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.Core.EvaluationList;
@@ -77,12 +76,16 @@ public class Questionnaire {
 
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint, mMainActivity);
-        mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), position, question.isHidden(), question.isMandatory(),
-                question.getAnswerIds(), question.getIsForced()));
+        //mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
+        //        question.getFilterId(), position, question.isHidden(),
+        //        question.getAnswerIds(), question.getIsForced()));
+
+        // Question is added to MetaData so the class always holds a complete set of all questions
+        // (empty questions are still included in output xml file)
         mMetaData.addQuestion(question);
-        mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(),
-                question.isHidden(), question.getIsForced());
+
+        //mMandatoryInfo.add(question.getQuestionId(),
+        //        question.isHidden(), question.getIsForced());
 
         return question;
     }
@@ -318,6 +321,10 @@ public class Questionnaire {
     // views which is handled by QuestionnairePagerAdapter
     boolean checkVisibility() {
 
+        //for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
+        //    Log.e(LOG, "IDS: " + mEvaluationList.get(iItem));
+        //}
+
         String sid = "";
         for (int iQ = 0; iQ < mEvaluationList.size(); iQ++) {
             sid += mEvaluationList.get(iQ).getValue();
@@ -369,13 +376,16 @@ public class Questionnaire {
     private boolean addQuestion(int iPos) {
 
         mQuestionInfo.get(iPos).setActive();
+
+        Question question = createQuestion(iPos);
+        View view = generateView(question, isImmersive);
+
         // View is fetched from Storage List and added to Active List
-        mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
-                mContextQPA.mListOfActiveViews.size(),                                  // this is were the injection happens
-                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
-                mContextQPA.mListOfViewsStorage.get(iPos).isMandatory(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
-        renewPositionsInPager();
+        mContextQPA.addView(view,
+                question.getIsForced(),                                  // this is were the injection happens
+                question.getAnswerIds(),
+                question.getFilterIds());
+        //renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
@@ -386,12 +396,12 @@ public class Questionnaire {
     private boolean removeQuestion(int iPos) {
 
         // If view is not mandatory -> can really be removed including entries in mEvaluationList
-        if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
+        //if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.getFromId(iPos).getId())) {
 
             mQuestionInfo.get(iPos).setInactive();
 
             // Remove checked answers on removed questions
-            String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
+            /*String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
             List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
 
             // Visually un-check checkboxes and radio buttons
@@ -410,14 +420,14 @@ public class Questionnaire {
                         radioButton.setChecked(false);
                     }
                 }
-            }
+            }*/
             mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
-        }
+        //}
 
         // Remove View from ActiveList
-        mQuestionInfo.get(iPos).setInactive();
-        mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
-        renewPositionsInPager();
+        //mQuestionInfo.getFromId(iPos).setInactive();
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getId());
+        //renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
@@ -434,13 +444,13 @@ public class Questionnaire {
     }
 
     // Renews all the positions in information object gathered from actual order
-    private void renewPositionsInPager() {
+    /*private void renewPositionsInPager() {
 
         for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
-            int iId = mQuestionInfo.get(iItem).getId();
-            mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
+            int iId = mQuestionInfo.getFromId(iItem).getId();
+            mQuestionInfo.getFromId(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
         }
-    }
+    }*/
 
     private void returnToMenu() {
         //mContextQPA.createMenu();

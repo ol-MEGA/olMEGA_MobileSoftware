@@ -108,7 +108,7 @@ public class ConnectedThread extends Thread {
         //byte[] buffer = new byte[buffer_size];
         //int bytesToWrite = 0, bytesRemaining = 0;
 
-        // get stream to write audio data to flash memory
+        // getFromId stream to write audio data to flash memory
 
 
         // recording loop

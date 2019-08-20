@@ -1,5 +1,7 @@
 package com.fragtest.android.pa.HelperClasses;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -12,7 +14,7 @@ public class Find {
     }
 
     public static double findMaxVal(double[] data) {
-        // method to get the maximum value of an array
+        // method to getFromId the maximum value of an array
 
         double maxVal = data[0];
 
@@ -25,7 +27,7 @@ public class Find {
     }
 
     public static double findMinVal(double[] data) {
-        // method to get the minimum value of an array
+        // method to getFromId the minimum value of an array
 
         double minVal = data[0];
 
@@ -39,7 +41,7 @@ public class Find {
 
 
     public static int findMaxIdx(double[] data) {
-        // method to get the index of the maximum value of an array
+        // method to getFromId the index of the maximum value of an array
 
         double maxVal = findMaxVal(data);
         int maxIdx = 0;
@@ -55,7 +57,7 @@ public class Find {
     }
 
     public static int findMinIdx(double[] data) {
-        // method to get the index of  the minimum value of an array
+        // method to getFromId the index of  the minimum value of an array
 
         double minVal = findMinVal(data);
         int minIdx = 0;
@@ -71,7 +73,7 @@ public class Find {
     }
 
     public static int[] findGreaterIdx(double[] data, double data2){
-        // method to get the index of the value of data that are bigger than
+        // method to getFromId the index of the value of data that are bigger than
         // data2
 
         List<Integer> greaterIndices = new ArrayList<>();
@@ -94,7 +96,7 @@ public class Find {
     }
 
     public static int[] findGreaterIdx(int[] data, double data2){
-        // method to get the index of the value of data that are bigger than
+        // method to getFromId the index of the value of data that are bigger than
         // data2
 
         List<Integer> greaterIndices = new ArrayList<>();
@@ -117,7 +119,7 @@ public class Find {
     }
 
     public static int[] findGreaterVal(int[] data, double data2){
-        // method to get the index of the value of data that are bigger than
+        // method to getFromId the index of the value of data that are bigger than
         // data2
 
         List<Integer> greaterIndices = new ArrayList<>();

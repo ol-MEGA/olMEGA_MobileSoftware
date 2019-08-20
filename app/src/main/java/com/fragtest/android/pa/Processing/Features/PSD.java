@@ -78,8 +78,8 @@ public class PSD extends BasicProcessRunnable {
 		FloatFFT_1D fft = new FloatFFT_1D(NFFT);
 
 		for (int block = 0; block < nBlocks; block++) {
-			
-			/* get current block and window the data */
+
+            /* getFromId current block and window the data */
 			float[] xBlock = new float[blockSize];
 			float[] yBlock = new float[blockSize];
 		
@@ -123,7 +123,7 @@ public class PSD extends BasicProcessRunnable {
 				float[] P = new float[Xx.length];
 				
 				for (int i = 0; i < Xx.length-1; i += 2) {
-					/* multiply spectra of both channels to get cross power spectrum */
+                    /* multiply spectra of both channels to getFromId cross power spectrum */
 					P[i] 	= mFFT[mIdx[psd][0]][i] * vConjSecChan[i] - mFFT[mIdx[psd][0]][i+1] * vConjSecChan[i+1];
 					P[i+1]	= mFFT[mIdx[psd][0]][i] * vConjSecChan[i+1] + mFFT[mIdx[psd][0]][i+1] * vConjSecChan[i];
 					
@@ -189,7 +189,7 @@ public class PSD extends BasicProcessRunnable {
 		
 				
 		for (int i = 0; i < nPxyBlocks; i++) {
-			for (int j = 0; j < mPxyOnesided[0].length; j++) {			// divide by the sampling frequency to get the cross power spectral density
+            for (int j = 0; j < mPxyOnesided[0].length; j++) {            // divide by the sampling frequency to getFromId the cross power spectral density
 				mPxyOnesided[i][j] = mPxyOnesided[i][j] / fs;
 			}			
 		}

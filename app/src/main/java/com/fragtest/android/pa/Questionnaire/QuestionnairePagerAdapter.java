@@ -15,17 +15,16 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.ListOfViews;
 import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Menu.Help;
 import com.fragtest.android.pa.Menu.MenuPage;
-import com.fragtest.android.pa.Menu.SwipeMessage;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -42,9 +41,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private final int mUpdateIntervalBattery = 1000*60;
     private final int mUpdateIntervalTime = 1000*10;
     // Stores all active Views
-    ArrayList<QuestionViewActive> mListOfActiveViews;
+    public ListOfViews mListOfViews;
     // Stores all Views
-    ArrayList<QuestionViewActive> mListOfViewsStorage;
+    //ArrayList<QuestionView> mListOfViewsStorage;
     private boolean isCountDownRunning = false;
     private boolean isInForeGround = false;
     private boolean isMenu = false;
@@ -116,6 +115,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     };
 
     public QuestionnairePagerAdapter(MainActivity mainActivity, ViewPager viewPager, boolean immersive) {
+
         mMainActivity = mainActivity;
         mViewPager = viewPager;
         mVersion = mMainActivity.getVersion();
@@ -124,8 +124,45 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         batteryPlaceholderWeight = mMainActivity.getResources().getIntArray(R.array.battery_placeholder_weight)[0]*0.01f;
         batteryStates = mMainActivity.getResources().getIntArray(R.array.batteryStates);
         mVibration =  new Vibration(mMainActivity);
-        handleControls();
 
+        // Set controls and listeners
+
+        mMainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (isMenu) {
+                    createHelpScreen();
+                } else {
+                    mMainActivity.mAppState.finishQuest();
+                }
+            }
+        });
+        mMainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mViewPager.getCurrentItem() != 0) {
+                    mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+                }
+            }
+        });
+        mMainActivity.mArrowForward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if ((mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1)) {
+                    mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+                }
+            }
+        });
+        mMainActivity.mRevert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mMainActivity, R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
+                createQuestionnaire();
+            }
+        });
+
+        mCountDownHandler.post(mBatteryRunnable);
     }
 
     public void setIsCharging(boolean val) {
@@ -187,8 +224,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
-        mListOfActiveViews = new ArrayList<>();
-        mListOfViewsStorage = new ArrayList<>();
+        mListOfViews = new ListOfViews();
+        //mListOfViewsStorage = new ArrayList<>();
 
         createMenuLayout();
         setControlsMenu();
@@ -198,30 +235,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mCountDownHandler.post(mTimeRunnable);
     }
 
-    public void createSwipeMessage(int currentItemBeforeMessage) {
-
-        mCurrentItemBeforeMessage = currentItemBeforeMessage;
-        Log.e(LOG, "CREATING SWIPE MESSAGE: " + mCurrentItemBeforeMessage);
-
-        SwipeMessage swipeMessage = new SwipeMessage(mMainActivity, this);
-        LinearLayout layout = swipeMessage.generateView();
-
-        layout.setId(0);
-
-        addView(layout, mCurrentItemBeforeMessage - 1, mCurrentItemBeforeMessage - 1, true, null);
-
-        notifyDataSetChanged();
-
-        mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
-
-    }
-
     public void returnToQuestionnaire() {
 
         Log.e(LOG, "RETURNING");
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage - 1);
         removeView(mCurrentItemBeforeMessage);
-        //mListOfActiveViews.remove(mCurrentItemBeforeMessage);
+        //mListOfViews.removeFromId(mCurrentItemBeforeMessage);
         notifyDataSetChanged();
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
         mMainActivity.startRecordingFalseSwipes();
@@ -234,23 +253,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mNUM_PAGES = 1;
         mViewPager.setOffscreenPageLimit(0);
 
-        mListOfActiveViews = new ArrayList<>();
-        mListOfViewsStorage = new ArrayList<>();
-
-        createHelpLayout();
-    }
-
-    public void createHelpLayout() {
+        mListOfViews = new ListOfViews();
 
         LinearLayout layout = mHelpScreen.generateView();
 
         layout.setId(0);
         // Adds the Layout to List carrying all ACTIVE Views
-        mListOfActiveViews.add(new QuestionViewActive(layout, layout.getId(),
-                0, true, null));
-        // Adds the Layout to List storing ALL Views
-        mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
-                0, true, null));
+        mListOfViews.add(new QuestionView(layout, layout.getId(),
+                false, null, null));
 
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
@@ -276,12 +286,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
 
-        mListOfActiveViews = new ArrayList<>();
-        mListOfViewsStorage = new ArrayList<>();
+        mListOfViews = new ListOfViews();
 
         createQuestionnaireLayout();
         setControlsQuestionnaire();
+
         // Creates and destroys views based on filter id settings
+        // First, all pages are created, then unsuitable pages are erased from the list.
         mQuestionnaire.checkVisibility();
 
         notifyDataSetChanged();
@@ -302,8 +313,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
 
-        mListOfActiveViews = new ArrayList<>();
-        mListOfViewsStorage = new ArrayList<>();
+        mListOfViews = new ListOfViews();
+        //mListOfViewsStorage = new ArrayList<>();
 
         createQuestionnaireLayout();
         setControlsQuestionnaire();
@@ -454,14 +465,13 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     // Add new page to display
-    public int addView(View view, int position, int positionInRaw, boolean mandatory,
-                       List<Answer> listOfAnswers) {
+    public void addView(View view, boolean isForced,
+                        ArrayList<Integer> listOfAnswerIds, ArrayList<Integer> listOfFilterIds) {
 
-        mListOfActiveViews.add(new QuestionViewActive(view, view.getId(), positionInRaw, mandatory,
-                listOfAnswers));
+        mListOfViews.add(new QuestionView(view, view.getId(), isForced,
+                listOfAnswerIds, listOfFilterIds));
         // Sort the Views by their id (implicitly their determined order)
-        Collections.sort(mListOfActiveViews);
-        return position;
+        Collections.sort(mListOfViews);
     }
 
     // Inserts contents in blank menu
@@ -474,11 +484,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         layout.setId(0);
         // Adds the Layout to List carrying all ACTIVE Views
-        mListOfActiveViews.add(new QuestionViewActive(layout, layout.getId(),
-                0, true, null));
-        // Adds the Layout to List storing ALL Views
-        mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
-                0, true, null));
+        mListOfViews.add(new QuestionView(layout, layout.getId(),
+                false, null, null));
 
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
@@ -526,18 +533,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             LinearLayout layout = mQuestionnaire.generateView(question, isImmersive);
             // Sets Layout Id to Question Id
             layout.setId(mQuestionnaire.getId(question));
-            // Adds the Layout to List carrying all ACTIVE Views
-            mListOfActiveViews.add(new QuestionViewActive(layout, layout.getId(),
-                    iQuestion, question.isMandatory(), question.getAnswers()));
-            // Adds the Layout to List storing ALL Views
-            mListOfViewsStorage.add(new QuestionViewActive(layout, layout.getId(),
-                    iQuestion, question.isMandatory(), question.getAnswers()));
+
+            mListOfViews.add(new QuestionView(layout, layout.getId(), question.getIsForced(), question.getAnswerIds(), question.getFilterIds()));
+
         }
     }
 
     public boolean getHasQuestionBeenAnswered() {
         if (mViewPager.getCurrentItem() > 0) {
-            return mQuestionnaire.getQuestionHasBeenAnswered(mListOfActiveViews.get(
+            return mQuestionnaire.getQuestionHasBeenAnswered(mListOfViews.getFromId(
                     mViewPager.getCurrentItem() - 1).getId());
         } else {
             return true;
@@ -546,52 +550,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public boolean getHasQuestionForcedAnswer() {
         if (mViewPager.getCurrentItem() > 0) {
-            return mQuestionnaire.getIsForcedFromId(mListOfActiveViews.get(
+            return mQuestionnaire.getIsForcedFromId(mListOfViews.getFromId(
                     mViewPager.getCurrentItem() - 1).getId());
         } else {
             return true;
         }
-    }
-
-    // Set up control elements on top menu
-    private void handleControls() {
-
-        mMainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (isMenu) {
-                    createHelpScreen();
-                } else {
-                    mMainActivity.mAppState.finishQuest();
-                }
-            }
-        });
-        mMainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mViewPager.getCurrentItem() != 0) {
-                    mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
-                }
-            }
-        });
-        mMainActivity.mArrowForward.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if ((mViewPager.getCurrentItem() < mViewPager.getAdapter().getCount() - 1)) {
-                    mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
-                }
-            }
-        });
-        mMainActivity.mRevert.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(mMainActivity, R.string.infoTextRevert, Toast.LENGTH_SHORT).show();
-                createQuestionnaire();
-            }
-        });
-
-        mCountDownHandler.post(mBatteryRunnable);
     }
 
 
@@ -690,20 +653,20 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
 
     // Removes specific view from list and updates viewpager
-    int removeView(int position) {
+    void removeView(int id) {
 
         int nCurrentItem = mViewPager.getCurrentItem();
         mViewPager.setAdapter(null);
-        mListOfActiveViews.remove(position);
+        mListOfViews.removeFromId(id);
         mViewPager.setAdapter(this);
         mViewPager.setCurrentItem(nCurrentItem);
-        return position;
+        //return position;
     }
 
     // Returns position of element with given id in viewpager
     int getPositionFromId(int iId) {
-        for (int iItem = 0; iItem < mListOfActiveViews.size(); iItem++) {
-            if (mListOfActiveViews.get(iItem).getId() == iId) {
+        for (int iItem = 0; iItem < mListOfViews.size(); iItem++) {
+            if (mListOfViews.get(iItem).getId() == iId) {
                 return iItem;
             }
         }
@@ -713,7 +676,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Takes view out of viewpager and includes it in displayable collection
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
-        View view = mListOfActiveViews.get(position).getView();
+
+        View view = mListOfViews.get(position).getView();
         collection.addView(view);
         return view;
     }
@@ -727,16 +691,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Returns number of pages in viewpager
     @Override
     public int getCount() {
-        if (!(mListOfActiveViews == null) && !(mListOfActiveViews.size() == 0)) {
-            mNUM_PAGES = mListOfActiveViews.size();
+        if (!(mListOfViews == null) && !(mListOfViews.size() == 0)) {
+            mNUM_PAGES = mListOfViews.size();
         } else {
             mNUM_PAGES = 0;
         }
         return mNUM_PAGES;
-    }
-
-    public int getMaxAllowed() {
-        return mMAX_ALLOWED;
     }
 
     @Override
@@ -753,7 +713,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Returns position of object in displayed list
     @Override
     public int getItemPosition(Object object) {
-        int index = mListOfActiveViews.indexOf(object);
+
+        int index = mListOfViews.indexOf(object);
 
         if (index == -1)
             return POSITION_NONE;

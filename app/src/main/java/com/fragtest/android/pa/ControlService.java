@@ -771,7 +771,7 @@ public class ControlService extends Service {
             Log.e(LOG, "Device Time false: " + Calendar.getInstance().getTime());
             return false;
         /*}
-        if (Calendar.getInstance().get(Calendar.YEAR) < CURRENT_YEAR) {
+        if (Calendar.getInstance().getFromId(Calendar.YEAR) < CURRENT_YEAR) {
             messageClient(MSG_TIME_INCORRECT);
             Logger.info("Device Time false: " + Calendar.getInstance().getTime());
             LogIHAB.log("Device Time false: " + Calendar.getInstance().getTime());

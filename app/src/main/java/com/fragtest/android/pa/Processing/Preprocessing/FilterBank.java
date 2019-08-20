@@ -115,7 +115,7 @@ public class FilterBank {
             double w0 = (2*Math.PI*modFilterCFs[i])/fsamp;
             double[] filtCoeff = makeModulationFilter(w0,qFactor);
 
-            //get the filter coefficients
+            //getFromId the filter coefficients
             double[] b = {filtCoeff[0],filtCoeff[1],filtCoeff[2]};
             double[] a = {filtCoeff[3],filtCoeff[4],filtCoeff[5]};
 

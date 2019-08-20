@@ -72,7 +72,7 @@ public class ArrayHelper {
         //with the parameter dimension you pretend over which dimension the
         //mean was calculated.
 
-        //get array size;
+        //getFromId array size;
         int numLayer = array.length;
         int numRow = array[0].length;
         int numColumn = array[0][0].length;
@@ -159,7 +159,7 @@ public class ArrayHelper {
         //with the parameter dimension you pretend over which dimension the
         //maximum value was searched.
 
-        //get array size;
+        //getFromId array size;
         int numLayer = array.length;
         int numRow = array[0].length;
         int numColumn = array[0][0].length;
@@ -230,7 +230,7 @@ public class ArrayHelper {
     public static double[][][] max(double[][][] array){
         //this function find the maximum value of the 3D input array.
 
-        //get array size;
+        //getFromId array size;
         int numLayer = array.length;
         int numRow = array[0].length;
         int numColumn = array[0][0].length;
@@ -302,7 +302,7 @@ public class ArrayHelper {
 
     public static double[] sum(double[][] array, int dimension){
 
-        //get array size;
+        //getFromId array size;
         int numRow = array.length;
         int numColumn = array[0].length;
         double[] sumOut = new double[0];

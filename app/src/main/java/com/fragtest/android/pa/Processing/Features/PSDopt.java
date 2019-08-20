@@ -87,7 +87,7 @@ public class PSDopt extends BasicProcessRunnable {
 
         for (int block = 0; block < nBlocks; block++) {
 
-            /* get current block and window the data */
+            /* getFromId current block and window the data */
             for (int i = 0; i < blockSize; i++) {
                 Xx[i] = x[i + blockStartIdx[block]] * hannWin[i];
                 Yy[i] = y[i + blockStartIdx[block]] * hannWin[i];
@@ -167,7 +167,7 @@ public class PSDopt extends BasicProcessRunnable {
         }
 
         for (int i = 0; i < nPxyBlocks; i++) {
-            for (int j = 0; j < mPSD[0].length; j++) {			// divide by the sampling frequency to get the cross power spectral density
+            for (int j = 0; j < mPSD[0].length; j++) {            // divide by the sampling frequency to getFromId the cross power spectral density
                 mPSD[i][j] = mPSD[i][j] / fs;
             }
         }
