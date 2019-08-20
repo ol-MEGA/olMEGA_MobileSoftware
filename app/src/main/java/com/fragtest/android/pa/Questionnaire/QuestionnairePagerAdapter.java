@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -24,7 +23,6 @@ import com.fragtest.android.pa.Menu.MenuPage;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Created by ulrikkowalk on 28.02.17.
@@ -237,7 +235,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public void returnToQuestionnaire() {
 
-        Log.e(LOG, "RETURNING");
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage - 1);
         removeView(mCurrentItemBeforeMessage);
         //mListOfViews.removeFromId(mCurrentItemBeforeMessage);
@@ -470,8 +467,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         mListOfViews.add(new QuestionView(view, view.getId(), isForced,
                 listOfAnswerIds, listOfFilterIds));
+
         // Sort the Views by their id (implicitly their determined order)
-        Collections.sort(mListOfViews);
+        //Collections.sort(mListOfViews);
+
     }
 
     // Inserts contents in blank menu
@@ -532,7 +531,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             // Inflates Question Layout based on Question Details
             LinearLayout layout = mQuestionnaire.generateView(question, isImmersive);
             // Sets Layout Id to Question Id
-            layout.setId(mQuestionnaire.getId(question));
+            //layout.setId(mQuestionnaire.getId(question));
 
             mListOfViews.add(new QuestionView(layout, layout.getId(), question.getIsForced(), question.getAnswerIds(), question.getFilterIds()));
 
@@ -540,8 +539,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     }
 
     public boolean getHasQuestionBeenAnswered() {
+
         if (mViewPager.getCurrentItem() > 0) {
-            return mQuestionnaire.getQuestionHasBeenAnswered(mListOfViews.getFromId(
+            return mQuestionnaire.getQuestionHasBeenAnswered(mListOfViews.get(
                     mViewPager.getCurrentItem() - 1).getId());
         } else {
             return true;
@@ -550,8 +550,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     public boolean getHasQuestionForcedAnswer() {
         if (mViewPager.getCurrentItem() > 0) {
-            return mQuestionnaire.getIsForcedFromId(mListOfViews.getFromId(
-                    mViewPager.getCurrentItem() - 1).getId());
+            return mListOfViews.get(mViewPager.getCurrentItem() - 1).getIsForced();
         } else {
             return true;
         }
@@ -564,14 +563,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
 
     private void setBatteryLogo() {
-        LinearLayout.LayoutParams regparams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams regParams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
                 0,
                 (1.0f-2* batteryPlaceholderWeight)*(1.0f - batteryLevel)
         );
-        regparams.leftMargin = mUnits.convertDpToPixels(0);
-        regparams.rightMargin = mUnits.convertDpToPixels(10);
-        mMainActivity.mBatteryReg.setLayoutParams(regparams);
+        regParams.leftMargin = mUnits.convertDpToPixels(0);
+        regParams.rightMargin = mUnits.convertDpToPixels(10);
+        mMainActivity.mBatteryReg.setLayoutParams(regParams);
 
         LinearLayout.LayoutParams progparams = new LinearLayout.LayoutParams(
                 mUnits.convertDpToPixels(12),
@@ -659,6 +658,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setAdapter(null);
         mListOfViews.removeFromId(id);
         mViewPager.setAdapter(this);
+        //this.notifyDataSetChanged();
+        //Collections.sort(mListOfViews);
+
         mViewPager.setCurrentItem(nCurrentItem);
         //return position;
     }

@@ -20,16 +20,25 @@ class QuestionInfo {
     private boolean mIsForced;
 
     QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
-                 int position, boolean hidden,
+                 boolean hidden,
                  List<Integer> answerIds, boolean isForced) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
         mActive = true;
-        mPositionInPager = position;
         mHidden = hidden;
         mListOfAnswerIds = answerIds;
         mIsForced = isForced;
+    }
+
+    QuestionInfo(Question question) {
+        mQuestion = question;
+        mId = question.getQuestionId();
+        mFilterId = question.getFilterIds();
+        mActive = true;
+        mHidden = question.isHidden();
+        mListOfAnswerIds = question.getAnswerIds();
+        mIsForced = question.getIsForced();
     }
 
     boolean isActive() {

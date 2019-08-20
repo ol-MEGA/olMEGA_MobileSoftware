@@ -13,6 +13,7 @@ import com.fragtest.android.pa.Core.MetaData;
 import com.fragtest.android.pa.MainActivity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -69,6 +70,8 @@ public class Questionnaire {
         mMetaData.initialise();
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
+
+        putAllQuestionsInQuestionInfo();
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -106,6 +109,7 @@ public class Questionnaire {
         boolean isPhotograph = false;
 
         LinearLayout answerContainer = new LinearLayout(mMainActivity);
+        answerContainer.setId(question.getQuestionId());
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
@@ -321,10 +325,6 @@ public class Questionnaire {
     // views which is handled by QuestionnairePagerAdapter
     boolean checkVisibility() {
 
-        //for (int iItem = 0; iItem < mEvaluationList.size(); iItem++) {
-        //    Log.e(LOG, "IDS: " + mEvaluationList.get(iItem));
-        //}
-
         String sid = "";
         for (int iQ = 0; iQ < mEvaluationList.size(); iQ++) {
             sid += mEvaluationList.get(iQ).getValue();
@@ -337,11 +337,17 @@ public class Questionnaire {
         while (wasChanged) {
             wasChanged = false;
 
+            //Log.e(LOG, "Size of MQuestionInfo: " + mQuestionInfo.size());
+
+
             for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
                 QuestionInfo qI = mQuestionInfo.get(iPos);
+                //Log.e(LOG, "Talking About: " + qI.getQuestion());
 
                 if (qI.isActive()) {                                                                    // View is active but might be obsolete
+
+                    //Log.e(LOG, "ACTIVE!!");
 
                     if (qI.isHidden()) {                                                                // View is declared "Hidden"
                         removeQuestion(iPos);
@@ -357,6 +363,8 @@ public class Questionnaire {
 
                 } else {                                                                                // View is inactive but should possibly be active
 
+                    //Log.e(LOG, "INACTIVE!!");
+
                     if (!qI.isHidden()
                             && (mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdPositive())    // View is not declared "Hidden"
                             || qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
@@ -369,7 +377,22 @@ public class Questionnaire {
                 }
             }
         }
+
+        // Sort the List of Views by Id
+        Collections.sort(mContextQPA.mListOfViews);
+        // Force a reload of the List of Views
+        mContextQPA.notifyDataSetChanged();
+
         return true;
+    }
+
+    private void putAllQuestionsInQuestionInfo() {
+
+        for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
+            Question question = createQuestion(iQuestion);
+            mQuestionInfo.add(new QuestionInfo(question));
+            mQuestionInfo.get(iQuestion).setActive();
+        }
     }
 
     // Adds the question to the displayed list
@@ -379,17 +402,22 @@ public class Questionnaire {
 
         Question question = createQuestion(iPos);
         View view = generateView(question, isImmersive);
+        //view.setId(question.getQuestionId());
 
         // View is fetched from Storage List and added to Active List
         mContextQPA.addView(view,
                 question.getIsForced(),                                  // this is were the injection happens
                 question.getAnswerIds(),
                 question.getFilterIds());
+
+        //mQuestionInfo.add(new QuestionInfo(question));
+
         //renewPositionsInPager();
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
         return true;
+
     }
 
     // Removes the question from the displayed list and all given answer ids from memory
@@ -432,6 +460,7 @@ public class Questionnaire {
         mContextQPA.setQuestionnaireProgressBar();
 
         return true;
+
     }
 
     // Returns answers given by user for specific question
