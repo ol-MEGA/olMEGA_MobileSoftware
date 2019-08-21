@@ -972,8 +972,6 @@ public class MainActivity extends AppCompatActivity {
                     return mStatContext.getResources().getString(R.string.noQuestionnaires);
                 case ERROR_NO_USB:
                     return mStatContext.getResources().getString(R.string.noUSB);
-                case ERROR_NO_PERMISSION_AUDIO:
-                    return mStatContext.getResources().getString(R.string.noPermissionAudio);
                 default:
                     return "generic error message";
             }
