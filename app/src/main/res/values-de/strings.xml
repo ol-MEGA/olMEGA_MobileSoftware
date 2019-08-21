@@ -10,6 +10,7 @@
     <string name="buttonTextOkay">Weiter</string>
     <string name="timeRemaining">Nächster Fragebogen geplant in %h %m %s</string>
     <string name="menuText">Starte Frage-bogen</string>
+
     <string name="noQuestionnaires">• Fragebogen kann nicht geladen werden.</string>
     <string name="noBluetooth">• Sendebox kann nicht gefunden werden.</string>
     <string name="batteryWarning">• Bitte laden Sie das Smartphone.</string>

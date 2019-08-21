@@ -151,26 +151,123 @@ public class MainActivity extends AppCompatActivity {
 
     public INPUT_CONFIG mServiceState;
 
-    // Errors
-    public enum AppErrors {
-        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST, ERROR_NO_USB;
+    /**
+     * PERMISSION STUFF (ANDROID 6+)
+     */
 
-        public String getErrorMessage() {
-            switch (this) {
-                case ERROR_NO_BT:
-                    return mStatContext.getResources().getString(R.string.noBluetooth);
-                case ERROR_BATT_LOW:
-                    return mStatContext.getResources().getString(R.string.batteryWarning);
-                case ERROR_BATT_CRITICAL:
-                    return mStatContext.getResources().getString(R.string.batteryCritical);
-                case ERROR_NO_QUEST:
-                    return mStatContext.getResources().getString(R.string.noQuestionnaires);
-                case ERROR_NO_USB:
-                    return mStatContext.getResources().getString(R.string.noUSB);
-                default:
-                    return "generic error message";
+    // TODO: Need to implement this
+    public void checkForPermissions() {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.RECORD_AUDIO)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        MY_PERMISSIONS_RECORD_AUDIO);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
+                permissionGranted = true;
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
             }
         }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            // Permission is not granted
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.WRITE_SETTINGS)) {
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.WRITE_SETTINGS},
+                        MY_PERMISSIONS_WRITE_SETTINGS);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.VIBRATE)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_VIBRATE);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WAKE_LOCK)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_WAKE_LOCK);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_BOOT_COMPLETED)
+                != PackageManager.PERMISSION_GRANTED) {
+            LogIHAB.log("Requesting permission to record audio.");
+            requestPermissions(MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
+        }
+
+
     }
 
     public ArrayList<String> mErrorList = new ArrayList<>();
@@ -859,129 +956,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * PERMISSION STUFF (ANDROID 6+)
-     */
+    // Errors
+    public enum AppErrors {
+        ERROR_NO_BT, ERROR_BATT_LOW, ERROR_BATT_CRITICAL, ERROR_NO_QUEST, ERROR_NO_USB, ERROR_NO_PERMISSION_AUDIO;
 
-    // TODO: Need to implement this
-
-    public void checkForPermissions() {
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.RECORD_AUDIO)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        MY_PERMISSIONS_RECORD_AUDIO);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-
-        }
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_EXTERNAL_STORAGE)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_READ_EXTERNAL_STORAGE);
-                permissionGranted = true;
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+        public String getErrorMessage() {
+            switch (this) {
+                case ERROR_NO_BT:
+                    return mStatContext.getResources().getString(R.string.noBluetooth);
+                case ERROR_BATT_LOW:
+                    return mStatContext.getResources().getString(R.string.batteryWarning);
+                case ERROR_BATT_CRITICAL:
+                    return mStatContext.getResources().getString(R.string.batteryCritical);
+                case ERROR_NO_QUEST:
+                    return mStatContext.getResources().getString(R.string.noQuestionnaires);
+                case ERROR_NO_USB:
+                    return mStatContext.getResources().getString(R.string.noUSB);
+                case ERROR_NO_PERMISSION_AUDIO:
+                    return mStatContext.getResources().getString(R.string.noPermissionAudio);
+                default:
+                    return "generic error message";
             }
         }
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_WRITE_EXTERNAL_STORAGE);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            LogIHAB.log("Requesting permission to record audio.");
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    Manifest.permission.WRITE_SETTINGS)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_SETTINGS},
-                        MY_PERMISSIONS_WRITE_SETTINGS);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.VIBRATE)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_VIBRATE);
-        }
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WAKE_LOCK)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_WAKE_LOCK);
-        }
-
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECEIVE_BOOT_COMPLETED)
-                !=PackageManager.PERMISSION_GRANTED)
-        {
-            LogIHAB.log("Requesting permission to record audio.");
-            requestPermissions(MY_PERMISSIONS_RECEIVE_BOOT_COMPLETED);
-        }
-
-
     }
 
 

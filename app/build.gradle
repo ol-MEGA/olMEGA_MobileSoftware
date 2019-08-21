@@ -9,11 +9,11 @@ android {
             keyPassword 'android'
         }
     }
-    compileSdkVersion 25
+    compileSdkVersion 26
     defaultConfig {
         applicationId "com.fragtest.android.pa"
         minSdkVersion 23
-        targetSdkVersion 25
+        targetSdkVersion 26
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.config
 
