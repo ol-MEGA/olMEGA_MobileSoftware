@@ -1,6 +1,7 @@
 package com.fragtest.android.pa.ServiceStates;
 
 import android.content.SharedPreferences;
+import android.media.AudioDeviceInfo;
 
 public interface ServiceState {
 
@@ -55,5 +56,15 @@ public interface ServiceState {
     void bluetoothReceived(String action, SharedPreferences sharedPreferences);
 
     void onDestroy();
+
+    void bluetoothConnected();
+
+    void bluetoothDisconnected();
+
+    void bluetoothSwitchedOff();
+
+    void bluetoothSwitchedOn();
+
+    AudioDeviceInfo getPreferredDevice();
 
 }

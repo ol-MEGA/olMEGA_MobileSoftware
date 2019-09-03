@@ -264,7 +264,7 @@ public class ConnectedThread extends Thread {
                             OutputFile.flush();
                             if (isRecording == false) {
                                 try {
-                                    mConnectedThread.OutputFile.close();
+                                    mConnectedThread.OutputFile.release();
                                 } catch (Exception e) {
                                 }
                                 mConnectedThread.OutputFile = null;
@@ -281,7 +281,7 @@ public class ConnectedThread extends Thread {
             }
             try {
                 if (OutputFile != null)
-                    OutputFile.close();
+                    OutputFile.release();
             } catch (Exception e) {
                 Log.d(LOG, e.getMessage());
                 this.cancel();

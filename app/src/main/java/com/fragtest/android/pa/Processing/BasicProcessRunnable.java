@@ -148,7 +148,7 @@ public class BasicProcessRunnable implements Runnable {
 
 			// TODO: consider writing the header only once (minus timestamp)  
 
-			featureRAF.writeInt(0);                        // block count will be written on close
+            featureRAF.writeInt(0);                        // block count will be written on release
 			featureRAF.writeInt(nFeatures + 2);            // feature dimension count + timestamps (relative)
 			if (procBlockSize == procOutBlockSize) {
 				featureRAF.writeInt(procBlockSize);        // [samples]

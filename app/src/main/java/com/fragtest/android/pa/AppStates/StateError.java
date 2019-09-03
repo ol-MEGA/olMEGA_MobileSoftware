@@ -171,4 +171,14 @@ public class StateError implements AppState {
             mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);
         }
     }
+
+    @Override
+    public void startRecording() {
+
+    }
+
+    @Override
+    public void stopRecording() {
+
+    }
 }

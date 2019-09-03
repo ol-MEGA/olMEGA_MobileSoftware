@@ -203,16 +203,16 @@ public class MainActivity extends AppCompatActivity {
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
             // only announce on change
-            if (plugged && !ControlService.isCharging) {
+            if (plugged && !ControlService.getIsCharging()) {
                 mAppState.chargeOn();
                 // a change towards charging
                 messageService(ControlService.MSG_CHARGING_ON);
-            } else if (!plugged && ControlService.isCharging) {
+            } else if (!plugged && ControlService.getIsCharging()) {
                 mAppState.chargeOff();
                 // a change towards not charging
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
-            ControlService.isCharging = plugged;
+            ControlService.setIsCharging(plugged);
             mAdapter.setIsCharging(plugged);
 
         }
@@ -251,9 +251,9 @@ public class MainActivity extends AppCompatActivity {
 
             // Are we plugged in?
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            ControlService.isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_PLUGGED_USB;
-            if (ControlService.isCharging) {
+            ControlService.setIsCharging(status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_PLUGGED_USB);
+            if (ControlService.getIsCharging()) {
                 messageService(ControlService.MSG_CHARGING_ON_PRE);
                 mAppState.chargeOn();
             }
@@ -306,9 +306,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void doBindService() {
-        if (!isServiceRunning() && permissionGranted) {
-            startService(new Intent(this, ControlService.class));
-        }
+        /*if (!isServiceRunning() && permissionGranted) {
+            bindService(new Intent(this, ControlService.class),
+                    mConnection, ControlService.BIND_AUTO_CREATE);
+        }*/
         if (permissionGranted) {
             bindService(new Intent(this, ControlService.class),
                     mConnection, Context.BIND_AUTO_CREATE);
@@ -1204,13 +1205,13 @@ public class MainActivity extends AppCompatActivity {
 
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
-                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                        if (isBTPresent) {
+                    /*if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
+                        if (getIsBTPresent()) {
                             mAppState.bluetoothPresent();
                         } else {
                             mAppState.bluetoothNotPresent();
                         }
-                    }
+                    }*/
 
                     break;
 
@@ -1221,19 +1222,23 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_RECORDING:
 
-                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                        mAppState.bluetoothPresent();
-                        isBTPresent = true;
-                    }
+                    mAppState.startRecording();
+                    Log.e(LOG, "AppState: " + mAppState + " Start Recording");
+                    //if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
+                    //    mAppState.bluetoothPresent();
+                    //setIsBTPresent(true);
+                    //}
 
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
+                    mAppState.stopRecording();
+                    Log.e(LOG, "AppState: " + mAppState + " Stop Recording");
+                    /*if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
                         mAppState.bluetoothNotPresent();
-                        isBTPresent = false;
-                    }
+                        setIsBTPresent(false);
+                    }*/
 
                     break;
 
@@ -1268,12 +1273,12 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_BT_CONNECTED:
                     setIsBTPresent(true);
-                    mAppState.bluetoothPresent();
+                    //mAppState.bluetoothPresent();
                     break;
 
                 case ControlService.MSG_BT_DISCONNECTED:
                     setIsBTPresent(false);
-                    mAppState.bluetoothNotPresent();
+                    //mAppState.bluetoothNotPresent();
                     break;
 
                 case ControlService.MSG_STATE_CHANGE:

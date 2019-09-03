@@ -10,8 +10,6 @@ import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
-import java.util.ResourceBundle;
-
 /**
  * Created by ul1021 on 15.04.2018.
  */
@@ -133,19 +131,19 @@ public class StateConnecting implements AppState {
 
     @Override
     public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        stopConnecting();
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setLogoActive();
-        mainActivity.setState(mainActivity.getStateRunning());
-        mainActivity.mAppState.setInterface();
+        //LogIHAB.log(LOG + ":" + "bluetoothPresent()");
+        //stopConnecting();
+        //mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        //mainActivity.setLogoActive();
+        //mainActivity.setState(mainActivity.getStateRunning());
+        //mainActivity.mAppState.setInterface();
     }
 
     @Override
     public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.setLogoInactive();
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+        //LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
+        //mainActivity.setLogoInactive();
+        //mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 
     @Override
@@ -250,5 +248,25 @@ public class StateConnecting implements AppState {
             mainActivity.mAppState.setInterface();
             mainActivity.setLogoInactive();
         }
+    }
+
+    @Override
+    public void startRecording() {
+        LogIHAB.log(LOG + ":" + "startRecording()");
+        Log.e(LOG, "Start Recording");
+        stopConnecting();
+        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_USB);
+        mainActivity.setLogoActive();
+        mainActivity.setState(mainActivity.getStateRunning());
+        mainActivity.mAppState.setInterface();
+    }
+
+    @Override
+    public void stopRecording() {
+        LogIHAB.log(LOG + ":" + "stopRecording()");
+        Log.e(LOG, "Stop Recording");
+        mainActivity.setLogoInactive();
+        //mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 }

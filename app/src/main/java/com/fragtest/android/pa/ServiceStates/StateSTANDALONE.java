@@ -1,6 +1,7 @@
 package com.fragtest.android.pa.ServiceStates;
 
 import android.content.SharedPreferences;
+import android.media.AudioDeviceInfo;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
@@ -9,21 +10,26 @@ public class StateSTANDALONE implements ServiceState {
 
     ControlService mService;
     String LOG = "StateSTANDALONE";
+    private boolean isBound = false;
+    private AudioDeviceInfo mDevice = null;
 
     public StateSTANDALONE(ControlService service) {
         this.mService = service;
-
     }
 
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":setInterface()");
 
-        if (mService.getIsRecording()) {
+        if (ControlService.getIsRecording()) {
             LogIHAB.log(LOG + ": stopping Recording");
             mService.stopRecording();
         }
+    }
 
+    @Override
+    public AudioDeviceInfo getPreferredDevice() {
+        return mDevice;
     }
 
     @Override
@@ -124,7 +130,6 @@ public class StateSTANDALONE implements ServiceState {
     @Override
     public void chargingOn() {
         mService.stopRecording();
-        mService.getMTaskHandler().postDelayed(mService.mDisableBT, mService.mDisableBTTime);
     }
 
     @Override
@@ -145,11 +150,30 @@ public class StateSTANDALONE implements ServiceState {
 
     @Override
     public void bluetoothReceived(String action, SharedPreferences sharedPreferences) {
-
     }
 
     @Override
     public void onDestroy() {
        mService.stopAlarmAndCountdown();
+    }
+
+    @Override
+    public void bluetoothConnected() {
+
+    }
+
+    @Override
+    public void bluetoothDisconnected() {
+
+    }
+
+    @Override
+    public void bluetoothSwitchedOff() {
+
+    }
+
+    @Override
+    public void bluetoothSwitchedOn() {
+
     }
 }

@@ -44,4 +44,8 @@ public interface AppState {
 
     void usbNotPresent();
 
+    void startRecording();
+
+    void stopRecording();
+
 }

@@ -89,7 +89,7 @@ public class AudioFileIO {
             FileOutputStream os = new FileOutputStream( file, false );
             stream = new DataOutputStream( new BufferedOutputStream( os ));
 
-            // Write zeros. This will be filed with a proper header on close.
+            // Write zeros. This will be filed with a proper header on release.
             // Alternatively, FileChannel might be used.
             if ( isWave ) {
                 int nBytes = 44; // length of the WAV (RIFF) header
@@ -110,7 +110,7 @@ public class AudioFileIO {
 
     }
 
-    // close the output stream
+    // release the output stream
     public void closeDataOutStream(){
         try {
             stream.flush();
@@ -138,7 +138,7 @@ public class AudioFileIO {
         return inputStream;
     }
 
-    // close the input stream
+    // release the input stream
     public void closeInStream( BufferedInputStream stream ){
         try {
             stream.close();

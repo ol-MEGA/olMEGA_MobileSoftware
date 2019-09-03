@@ -168,4 +168,14 @@ public class StateCharging implements AppState {
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
     }
+
+    @Override
+    public void startRecording() {
+
+    }
+
+    @Override
+    public void stopRecording() {
+
+    }
 }

@@ -183,4 +183,14 @@ public class StateQuest implements AppState {
             mainActivity.setLogoInactive();
         }
     }
+
+    @Override
+    public void startRecording() {
+
+    }
+
+    @Override
+    public void stopRecording() {
+
+    }
 }

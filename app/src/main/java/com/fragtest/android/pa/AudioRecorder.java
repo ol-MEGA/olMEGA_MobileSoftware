@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -66,18 +67,39 @@ public class AudioRecorder {
         }, "AudioRecorder Thread");
     }
 
+    public boolean setPreferredDevice(AudioDeviceInfo device) {
+
+        if (device != null) {
+            Log.e(LOG, "Device set through audioRecord: " + device.getType());
+            return audioRecord.setPreferredDevice(device);
+        }
+        return false;
+    }
+
+    public int getPreferredDevice() {
+        if (audioRecord != null) {
+            if (audioRecord.getPreferredDevice() != null) {
+                return audioRecord.getPreferredDevice().getType();
+            }
+        }
+        return AudioDeviceInfo.TYPE_UNKNOWN;
+    }
+
     public void start() {
         stopRecording = false;
         recordingThread.start();
+        ControlService.setIsRecording(true);
     }
 
 
     public void stop() {
         stopRecording = true;
+        ControlService.setIsRecording(false);
     }
 
-    public void close() {
+    public void release() {
         audioRecord.release();
+        ControlService.setIsRecording(false);
     }
 
     public int getState() {
@@ -87,6 +109,8 @@ public class AudioRecorder {
     private void recordAudio() {
 
         audioRecord.startRecording();
+
+        Log.e(LOG, "RECORDING AUDIO.");
 
         byte[] buffer = new byte[bufferSize];
         int bytesToWrite = 0, bytesRemaining = 0;
@@ -157,6 +181,7 @@ public class AudioRecorder {
                     e.printStackTrace();
                 }
             }
+            //ControlService.setIsRecording(false);
         }
 
         if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {

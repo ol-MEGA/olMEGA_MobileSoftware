@@ -3,7 +3,6 @@ package com.fragtest.android.pa.AppStates;
 import android.util.Log;
 import android.view.View;
 
-import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
@@ -165,5 +164,15 @@ public class StateProposing implements AppState {
             mainActivity.mAppState.setInterface();
             mainActivity.setLogoInactive();
         }
+    }
+
+    @Override
+    public void startRecording() {
+
+    }
+
+    @Override
+    public void stopRecording() {
+
     }
 }

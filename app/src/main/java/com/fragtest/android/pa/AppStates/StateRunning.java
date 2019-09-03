@@ -10,8 +10,6 @@ import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
 
-import java.util.ResourceBundle;
-
 /**
  * Created by ul1021 on 15.04.2018.
  */
@@ -25,6 +23,18 @@ public class StateRunning implements AppState {
     public StateRunning(MainActivity context, QuestionnairePagerAdapter qpa) {
         this.mainActivity = context;
         this.qpa = qpa;
+    }
+
+    @Override
+    public void startRecording() {
+
+    }
+
+    @Override
+    public void stopRecording() {
+        mainActivity.setLogoInactive();
+        mainActivity.setState(mainActivity.getStateConnecting());
+        mainActivity.mAppState.setInterface();
     }
 
     @Override
@@ -83,16 +93,16 @@ public class StateRunning implements AppState {
     @Override
     public void bluetoothPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        //mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 
     @Override
     public void bluetoothNotPresent() {
         LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.setLogoInactive();
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setState(mainActivity.getStateConnecting());
-        mainActivity.mAppState.setInterface();
+        //mainActivity.setLogoInactive();
+        //mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+        //mainActivity.setState(mainActivity.getStateConnecting());
+        //mainActivity.mAppState.setInterface();
     }
 
     @Override

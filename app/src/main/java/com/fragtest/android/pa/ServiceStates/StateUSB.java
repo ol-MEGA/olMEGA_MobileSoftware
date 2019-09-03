@@ -1,6 +1,9 @@
 package com.fragtest.android.pa.ServiceStates;
 
 import android.content.SharedPreferences;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
@@ -9,7 +12,9 @@ public class StateUSB implements ServiceState {
 
     ControlService mService;
     String LOG = "StateUSB";
-    //private boolean mIsUSBPresent = false;
+    AudioManager mAudioManager;
+    private boolean isBound = false;
+    private AudioDeviceInfo mDevice;
 
     public StateUSB(ControlService service) {
         this.mService = service;
@@ -21,11 +26,32 @@ public class StateUSB implements ServiceState {
 
         LogIHAB.log(LOG + ":setInterface()");
 
-        if (mService.checkUSB()) {
+        mAudioManager = (AudioManager) mService.getSystemService(mService.AUDIO_SERVICE);
+        AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
+
+        boolean found = false;
+        for (AudioDeviceInfo device : devices) {
+            Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
+            // Device needs to be A2DP Profile and only provide audio output
+            if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
+                mService.setPreferredAudioDevice(device);
+                found = true;
+            }
+        }
+        if (!found) {
+            Log.e(LOG, "NO USB DEVICE WAS FOUND!");
+        }
+
+        if (found) {
             usbAttached();
         } else {
             usbDetached();
         }
+    }
+
+    @Override
+    public AudioDeviceInfo getPreferredDevice() {
+        return mDevice;
     }
 
     @Override
@@ -131,7 +157,6 @@ public class StateUSB implements ServiceState {
     @Override
     public void chargingOn() {
         mService.stopRecording();
-        mService.getMTaskHandler().postDelayed(mService.mDisableBT, mService.mDisableBTTime);
     }
 
     @Override
@@ -171,5 +196,25 @@ public class StateUSB implements ServiceState {
     @Override
     public void onDestroy() {
         mService.stopAlarmAndCountdown();
+    }
+
+    @Override
+    public void bluetoothConnected() {
+
+    }
+
+    @Override
+    public void bluetoothDisconnected() {
+
+    }
+
+    @Override
+    public void bluetoothSwitchedOff() {
+
+    }
+
+    @Override
+    public void bluetoothSwitchedOn() {
+
     }
 }
