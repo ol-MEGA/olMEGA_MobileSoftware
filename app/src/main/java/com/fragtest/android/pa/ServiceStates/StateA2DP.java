@@ -79,6 +79,13 @@ public class StateA2DP implements ServiceState {
     }
 
     @Override
+    public void changeState() {
+        /** Cleanup **/
+        mService.stopRecording();
+        mService.shutdownAudioRecorder();
+    }
+
+    @Override
     public AudioDeviceInfo getPreferredDevice() {
         return mDevice;
     }

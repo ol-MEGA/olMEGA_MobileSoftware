@@ -69,17 +69,35 @@ public class ConnectedThread extends Thread {
 
     }
 
+    // Send message to connected client
+    private void messageClient(int what) {
 
+        if (mMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null");
+        }
+    }
 
     public void stopRecording() {
         isRecording = false;
+        ControlService.setIsRecording(false);
+        messageClient(ControlService.MSG_STOP_RECORDING);
+        Log.e(LOG, "STOPPING AUDIO RECORDING");
     }
-
-
 
     public void run() {
 
+        Log.e(LOG, "STARTING AUDIO RECORDING");
+        messageClient(ControlService.MSG_START_RECORDING);
+
         isRecording = true;
+        ControlService.setIsRecording(true);
+
 
         try {
             tmpIn = mmSocket.getInputStream();
@@ -145,7 +163,10 @@ public class ConnectedThread extends Thread {
                     ringBuffer.addByte((byte) bis.read());
                     count++;
 
-                    if (ringBuffer.getByte(0) == (byte) 0x0 && ringBuffer.getByte(-1) == (byte) 0x80 && ringBuffer.getByte(-(buffer_size + 5)) == (byte) 0x7F && ringBuffer.getByte(-(buffer_size + 4)) == (byte) 0xFF) {
+                    if (ringBuffer.getByte(0) == (byte) 0x0 &&
+                            ringBuffer.getByte(-1) == (byte) 0x80 &&
+                            ringBuffer.getByte(-(buffer_size + 5)) == (byte) 0x7F &&
+                            ringBuffer.getByte(-(buffer_size + 4)) == (byte) 0xFF) {
                         count = 0;
                         lastAudioBlock = Arrays.copyOf(ringBuffer.data(-(buffer_size + 3), buffer_size), buffer_size);
                         AudioVolume = (short) (((ringBuffer.getByte(-2) & 0xFF) << 8) | (ringBuffer.getByte(-3) & 0xFF));
@@ -158,7 +179,7 @@ public class ConnectedThread extends Thread {
                     if (count == 0) { //count == 0
 
                         numBlocks++;
-                        /*leftLevel = 0;
+                        leftLevel = 0;
                         rightLevel = 0;
                         for (int countSample = 0; countSample < buffer_size; countSample += 2) {
                             short int16 = (short) (((lastAudioBlock[countSample + 1] & 0xFF) << 8) | (lastAudioBlock[countSample] & 0xFF));
@@ -166,23 +187,23 @@ public class ConnectedThread extends Thread {
                                 leftLevel += Math.abs(int16);
                             else
                                 rightLevel += Math.abs(int16);
-                        }*/
+                        }
 
                         if (outputStream != null) {
                             for (int countSample = 0; countSample < buffer_size; countSample += 2) {
                                 short int16 = (short) (((lastAudioBlock[countSample + 1] & 0xFF) << 8) | (lastAudioBlock[countSample] & 0xFF));
-                                /*if (is32bitRecording) {
+                                if (is32bitRecording) {
                                     int int32 = int16 << (16 - AudioVolume);
                                     outputStream.write((byte)(int32 >> 24));
                                     outputStream.write((byte)(int32 >> 16));
                                     outputStream.write((byte)(int32 >> 8));
                                     outputStream.write((byte)(int32));
                                 } else {
-*/
-                                outputStream.write(int16 >> 8);
-                                outputStream.write(int16);
-                                bytesWritten += 4;
-                                //}
+
+                                    outputStream.write(int16 >> 8);
+                                    outputStream.write(int16);
+                                    bytesWritten += 4;
+                                }
                             }
 
                             outputStream.flush();
@@ -210,6 +231,7 @@ public class ConnectedThread extends Thread {
             fileIO.closeDataOutStream();
 
             // report back to service
+            //messageClient(ControlService.MSG_CHUNK_RECORDED);
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
                 Bundle data = new Bundle();
@@ -221,72 +243,6 @@ public class ConnectedThread extends Thread {
                     e.printStackTrace();
                 }
             }
-/*
-            while (run) {
-                try {
-                    ringBuffer.addByte((byte) bis.read());
-                    count++;
-                    if (ringBuffer.getByte(0) == (byte) 0x0 && ringBuffer.getByte(-1) == (byte) 0x80 && ringBuffer.getByte(-(buffer_size + 5)) == (byte) 0x7F && ringBuffer.getByte(-(buffer_size + 4)) == (byte) 0xFF) {
-                        count = 0;
-                        lastAudioBlock = Arrays.copyOf(ringBuffer.data(-(buffer_size + 3), buffer_size), buffer_size);
-                        AudioVolume = (short) (((ringBuffer.getByte(-2) & 0xFF) << 8) | (ringBuffer.getByte(-3) & 0xFF));
-                        countCorrectPackages++;
-                    } else if (count == buffer_size + additionalBytesCount) {
-                        count = 0;
-                        lostBlocks++;
-                        countCorrectPackages = 0;
-                    }
-                    if (count == 0) {
-                        numBlocks++;
-                        leftLevel = 0;
-                        rightLevel = 0;
-                        for (int countSample = 0; countSample < buffer_size; countSample += 2) {
-                            short int16 = (short) (((lastAudioBlock[countSample + 1] & 0xFF) << 8) | (lastAudioBlock[countSample] & 0xFF));
-                            if (countSample % 4 == 0)
-                                leftLevel += Math.abs(int16);
-                            else
-                                rightLevel += Math.abs(int16);
-                        }
-                        if (OutputFile != null) {
-                            for (int countSample = 0; countSample < buffer_size; countSample += 2) {
-                                short int16 = (short) (((lastAudioBlock[countSample + 1] & 0xFF) << 8) | (lastAudioBlock[countSample] & 0xFF));
-                                if (is32bitRecording) {
-                                    int int32 = int16 << (16 - AudioVolume);
-                                    OutputFile.write((byte) (int32 >> 24));
-                                    OutputFile.write((byte) (int32 >> 16));
-                                    OutputFile.write((byte) (int32 >> 8));
-                                    OutputFile.write((byte) (int32));
-                                } else {
-                                    OutputFile.write((byte) (int16 >> 8));
-                                    OutputFile.write((byte) (int16));
-                                }
-                            }
-                            OutputFile.flush();
-                            if (isRecording == false) {
-                                try {
-                                    mConnectedThread.OutputFile.release();
-                                } catch (Exception e) {
-                                }
-                                mConnectedThread.OutputFile = null;
-                            }
-                        } else {
-                            Log.e(LOG, "Output File is null");
-                            //   audioTrack.write(lastAudioBlock, 0, buffer_size);
-                        }
-                    }
-                } catch (IOException e) {
-                    this.cancel();
-                    Log.d(LOG, e.toString());
-                }
-            }
-            try {
-                if (OutputFile != null)
-                    OutputFile.release();
-            } catch (Exception e) {
-                Log.d(LOG, e.getMessage());
-                this.cancel();
-            }
-            */
         }
     }
 

@@ -499,7 +499,7 @@ public class MainActivity extends AppCompatActivity {
             case RFCOMM:
                 mRecord.setBackgroundTintList(
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                R.color.BatteryGreen, null)));
+                                R.color.BatteryYellow, null)));
                 break;
 
             case USB:
@@ -670,7 +670,7 @@ public class MainActivity extends AppCompatActivity {
         enableKioskMode(USE_KIOSK_MODE);
 
         // ONLY Needed in case of uninstall!!!
-        //mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+        mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
 
     }
 

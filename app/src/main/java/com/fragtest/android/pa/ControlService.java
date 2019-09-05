@@ -28,7 +28,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
-import com.fragtest.android.pa.Core.ConnectedThread;
 import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
@@ -61,7 +60,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * The brains of the operation.
@@ -291,18 +289,12 @@ public class ControlService extends Service {
 
     Context context = this;
 
-    // RFCOMM-specific
-    public ConnectedThread mConnectedThread = null;
-    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-
-    /**
-     * State Affairs
-     **/
-
-
-    public void setState(ServiceState newServiceState) {
-        mServiceState = newServiceState;
+    public static void setIsRecording(boolean status) {
+        synchronized (recordingLock) {
+            isRecording = status;
+            Log.e(LOG, "Recording Status: " + status);
+        }
     }
 
     public ServiceState getStateA2DP() {
@@ -391,6 +383,16 @@ public class ControlService extends Service {
         }
     }
 
+    /**
+     * State Affairs
+     **/
+
+
+    public void setState(ServiceState newServiceState) {
+        mServiceState.changeState();
+        mServiceState = newServiceState;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flag, int StartID) {
         Log.d(LOG, "onStartCommand");
@@ -422,16 +424,9 @@ public class ControlService extends Service {
     }
 
     /**
-     * Thread-safe status variables
+     * Messenger
      */
 
-
-    static void setIsRecording(boolean status) {
-        synchronized (recordingLock) {
-            isRecording = status;
-            Log.e(LOG, "Recording Status: " + status);
-        }
-    }
 
     // Send message to connected client with additional data
     public void messageClient(int what, Bundle data) {
@@ -462,6 +457,14 @@ public class ControlService extends Service {
             Log.d(LOG, "mClientMessenger is null - storing message: " + what);
             mMessageList.addMessage(what);
         }
+    }
+
+    public Messenger getClientMessenger() {
+        return mClientMessenger;
+    }
+
+    public Messenger getServiceMessenger() {
+        return serviceMessenger;
     }
 
     /** Lifecycle **/
@@ -1041,33 +1044,27 @@ public class ControlService extends Service {
 
         if (!operationMode.equals(operationModeStatus) || operationModeStatus.equals("")) {
 
-            stopRecording();
+            // Might be moved to state classes
+            //stopRecording();
+            //shutdownAudioRecorder();
 
-            shutdownAudioRecorder();
+            // Cleanup
+            mServiceState.changeState();
 
             switch (operationMode) {
                 case "A2DP":
                     operationModeStatus = INPUT_CONFIG.A2DP.toString();
                     mServiceState = getStateA2DP();
-
-                    //setupAudioRecorder();
-
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
                     operationModeStatus = INPUT_CONFIG.RFCOMM.toString();
                     mServiceState = getStateRFCOMM();
-
-                    //setupAudioRecorder();
-
                     INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "USB":
                     operationModeStatus = INPUT_CONFIG.USB.toString();
                     mServiceState = getStateUSB();
-
-                    //setupAudioRecorder();
-
                     INPUT = INPUT_CONFIG.USB;
                     break;
                 case "STANDALONE":

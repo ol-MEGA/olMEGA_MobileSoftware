@@ -28,6 +28,11 @@ public class StateSTANDALONE implements ServiceState {
     }
 
     @Override
+    public void changeState() {
+        /** Cleanup **/
+    }
+
+    @Override
     public AudioDeviceInfo getPreferredDevice() {
         return mDevice;
     }
