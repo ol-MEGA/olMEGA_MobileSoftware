@@ -51,6 +51,7 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void changeState() {
+        Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
     }
 

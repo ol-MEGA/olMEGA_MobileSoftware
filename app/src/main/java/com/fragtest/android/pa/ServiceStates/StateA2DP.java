@@ -41,7 +41,8 @@ public class StateA2DP implements ServiceState {
                         if (mService.getBluetoothAdapter().isDiscovering()) {
                             mService.getBluetoothAdapter().cancelDiscovery();
                         }
-                        mService.getBluetoothAdapter().startDiscovery();
+                        mService.messageClient(ControlService.MSG_BT_DISCONNECTED);
+                        //mService.getBluetoothAdapter().startDiscovery();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -80,6 +81,7 @@ public class StateA2DP implements ServiceState {
 
     @Override
     public void changeState() {
+        Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
         mService.stopRecording();
         mService.shutdownAudioRecorder();

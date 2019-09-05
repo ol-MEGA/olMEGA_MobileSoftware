@@ -88,6 +88,8 @@ public class StateConnecting implements AppState {
             mainActivity.mAppState.setInterface();
         } else if (mainActivity.mServiceState == INPUT_CONFIG.STANDALONE) {
             stopConnecting();
+            mainActivity.setState(mainActivity.getStateRunning());
+            mainActivity.mAppState.setInterface();
         } else {
             stopConnecting();
             mainActivity.setState(mainActivity.getStateError());
@@ -113,6 +115,8 @@ public class StateConnecting implements AppState {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
         mainActivity.setLogoInactive();
         stopConnecting();
+        mainActivity.setState(mainActivity.getStateError());
+        mainActivity.mAppState.setInterface();
     }
 
     @Override
@@ -215,6 +219,7 @@ public class StateConnecting implements AppState {
         mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
+        /*
         if (mainActivity.mServiceState == INPUT_CONFIG.STANDALONE) {
             Log.e(LOG, LOG + ":" + "State Connecting going on to Running..");
             mainActivity.setState(mainActivity.getStateRunning());
@@ -223,7 +228,7 @@ public class StateConnecting implements AppState {
             Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
             mainActivity.setState(mainActivity.getStateError());
             mainActivity.mAppState.setInterface();
-        }
+        }*/
     }
 
     @Override

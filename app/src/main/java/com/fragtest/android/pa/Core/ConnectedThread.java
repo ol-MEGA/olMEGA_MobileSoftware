@@ -62,6 +62,7 @@ public class ConnectedThread extends Thread {
         this.isWave  = isWave;
         run = true;
         mmSocket = socket;
+
         //InputStream tmpIn = null;
         //OutputStream tmpOut = null;
         // Get the input and output streams, using temp objects because
@@ -85,6 +86,13 @@ public class ConnectedThread extends Thread {
 
     public void stopRecording() {
         isRecording = false;
+        try {
+            tmpIn.close();
+            tmpOut.close();
+        } catch (Exception e) {
+
+        }
+
         ControlService.setIsRecording(false);
         messageClient(ControlService.MSG_STOP_RECORDING);
         Log.e(LOG, "STOPPING AUDIO RECORDING");
@@ -123,8 +131,8 @@ public class ConnectedThread extends Thread {
 
         chunklengthInBytes = (chunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
 
-        //byte[] buffer = new byte[buffer_size];
-        //int bytesToWrite = 0, bytesRemaining = 0;
+        byte[] buffer = new byte[buffer_size];
+        int bytesToWrite = 0, bytesRemaining = 0;
 
         // get stream to write audio data to flash memory
 
@@ -140,7 +148,7 @@ public class ConnectedThread extends Thread {
                     isWave
             );
 
-            /*
+
             // write remaining data from last block
             if (bytesRemaining > 0) {
                 try {
@@ -150,7 +158,7 @@ public class ConnectedThread extends Thread {
                     e.printStackTrace();
                 }
             }
-            */
+
 
             // chunk loop
             int bytesWritten = 0;

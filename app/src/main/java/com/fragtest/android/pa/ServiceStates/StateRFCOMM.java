@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.SharedPreferences;
 import android.media.AudioDeviceInfo;
-import android.media.AudioManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -22,16 +21,13 @@ public class StateRFCOMM implements ServiceState {
 
     private ControlService mService;
     private String LOG = "StateRFCOMM";
-    private AudioManager mAudioManager;
     private int mIntervalRecordingCheck = 200;
     private boolean isBound = false;
-    private AudioDeviceInfo mDevice;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     public ConnectedThread mConnectedThread = null;
-    private String mDeviceAdress;
     private String chunklengthInS;
     private boolean isWave;
-    private BluetoothSocket mSocket;
+    private BluetoothSocket mSocket = null;
 
     private Runnable mRecordingRunnable = new Runnable() {
         @Override
@@ -39,7 +35,7 @@ public class StateRFCOMM implements ServiceState {
             if (isBound) {
                 Log.e(LOG, "Client is bound.");
 
-                mService.getBluetoothAdapter().startDiscovery();
+                //mService.getBluetoothAdapter().startDiscovery();
 
                 Set<BluetoothDevice> btdevices = mService.getBluetoothAdapter().getBondedDevices();
                 for (BluetoothDevice device : btdevices) {
@@ -49,10 +45,14 @@ public class StateRFCOMM implements ServiceState {
                             && device.getBondState() == BluetoothDevice.BOND_BONDED
                             && device.getType() == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
 
-                        mService.getBluetoothAdapter().cancelDiscovery();
+                        //mService.getBluetoothAdapter().cancelDiscovery();
 
+                        Log.e(LOG, "NULLING SOCKET");
+
+                        mSocket = null;
                         Log.e(LOG, "Connecting to device: " + device);
                         try {
+
                             mSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
                             Log.e(LOG, "Socket created: " + mSocket);
                         } catch (IOException e) {
@@ -64,7 +64,9 @@ public class StateRFCOMM implements ServiceState {
                             // This is a blocking call and will only return on a successful connection or an exception
                             if (!mSocket.isConnected()) {
                                 mSocket.connect();
-                                Log.e(LOG, "Connecting");
+
+
+                                Log.e(LOG, "Connected: " + mSocket.isConnected());
                             } else {
                                 Log.e(LOG, "Already connected.");
                             }
@@ -81,7 +83,7 @@ public class StateRFCOMM implements ServiceState {
 
             } else {
                 Log.e(LOG, "Client is not bound yet - 1 second wait.");
-                //mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
             }
         }
     };
@@ -104,10 +106,8 @@ public class StateRFCOMM implements ServiceState {
             mService.getBluetoothAdapter().enable();
         }
 
-        mAudioManager = (AudioManager) mService.getSystemService(ControlService.AUDIO_SERVICE);
-
         if (!ControlService.getIsCharging()) {
-            mService.getMTaskHandler().post(mRecordingRunnable);
+            mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
         }
     }
 
@@ -116,21 +116,17 @@ public class StateRFCOMM implements ServiceState {
         Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
-        mConnectedThread.stopRecording();
-        mConnectedThread = null;
-        mAudioManager = null;
-        try {
-            mSocket.close();
-        } catch (Exception e) {
+        if (mConnectedThread != null) {
+            mConnectedThread.stopRecording();
+            mConnectedThread.cancel();
+            mConnectedThread = null;
         }
         mSocket = null;
-        mDevice = null;
-        mDeviceAdress = null;
     }
 
     @Override
     public AudioDeviceInfo getPreferredDevice() {
-        return mDevice;
+        return null;
     }
 
     @Override
@@ -141,8 +137,7 @@ public class StateRFCOMM implements ServiceState {
     @Override
     public void unregisterClient() {
         isBound = false;
-        //mService.stopRecording();
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        changeState();
     }
 
     @Override
@@ -200,7 +195,7 @@ public class StateRFCOMM implements ServiceState {
 
     @Override
     public void applicationShutdown() {
-        mConnectedThread.stopRecording();
+        changeState();
     }
 
     @Override
@@ -214,12 +209,12 @@ public class StateRFCOMM implements ServiceState {
         }
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.getVibration().singleBurst();
-        isBound = false;
+        //isBound = false;
     }
 
     @Override
     public void chargingOff() {
-        isBound = true;
+        //isBound = true;
         mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
     }
 
@@ -230,12 +225,12 @@ public class StateRFCOMM implements ServiceState {
         }
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.getVibration().singleBurst();
-        isBound = false;
+        //isBound = false;
     }
 
     @Override
     public void chargingOnPre() {
-        isBound = false;
+        //isBound = false;
         //mService.stopRecording();
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
@@ -269,26 +264,32 @@ public class StateRFCOMM implements ServiceState {
     public void onDestroy() {
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.stopAlarmAndCountdown();
+        changeState();
     }
 
     @Override
     public void bluetoothConnected() {
 
         Log.e(LOG, "BT CONNECTED");
-        isBound = true;
+        //isBound = true;
 
         if (!ControlService.getIsRecording()) {
-            Log.e(LOG, "New thread.");
-            mConnectedThread = new ConnectedThread(mSocket, mService.getServiceMessenger(),
-                    Integer.parseInt(chunklengthInS), isWave);
+            try {
+                mConnectedThread = null;
+                Log.e(LOG, "New thread.");
+                mConnectedThread = new ConnectedThread(mSocket, mService.getClientMessenger(),
+                        Integer.parseInt(chunklengthInS), isWave);
 
-            Log.e(LOG, "Max Priority");
-            mConnectedThread.setPriority(Thread.MAX_PRIORITY);
-            Log.e(LOG, "Now starting.");
-            mConnectedThread.start();
+                Log.e(LOG, "Max Priority");
+                mConnectedThread.setPriority(Thread.MAX_PRIORITY);
+                Log.e(LOG, "Now starting.");
+                mConnectedThread.start();
+
+            } catch (Exception e) {
+                Log.e(LOG, "ConnectedThread creation failed.");
+                mConnectedThread = null;
+            }
         }
-
-
     }
 
     @Override
@@ -296,17 +297,30 @@ public class StateRFCOMM implements ServiceState {
 
         Log.e(LOG, "BT DISCONNECTED");
 
+        if (mSocket == null) {
+            Log.e(LOG, "MSOCKET IS NULL");
+        } else {
+
+        }
+
         if (mConnectedThread != null) {
-            mConnectedThread.stopRecording();
+            try {
+                mConnectedThread.stopRecording();
+                mConnectedThread.cancel();
+                mConnectedThread = null;
+            } catch (Exception e) {
+                Log.e(LOG, "ConnectedThread cancellation failed.");
+            }
         }
 
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        //mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.getVibration().singleBurst();
-        isBound = false;
+        //isBound = false;
 
-        if (!mService.getBluetoothAdapter().isEnabled()) {
-            mService.getBluetoothAdapter().enable();
-        }
+        //if (!mService.getBluetoothAdapter().isEnabled()) {
+        //    mService.getBluetoothAdapter().enable();
+        //}
+        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
     }
 
     @Override
@@ -314,10 +328,11 @@ public class StateRFCOMM implements ServiceState {
 
         Log.e(LOG, "BT Switched off.");
 
-        mService.getVibration().singleBurst();
+        /*mService.getVibration().singleBurst();
         if (mConnectedThread != null) {
             mConnectedThread.stopRecording();
-        }
+            mConnectedThread.cancel();
+        }*/
         mService.getBluetoothAdapter().enable();
     }
 

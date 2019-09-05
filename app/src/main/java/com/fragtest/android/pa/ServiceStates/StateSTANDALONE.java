@@ -2,6 +2,7 @@ package com.fragtest.android.pa.ServiceStates;
 
 import android.content.SharedPreferences;
 import android.media.AudioDeviceInfo;
+import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
@@ -29,6 +30,7 @@ public class StateSTANDALONE implements ServiceState {
 
     @Override
     public void changeState() {
+        Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
     }
 

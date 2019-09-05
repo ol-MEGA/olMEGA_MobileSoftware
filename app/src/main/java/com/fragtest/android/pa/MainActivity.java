@@ -604,6 +604,7 @@ public class MainActivity extends AppCompatActivity {
             mBatteryReg = findViewById(R.id.battery_reg);
             mCharging = findViewById(R.id.charging);
 
+
             mFileIO = new FileIO();
             showConfigButton = mFileIO.checkConfigFile();
             if (showConfigButton) {
@@ -670,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
         enableKioskMode(USE_KIOSK_MODE);
 
         // ONLY Needed in case of uninstall!!!
-        mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+        //mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
 
     }
 
@@ -749,7 +750,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         //Set the system brightness using the brightness variable value
-        boolean maxBrightness = sharedPreferences.getBoolean("maxBrightness", false);
+        /*boolean maxBrightness = sharedPreferences.getBoolean("maxBrightness", false);
         if (maxBrightness) {
             LogIHAB.log(LOG + ": Setting display brightness to maximum.");
             //Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, 255);
@@ -759,7 +760,7 @@ public class MainActivity extends AppCompatActivity {
             layoutParams.screenBrightness = 1f;//mBrightness / (float)255;
             //Apply attribute changes to this window
             mWindow.setAttributes(layoutParams);
-        }
+        }*/
     }
 
 

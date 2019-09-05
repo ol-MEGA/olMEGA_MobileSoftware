@@ -1042,6 +1042,8 @@ public class ControlService extends Service {
     }*/
     private void setOperationMode(String operationMode) {
 
+        Log.e(LOG, "STATUS: " + operationModeStatus + " New: " + operationMode);
+
         if (!operationMode.equals(operationModeStatus) || operationModeStatus.equals("")) {
 
             // Might be moved to state classes
