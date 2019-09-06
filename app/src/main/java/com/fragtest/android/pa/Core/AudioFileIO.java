@@ -24,7 +24,7 @@ public class AudioFileIO {
 
     private static int chunkId = 1;
 
-    public String filename;
+    public static String filename;
 
     int samplerate   = 0;
     int channels     = 0;

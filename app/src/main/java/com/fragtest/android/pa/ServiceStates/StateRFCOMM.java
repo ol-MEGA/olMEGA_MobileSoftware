@@ -21,21 +21,21 @@ public class StateRFCOMM implements ServiceState {
 
     private ControlService mService;
     private String LOG = "StateRFCOMM";
-    private int mIntervalRecordingCheck = 200;
+    private int mIntervalConnectionCheck = 200;
     private boolean isBound = false;
+    private boolean isCharging = false;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     public ConnectedThread mConnectedThread = null;
     private String chunklengthInS;
     private boolean isWave;
     private BluetoothSocket mSocket = null;
+    private BluetoothDevice mBluetoothDevice;
 
-    private Runnable mRecordingRunnable = new Runnable() {
+    private Runnable mConnectionRunnable = new Runnable() {
         @Override
         public void run() {
-            if (isBound) {
+            if (isBound && !isCharging) {
                 Log.e(LOG, "Client is bound.");
-
-                //mService.getBluetoothAdapter().startDiscovery();
 
                 Set<BluetoothDevice> btdevices = mService.getBluetoothAdapter().getBondedDevices();
                 for (BluetoothDevice device : btdevices) {
@@ -45,15 +45,17 @@ public class StateRFCOMM implements ServiceState {
                             && device.getBondState() == BluetoothDevice.BOND_BONDED
                             && device.getType() == BluetoothDevice.DEVICE_TYPE_CLASSIC) {
 
-                        //mService.getBluetoothAdapter().cancelDiscovery();
+                        mBluetoothDevice = device;
+                        mBluetoothDevice.createBond();
+                        mService.getBluetoothAdapter().cancelDiscovery();
 
                         Log.e(LOG, "NULLING SOCKET");
 
                         mSocket = null;
-                        Log.e(LOG, "Connecting to device: " + device);
+                        Log.e(LOG, "Connecting to device: " + mBluetoothDevice);
                         try {
 
-                            mSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                            mSocket = mBluetoothDevice.createRfcommSocketToServiceRecord(MY_UUID);
                             Log.e(LOG, "Socket created: " + mSocket);
                         } catch (IOException e) {
                             Log.e(LOG, "Socket NOT created.");
@@ -75,15 +77,22 @@ public class StateRFCOMM implements ServiceState {
                         }
 
                         Log.e(LOG, "Connection routine finished.");
-                        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
 
+                        if (mSocket.isConnected()) {
+                            mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
+                        } else {
+                            Log.e(LOG, "Retrying connection");
+                            mService.getMTaskHandler().postDelayed(mConnectionRunnable, mIntervalConnectionCheck);
+                        }
+
+                        break;
                     }
-                    break;
+
                 }
 
             } else {
                 Log.e(LOG, "Client is not bound yet - 1 second wait.");
-                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+                mService.getMTaskHandler().postDelayed(mConnectionRunnable, mIntervalConnectionCheck);
             }
         }
     };
@@ -94,6 +103,8 @@ public class StateRFCOMM implements ServiceState {
 
     @Override
     public void setInterface() {
+
+        mService.getBluetoothAdapter().startDiscovery();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mService);
         chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
@@ -106,20 +117,23 @@ public class StateRFCOMM implements ServiceState {
             mService.getBluetoothAdapter().enable();
         }
 
-        if (!ControlService.getIsCharging()) {
-            mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+        if (!isCharging) {
+            mService.getMTaskHandler().postDelayed(mConnectionRunnable, mIntervalConnectionCheck);
         }
     }
 
     @Override
-    public void changeState() {
+    public void cleanUp() {
         Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
         if (mConnectedThread != null) {
             mConnectedThread.stopRecording();
-            mConnectedThread.cancel();
+            mConnectedThread.interrupt();
+            //mConnectedThread.cancel();
             mConnectedThread = null;
+        } else {
+            Log.e(LOG, "MCONNECTEDTHREAD IS NULL!");
         }
         mSocket = null;
     }
@@ -137,7 +151,7 @@ public class StateRFCOMM implements ServiceState {
     @Override
     public void unregisterClient() {
         isBound = false;
-        changeState();
+        cleanUp();
     }
 
     @Override
@@ -195,7 +209,7 @@ public class StateRFCOMM implements ServiceState {
 
     @Override
     public void applicationShutdown() {
-        changeState();
+        cleanUp();
     }
 
     @Override
@@ -207,42 +221,56 @@ public class StateRFCOMM implements ServiceState {
         if (ControlService.getIsRecording()) {
             mConnectedThread.stopRecording();
         }
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
         mService.getVibration().singleBurst();
         //isBound = false;
     }
 
     @Override
     public void chargingOff() {
+        Log.e(LOG, "ChargingOff");
         //isBound = true;
-        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+        //mService.getMTaskHandler().postDelayed(mConnectionRunnable, mIntervalConnectionCheck);
+        isCharging = false;
+        setInterface();
     }
 
     @Override
     public void chargingOn() {
-        if (ControlService.getIsRecording()) {
-            mConnectedThread.stopRecording();
-        }
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
-        mService.getVibration().singleBurst();
+        Log.e(LOG, "ChargingOn");
+        //if (ControlService.getIsRecording()) {
+        //    mConnectedThread.stopRecording();
+        //}
+        //mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
+        //mService.getVibration().singleBurst();
         //isBound = false;
+        isCharging = true;
+        cleanUp();
     }
 
     @Override
     public void chargingOnPre() {
+        Log.e(LOG, "ChargingOnPre");
         //isBound = false;
         //mService.stopRecording();
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        isCharging = true;
+        mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
     }
 
     @Override
     public void usbAttached() {
+        Log.e(LOG, "USB Attached");
         LogIHAB.log(LOG + ":" + "usbAttached()");
+        isCharging = true;
+        cleanUp();
     }
 
     @Override
     public void usbDetached() {
+        Log.e(LOG, "USB Detached");
         LogIHAB.log(LOG + ":" + "usbDetached()");
+        isCharging = false;
+        setInterface();
     }
 
     @Override
@@ -262,9 +290,9 @@ public class StateRFCOMM implements ServiceState {
 
     @Override
     public void onDestroy() {
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
         mService.stopAlarmAndCountdown();
-        changeState();
+        cleanUp();
     }
 
     @Override
@@ -284,6 +312,7 @@ public class StateRFCOMM implements ServiceState {
                 mConnectedThread.setPriority(Thread.MAX_PRIORITY);
                 Log.e(LOG, "Now starting.");
                 mConnectedThread.start();
+                mService.getVibration().singleBurst();
 
             } catch (Exception e) {
                 Log.e(LOG, "ConnectedThread creation failed.");
@@ -313,14 +342,15 @@ public class StateRFCOMM implements ServiceState {
             }
         }
 
-        //mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        //mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
         mService.getVibration().singleBurst();
         //isBound = false;
 
         //if (!mService.getBluetoothAdapter().isEnabled()) {
         //    mService.getBluetoothAdapter().enable();
         //}
-        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+        setInterface();
+        //mService.getMTaskHandler().postDelayed(mConnectionRunnable, mIntervalConnectionCheck);
     }
 
     @Override

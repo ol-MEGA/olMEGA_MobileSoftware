@@ -86,9 +86,11 @@ public class ConnectedThread extends Thread {
 
     public void stopRecording() {
         isRecording = false;
+        Log.e(LOG, "isRecording was set to: " + isRecording);
         try {
             tmpIn.close();
             tmpOut.close();
+            mmSocket.close();
         } catch (Exception e) {
 
         }
@@ -131,11 +133,10 @@ public class ConnectedThread extends Thread {
 
         chunklengthInBytes = (chunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
 
+        Log.e(LOG, "ChunkLenInS: " + chunklengthInS);
+
         byte[] buffer = new byte[buffer_size];
         int bytesToWrite = 0, bytesRemaining = 0;
-
-        // get stream to write audio data to flash memory
-
 
         // recording loop
         while (isRecording) {
@@ -147,7 +148,6 @@ public class ConnectedThread extends Thread {
                     RECORDER_AUDIO_ENCODING,
                     isWave
             );
-
 
             // write remaining data from last block
             if (bytesRemaining > 0) {
@@ -167,7 +167,7 @@ public class ConnectedThread extends Thread {
             while (bytesWritten < chunklengthInBytes && isRecording && bis != null) {
 
                 try {
-                    //int bytesRead = audioRecord.read(buffer, 0, bufferSize);
+
                     ringBuffer.addByte((byte) bis.read());
                     count++;
 
@@ -178,13 +178,14 @@ public class ConnectedThread extends Thread {
                         count = 0;
                         lastAudioBlock = Arrays.copyOf(ringBuffer.data(-(buffer_size + 3), buffer_size), buffer_size);
                         AudioVolume = (short) (((ringBuffer.getByte(-2) & 0xFF) << 8) | (ringBuffer.getByte(-3) & 0xFF));
+                        AudioVolume = -6;
                         countCorrectPackages++;
                     } else if (count == buffer_size + additionalBytesCount) {
                         count = 0;
                         lostBlocks++;
                         countCorrectPackages = 0;
                     }
-                    if (count == 0) { //count == 0
+                    if (count == 0) {
 
                         numBlocks++;
                         leftLevel = 0;
@@ -235,11 +236,13 @@ public class ConnectedThread extends Thread {
                 }
             }
 
-            String filename = fileIO.filename;
+            //String filename = fileIO.filename;
+            String filename = fileIO.getFilename(isWave);
             fileIO.closeDataOutStream();
 
+            Log.e(LOG, "REPORTING BACK TO SERVICE");
+
             // report back to service
-            //messageClient(ControlService.MSG_CHUNK_RECORDED);
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
                 Bundle data = new Bundle();

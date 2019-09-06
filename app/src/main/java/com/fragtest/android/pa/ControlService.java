@@ -389,7 +389,7 @@ public class ControlService extends Service {
 
 
     public void setState(ServiceState newServiceState) {
-        mServiceState.changeState();
+        mServiceState.cleanUp();
         mServiceState = newServiceState;
     }
 
@@ -595,7 +595,7 @@ public class ControlService extends Service {
         return mMessengerHandler.getBinder();
     }
 
-    private int getChunkId() {
+    public int getChunkId() {
         // Returns the current chunk ID and increments
         if (mChunkId < 999999) {
             mChunkId += 1;
@@ -1051,7 +1051,7 @@ public class ControlService extends Service {
             //shutdownAudioRecorder();
 
             // Cleanup
-            mServiceState.changeState();
+            mServiceState.cleanUp();
 
             switch (operationMode) {
                 case "A2DP":
@@ -1303,6 +1303,7 @@ public class ControlService extends Service {
                 case MSG_MANUAL_QUESTIONNAIRE:
                     // User has initiated questionnaire manually without/before timer
                     startQuestionnaire("manual");
+                    mVibration.repeatingBurstOff();
                     LogIHAB.log("Taking Questionnaire: manual");
                     break;
 
@@ -1310,6 +1311,7 @@ public class ControlService extends Service {
                     // User has accepted proposition to start a new questionnaire by selecting
                     // "Start Questionnaire" item in User Menu
                     startQuestionnaire("auto");
+                    mVibration.repeatingBurstOff();
                     LogIHAB.log("Taking Questionnaire: auto");
                     break;
 
@@ -1380,6 +1382,7 @@ public class ControlService extends Service {
                         AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
                     }
 
+                    // TODO: Check if necessary
                     for (String file : featureFiles) {
                         if (file != null) {
                             new SingleMediaScanner(context, new File(file));
@@ -1405,6 +1408,7 @@ public class ControlService extends Service {
 
                 case MSG_APPLICATION_SHUTDOWN:
                     mServiceState.applicationShutdown();
+                    mVibration.repeatingBurstOff();
                     LogIHAB.log("Shutdown");
                     break;
 

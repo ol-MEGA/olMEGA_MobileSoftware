@@ -80,7 +80,7 @@ public class StateA2DP implements ServiceState {
     }
 
     @Override
-    public void changeState() {
+    public void cleanUp() {
         Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
         mService.stopRecording();

@@ -7,7 +7,7 @@ public interface ServiceState {
 
     void setInterface();
 
-    void changeState();
+    void cleanUp();
 
     void registerClient();
 
