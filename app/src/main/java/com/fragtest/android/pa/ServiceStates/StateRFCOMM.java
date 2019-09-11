@@ -254,7 +254,8 @@ public class StateRFCOMM implements ServiceState {
         //isBound = false;
         //mService.stopRecording();
         isCharging = true;
-        mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
+        //mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
+        cleanUp();
     }
 
     @Override

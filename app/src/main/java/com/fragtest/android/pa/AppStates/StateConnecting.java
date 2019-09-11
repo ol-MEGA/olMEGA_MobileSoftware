@@ -30,6 +30,16 @@ public class StateConnecting implements AppState {
         @Override
         public void run() {
             stopConnecting();
+
+            if (mainActivity.mServiceState == INPUT_CONFIG.STANDALONE) {
+                Log.e(LOG, LOG + ":" + "State Connecting going on to Running..");
+                mainActivity.setState(mainActivity.getStateRunning());
+                mainActivity.mAppState.setInterface();
+            } else {
+                Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
+                mainActivity.setState(mainActivity.getStateError());
+                mainActivity.mAppState.setInterface();
+            }
         }
     };
 

@@ -1126,7 +1126,13 @@ public class ControlService extends Service {
 
         setupAudioRecorder();
 
-        audioRecorder.setPreferredDevice(mServiceState.getPreferredDevice());
+        AudioDeviceInfo device = mServiceState.getPreferredDevice();
+
+        if (device == null) {
+            Log.e(LOG, "NO APPROPRIATE DEVICE FOUND.");
+            return;
+        }
+        audioRecorder.setPreferredDevice(device);
 
         if (!getIsRecording()) {
             Log.e(LOG, "STARTING RECORDING from Source: " + audioRecorder.getPreferredDevice());
@@ -1176,54 +1182,6 @@ public class ControlService extends Service {
         }
     }
 
-
-    /**
-     * RFCOMM
-     */
-
-/*
-    public void connectBtDevice() {
-
-        if (mBluetoothAdapter.isEnabled()) {
-
-            String deviceAddress = sharedPreferences.getString("BTDevice", "");
-            if (!deviceAddress.equals("")) {
-
-                if (mConnectedThread != null) {
-                    mConnectedThread.cancel();
-                    mConnectedThread = null;
-                }
-
-                Log.e(LOG, "Device Address: " + deviceAddress);
-
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
-                BluetoothSocket socket = null;
-                try {
-                    socket = device.createRfcommSocketToServiceRecord(MY_UUID);
-                    try {
-                        // This is a blocking call and will only return on a successful connection or an exception
-                        socket.connect();
-                        mConnectedThread = new ConnectedThread(socket, serviceMessenger,
-                                Integer.parseInt(chunklengthInS), isWave);
-                        mConnectedThread.setPriority(Thread.MAX_PRIORITY);
-                        //mConnectedThread.start();
-                        Log.e(LOG, "Number 1");
-                    } catch (IOException e) {
-                        Log.e(LOG, "ConnectedThread creation failed " + e.toString());
-                        mConnectedThread = null;
-                    }
-                } catch (IOException e) {
-                    Log.e(LOG, "Socket create() failed " + e.toString());
-                    mConnectedThread = null;
-                }
-            } else
-                Log.e(LOG, "no Device selected. Please open Settings!");
-        } else {
-            Log.e(LOG, "Bluetooth not activated.");
-            mBluetoothAdapter.enable();
-        }
-    }
-*/
 
     /**
      * Communication between Service and Activity

@@ -53,6 +53,8 @@ public class StateUSB implements ServiceState {
     public void cleanUp() {
         Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
+        mService.stopRecording();
+        mService.shutdownAudioRecorder();
     }
 
     @Override

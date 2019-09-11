@@ -29,6 +29,7 @@ public class StateA2DP implements ServiceState {
                     AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
 
                     boolean found = false;
+                    mDevice = null;
                     for (AudioDeviceInfo device : devices) {
                         Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
                         // Device needs to be A2DP Profile and only provide audio output
@@ -49,7 +50,7 @@ public class StateA2DP implements ServiceState {
                 }
 
                 mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
-                mService.setPreferredAudioDevice(mDevice);
+                //mService.setPreferredAudioDevice(mDevice);
                 mService.startRecording();
             } else {
                 Log.e(LOG, "Client is not bound yet - 1 second wait.");

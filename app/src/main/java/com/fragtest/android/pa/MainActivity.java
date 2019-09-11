@@ -1274,12 +1274,20 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_BT_CONNECTED:
                     setIsBTPresent(true);
+                    Log.e(LOG, "Bluetooth Connected.");
                     //mAppState.bluetoothPresent();
+                    if (mServiceState == INPUT_CONFIG.A2DP) {
+                        removeError(AppErrors.ERROR_NO_BT);
+                    }
                     break;
 
                 case ControlService.MSG_BT_DISCONNECTED:
                     setIsBTPresent(false);
+                    Log.e(LOG, "Bluetooth Disconnected.");
                     //mAppState.bluetoothNotPresent();
+                    if (mServiceState == INPUT_CONFIG.A2DP) {
+                        addError(AppErrors.ERROR_NO_BT);
+                    }
                     break;
 
                 case ControlService.MSG_STATE_CHANGE:
