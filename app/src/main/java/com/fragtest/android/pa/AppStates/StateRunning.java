@@ -40,6 +40,7 @@ public class StateRunning implements AppState {
     @Override
     public void setInterface() {
         LogIHAB.log(LOG + ":" + "setInterface()");
+        Log.e(LOG, "SETINTERFACE");
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.menuText));
         qpa.getMenuPage().makeTextSizeNormal();
         qpa.getMenuPage().makeFontWeightNormal();
@@ -180,6 +181,7 @@ public class StateRunning implements AppState {
     @Override
     public void usbNotPresent() {
         LogIHAB.log(LOG + ":" + "usbNotPresent()");
+        Log.e(LOG, "USB not present.");
         if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             // TODO: See if this is needed
             mainActivity.addError(MainActivity.AppErrors.ERROR_NO_USB);

@@ -205,10 +205,12 @@ public class MainActivity extends AppCompatActivity {
             // only announce on change
             if (plugged && !ControlService.getIsCharging()) {
                 mAppState.chargeOn();
+                //setIsCharging(true);
                 // a change towards charging
                 messageService(ControlService.MSG_CHARGING_ON);
             } else if (!plugged && ControlService.getIsCharging()) {
                 mAppState.chargeOff();
+                //setIsCharging(false);
                 // a change towards not charging
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
@@ -226,6 +228,10 @@ public class MainActivity extends AppCompatActivity {
     public boolean getIsUSBPresent() {
         return isUSBPresent;
     }
+
+    //public boolean getIsCharging() { return isCharging; }
+
+    //public void setIsCharging(boolean charging) { isCharging = charging; }
 
     public boolean getIsBTPresent() {
         return isBTPresent;
@@ -1144,9 +1150,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
 
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG, "Message received: " + msg.what);
-            }
+
+            Log.e(LOG, "Message received: " + msg.what);
+
 
             switch (msg.what) {
 
@@ -1292,6 +1298,8 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_STATE_CHANGE:
 
+                    Log.e(LOG, "STATE : " + msg.getData().getString("operationMode", ""));
+
                     switch (msg.getData().getString("operationMode", "")) {
                         case "A2DP":
                             mServiceState = INPUT_CONFIG.A2DP;
@@ -1304,6 +1312,9 @@ public class MainActivity extends AppCompatActivity {
                         case "USB":
                             mServiceState = INPUT_CONFIG.USB;
                             removeError(AppErrors.ERROR_NO_BT);
+                            if (!getIsUSBPresent() && !ControlService.getIsCharging()) {
+                                addError(AppErrors.ERROR_NO_USB);
+                            }
                             setLogoActive();
                             break;
                         case "STANDALONE":
@@ -1314,7 +1325,7 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
 
-                    mAppState = mStateConnecting;
+                    mAppState = getStateConnecting();
                     mAppState.setInterface();
                     break;
 

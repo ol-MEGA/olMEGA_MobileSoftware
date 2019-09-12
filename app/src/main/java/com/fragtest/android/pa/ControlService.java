@@ -167,10 +167,12 @@ public class ControlService extends Service {
 
                 case UsbManager.ACTION_USB_DEVICE_ATTACHED:
                     mServiceState.usbAttached();
+                    messageClient(MSG_USB_CONNECT);
                     break;
 
                 case UsbManager.ACTION_USB_DEVICE_DETACHED:
                     mServiceState.usbDetached();
+                    messageClient(MSG_USB_DISCONNECT);
                     break;
 
                 case BluetoothDevice.ACTION_ACL_CONNECTED:
@@ -984,62 +986,6 @@ public class ControlService extends Service {
         return processingSettings;
     }
 
-    public void disableBluetoothAdapter() {
-        //mBluetoothAdapter.disable();
-    }
-
-    /**
-     * Functional Stuff
-     **/
-
-
-    /*public void announceBTDisconnected() {
-        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
-            Log.e(LOG, "BTDEVICES not connected.");
-
-            if (INPUT == INPUT_CONFIG.RFCOMM) {
-                stopRecordingRFCOMM();
-            } else {
-                stopRecording();
-            }
-            setIsBTPresent(false);
-            mVibration.singleBurst();
-        }
-    }*/
-
-    /*public void announceBTConnected() {
-        if (INPUT == INPUT_CONFIG.A2DP || INPUT == INPUT_CONFIG.RFCOMM) {
-            Log.e(LOG, "BTDEVICES connected.");
-
-            if (INPUT == INPUT_CONFIG.RFCOMM) {
-                startRecordingRFCOMM();
-            } else if (INPUT == INPUT_CONFIG.A2DP) {
-                startRecording();
-            }
-            isBTPresent = true;
-            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-        }
-    }*/
-
-    /*public void announceUSBConnected() {
-            messageClient(MSG_USB_CONNECT);
-            startRecording();
-    }
-
-    public void announceUSBDisconnected() {
-            messageClient(MSG_USB_DISCONNECT);
-            stopRecording();
-    }*/
-
-    /*private void setOperationMode(INPUT_CONFIG operationMode) {
-        if (operationMode != operationModeStatus) {
-            INPUT = operationMode;
-            operationModeStatus = operationMode;
-            LogIHAB.log("Operation Mode changed to: " + operationMode);
-        } else {
-            LogIHAB.log("Operation Mode: " + operationMode);
-        }
-    }*/
     private void setOperationMode(String operationMode) {
 
         Log.e(LOG, "STATUS: " + operationModeStatus + " New: " + operationMode);
@@ -1130,8 +1076,12 @@ public class ControlService extends Service {
 
         if (device == null) {
             Log.e(LOG, "NO APPROPRIATE DEVICE FOUND.");
+            if (INPUT == INPUT_CONFIG.USB) {
+                messageClient(MSG_USB_DISCONNECT);
+            }
             return;
         }
+
         audioRecorder.setPreferredDevice(device);
 
         if (!getIsRecording()) {
@@ -1322,6 +1272,7 @@ public class ControlService extends Service {
                         processingThread.start();
                     }
 
+                    // TODO: Still necessary?
                     if (keepAudioCache) {
                         new SingleMediaScanner(context, new File(filename));
                     }

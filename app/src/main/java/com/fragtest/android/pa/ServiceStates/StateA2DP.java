@@ -29,7 +29,6 @@ public class StateA2DP implements ServiceState {
                     AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
 
                     boolean found = false;
-                    mDevice = null;
                     for (AudioDeviceInfo device : devices) {
                         Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
                         // Device needs to be A2DP Profile and only provide audio output
@@ -86,6 +85,7 @@ public class StateA2DP implements ServiceState {
         /** Cleanup **/
         mService.stopRecording();
         mService.shutdownAudioRecorder();
+        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
 
     @Override

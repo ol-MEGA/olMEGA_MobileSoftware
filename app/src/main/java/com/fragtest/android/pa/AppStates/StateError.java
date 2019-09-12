@@ -174,7 +174,11 @@ public class StateError implements AppState {
 
     @Override
     public void startRecording() {
+        Log.e(LOG, "Starting Recording Process!");
 
+        mainActivity.setLogoActive();
+        mainActivity.setState(mainActivity.getStateRunning());
+        mainActivity.mAppState.setInterface();
     }
 
     @Override

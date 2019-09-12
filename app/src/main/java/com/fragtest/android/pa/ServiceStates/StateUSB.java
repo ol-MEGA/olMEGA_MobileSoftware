@@ -12,9 +12,42 @@ public class StateUSB implements ServiceState {
 
     ControlService mService;
     String LOG = "StateUSB";
-    AudioManager mAudioManager;
+    private AudioManager mAudioManager;
+    private int mIntervalRecordingCheck = 200;
     private boolean isBound = false;
     private AudioDeviceInfo mDevice;
+
+    private Runnable mRecordingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isBound) {
+                Log.e(LOG, "Client is bound.");
+
+                try {
+                    AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
+
+                    mDevice = null;
+                    for (AudioDeviceInfo device : devices) {
+                        Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
+                        // Device needs to be USB and provide audio input
+                        if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
+                            Log.e(LOG, "This looks like a good device");
+                            mDevice = device;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+                mService.startRecording();
+            } else {
+                Log.e(LOG, "Client is not bound yet - short wait before retry.");
+                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+            }
+        }
+    };
 
     public StateUSB(ControlService service) {
         this.mService = service;
@@ -25,27 +58,34 @@ public class StateUSB implements ServiceState {
     public void setInterface() {
 
         LogIHAB.log(LOG + ":setInterface()");
+        Log.e(LOG, "SET INTERFACE");
 
-        mAudioManager = (AudioManager) mService.getSystemService(mService.AUDIO_SERVICE);
-        AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
+        if (mService.checkUSB()) {
+            mAudioManager = (AudioManager) mService.getSystemService(mService.AUDIO_SERVICE);
+            AudioDeviceInfo[] devices = mAudioManager.getDevices(android.media.AudioManager.GET_DEVICES_ALL);
 
-        boolean found = false;
-        for (AudioDeviceInfo device : devices) {
-            Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
-            // Device needs to be A2DP Profile and only provide audio output
-            if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
-                mService.setPreferredAudioDevice(device);
-                found = true;
+            boolean found = false;
+            mDevice = null;
+            for (AudioDeviceInfo device : devices) {
+                Log.e(LOG, "Device found: " + device.getType() + " Source: " + device.isSource() + " Sink: " + device.isSink());
+                // Device needs to be A2DP Profile and only provide audio output
+                if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
+                    Log.e(LOG, "THis looks like a good device.");
+                    found = true;
+                    mDevice = device;
+                }
             }
-        }
-        if (!found) {
-            Log.e(LOG, "NO USB DEVICE WAS FOUND!");
-        }
+            if (!found) {
+                Log.e(LOG, "NO USB DEVICE WAS FOUND!");
+            }
 
-        if (found) {
-            usbAttached();
-        } else {
-            usbDetached();
+            if (found) {
+                //usbAttached();
+                mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+                mService.startRecording();
+            } else {
+                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+            }
         }
     }
 
@@ -55,6 +95,7 @@ public class StateUSB implements ServiceState {
         /** Cleanup **/
         mService.stopRecording();
         mService.shutdownAudioRecorder();
+        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
 
     @Override
@@ -64,7 +105,7 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void registerClient() {
-
+        isBound = true;
         if (mService.checkUSB()) {
             usbAttached();
         } else {
@@ -74,7 +115,9 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void unregisterClient() {
-
+        isBound = false;
+        mService.stopRecording();
+        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
 
     @Override
@@ -159,17 +202,17 @@ public class StateUSB implements ServiceState {
 
     @Override
     public void chargingOff() {
-
+        setInterface();
     }
 
     @Override
     public void chargingOn() {
-        mService.stopRecording();
+        cleanUp();
     }
 
     @Override
     public void chargingOnPre() {
-
+        cleanUp();
     }
 
     @Override
@@ -179,9 +222,12 @@ public class StateUSB implements ServiceState {
         if (mService.getVibration() != null) {
             mService.getVibration().singleBurst();
         }
-        //mService.announceUSBConnected();
         mService.messageClient(ControlService.MSG_USB_CONNECT);
-        mService.startRecording();
+        setInterface();
+        //mService.messageClient(ControlService.MSG_USB_CONNECT);
+        //mService.announceUSBConnected();
+        //mService.messageClient(ControlService.MSG_USB_CONNECT);
+        //mService.startRecording();
     }
 
     @Override
@@ -191,9 +237,11 @@ public class StateUSB implements ServiceState {
         if (mService.getVibration() != null) {
             mService.getVibration().singleBurst();
         }
+        cleanUp();
+        //mService.messageClient(ControlService.MSG_USB_DISCONNECT);
         //mService.announceUSBDisconnected();
-        mService.messageClient(ControlService.MSG_USB_DISCONNECT);
-        mService.stopRecording();
+        //mService.messageClient(ControlService.MSG_USB_DISCONNECT);
+        //mService.stopRecording();
     }
 
     @Override

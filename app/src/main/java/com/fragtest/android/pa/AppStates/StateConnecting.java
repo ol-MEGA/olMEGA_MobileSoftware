@@ -70,7 +70,7 @@ public class StateConnecting implements AppState {
     public void setInterface() {
         LogIHAB.log(LOG + ":" + "setInterface()");
 
-        Log.e(LOG, "STATE IS NOW: " + mainActivity.mServiceState);
+        Log.e(LOG, "SET INTERFACE");
 
         if (mainActivity.mServiceState == INPUT_CONFIG.A2DP || mainActivity.mServiceState == INPUT_CONFIG.RFCOMM) {
             qpa.hideQuestionnaireProgressBar();
