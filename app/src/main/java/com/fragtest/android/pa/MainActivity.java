@@ -218,6 +218,15 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // Battery Status Receiver
+    private BroadcastReceiver mAdminReveicer = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            Log.e(LOG, "Received.");
+
+        }
+    };
+
 
     public void setUSBPresent(boolean isPresent) {
         isUSBPresent = isPresent;
@@ -738,8 +747,19 @@ public class MainActivity extends AppCompatActivity {
             shipPreferencesToControlService();
 
         }
+
         mAdapter.onResume();
         super.onResume();
+
+        if (!sharedPreferences.getBoolean("deviceAdmin", true)) {
+            mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+        } /*else {
+            try {
+                Runtime.getRuntime().exec("adb shell dpm set-device-owner com.fragtest.android.pa/.AdminReceiver");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }*/
 
         hideSystemUI(USE_KIOSK_MODE);
 
