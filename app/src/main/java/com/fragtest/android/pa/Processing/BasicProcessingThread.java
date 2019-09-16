@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class BasicProcessingThread extends Thread {
 
-	protected static final String LOG = "HALLO:Processing";
+	protected static final String LOG = "IHAB:Processing";
 	protected static final int DONE = 1;
 	
 	private Messenger serviceMessenger = null;	// instance of messenger to communicate with service
@@ -42,7 +42,7 @@ public class BasicProcessingThread extends Thread {
     private int filterHpFrequency;
     static int samplerate;
 	int chunklengthInS;					// in ms
-    private boolean downsample = false;
+	private boolean downsample;
 
     private Set<String> activeFeatures;
     private int processedFeatures = 0;
@@ -60,7 +60,9 @@ public class BasicProcessingThread extends Thread {
         filterHp = settings.getBoolean("filterHp");
         filterHpFrequency = settings.getInt("filterHpFrequency");
         filename = settings.getString("filename");
-        downsample = settings.getBoolean("downsample", false);
+		downsample = settings.getBoolean("downsample", true);
+
+		Log.e(LOG, "Downsample: " + downsample);
 
         // extract timestamp from filename
         timestamp = filename.substring(filename.lastIndexOf("/")+1);

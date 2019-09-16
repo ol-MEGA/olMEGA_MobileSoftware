@@ -94,7 +94,7 @@ public class AudioRecorder {
 
     public void stop() {
         stopRecording = true;
-        ControlService.setIsRecording(false);
+        //ControlService.setIsRecording(false);
     }
 
     public void release() {
@@ -183,6 +183,8 @@ public class AudioRecorder {
             }
             //ControlService.setIsRecording(false);
         }
+
+        ControlService.setIsRecording(false);
 
         if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
             audioRecord.stop();

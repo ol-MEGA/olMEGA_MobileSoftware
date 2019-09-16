@@ -56,11 +56,11 @@ public class BasicProcessRunnable implements Runnable {
 
 		// TODO how to handle this parameter-mess properly?
 
-		this.audioData = audioData;
-		this.procBlockSize = procBlockSize;
-		this.procHopSize = procHopSize;
-		this.nFeatures = nFeatures;
-		this.messenger = messenger;
+        this.audioData = audioData;
+        this.procBlockSize = procBlockSize;
+        this.procHopSize = procHopSize;
+        this.nFeatures = nFeatures;
+        this.messenger = messenger;
 
         // TODO: while at it, check this, too!
         samplingrate = BasicProcessingThread.samplerate;

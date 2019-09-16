@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.MainActivity;
@@ -632,9 +633,10 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         if (ControlService.useLogMode) {
             // Send battery level info to Control Service for logging etc.
-            Bundle batteryLevelBundle = new Bundle();
-            batteryLevelBundle.putFloat("batteryLevel", batteryLevel);
-            sendMessage(ControlService.MSG_BATTERY_LEVEL_INFO, batteryLevelBundle);
+            //Bundle batteryLevelBundle = new Bundle();
+            //batteryLevelBundle.putFloat("batteryLevel", batteryLevel);
+            //sendMessage(ControlService.MSG_BATTERY_LEVEL_INFO, batteryLevelBundle);
+            LogIHAB.log("battery level: " + batteryLevel);
         }
     }
     private void setBatteryColor() {

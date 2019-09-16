@@ -913,6 +913,7 @@ public class ControlService extends Service {
 
     private Bundle getPreferences() {
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
         // recording
@@ -920,6 +921,7 @@ public class ControlService extends Service {
         chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", keepAudioCache);
         isWave = sharedPreferences.getBoolean("isWave", isWave);
+        downsample = sharedPreferences.getBoolean("downsample", true);
 
         // Use automatic timer
         //isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
@@ -1001,16 +1003,19 @@ public class ControlService extends Service {
 
             switch (operationMode) {
                 case "A2DP":
+                    sharedPreferences.edit().putString("samplerate", "48000").apply();
                     operationModeStatus = INPUT_CONFIG.A2DP.toString();
                     mServiceState = getStateA2DP();
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
+                    sharedPreferences.edit().putString("samplerate", "16000").apply();
                     operationModeStatus = INPUT_CONFIG.RFCOMM.toString();
                     mServiceState = getStateRFCOMM();
                     INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "USB":
+                    sharedPreferences.edit().putString("samplerate", "48000").apply();
                     operationModeStatus = INPUT_CONFIG.USB.toString();
                     mServiceState = getStateUSB();
                     INPUT = INPUT_CONFIG.USB;
@@ -1259,6 +1264,10 @@ public class ControlService extends Service {
                     addProccessingBuffer(idxRecording, filename);
                     idxRecording = (idxRecording + 1) % processingBufferSize;
 
+                    if (keepAudioCache) {
+                        new SingleMediaScanner(context, new File(filename));
+                    }
+
                     if (!getIsProcessing()) {
 
                         LogIHAB.log("Start Processing");
@@ -1270,11 +1279,6 @@ public class ControlService extends Service {
                                 new MainProcessingThread(serviceMessenger, settings);
                         setIsProcessing(true);
                         processingThread.start();
-                    }
-
-                    // TODO: Still necessary?
-                    if (keepAudioCache) {
-                        new SingleMediaScanner(context, new File(filename));
                     }
 
                     Log.d(LOG, "New cache: " + filename);
@@ -1321,10 +1325,10 @@ public class ControlService extends Service {
                     LogIHAB.log("Shutdown");
                     break;
 
-                case MSG_BATTERY_LEVEL_INFO:
+               /* case MSG_BATTERY_LEVEL_INFO:
                     float batteryLevel = msg.getData().getFloat("batteryLevel");
                     LogIHAB.log("battery level: " + batteryLevel);
-                    break;
+                    break;*/
 
                 case MSG_BATTERY_CRITICAL:
                     LogIHAB.log("CRITICAL battery level: active");

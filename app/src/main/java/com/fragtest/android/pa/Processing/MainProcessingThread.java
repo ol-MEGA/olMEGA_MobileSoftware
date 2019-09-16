@@ -36,6 +36,7 @@ public class MainProcessingThread extends BasicProcessingThread{
 		super.mainRoutine();
 
 		LogIHAB.log("Processing");
+        Log.e(LOG, "PROCESSING!");
 
 
 

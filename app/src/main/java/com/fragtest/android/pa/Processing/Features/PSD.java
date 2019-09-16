@@ -19,9 +19,11 @@ public class PSD extends BasicProcessRunnable {
 	@Override
 	public void process(float[][] data) {
 		super.process(data);
-		
+
 		double blockDuration = 0.025;
 		int blockSize = (int) (blockDuration * samplingrate);
+
+		Log.e(LOG, "Samplingrate: " + samplingrate + ", BlockSize: " + blockSize);
 				
 		appendFeature(cpsd(data[0], data[1], blockSize, samplingrate));
 	}
@@ -46,7 +48,7 @@ public class PSD extends BasicProcessRunnable {
 		
 		/* compute cross power spectrum, starting with block indices */
 		int NFFT 		= 1 << (32 - Integer.numberOfLeadingZeros(blockSize - 1));			// next power of 2 of blocksize
-		Log.d(LOG, "FFT-Length: " + NFFT);
+		Log.d(LOG, "FFT-Length today: " + NFFT);
 		int L 			= x.length;															// length of complete signal(s)
 		int overlap 	= blockSize / 2;													// overlap of 50% in samples
 		int nBlocks		= (int) Math.floor(((float) L - overlap) / (blockSize - overlap));	// number of overlapping blocks

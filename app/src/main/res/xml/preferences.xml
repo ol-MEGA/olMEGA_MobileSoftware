@@ -102,7 +102,7 @@
             android:entries="@array/samplingrateEntries"
             android:entryValues="@array/samplingrateValues"
             android:key="samplerate"
-            android:summary="@string/pref_samplerate_summary"
+            android:summary="%s"
             android:title="@string/pref_samplerate_title" />
 
         <EditTextPreference

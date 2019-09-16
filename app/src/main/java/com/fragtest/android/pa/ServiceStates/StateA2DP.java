@@ -177,22 +177,25 @@ public class StateA2DP implements ServiceState {
 
     @Override
     public void chargingOff() {
-        isBound = true;
-        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+        //TODO: ONLY FOR NOW
+        /*isBound = true;
+        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);*/
     }
 
     @Override
     public void chargingOn() {
-        mService.stopRecording();
+        //TODO: ONLY FOR NOW
+        /*mService.stopRecording();
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.getVibration().singleBurst();
-        isBound = false;
+        isBound = false;*/
     }
 
     @Override
     public void chargingOnPre() {
-        mService.stopRecording();
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        //TODO: ONLY FOR NOW
+        //mService.stopRecording();
+        //mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
 
     @Override

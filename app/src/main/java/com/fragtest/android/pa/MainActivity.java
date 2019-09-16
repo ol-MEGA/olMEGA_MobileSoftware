@@ -1159,20 +1159,7 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_NO_QUESTIONNAIRE_FOUND:
 
                     mAppState.noQuest();
-
                     break;
-
-                /*case MSG_CHANGE_PREFERENCE:
-
-                    Bundle data = msg.getData();
-                    if (data.getString("type").equals("boolean")) {
-                        PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).
-                                edit().putBoolean(data.getString("key"), data.getBoolean("value")).
-                                apply();
-                    }
-                    shipPreferencesToControlService();
-
-                    break;*/
 
                 case ControlService.MSG_SET_COUNTDOWN_TIME:
 
@@ -1209,17 +1196,6 @@ public class MainActivity extends AppCompatActivity {
                     // Set UI to match ControlService's state
                     Bundle status = msg.getData();
                     mServiceIsRecording = status.getBoolean("isRecording");
-
-                    Log.d(LOG, "recording state: " + mServiceIsRecording);
-
-                    /*if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                        if (getIsBTPresent()) {
-                            mAppState.bluetoothPresent();
-                        } else {
-                            mAppState.bluetoothNotPresent();
-                        }
-                    }*/
-
                     break;
 
                 case ControlService.MSG_PREFS_IN_FOREGROUND:
@@ -1230,58 +1206,43 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_START_RECORDING:
 
                     mAppState.startRecording();
-                    Log.e(LOG, "AppState: " + mAppState + " Start Recording");
-                    //if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                    //    mAppState.bluetoothPresent();
-                    //setIsBTPresent(true);
-                    //}
-
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
 
                     mAppState.stopRecording();
-                    Log.e(LOG, "AppState: " + mAppState + " Stop Recording");
-                    /*if (ControlService.INPUT == INPUT_CONFIG.A2DP || ControlService.INPUT == INPUT_CONFIG.RFCOMM) {
-                        mAppState.bluetoothNotPresent();
-                        setIsBTPresent(false);
-                    }*/
-
                     break;
 
                 case ControlService.MSG_TIME_CORRECT:
 
                     mAppState.timeCorrect();
-
                     break;
                 case ControlService.MSG_TIME_INCORRECT:
 
                     mAppState.timeIncorrect();
-
                     break;
 
                 case ControlService.MSG_USB_CONNECT:
 
                     Log.e(LOG, "USB PRESENT!!!");
 
-                        mAppState.usbPresent();
-                        setUSBPresent(true);
+                    mAppState.usbPresent();
+                    setUSBPresent(true);
                     break;
 
                 case ControlService.MSG_USB_DISCONNECT:
 
                     Log.e(LOG, "USB NOT PRESENT!!!");
 
-                        mAppState.usbNotPresent();
-                        setUSBPresent(false);
-                        setLogoInactive();
-                        addError(AppErrors.ERROR_NO_USB);
+                    mAppState.usbNotPresent();
+                    setUSBPresent(false);
+                    setLogoInactive();
+                    addError(AppErrors.ERROR_NO_USB);
                     break;
 
                 case ControlService.MSG_BT_CONNECTED:
                     setIsBTPresent(true);
                     Log.e(LOG, "Bluetooth Connected.");
-                    //mAppState.bluetoothPresent();
                     if (mServiceState == INPUT_CONFIG.A2DP) {
                         removeError(AppErrors.ERROR_NO_BT);
                     }
@@ -1290,7 +1251,6 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_BT_DISCONNECTED:
                     setIsBTPresent(false);
                     Log.e(LOG, "Bluetooth Disconnected.");
-                    //mAppState.bluetoothNotPresent();
                     if (mServiceState == INPUT_CONFIG.A2DP) {
                         addError(AppErrors.ERROR_NO_BT);
                     }
@@ -1302,14 +1262,17 @@ public class MainActivity extends AppCompatActivity {
 
                     switch (msg.getData().getString("operationMode", "")) {
                         case "A2DP":
+                            sharedPreferences.edit().putString("samplerate", "48000").apply();
                             mServiceState = INPUT_CONFIG.A2DP;
                             removeError(AppErrors.ERROR_NO_USB);
                             break;
                         case "RFCOMM":
+                            sharedPreferences.edit().putString("samplerate", "16000").apply();
                             mServiceState = INPUT_CONFIG.RFCOMM;
                             removeError(AppErrors.ERROR_NO_USB);
                             break;
                         case "USB":
+                            sharedPreferences.edit().putString("samplerate", "48000").apply();
                             mServiceState = INPUT_CONFIG.USB;
                             removeError(AppErrors.ERROR_NO_BT);
                             if (!getIsUSBPresent() && !ControlService.getIsCharging()) {
