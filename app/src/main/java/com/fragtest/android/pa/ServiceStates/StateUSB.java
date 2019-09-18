@@ -10,14 +10,14 @@ import com.fragtest.android.pa.Core.LogIHAB;
 
 public class StateUSB implements ServiceState {
 
-    ControlService mService;
-    String LOG = "StateUSB";
+    private ControlService mService;
+    private String LOG = "StateUSB";
     private AudioManager mAudioManager;
-    private int mIntervalRecordingCheck = 200;
+    private int mInterval = 200;
     private boolean isBound = false;
     private AudioDeviceInfo mDevice;
 
-    private Runnable mRecordingRunnable = new Runnable() {
+    private Runnable mFindDeviceRunnable = new Runnable() {
         @Override
         public void run() {
             if (isBound) {
@@ -40,11 +40,11 @@ public class StateUSB implements ServiceState {
                     e.printStackTrace();
                 }
 
-                mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+                mService.getMTaskHandler().removeCallbacks(mFindDeviceRunnable);
                 mService.startRecording();
             } else {
                 Log.e(LOG, "Client is not bound yet - short wait before retry.");
-                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+                mService.getMTaskHandler().postDelayed(mFindDeviceRunnable, mInterval);
             }
         }
     };
@@ -81,10 +81,10 @@ public class StateUSB implements ServiceState {
 
             if (found) {
                 //usbAttached();
-                mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+                mService.getMTaskHandler().removeCallbacks(mFindDeviceRunnable);
                 mService.startRecording();
             } else {
-                mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+                mService.getMTaskHandler().postDelayed(mFindDeviceRunnable, mInterval);
             }
         }
     }
@@ -95,7 +95,7 @@ public class StateUSB implements ServiceState {
         /** Cleanup **/
         mService.stopRecording();
         mService.shutdownAudioRecorder();
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.getMTaskHandler().removeCallbacks(mFindDeviceRunnable);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class StateUSB implements ServiceState {
     public void unregisterClient() {
         isBound = false;
         mService.stopRecording();
-        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.getMTaskHandler().removeCallbacks(mFindDeviceRunnable);
     }
 
     @Override

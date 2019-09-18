@@ -84,6 +84,8 @@ public class BasicProcessingThread extends Thread {
 
 	private void discardData() {
 		buffer = null;
+        //NEW
+        audioData = null;
 	}
 
 
