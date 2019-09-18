@@ -21,7 +21,7 @@ public class StateRFCOMM implements ServiceState {
 
     private ControlService mService;
     private String LOG = "StateRFCOMM";
-    private int mIntervalConnectionCheck = 200;
+    private int mIntervalConnectionCheck = 500;
     private boolean isBound = false;
     private boolean isCharging = false;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -306,7 +306,7 @@ public class StateRFCOMM implements ServiceState {
             try {
                 mConnectedThread = null;
                 Log.e(LOG, "New thread.");
-                mConnectedThread = new ConnectedThread(mSocket, mService.getClientMessenger(),
+                mConnectedThread = new ConnectedThread(mSocket, mService.getServiceMessenger(),
                         Integer.parseInt(chunklengthInS), isWave);
 
                 Log.e(LOG, "Max Priority");

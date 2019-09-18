@@ -284,7 +284,7 @@ public class ControlService extends Service {
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
 
-    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    BluetoothAdapter mBluetoothAdapter;
     private int mDelayResetBT = 500;
 
     public static final boolean useLogMode = true;
@@ -489,8 +489,14 @@ public class ControlService extends Service {
         // TODO: NECESSARY?
         mServiceState = mStateSTANDALONE;
 
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter.enable();
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
+        samplerate = sharedPreferences.getString("samplerate", "48000");
+        chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
+        setupAudioRecorder();
 
         // If Chunk ID is not included in Shared Preference, initialize it -- else obtain it.
         if (sharedPreferences.getInt("chunkId", 0) == 0) {
@@ -1004,18 +1010,21 @@ public class ControlService extends Service {
             switch (operationMode) {
                 case "A2DP":
                     sharedPreferences.edit().putString("samplerate", "48000").apply();
+                    samplerate = "48000";
                     operationModeStatus = INPUT_CONFIG.A2DP.toString();
                     mServiceState = getStateA2DP();
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
                     sharedPreferences.edit().putString("samplerate", "16000").apply();
+                    samplerate = "16000";
                     operationModeStatus = INPUT_CONFIG.RFCOMM.toString();
                     mServiceState = getStateRFCOMM();
                     INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "USB":
                     sharedPreferences.edit().putString("samplerate", "48000").apply();
+                    samplerate = "48000";
                     operationModeStatus = INPUT_CONFIG.USB.toString();
                     mServiceState = getStateUSB();
                     INPUT = INPUT_CONFIG.USB;
@@ -1073,7 +1082,7 @@ public class ControlService extends Service {
      */
 
 
-    public void startRecording() {
+    public boolean startRecording() {
 
         setupAudioRecorder();
 
@@ -1084,7 +1093,7 @@ public class ControlService extends Service {
             if (INPUT == INPUT_CONFIG.USB) {
                 messageClient(MSG_USB_DISCONNECT);
             }
-            return;
+            return false;
         }
 
         audioRecorder.setPreferredDevice(device);
@@ -1095,6 +1104,8 @@ public class ControlService extends Service {
             audioRecorder.start();
             messageClient(MSG_START_RECORDING);
         }
+
+        return true;
     }
 
     public void stopRecording() {

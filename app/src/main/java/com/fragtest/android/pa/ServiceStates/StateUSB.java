@@ -96,6 +96,7 @@ public class StateUSB implements ServiceState {
         mService.stopRecording();
         mService.shutdownAudioRecorder();
         mService.getMTaskHandler().removeCallbacks(mFindDeviceRunnable);
+        mService.stopAlarmAndCountdown();
     }
 
     @Override
@@ -218,30 +219,20 @@ public class StateUSB implements ServiceState {
     @Override
     public void usbAttached() {
         LogIHAB.log(LOG + ":" + "usbAttached()");
-        //mService.isUSBPresent = true;
         if (mService.getVibration() != null) {
             mService.getVibration().singleBurst();
         }
         mService.messageClient(ControlService.MSG_USB_CONNECT);
         setInterface();
-        //mService.messageClient(ControlService.MSG_USB_CONNECT);
-        //mService.announceUSBConnected();
-        //mService.messageClient(ControlService.MSG_USB_CONNECT);
-        //mService.startRecording();
     }
 
     @Override
     public void usbDetached() {
         LogIHAB.log(LOG + ":" + "usbDetached()");
-        //mService.isUSBPresent = false;
         if (mService.getVibration() != null) {
             mService.getVibration().singleBurst();
         }
         cleanUp();
-        //mService.messageClient(ControlService.MSG_USB_DISCONNECT);
-        //mService.announceUSBDisconnected();
-        //mService.messageClient(ControlService.MSG_USB_DISCONNECT);
-        //mService.stopRecording();
     }
 
     @Override

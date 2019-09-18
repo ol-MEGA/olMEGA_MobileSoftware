@@ -244,6 +244,9 @@ public class ConnectedThread extends Thread {
 
             // report back to service
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
+
+            Log.e(LOG, "MESSAGE: " + msg);
+
             if (msg != null) {
                 Bundle data = new Bundle();
                 data.putString("filename", filename);

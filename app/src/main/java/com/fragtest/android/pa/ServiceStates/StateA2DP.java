@@ -47,10 +47,12 @@ public class StateA2DP implements ServiceState {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
+                mService.getBluetoothAdapter().cancelDiscovery();
                 mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
                 //mService.setPreferredAudioDevice(mDevice);
-                mService.startRecording();
+                if (!mService.startRecording()) {
+                    mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+                }
             } else {
                 Log.e(LOG, "Client is not bound yet - 1 second wait.");
                 mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
@@ -72,6 +74,7 @@ public class StateA2DP implements ServiceState {
             mService.getBluetoothAdapter().enable();
         }
 
+        mService.getBluetoothAdapter().cancelDiscovery();
         mAudioManager = (AudioManager) mService.getSystemService(ControlService.AUDIO_SERVICE);
 
         if (!ControlService.getIsCharging()) {
@@ -177,25 +180,22 @@ public class StateA2DP implements ServiceState {
 
     @Override
     public void chargingOff() {
-        //TODO: ONLY FOR NOW
-        /*isBound = true;
-        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);*/
+        isBound = true;
+        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
     }
 
     @Override
     public void chargingOn() {
-        //TODO: ONLY FOR NOW
-        /*mService.stopRecording();
+        mService.stopRecording();
         mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
         mService.getVibration().singleBurst();
-        isBound = false;*/
+        isBound = false;
     }
 
     @Override
     public void chargingOnPre() {
-        //TODO: ONLY FOR NOW
-        //mService.stopRecording();
-        //mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
+        mService.stopRecording();
+        mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
     }
 
     @Override
