@@ -14,6 +14,7 @@ import com.fragtest.android.pa.ControlService;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -43,7 +44,8 @@ public class ConnectedThread extends Thread {
     private int AudioVolume = 0;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private ConnectedThread mConnectedThread = null;
-    private Messenger mMessenger;
+    private Messenger mServiceMessenger;
+    private Messenger mClientMessenger;
     private boolean isWave = false;
     private int chunklengthInBytes = 0;
     private int chunklengthInS = 0;
@@ -51,13 +53,16 @@ public class ConnectedThread extends Thread {
     private InputStream tmpIn = null;
     private OutputStream tmpOut = null;
     private int countCorrectPackages = 0;
+    private ControlService mService;
 
 
     // Sampling Rate is fixed for now
-    public ConnectedThread(BluetoothSocket socket, Messenger _messenger, int _chunkLengthInS,
+    public ConnectedThread(BluetoothSocket socket, ControlService service, int _chunkLengthInS,
                            boolean isWave) {
 
-        this.mMessenger = _messenger;
+        this.mService = service;
+        this.mServiceMessenger = mService.getServiceMessenger();
+        this.mClientMessenger = mService.getClientMessenger();
         this.chunklengthInS = _chunkLengthInS;
         this.isWave  = isWave;
         run = true;
@@ -73,16 +78,30 @@ public class ConnectedThread extends Thread {
     // Send message to connected client
     private void messageClient(int what) {
 
-        if (mMessenger != null) {
+        if (mClientMessenger != null) {
             try {
                 Message msg = Message.obtain(null, what);
-                mMessenger.send(msg);
+                mClientMessenger.send(msg);
             } catch (RemoteException e) {
             }
         } else {
             Log.d(LOG, "mClientMessenger is null");
         }
     }
+
+    // Send message to connected client
+    /*private void messageService(int what) {
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null");
+        }
+    }*/
 
     public void stopRecording() {
         isRecording = false;
@@ -236,26 +255,40 @@ public class ConnectedThread extends Thread {
                 }
             }
 
-            //String filename = fileIO.filename;
             String filename = fileIO.getFilename(isWave);
             fileIO.closeDataOutStream();
 
-            Log.e(LOG, "REPORTING BACK TO SERVICE");
+            // Only process full chunks
+            if (bytesWritten >= chunklengthInBytes) {
 
-            // report back to service
-            Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
+                Log.e(LOG, "REPORTING BACK TO SERVICE");
 
-            Log.e(LOG, "MESSAGE: " + msg);
+                // report back to service
+                Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
 
-            if (msg != null) {
-                Bundle data = new Bundle();
-                data.putString("filename", filename);
-                msg.setData(data);
-                try {
-                    mMessenger.send(msg);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+                Log.e(LOG, "MESSAGE: " + msg);
+
+                if (msg != null) {
+                    Bundle data = new Bundle();
+                    data.putString("filename", filename);
+                    msg.setData(data);
+                    try {
+                        mServiceMessenger.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } else {
+                File file = new File(filename);
+                Log.e(LOG, "Chunk was incomplete: " + file.getAbsolutePath());
+                AudioFileIO.deleteFile(file.getAbsolutePath());
+                /*if (file.exists()){
+                    try {
+                        file.delete();
+                    } catch (Exception e) {
+                        // Don't do anything
+                    }
+                }*/
             }
         }
     }

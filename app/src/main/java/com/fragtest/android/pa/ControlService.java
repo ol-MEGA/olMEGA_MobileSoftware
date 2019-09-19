@@ -146,13 +146,14 @@ public class ControlService extends Service {
 
     private static boolean isCharging = false;
 
+
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
     private boolean isTimerRunning = false;
     private boolean isQuestionnairePending = false;
     private boolean isQuestionnairePresent = false;
     private boolean isBTPresent = false;
-    //public boolean isUSBPresent = false;
+    public static boolean isUSBPresent = false;
     private boolean isRegistered = false;
     private boolean isMenu = true;
     private XMLReader mXmlReader;
@@ -167,11 +168,13 @@ public class ControlService extends Service {
 
                 case UsbManager.ACTION_USB_DEVICE_ATTACHED:
                     mServiceState.usbAttached();
+                    setIsUSBPresent(true);
                     messageClient(MSG_USB_CONNECT);
                     break;
 
                 case UsbManager.ACTION_USB_DEVICE_DETACHED:
                     mServiceState.usbDetached();
+                    setIsUSBPresent(false);
                     messageClient(MSG_USB_DISCONNECT);
                     break;
 
@@ -370,6 +373,14 @@ public class ControlService extends Service {
     };
 
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
+
+    public static boolean isIsUSBPresent() {
+        return isUSBPresent;
+    }
+
+    public void setIsUSBPresent(boolean present) {
+        isUSBPresent = present;
+    }
 
     public static boolean getIsCharging() {
         return isCharging;
@@ -1085,6 +1096,8 @@ public class ControlService extends Service {
     public boolean startRecording() {
 
         setupAudioRecorder();
+
+        Log.e(LOG, "Audio Recorder about to start: " + audioRecorder);
 
         AudioDeviceInfo device = mServiceState.getPreferredDevice();
 

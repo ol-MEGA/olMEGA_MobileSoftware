@@ -126,6 +126,15 @@ public class StateRFCOMM implements ServiceState {
     public void cleanUp() {
         Log.e(LOG, "CHANGE STATE");
         /** Cleanup **/
+
+        if (mSocket != null) {
+            try {
+                mSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         mService.getMTaskHandler().removeCallbacks(mConnectionRunnable);
         if (mConnectedThread != null) {
             mConnectedThread.stopRecording();
@@ -261,17 +270,17 @@ public class StateRFCOMM implements ServiceState {
     @Override
     public void usbAttached() {
         Log.e(LOG, "USB Attached");
-        LogIHAB.log(LOG + ":" + "usbAttached()");
-        isCharging = true;
-        cleanUp();
+        //LogIHAB.log(LOG + ":" + "usbAttached()");
+        //isCharging = true;
+        //cleanUp();
     }
 
     @Override
     public void usbDetached() {
         Log.e(LOG, "USB Detached");
         LogIHAB.log(LOG + ":" + "usbDetached()");
-        isCharging = false;
-        setInterface();
+        //isCharging = false;
+        //setInterface();
     }
 
     @Override
@@ -306,7 +315,7 @@ public class StateRFCOMM implements ServiceState {
             try {
                 mConnectedThread = null;
                 Log.e(LOG, "New thread.");
-                mConnectedThread = new ConnectedThread(mSocket, mService.getServiceMessenger(),
+                mConnectedThread = new ConnectedThread(mSocket, mService,
                         Integer.parseInt(chunklengthInS), isWave);
 
                 Log.e(LOG, "Max Priority");

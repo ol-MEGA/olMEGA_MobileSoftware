@@ -42,14 +42,13 @@ public class StateA2DP implements ServiceState {
                             mService.getBluetoothAdapter().cancelDiscovery();
                         }
                         mService.messageClient(ControlService.MSG_BT_DISCONNECTED);
-                        //mService.getBluetoothAdapter().startDiscovery();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 mService.getBluetoothAdapter().cancelDiscovery();
                 mService.getMTaskHandler().removeCallbacks(mRecordingRunnable);
-                //mService.setPreferredAudioDevice(mDevice);
+
                 if (!mService.startRecording()) {
                     mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
                 }
@@ -307,6 +306,6 @@ public class StateA2DP implements ServiceState {
         Log.e(LOG, "BT Switched on.");
 
         mService.getVibration().singleBurst();
-        //mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
+        mService.getMTaskHandler().postDelayed(mRecordingRunnable, mIntervalRecordingCheck);
     }
 }

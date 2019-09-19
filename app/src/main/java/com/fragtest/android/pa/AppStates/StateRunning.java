@@ -171,11 +171,11 @@ public class StateRunning implements AppState {
     @Override
     public void usbPresent() {
         LogIHAB.log(LOG + ":" + "usbPresent()");
-        if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
+        //if (mainActivity.mServiceState == INPUT_CONFIG.USB) {
             //stopConnecting();
             //mainActivity.setState(mainActivity.getStateRunning());
             //mainActivity.mAppState.setInterface();
-        }
+        //}
     }
 
     @Override

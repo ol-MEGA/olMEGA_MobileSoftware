@@ -51,13 +51,16 @@ public class AudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT
         );
 
-        audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
-                samplerate,
-                AudioFormat.CHANNEL_IN_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
-        );
+        while (audioRecord == null || audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            Log.e(LOG, "initializing new audiorecord.");
+            audioRecord = new AudioRecord(
+                    MediaRecorder.AudioSource.DEFAULT,
+                    samplerate,
+                    AudioFormat.CHANNEL_IN_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+            );
+        }
 
         recordingThread = new Thread(new Runnable() {
             @Override

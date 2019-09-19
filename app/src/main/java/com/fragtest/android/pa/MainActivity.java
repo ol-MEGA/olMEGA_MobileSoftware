@@ -1227,6 +1227,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(LOG, "USB PRESENT!!!");
 
                     mAppState.usbPresent();
+                    removeError(AppErrors.ERROR_NO_USB);
                     setUSBPresent(true);
                     break;
 
