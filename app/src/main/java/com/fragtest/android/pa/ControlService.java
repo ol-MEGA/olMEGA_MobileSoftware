@@ -17,7 +17,6 @@ import android.content.res.Configuration;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioDeviceInfo;
-import android.media.AudioRouting;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -317,9 +316,6 @@ public class ControlService extends Service {
     public ServiceState getStateStandalone() {
         return mStateSTANDALONE;
     }
-
-    private AudioRouting mAudioRouting;
-
 
     public Runnable mDateTimeRunnable = new Runnable() {
         @Override
@@ -1011,33 +1007,33 @@ public class ControlService extends Service {
             //shutdownAudioRecorder();
 
             // Cleanup
-            mServiceState.cleanUp();
+            //mServiceState.cleanUp();
 
             switch (operationMode) {
                 case "A2DP":
                     sharedPreferences.edit().putString("samplerate", "48000").apply();
                     samplerate = "48000";
                     operationModeStatus = INPUT_CONFIG.A2DP.toString();
-                    mServiceState = getStateA2DP();
+                    setState(getStateA2DP());
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
                     sharedPreferences.edit().putString("samplerate", "16000").apply();
                     samplerate = "16000";
                     operationModeStatus = INPUT_CONFIG.RFCOMM.toString();
-                    mServiceState = getStateRFCOMM();
+                    setState(getStateRFCOMM());
                     INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "USB":
                     sharedPreferences.edit().putString("samplerate", "48000").apply();
                     samplerate = "48000";
                     operationModeStatus = INPUT_CONFIG.USB.toString();
-                    mServiceState = getStateUSB();
+                    setState(getStateUSB());
                     INPUT = INPUT_CONFIG.USB;
                     break;
                 case "STANDALONE":
                     operationModeStatus = INPUT_CONFIG.STANDALONE.toString();
-                    mServiceState = getStateStandalone();
+                    setState(getStateStandalone());
                     INPUT = INPUT_CONFIG.STANDALONE;
                     break;
             }
@@ -1053,7 +1049,7 @@ public class ControlService extends Service {
 
             messageClient(MSG_STATE_CHANGE, bundle);
         } else {
-            mServiceState.setInterface();
+            //mServiceState.setInterface();
             LogIHAB.log("OpMode: " + INPUT.toString());
             Log.e(LOG, "OpMode: " + INPUT.toString());
         }
