@@ -258,6 +258,8 @@ public class ConnectedThread extends Thread {
             String filename = fileIO.getFilename(isWave);
             fileIO.closeDataOutStream();
 
+            Log.e(LOG, "BytesWritten: " + bytesWritten + ", ChunkLengthInBytes: " + chunklengthInBytes);
+
             // Only process full chunks
             if (bytesWritten >= chunklengthInBytes) {
 

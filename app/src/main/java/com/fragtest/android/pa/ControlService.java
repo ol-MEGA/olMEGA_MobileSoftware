@@ -498,7 +498,7 @@ public class ControlService extends Service {
 
         // Begin as Standalone
         // TODO: NECESSARY?
-        mServiceState = mStateSTANDALONE;
+        mServiceState = getStateStandalone();
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothAdapter.enable();
@@ -706,12 +706,7 @@ public class ControlService extends Service {
     public boolean checkUSB() {
         UsbManager manager = (UsbManager) getSystemService(Context.USB_SERVICE);
         HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-        if (deviceList.size() > 0) {
-            //mServiceState.usbAttached();
-            return true;
-        } else {
-            return false;
-        }
+        return (deviceList.size() > 0);
     }
 
     private boolean checkTime() {

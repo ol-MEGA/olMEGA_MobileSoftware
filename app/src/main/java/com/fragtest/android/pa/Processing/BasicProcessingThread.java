@@ -101,7 +101,13 @@ public class BasicProcessingThread extends Thread {
 
         try {
             // load data from cache
+
+			Log.e(LOG, "Processing file: " + filename);
+
             RandomAccessFile inputFile = new RandomAccessFile(filename, "r");
+
+			Log.e(LOG, "Processing exists: " + inputFile.toString());
+
             buffer = new byte[(int) inputFile.length() - skip];
             inputFile.seek(skip);
             inputFile.readFully(buffer);

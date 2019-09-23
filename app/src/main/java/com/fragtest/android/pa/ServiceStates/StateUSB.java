@@ -59,6 +59,7 @@ public class StateUSB implements ServiceState {
 
         LogIHAB.log(LOG + ":setInterface()");
         Log.e(LOG, "SET INTERFACE");
+        Log.e(LOG, "USB connected: " + mService.checkUSB());
 
         if (mService.checkUSB()) {
             mAudioManager = (AudioManager) mService.getSystemService(mService.AUDIO_SERVICE);

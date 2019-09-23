@@ -60,14 +60,14 @@
             android:summary="@string/pref_autostart_summary"
             android:title="@string/pref_autostart_title" />
 
-        <SwitchPreference
+        <!--<SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="true"
             android:checked="true"
             android:key="maxBrightness"
             android:summary="@string/pref_maxBrightness_summary"
-            android:title="@string/pref_maxBrightness_title" />
+            android:title="@string/pref_maxBrightness_title" />-->
 
         <!--<SwitchPreference
             android:layout_width="wrap_content"

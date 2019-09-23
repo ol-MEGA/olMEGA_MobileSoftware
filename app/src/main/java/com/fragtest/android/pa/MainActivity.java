@@ -18,7 +18,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,7 +28,6 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.os.UserManager;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
@@ -656,11 +654,11 @@ public class MainActivity extends AppCompatActivity {
             isActivityRunning = true;
         }
 
-        if (!Settings.System.canWrite(this)) {
+        /*if (!Settings.System.canWrite(this)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
             intent.setData(Uri.parse("package:" + mStatContext.getPackageName()));
             startActivity(intent);
-        }
+        }*/
 
         // BRIGHTNESS ADJUSTMENT
         mResolver = getContentResolver();
