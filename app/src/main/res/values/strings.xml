@@ -14,6 +14,7 @@
     <string name="noBluetooth">• Unable to connect to device.</string>
     <string name="batteryWarning">• Please charge the smartphone.</string>
     <string name="batteryCritical">• Battery level critical - Application stopped.</string>
+    <string name="noUSB">• Unable to find USB device.</string>
 
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>
@@ -29,4 +30,36 @@
     <string name="help_text_multi_03">Or this one</string>
     <string name="help_hint"><b>Hint:</b> Sometimes two or more answers will contradict each other. In that case, checking one will automatically uncheck the other(s).</string>
     <string name="help_button_ready">Close</string>
+
+    <string name="swipeMessage">Please answer the question first.</string>
+    <string name="swipeOkay">Okay</string>
+
+    <string name="pref_head_Questionnaire">Questionnaire</string>
+    <string name="pref_head_General">General</string>
+    <string name="pref_head_Recording">Recording</string>
+    <string name="pref_head_Processing">Processing</string>
+
+    <string name="pref_whichQuest_title">Select questionnaire</string>
+    <string name="pref_whichQuest_dialogTitle">Select questionnaire</string>
+    <string name="pref_forceAnswer_title">Force answers</string>
+    <string name="pref_forceAnswer_summary">No Swiping without Answer</string>
+    <string name="pref_forceAnswerDialog_title">Force Dialog</string>
+    <string name="pref_forceAnswerDialog_summary">Inform user via popup</string>
+    <string name="pref_autostart_title">Autostart</string>
+    <string name="pref_autostart_summary">Start app with system</string>
+    <string name="pref_maxBrightness_title">Display always bright</string>
+    <string name="pref_maxBrightness_summary">Keep display brightness maximum</string>
+    <string name="pref_operationMode_title">Operation Mode</string>
+    <string name="pref_samplerate_title">Sampling Rate</string>
+    <string name="pref_samplerate_summary">Recording sampling rate in Hz</string>
+    <string name="pref_chunklengthInS_title">Cache size in seconds</string>
+    <string name="pref_keepAudioCache_title">Keep cached audio data</string>
+    <string name="pref_features_title">Features</string>
+    <string name="pref_isWave_title">Cache in WAVE format</string>
+    <string name="pref_filterHp_title">Highpass filter</string>
+    <string name="pref_filterHpFrequency_title">Cutoff frequency in Hz</string>
+    <string name="pref_downsample_title">Downsampling</string>
+    <string name="pref_downsample_summary">Downsample audio (fixed factor 2)</string>
+
+
 </resources>

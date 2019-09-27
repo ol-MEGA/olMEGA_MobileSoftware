@@ -2,9 +2,8 @@ package com.fragtest.android.pa.Questionnaire;
 
 import android.graphics.Color;
 import android.util.Log;
-import android.widget.CheckBox;
+import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 
 import com.fragtest.android.pa.BuildConfig;
 import com.fragtest.android.pa.Core.EvaluationList;
@@ -14,6 +13,7 @@ import com.fragtest.android.pa.Core.MetaData;
 import com.fragtest.android.pa.MainActivity;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -37,7 +37,7 @@ public class Questionnaire {
     // Flag: display forced empty vertical spaces
     private final boolean acceptBlankSpaces = false;
     // Number of pages in questionnaire (visible and hidden)
-    private int mNumPages, mViewPagerHeight;
+    private int mNumPages;
     // ArrayList containing all questions (including all attached information)
     private ArrayList<String> mQuestionList;
     private MetaData mMetaData;
@@ -62,14 +62,13 @@ public class Questionnaire {
     }
 
     public void setUp(ArrayList<String> questionList) {
-        //mRawInput = mFileIO.readRawTextFile();
-        // offline version
-        //String mRawInput = mFileIO.readRawTextFile(mContext, R.raw.question_short_eng);
 
         mMetaData = new MetaData(mMainActivity, mHead, mFoot, mSurveyURI, mMotivation, mVersion);
         mMetaData.initialise();
         mQuestionList = questionList;
         mNumPages = mQuestionList.size();
+
+        putAllQuestionsInQuestionInfo();
     }
 
     // Generate a Layout for Question at desired Position based on String Blueprint
@@ -77,11 +76,6 @@ public class Questionnaire {
 
         String sQuestionBlueprint = mQuestionList.get(position);
         Question question = new Question(sQuestionBlueprint, mMainActivity);
-        mQuestionInfo.add(new QuestionInfo(question, question.getQuestionId(),
-                question.getFilterId(), position,
-                question.isHidden(), question.isMandatory(), question.getAnswerIds()));
-        mMetaData.addQuestion(question);
-        mMandatoryInfo.add(question.getQuestionId(), question.isMandatory(), question.isHidden());
 
         return question;
     }
@@ -102,6 +96,7 @@ public class Questionnaire {
         boolean isPhotograph = false;
 
         LinearLayout answerContainer = new LinearLayout(mMainActivity);
+        answerContainer.setId(question.getQuestionId());
         LinearLayout.LayoutParams linearContainerParams =
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT);
@@ -146,9 +141,6 @@ public class Questionnaire {
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
                 mMainActivity, this, answerLayout);
 
-        /*final AnswerTypeDate answerTypeDate = new AnswerTypeDate(
-                mContext, this, question.getQuestionId());*/
-
         final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
                 mMainActivity, answerLayout);
 
@@ -171,10 +163,7 @@ public class Questionnaire {
             if (((nAnswerId == 66666) && (acceptBlankSpaces)) || (nAnswerId != 66666)) {
 
                 switch (sType) {
-                    /*case "date": {
-                        answerTypeDate.addAnswer(sAnswer);
-                        break;
-                    }*/
+
                     case "radio": {
                         isRadio = true;
                         answerTypeRadio.addAnswer(nAnswerId, sAnswer, isDefault);
@@ -298,6 +287,7 @@ public class Questionnaire {
     }
 
     boolean finaliseEvaluation() {
+
         mMetaData.finalise(mEvaluationList);
         mFileIO.saveDataToFile(mMainActivity, mMetaData.getFileName(), mMetaData.getData());
         returnToMenu();
@@ -329,6 +319,9 @@ public class Questionnaire {
         while (wasChanged) {
             wasChanged = false;
 
+            //Log.e(LOG, "Size of MQuestionInfo: " + mQuestionInfo.size());
+
+
             for (int iPos = 0; iPos < mQuestionInfo.size(); iPos++) {
 
                 QuestionInfo qI = mQuestionInfo.get(iPos);
@@ -354,27 +347,49 @@ public class Questionnaire {
                             || qI.getFilterIdPositive().size() == 0)                                    // && (At least 1 positive Filter Id exists OR No positive filter Ids declared)
                             && (!mEvaluationList.containsAtLeastOneAnswerId(qI.getFilterIdNegative())   // && (Not even 1 negative Filter Id exists OR No negative filter Ids declared)
                             || qI.getFilterIdNegative().size() == 0)
-                            ) {
+                    ) {
                         addQuestion(iPos);
                         wasChanged = true;
                     }
                 }
             }
         }
+
+        // Sort the List of Views by Id
+        Collections.sort(mContextQPA.mListOfViews);
+        // Force a reload of the List of Views
+        mContextQPA.notifyDataSetChanged();
+
         return true;
+    }
+
+    private void putAllQuestionsInQuestionInfo() {
+
+        for (int iQuestion = 0; iQuestion < mQuestionList.size(); iQuestion++) {
+            Question question = createQuestion(iQuestion);
+            mQuestionInfo.add(new QuestionInfo(question));
+            mQuestionInfo.get(iQuestion).setActive();
+
+            // Question is added to MetaData so the class always holds a complete set of all questions
+            // (empty questions are still included in output xml file)
+            mMetaData.addQuestion(question);
+        }
     }
 
     // Adds the question to the displayed list
     private boolean addQuestion(int iPos) {
 
         mQuestionInfo.get(iPos).setActive();
+
+        Question question = createQuestion(iPos);
+        View view = generateView(question, isImmersive);
+
         // View is fetched from Storage List and added to Active List
-        mContextQPA.addView(mContextQPA.mListOfViewsStorage.get(iPos).getView(),
-                mContextQPA.mListOfActiveViews.size(),                                  // this is were the injection happens
-                mContextQPA.mListOfViewsStorage.get(iPos).getPositionInRaw(),
-                mContextQPA.mListOfViewsStorage.get(iPos).isMandatory(),
-                mContextQPA.mListOfViewsStorage.get(iPos).getListOfAnswerIds());
-        renewPositionsInPager();
+        mContextQPA.addView(view,
+                question.getIsForced(),                                  // this is were the injection happens
+                question.getAnswerIds(),
+                question.getFilterIds());
+
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
@@ -384,55 +399,23 @@ public class Questionnaire {
     // Removes the question from the displayed list and all given answer ids from memory
     private boolean removeQuestion(int iPos) {
 
-        // If view is not mandatory -> can really be removed including entries in mEvaluationList
-        if (!mMandatoryInfo.isMandatoryFromId(mQuestionInfo.get(iPos).getId())) {
-
-            mQuestionInfo.get(iPos).setInactive();
-            mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
-            // Remove checked answers on removed questions
-            String sType = mQuestionInfo.get(iPos).getQuestion().getTypeAnswer();
-            List<Integer> mListOfAnswerIds = mQuestionInfo.get(iPos).getAnswerIds();
-
-            // Visually un-check checkboxes and radio buttons
-            for (int iAnswer = 0; iAnswer < mListOfAnswerIds.size(); iAnswer++) {
-                if (sType.equals("checkbox") && mListOfAnswerIds.get(iAnswer) != 66666) {
-                    CheckBox checkBox = (CheckBox) mContextQPA.mViewPager.findViewById(
-                            mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
-                    if (checkBox != null) {
-                        checkBox.setChecked(false);
-                    }
-                } else if (sType.equals("radio") && mListOfAnswerIds.get(iAnswer) != 66666) {
-                    RadioButton radioButton = (RadioButton) mContextQPA.mViewPager.findViewById(
-                            mQuestionInfo.get(iPos).getAnswerIds().get(iAnswer));
-                    if (radioButton != null) {
-                        radioButton.setChecked(false);
-                    }
-                }
-            }
-        }
-
-        // Remove View from ActiveList
         mQuestionInfo.get(iPos).setInactive();
-        mContextQPA.removeView(mQuestionInfo.get(iPos).getPositionInPager());
-        renewPositionsInPager();
+        mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
+
+        // Remove View from Active List
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getId());
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();
 
         return true;
     }
 
-    // Renews all the positions in information object gathered from actual order
-    private void renewPositionsInPager() {
-
-        for (int iItem = 0; iItem < mQuestionInfo.size(); iItem++) {
-            int iId = mQuestionInfo.get(iItem).getId();
-            mQuestionInfo.get(iItem).setPositionInPager(mContextQPA.getPositionFromId(iId));
-        }
+    // Returns answers given by user for specific question
+    public boolean getQuestionHasBeenAnswered(int id) {
+        return mEvaluationList.containsQuestionId(id);
     }
 
     private void returnToMenu() {
-        //mContextQPA.createMenu();
-        //mMainActivity.setState(mMainActivity.getStateConnecting());
         mMainActivity.finishQuestionnaire();
     }
 }

@@ -137,5 +137,20 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Administration">
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
+            android:key="unsetDeviceAdmin"
+            android:summary="For uninstall only"
+            android:title="Unset Device Administrator" />
+
+
+    </PreferenceCategory>
 
 </PreferenceScreen>

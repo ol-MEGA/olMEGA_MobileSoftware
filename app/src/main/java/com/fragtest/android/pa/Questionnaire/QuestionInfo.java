@@ -13,26 +13,40 @@ class QuestionInfo {
     private final int mId;
     private final ArrayList<Integer> mFilterId;
     private final boolean mHidden;
-    //private final boolean mMandatory;
     private final Question mQuestion;
     private final List<Integer> mListOfAnswerIds;
     private boolean mActive;
     private int mPositionInPager;
+    private boolean mIsForced;
 
     QuestionInfo(Question question, int id, ArrayList<Integer> filterId,
-                 int position, boolean hidden, boolean mandatory,
-                 List<Integer> answerIds) {
+                 boolean hidden,
+                 List<Integer> answerIds, boolean isForced) {
         mQuestion = question;
         mId = id;
         mFilterId = filterId;
         mActive = true;
-        mPositionInPager = position;
         mHidden = hidden;
         mListOfAnswerIds = answerIds;
+        mIsForced = isForced;
+    }
+
+    QuestionInfo(Question question) {
+        mQuestion = question;
+        mId = question.getQuestionId();
+        mFilterId = question.getFilterIds();
+        mActive = true;
+        mHidden = question.isHidden();
+        mListOfAnswerIds = question.getAnswerIds();
+        mIsForced = question.getIsForced();
     }
 
     boolean isActive() {
         return mActive;
+    }
+
+    boolean getIsForced() {
+        return mIsForced;
     }
 
     public int getId() {
@@ -68,14 +82,6 @@ class QuestionInfo {
 
     void setActive() {
         mActive = true;
-    }
-
-    int getPositionInPager() {
-        return mPositionInPager;
-    }
-
-    void setPositionInPager(int position) {
-        mPositionInPager = position;
     }
 
     public Question getQuestion() {

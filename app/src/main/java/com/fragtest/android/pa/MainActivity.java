@@ -6,6 +6,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -30,6 +31,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -130,6 +132,11 @@ public class MainActivity extends AppCompatActivity {
     private StateProposing mStateProposing;
     private StateQuest mStateQuest;
     private StateRunning mStateRunning;
+
+    private static boolean bRecordSwipes = true;
+    // Forced Answers (no answer no swipe)
+    private int falseSwipes = 0;
+    private boolean isForcedAnswer, isForcedAnswerDialog;
 
     // Context
     private static Context mStatContext;
@@ -294,6 +301,41 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
     }
 
+    private ViewPager.OnPageChangeListener myOnPageChangeListener =
+            new ViewPager.OnPageChangeListener() {
+
+                @Override
+                public void onPageScrollStateChanged(int state) {
+                }
+
+                @Override
+                public void onPageScrolled(int position,
+                                           float positionOffset, int positionOffsetPixels) {
+                }
+
+                @Override
+                public void onPageSelected(int position) {
+                    // In case of forced answers, no forward swiping is allowed on unanswered questions
+
+                    if (!mAdapter.getHasQuestionBeenAnswered() && mAdapter.getHasQuestionForcedAnswer() && isForcedAnswer) {
+                        mAdapter.setQuestionnaireProgressBar(position - 1);
+                        mAdapter.setArrows(position - 1);
+                        mViewPager.setCurrentItem(position - 1, true);
+                        if (bRecordSwipes) {
+                            falseSwipes += 1;
+                        }
+                        Log.e(LOG, "False Swipes: " + falseSwipes);
+                        if (bRecordSwipes && isForcedAnswer && isForcedAnswerDialog && falseSwipes > 2) {
+                            messageFalseSwipes();
+                        }
+                    } else {
+                        mAdapter.setQuestionnaireProgressBar(position);
+                        mAdapter.setArrows(position);
+                        mViewPager.setCurrentItem(position, true);
+                    }
+                }
+            };
+
     private void shipPreferencesToControlService() {
         // Load information from shared preferences and bundle them
         Bundle dataPreferences = new Bundle();
@@ -334,25 +376,6 @@ public class MainActivity extends AppCompatActivity {
     public void incrementPage() {
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1, true);
     }
-
-    private ViewPager.OnPageChangeListener myOnPageChangeListener =
-            new ViewPager.OnPageChangeListener() {
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-                }
-
-                @Override
-                public void onPageScrolled(int position,
-                                           float positionOffset, int positionOffsetPixels) {
-                }
-
-                @Override
-                public void onPageSelected(int position) {
-                    mAdapter.setQuestionnaireProgressBar(position);
-                    mAdapter.setArrows(position);
-                }
-            };
 
 
     /**
@@ -432,6 +455,31 @@ public class MainActivity extends AppCompatActivity {
             mConfig.setVisibility(View.GONE);
         }
     }
+
+    public static void stopRecordingFalseSwipes() {
+        bRecordSwipes = false;
+    }
+
+    public static void startRecordingFalseSwipes() {
+        bRecordSwipes = true;
+    }
+
+    private void messageFalseSwipes() {
+        stopRecordingFalseSwipes();
+        falseSwipes = 0;
+        new AlertDialog.Builder(this, R.style.SwipeDialogTheme)
+                .setTitle(R.string.app_name)
+                .setMessage(R.string.swipeMessage)
+                .setPositiveButton(R.string.swipeOkay, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startRecordingFalseSwipes();
+                    }
+                })
+                .setCancelable(false)
+                .show();
+    }
+
 
 
     /**
@@ -525,6 +573,12 @@ public class MainActivity extends AppCompatActivity {
             isActivityRunning = true;
         }
 
+        /*if (!Settings.System.canWrite(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+            intent.setData(Uri.parse("package:" + mStatContext.getPackageName()));
+            startActivity(intent);
+        }*/
+
         // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -605,6 +659,27 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         hideSystemUI(USE_KIOSK_MODE);
+
+        isForcedAnswer = sharedPreferences.getBoolean("forceAnswer", true);
+        isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
+
+        if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {
+            mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
+        }
+
+        //Set the system brightness using the brightness variable value
+        /*boolean maxBrightness = sharedPreferences.getBoolean("maxBrightness", false);
+        if (maxBrightness) {
+            LogIHAB.log(LOG + ": Setting display brightness to maximum.");
+            //Settings.System.putInt(mResolver, Settings.System.SCREEN_BRIGHTNESS, 255);
+            //Get the current window attributes
+            WindowManager.LayoutParams layoutParams = mWindow.getAttributes();
+            //Set the brightness of this window
+            layoutParams.screenBrightness = 1f;//mBrightness / (float)255;
+            //Apply attribute changes to this window
+            mWindow.setAttributes(layoutParams);
+        }*/
+
     }
 
 

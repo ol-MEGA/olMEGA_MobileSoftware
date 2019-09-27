@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/apk/res/android">
-    
+<resources>
+
     <!-- put the name of your feature here -->
     <string-array name="features">
         <item>RMS</item>
@@ -18,6 +18,13 @@
         <item>48000</item>
         <item>44100</item>
         <item>16000</item>
+    </string-array>
+
+    <string-array name="operationMode">
+        <item>A2DP</item>
+        <item>RFCOMM</item>
+        <item>USB</item>
+        <item>STANDALONE</item>
     </string-array>
 
     <integer-array name="batteryStates">
