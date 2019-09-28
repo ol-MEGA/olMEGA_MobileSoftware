@@ -24,7 +24,7 @@ public class LogIHAB {
         FileWriter fw = null;
 
         String formattedString = Timestamp.getTimestamp(4) + " " + string;
-        Log.e(LOG, "formatted string: "+formattedString);
+        //Log.e(LOG, "formatted string: "+formattedString);
 
         try
         {

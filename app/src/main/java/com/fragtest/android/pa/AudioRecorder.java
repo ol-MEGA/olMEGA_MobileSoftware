@@ -1,5 +1,6 @@
 package com.fragtest.android.pa;
 
+import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -7,6 +8,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 import com.fragtest.android.pa.Core.AudioFileIO;
 
@@ -31,12 +33,15 @@ public class AudioRecorder {
     private int chunklengthInBytes, bufferSize;
     private Messenger messenger;
     private int samplerate;
+    private ControlService mContext;
 
-    AudioRecorder(Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
 
-        messenger = _messenger;
-        isWave = _isWave;
-        samplerate = _samplerate;
+    public AudioRecorder(ControlService context, Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
+
+        this.mContext = context;
+        this.messenger = _messenger;
+        this.isWave = _isWave;
+        this.samplerate = _samplerate;
 
         chunklengthInBytes = (_chunklengthInS * _samplerate * CHANNELS * BITS / 8);
 
@@ -47,7 +52,7 @@ public class AudioRecorder {
 
 
         audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
+                MediaRecorder.AudioSource.VOICE_RECOGNITION,
                 samplerate,
                 AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,
@@ -64,30 +69,34 @@ public class AudioRecorder {
 
 
     public void start() {
-        /*audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.DEFAULT,
-                samplerate,
-                AudioFormat.CHANNEL_IN_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
-        );*/
         stopRecording = false;
         recordingThread.start();
     }
 
+    public int getRecordingState() {
+        return audioRecord.getRecordingState();
+    }
+
+    public void setPreferredDevice(AudioDeviceInfo device) {
+        audioRecord.setPreferredDevice(device);
+        Log.e(LOG, "Recording device set through AudioRecord: " + audioRecord.getPreferredDevice());
+    }
 
     public void stop() {
-
         stopRecording = true;
     }
 
-
-    public void close() {
-
+    public void release() {
         audioRecord.release();
+        Log.e(LOG, "AudioRecorder released");
     }
 
     private void recordAudio() {
+
+        Log.e(LOG, "Starting to record.");
+
+        ControlService.setIsRecording(true);
+        mContext.messageClient(ControlService.MSG_START_RECORDING);
 
         audioRecord.startRecording();
 
@@ -148,6 +157,8 @@ public class AudioRecorder {
             String filename = fileIO.filename;
             fileIO.closeDataOutStream();
 
+            //mContext.messageService(ControlService.MSG_CHUNK_RECORDED);
+
             // report back to service
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
@@ -163,12 +174,18 @@ public class AudioRecorder {
         }
 
         audioRecord.stop();
-        Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
+
+        mContext.messageClient(ControlService.MSG_STOP_RECORDING);
+        mContext.messageService(ControlService.MSG_RECORDING_STOPPED);
+        ControlService.setIsRecording(false);
+
+        /*Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
         try {
             messenger.send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();
-        }
+        }*/
+        Log.e(LOG, "Recording stopped.");
     }
 
 }

@@ -3,12 +3,10 @@ package com.fragtest.android.pa;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -17,7 +15,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -64,6 +61,8 @@ import java.util.Set;
 
 import static com.fragtest.android.pa.ControlService.MSG_APPLICATION_SHUTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_CHANGE_PREFERENCE;
+import static com.fragtest.android.pa.ControlService.MSG_CHARGING_OFF;
+import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 
@@ -182,6 +181,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -200,10 +200,10 @@ public class MainActivity extends AppCompatActivity {
                 // a change towards not charging
                 messageService(ControlService.MSG_CHARGING_OFF);
             }
-            ControlService.isCharging = plugged;
+            ControlService.setIsCharging(plugged);
             mAdapter.setIsCharging(plugged);
         }
-    };
+    };*/
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -215,18 +215,6 @@ public class MainActivity extends AppCompatActivity {
 
             //TODO: Experimental - Grant permission and suppress "Bluetooth Permission" - problem
             //mDevicePolicyManager.setPermissionPolicy(mAdminComponentName, DevicePolicyManager.PERMISSION_POLICY_AUTO_GRANT);
-
-            IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = registerReceiver(null, batteryFilter);
-
-            // Are we plugged in?
-            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            ControlService.isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                    status == BatteryManager.BATTERY_PLUGGED_USB;
-            if (ControlService.isCharging) {
-                messageService(ControlService.MSG_CHARGING_ON_PRE);
-                mAppState.chargeOn();
-            }
 
             messageService(ControlService.MSG_REGISTER_CLIENT);
             messageService(ControlService.MSG_GET_STATUS);
@@ -544,7 +532,7 @@ public class MainActivity extends AppCompatActivity {
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+            //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
             handleNewPagerAdapter();
 
@@ -599,7 +587,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
-        unregisterReceiver(mBatInfoReceiver);
+        //unregisterReceiver(mBatInfoReceiver);
     }
 
     @Override
@@ -984,6 +972,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             switch (msg.what) {
+
+                case MSG_CHARGING_ON:
+                    mAppState.chargeOn();
+                    mAdapter.setIsCharging(true);
+                    break;
+
+                case MSG_CHARGING_OFF:
+                    mAppState.chargeOff();
+                    mAdapter.setIsCharging(false);
+                    break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
 

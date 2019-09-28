@@ -5,9 +5,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -30,15 +29,15 @@ import com.fragtest.android.pa.Core.EventReceiver;
 import com.fragtest.android.pa.Core.EventTimer;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.Core.MessageList_toClient;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
+import com.fragtest.android.pa.InputProfile.InputProfile;
+import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
 
-import org.pmw.tinylog.Configurator;
-import org.pmw.tinylog.Level;
 import org.pmw.tinylog.Logger;
-import org.pmw.tinylog.writers.FileWriter;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -118,6 +117,8 @@ public class ControlService extends Service {
     public static final int MSG_TIME_CORRECT = 67;
     public static final int MSG_TIME_INCORRECT = 68;
 
+    private static int mChunkId = 1;
+
     // Shows whether questionnaire is active - tackles lifecycle jazz
     private boolean isActiveQuestionnaire = false;
     private boolean isTimerRunning = false;
@@ -133,8 +134,8 @@ public class ControlService extends Service {
 
     public static final String FILENAME_LOG = "log2.txt";
     public static final String FILENAME_LOG_tmp = "log.txt";
-
-    private int mChunkId = 1;
+    // Messenger to pass to threads
+    final Messenger mServiceMessenger = new Messenger(new MessageHandler());
 
     // preferences
     private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
@@ -164,8 +165,7 @@ public class ControlService extends Service {
 
     // Messenger to clients
     private Messenger mClientMessenger;
-    // Messenger to pass to threads
-    final Messenger serviceMessenger = new Messenger(new MessageHandler());
+    private MessageList_toClient mMessageList;
 
     // Audio recording
     private AudioRecorder audioRecorder;
@@ -184,48 +184,12 @@ public class ControlService extends Service {
     static boolean isProcessing = false;
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
-
-    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    private int mDelayResetBT = 500;
+    private InputProfile mInputProfile;
+    private InputProfile_A2DP mInputProfile_A2DP;
 
     public static final boolean useLogMode = true;
 
     Context context = this;
-
-    private Runnable mStartRecordingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            audioRecorder = new AudioRecorder(
-                    serviceMessenger,
-                    Integer.parseInt(chunklengthInS),
-                    Integer.parseInt(samplerate),
-                    isWave);
-            if (!isCharging) {
-                audioRecorder.start();
-                setIsRecording(true);
-                messageClient(MSG_START_RECORDING);
-                mVibration.singleBurst();
-            }
-        }
-    };
-
-    private Runnable mResetBTAdapterRunnable = new Runnable() {
-        @Override
-        public void run() {
-            mBluetoothAdapter.enable();
-            mBluetoothAdapter.startDiscovery();
-        }
-    };
-
-    private Runnable mDisableBT = new Runnable() {
-        @Override
-        public void run() {
-            if (isCharging) {
-                mBluetoothAdapter.disable();
-                mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
-            }
-        }
-    };
 
     private Runnable mDateTimeRunnable = new Runnable() {
         @Override
@@ -266,7 +230,6 @@ public class ControlService extends Service {
                 return true;
             }
         }
-        mBluetoothAdapter.disable();
         return false;
     }
 
@@ -289,6 +252,31 @@ public class ControlService extends Service {
         }
     };
 
+    // Battery Status Receiver
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context ctxt, Intent intent) {
+            int tempPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
+                    tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
+
+            // only announce on change
+            if (plugged && !ControlService.getIsCharging()) {
+                mInputProfile.chargingOn();
+                mVibration.singleBurst();
+                // a change towards charging
+                messageClient(ControlService.MSG_CHARGING_ON);
+                ControlService.setIsCharging(true);
+            } else if (!plugged && ControlService.getIsCharging()) {
+                mVibration.singleBurst();
+                mInputProfile.chargingOff();
+                // a change towards not charging
+                messageClient(ControlService.MSG_CHARGING_OFF);
+                ControlService.setIsCharging(false);
+            }
+        }
+    };
+
     private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -306,320 +294,20 @@ public class ControlService extends Service {
         }
     };
 
-    //The BroadcastReceiver that listens for bluetooth broadcasts
-    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (!isStandalone) {
-                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                    Log.e(LOG, "BTDEVICES found.");
-                } else if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                    announceBTConnected();
-                    Logger.info("Bluetooth: connected");
-                    LogIHAB.log("Bluetooth: connected");
-                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES finished.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {
-                    Log.e(LOG, "BTDEVICES about to disconnect.");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                    announceBTDisconnected();
-                    Logger.info("Bluetooth: disconnected");
-                    LogIHAB.log("Bluetooth: disconnected");
-                }
-            }
-        }
-    };
-
-    class MessageHandler extends Handler {
-
-        @Override
-        public void handleMessage(Message msg) {
-
-            Log.d(LOG, "Received Message: " + msg.what);
-
-            switch (msg.what) {
-
-                case MSG_REGISTER_CLIENT:
-
-                    Configurator.defaultConfig()
-                            .writer(new FileWriter(FILENAME_LOG_tmp))
-                            .level(Level.INFO)
-                            .activate();
-
-                    Log.e(LOG,"msg: "+msg);
-                    Log.i(LOG, "Client registered to service");
-                    Logger.info("Client registered to service");
-                    LogIHAB.log("Client registered to service");
-                    mClientMessenger = msg.replyTo;
-
-                    setupApplication();
-                    mTaskHandler.post(mDateTimeRunnable);
-                    mTaskHandler.post(mLogCheckRunnable);
-                    mTaskHandler.post(mActivityCheckRunnable);
-
-                    // Set and announce bluetooth disabled - then enable it to force recognition via
-                    // broadcast receiver. This way, a connection can be made with an already
-                    // active transmitter
-                    if (!isStandalone) {
-                        mBluetoothAdapter.disable();
-                        messageClient(MSG_BT_DISCONNECTED);
-                    }
-
-                    //IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                    //Intent batteryStatus = registerReceiver(null, batteryFilter);
-
-                    if (!isCharging) {
-                        if (!mBluetoothAdapter.isEnabled()) {
-                            mBluetoothAdapter.enable();
-                        }
-                    } else {
-                        mVibration.singleBurst();
-                    }
-
-                    if (isStandalone) {
-                        mBluetoothAdapter.disable();
-                        announceBTConnected();
-                    }
-
-                    checkTime();
-                    checkLog();
-                    break;
-
-                case MSG_UNREGISTER_CLIENT:
-                    mClientMessenger = null;
-                    stopAlarmAndCountdown();
-                    Logger.info("Client unregistered from service");
-                    LogIHAB.log("Client unregistered from service");
-                    if (restartActivity) {
-                        startActivity();
-                    } else {
-                        mBluetoothAdapter.disable();
-                    }
-                    mTaskHandler.removeCallbacks(mDateTimeRunnable);
-                    mTaskHandler.removeCallbacks(mLogCheckRunnable);
-                    mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-                    break;
-
-                case MSG_GET_STATUS:
-                    Bundle status = new Bundle();
-                    status.putBoolean("isRecording", getIsRecording());
-                    messageClient(MSG_GET_STATUS, status);
-                    break;
-
-                case MSG_RESET_BT:
-                    mBluetoothAdapter.cancelDiscovery();
-                    mBluetoothAdapter.disable();
-                    mTaskHandler.postDelayed(mResetBTAdapterRunnable, mDelayResetBT);
-                    break;
-
-                case MSG_START_COUNTDOWN:
-                    setAlarmAndCountdown();
-                    break;
-
-                case MSG_STOP_COUNTDOWN:
-                    stopAlarmAndCountdown();
-                    break;
-
-                case MSG_MANUAL_QUESTIONNAIRE:
-                    // User has initiated questionnaire manually without/before timer
-                    startQuestionnaire("manual");
-                    Logger.info("Taking Questionnaire: manual");
-                    LogIHAB.log("Taking Questionnaire: manual");
-                    break;
-
-                case MSG_PROPOSITION_ACCEPTED:
-                    // User has accepted proposition to start a new questionnaire by selecting
-                    // "Start Questionnaire" item in User Menu
-                    startQuestionnaire("auto");
-                    Logger.info("Taking Questionnaire: auto");
-                    LogIHAB.log("Taking Questionnaire: auto");
-                    break;
-
-                case MSG_QUESTIONNAIRE_FINISHED:
-                    Logger.info("Questionnaire finished");
-                    LogIHAB.log("Questionnaire finished");
-                    break;
-
-                case MSG_ISMENU:
-                    isMenu = true;
-                    break;
-
-                case MSG_QUESTIONNAIRE_ACTIVE:
-                        isMenu = false;
-                        isActiveQuestionnaire = true;
-                        mEventTimer.stopTimer();
-                        isTimerRunning = false;
-                        Log.i(LOG, "Questionnaire active");
-                    break;
-
-                case MSG_CHECK_FOR_PREFERENCES:
-                    if (!msg.getData().isEmpty()) {
-                        Bundle prefs = msg.getData();
-                        updatePreferences(prefs);
-                    }
-                    checkForPreferences();
-                    break;
-
-                case MSG_RECORDING_STOPPED:
-                    Log.d(LOG, "Stop caching audio");
-                    Logger.info("Stop caching audio");
-                    LogIHAB.log("Stop caching audio");
-                    audioRecorder.close();
-                    setIsRecording(false);
-                    messageClient(MSG_GET_STATUS);
-                    break;
-
-                case MSG_CHUNK_RECORDED:
-
-                    LogIHAB.log("CHUNK RECORDED");
-
-                    AudioFileIO.setChunkId(getChunkId());
-
-                    String filename = msg.getData().getString("filename");
-                    addProccessingBuffer(idxRecording, filename);
-                    idxRecording = (idxRecording + 1) % processingBufferSize;
-
-                    LogIHAB.log("isProcessing: "+getIsProcessing()+", isRecording: "+getIsRecording());
-
-                    if (!getIsProcessing()) {
-
-                        LogIHAB.log("Start Processing");
-
-                        Bundle settings = getPreferences();
-
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    }
-
-                    if (keepAudioCache) {
-                        new SingleMediaScanner(context, new File(filename));
-                    }
-
-                    Log.d(LOG, "New cache: " + filename);
-                    Logger.info("New cache:\t{}", filename);
-                    LogIHAB.log("New cache:\t" + filename);
-
-                    break;
-
-                case MSG_CHUNK_PROCESSED:
-
-                    ArrayList<String> featureFiles = msg.getData().
-                            getStringArrayList("featureFiles");
-
-                    if (!keepAudioCache) {
-                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
-                    }
-
-                    for (String file : featureFiles) {
-                        if (file != null) {
-                            new SingleMediaScanner(context, new File(file));
-                        }
-                    }
-
-                    deleteProccessingBuffer(idxProcessing);
-                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
-
-                    if (processingBuffer[idxProcessing] != null) {
-                        Bundle settings = getPreferences();
-
-                        settings.putString("filename", processingBuffer[idxProcessing]);
-                        MainProcessingThread processingThread =
-                                new MainProcessingThread(serviceMessenger, settings);
-                        setIsProcessing(true);
-                        processingThread.start();
-                    } else {
-                        setIsProcessing(false);
-                    }
-
-                    break;
-
-                case MSG_APPLICATION_SHUTDOWN:
-                    //stopRecording() is called by receiver
-                    if (mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.disable();
-                    }
-                    Logger.info("Shutdown");
-                    LogIHAB.log("Shutdown");
-                    break;
-
-                case MSG_BATTERY_LEVEL_INFO:
-                    float batteryLevel = msg.getData().getFloat("batteryLevel");
-                    Logger.info("battery level: " + batteryLevel);
-                    LogIHAB.log("battery level: " + batteryLevel);
-                    Log.e(LOG, "Battery Level Info: "+batteryLevel);
-                    break;
-
-                case MSG_BATTERY_CRITICAL:
-                    //TODO: Test this case
-                    Logger.info("CRITICAL battery level: active");
-                    LogIHAB.log("CRITICAL battery level: active");
-                    if (mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.disable();
-                    }
-                    break;
-
-                case MSG_CHARGING_OFF:
-                    Logger.info("Charging: inactive");
-                    LogIHAB.log("Charging: inactive");
-                    isCharging = false;
-                    mTaskHandler.removeCallbacks(mDisableBT);
-                    if (!mBluetoothAdapter.isEnabled()) {
-                        mBluetoothAdapter.enable();
-                    }
-                    mVibration.singleBurst();
-                    // startRecording() is invoked by receiver upon completion
-                    break;
-
-                case MSG_CHARGING_ON:
-                    isCharging = true;
-                    Logger.info("Charging: active");
-                    LogIHAB.log("Charging: active");
-
-                    if (mBluetoothAdapter.isEnabled()) {
-                        stopRecording();
-                        mBluetoothAdapter.disable();
-                    }
-                    mVibration.singleBurst();
-                    mTaskHandler.postDelayed(mDisableBT, mDisableBTTime);
-                    break;
-
-                case MSG_CHARGING_ON_PRE:
-                    isCharging = true;
-                    break;
-
-                default:
-                    super.handleMessage(msg);
-                    break;
-            }
-        }
+    public static boolean getIsCharging() {
+        return isCharging;
     }
 
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
-    @Override
-    public void onCreate() {
+    /**
+     * Thread-safe status variables
+     */
 
-        Log.e(LOG, "onCreate");
 
-        // log file
-        Configurator.currentConfig()
-                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
-                .level(Level.INFO)
-                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
-                .activate();
-
-        Logger.info("Service onCreate");
-        LogIHAB.log("Service onCreate");
-
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        showNotification();
-
-        Log.e(LOG,"ControlService started");
+    public static void setIsCharging(boolean charging) {
+        isCharging = charging;
+        Log.e(LOG, "Charging set: " + getIsCharging());
     }
 
     @Override
@@ -642,24 +330,10 @@ public class ControlService extends Service {
         Log.d(LOG,"onLowMemory");
     }
 
-    @Override
-    public void onDestroy() {
-        Log.d(LOG, "onDestroy");
-        stopAlarmAndCountdown();
-
-        mBluetoothAdapter.disable();
-
-        mNotificationManager.cancel(NOTIFICATION_ID);
-
-        // Unregister broadcast listeners
-        this.unregisterReceiver(mAlarmReceiver);
-        this.unregisterReceiver(mBluetoothStateReceiver);
-
-        Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
-        Log.e(LOG,"ControlService stopped");
-        Logger.info("Service stopped");
-        LogIHAB.log("Service stopped");
-        super.onDestroy();
+    public static boolean getIsRecording() {
+        synchronized (recordingLock) {
+            return isRecording;
+        }
     }
 
     @Override
@@ -693,53 +367,37 @@ public class ControlService extends Service {
         super.dump(fd, writer, args);
     }
 
-    private int getChunkId() {
-        // Returns the current chunk ID and increments
-        if (mChunkId < 999999) {
-            mChunkId += 1;
-        } else {
-            mChunkId = 1;
+    public static void setIsRecording(boolean status) {
+        synchronized (recordingLock) {
+            isRecording = status;
         }
-        sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
-        LogIHAB.log("Returning chunk id: "+ mChunkId);
-        return mChunkId;
     }
 
-    private boolean checkLog() {
+    @Override
+    public void onCreate() {
 
-        // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
-        File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
+        Log.e(LOG, "onCreate");
 
-        if (!fLog_tmp.exists()) {
-            try{
-                fLog_tmp.createNewFile();
-                Log.d(LOG, "Log file created");
-            } catch (IOException e) {
-                Log.d(LOG, "Error creating Log file");
-            }
-        }
+        mMessageList = new MessageList_toClient(this);
 
-        new SingleMediaScanner(context, fLog_tmp);
-        Log.d(LOG, "Log file checked.");
+        // log file
+        /*Configurator.currentConfig()
+                .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
+                .level(Level.INFO)
+                .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
+                .activate();
 
-
+        Logger.info("Service onCreate");*/
+        LogIHAB.log("Service onCreate");
 
 
-        File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        showNotification();
 
-        if (!fLog.exists()) {
-            try{
-                fLog.createNewFile();
-                Log.d(LOG, "Log file created");
-            } catch (IOException e) {
-                Log.d(LOG, "Error creating Log file");
-            }
-        }
+        mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
+        mInputProfile = mInputProfile_A2DP;
 
-        new SingleMediaScanner(context, fLog);
-        Log.d(LOG, "Log file checked.");
-
-        return true;
+        Log.e(LOG, "ControlService started");
     }
 
     private boolean checkTime() {
@@ -770,7 +428,7 @@ public class ControlService extends Service {
         }
     }
 
-    private void announceBTDisconnected() {
+    /*private void announceBTDisconnected() {
         if (!isStandalone) {
             Log.e(LOG, "BTDEVICES not connected.");
             stopRecording();
@@ -786,35 +444,73 @@ public class ControlService extends Service {
             isBluetoothPresent = true;
             mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
         }
+    }*/
+
+    @Override
+    public void onDestroy() {
+        Log.d(LOG, "onDestroy");
+        stopAlarmAndCountdown();
+
+        mInputProfile.onDestroy();
+
+        mNotificationManager.cancel(NOTIFICATION_ID);
+
+        // Unregister broadcast listeners
+        this.unregisterReceiver(mAlarmReceiver);
+        this.unregisterReceiver(mBatInfoReceiver);
+
+
+        Toast.makeText(this, "ControlService stopped", Toast.LENGTH_SHORT).show();
+        Log.e(LOG, "ControlService stopped");
+        Logger.info("Service stopped");
+        LogIHAB.log("Service stopped");
+        super.onDestroy();
     }
 
-    // Send message to connected client with additional data
-    private void messageClient(int what, Bundle data) {
-
-        if (mClientMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                msg.setData(data);
-                mClientMessenger.send(msg);
-            } catch (RemoteException e) {
-            }
+    public int getChunkId() {
+        // Returns the current chunk ID and increments
+        if (mChunkId < 999999) {
+            mChunkId += 1;
         } else {
-            Log.d(LOG, "mClientMessenger is null.");
+            mChunkId = 1;
         }
+        sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        LogIHAB.log("Returning chunk id: " + mChunkId);
+        return mChunkId;
     }
 
-    // Send message to connected client
-    private void messageClient(int what) {
+    private boolean checkLog() {
 
-        if (mClientMessenger != null) {
-            try {
-                Message msg = Message.obtain(null, what);
-                mClientMessenger.send(msg);
-            } catch (RemoteException e) {
+        // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
+        /*File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
+
+        if (!fLog_tmp.exists()) {
+            try{
+                fLog_tmp.createNewFile();
+                Log.d(LOG, "Log file created");
+            } catch (IOException e) {
+                Log.d(LOG, "Error creating Log file");
             }
-        } else {
-            Log.d(LOG, "mClientMessenger is null.");
         }
+
+        new SingleMediaScanner(context, fLog_tmp);
+        Log.d(LOG, "Log file checked.");
+*/
+        File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
+
+        if (!fLog.exists()) {
+            try {
+                fLog.createNewFile();
+                Log.d(LOG, "Log file created");
+            } catch (IOException e) {
+                Log.d(LOG, "Error creating Log file");
+            }
+        }
+
+        new SingleMediaScanner(context, fLog);
+        Log.d(LOG, "Log file checked.");
+
+        return true;
     }
 
     public void startActivity() {
@@ -822,32 +518,7 @@ public class ControlService extends Service {
         startActivity(intent);
     }
 
-    private void startRecording() {
-        Log.d(LOG, "Start caching audio");
-        Logger.info("Start caching audio");
-        LogIHAB.log("Start caching audio");
-        AudioFileIO.setChunkId(mChunkId);
-        // A delay before starting a new recording prevents initialisation bug
-        if (!getIsRecording() && !isCharging) {
-            mTaskHandler.postDelayed(mStartRecordingRunnable, 1000);
-        }
-    }
 
-    private void stopRecording() {
-
-        if (getIsRecording()) {
-            Log.d(LOG, "Requesting stop caching audio");
-            Logger.info("Requesting stop caching audio");
-            LogIHAB.log("Requesting stop caching audio");
-
-            audioRecorder.stop();
-            setIsRecording(false);
-            // TODO: Experimental
-            mTaskHandler.removeCallbacks(mStartRecordingRunnable);
-
-            messageClient(MSG_STOP_RECORDING);
-        }
-    }
 
     private void showNotification() {
 
@@ -871,62 +542,20 @@ public class ControlService extends Service {
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    private void setupApplication() {
+    // Send message to connected client with additional data
+    public void messageClient(int what, Bundle data) {
 
-        // If no chunk Id in present shared preferences, initialise with 1, else fetch
-        // Important for the first initialisation
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (sharedPreferences.getInt("chunkId", 0) == 0) {
-            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                msg.setData(data);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
         } else {
-            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
+            Log.d(LOG, "mClientMessenger is null.");
+            mMessageList.addMessage(what, data);
         }
-
-        // If no Date representation is
-        Date dateTime = new Date(System.currentTimeMillis());
-        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
-            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
-        }
-
-        initialiseValues();
-
-        mFileIO = new FileIO();
-        isQuestionnairePresent = mFileIO.setupFirstUse(this);
-
-        Log.e(LOG, "Messenger Control S: "+mMessengerHandler);
-        mEventTimer = new EventTimer(this, serviceMessenger); // mMessengerHandler
-
-        mEventTimer.setTimer(10);
-        mEventTimer.stopTimer();
-
-        mVibration = new Vibration(this);
-        mVibration.singleBurst();
-
-        if (useLogMode) {
-            // Register receiver for display activity (if used in log mode)
-            IntentFilter displayFilter = new IntentFilter();
-            displayFilter.addAction(Intent.ACTION_SCREEN_ON);
-            displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
-            this.registerReceiver(mDisplayReceiver, displayFilter);
-        }
-
-        // Register receiver for alarm
-        this.registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
-
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        this.registerReceiver(mBluetoothStateReceiver, filter);
-
-        // It is safe to say, that the display is illuminated on system/application startup
-        if (useLogMode) {
-            Logger.info("Display: on");
-            LogIHAB.log("Display: on");
-        }
-
-        checkForPreferences();
     }
 
     // Load preset values from shared preferences, default values from external class InitValues
@@ -1168,19 +797,318 @@ public class ControlService extends Service {
         }
     }
 
-    /**
-     * Thread-safe status variables
-     */
+    // Send message to connected client
+    public void messageClient(int what) {
 
-    static void setIsRecording(boolean status) {
-        synchronized (recordingLock) {
-            isRecording = status;
+        if (mClientMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mClientMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null - storing message: " + what);
+            mMessageList.addMessage(what);
         }
     }
 
-    static boolean getIsRecording() {
-        synchronized (recordingLock) {
-            return isRecording;
+    public void messageService(int what) {
+
+        if (mServiceMessenger != null) {
+            try {
+                Message msg = Message.obtain(null, what);
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+            }
+        } else {
+            Log.d(LOG, "mClientMessenger is null - storing message NOT: " + what);
+        }
+    }
+
+    private void setupApplication() {
+
+        // If no chunk Id in present shared preferences, initialise with 1, else fetch
+        // Important for the first initialisation
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        if (sharedPreferences.getInt("chunkId", 0) == 0) {
+            sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
+        } else {
+            mChunkId = sharedPreferences.getInt("chunkId", mChunkId);
+        }
+
+        // If no Date representation is
+        Date dateTime = new Date(System.currentTimeMillis());
+        if (sharedPreferences.getLong("timeStamp", 0) == 0) {
+            sharedPreferences.edit().putLong("timeStamp", dateTime.getTime()).apply();
+        }
+
+        initialiseValues();
+
+        mFileIO = new FileIO();
+        isQuestionnairePresent = mFileIO.setupFirstUse(this);
+
+        Log.e(LOG, "Messenger Control S: " + mMessengerHandler);
+        mEventTimer = new EventTimer(this, mServiceMessenger); // mMessengerHandler
+
+        mEventTimer.setTimer(10);
+        mEventTimer.stopTimer();
+
+        mVibration = new Vibration(this);
+        mVibration.singleBurst();
+
+        // Register receiver for display activity
+        IntentFilter displayFilter = new IntentFilter();
+        displayFilter.addAction(Intent.ACTION_SCREEN_ON);
+        displayFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mDisplayReceiver, displayFilter);
+
+        // Register receiver for alarm
+        registerReceiver(mAlarmReceiver, new IntentFilter("AlarmReceived"));
+
+        // Register receiver for battery activity
+        registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+        IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, batteryFilter);
+
+        // Are we plugged in?
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        ControlService.setIsCharging(status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_PLUGGED_USB);
+        if (ControlService.getIsCharging()) {
+            mInputProfile.chargingOnPre();
+        }
+
+        // It is safe to say, that the display is illuminated on system/application startup
+        if (useLogMode) {
+            Logger.info("Display: on");
+            LogIHAB.log("Display: on");
+        }
+
+        checkForPreferences();
+    }
+
+    class MessageHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            Log.d(LOG, "Received Message: " + msg.what);
+
+            switch (msg.what) {
+
+                case MSG_REGISTER_CLIENT:
+
+                    /*Configurator.defaultConfig()
+                            .writer(new FileWriter(FILENAME_LOG_tmp))
+                            .level(Level.INFO)
+                            .activate();
+*/
+                    Log.e(LOG, "msg: " + msg);
+                    Log.i(LOG, "Client registered to service");
+
+                    LogIHAB.log("Client registered to service");
+                    mClientMessenger = msg.replyTo;
+                    LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
+                    mMessageList.work();
+
+                    setupApplication();
+
+                    mInputProfile.registerClient();
+                    mInputProfile.setInterface();
+
+                    mTaskHandler.post(mDateTimeRunnable);
+                    mTaskHandler.post(mLogCheckRunnable);
+                    mTaskHandler.post(mActivityCheckRunnable);
+
+
+                    checkTime();
+                    checkLog();
+                    break;
+
+                case MSG_UNREGISTER_CLIENT:
+
+                    mInputProfile.unregisterClient();
+
+                    LogIHAB.log("Client unregistered from service");
+
+                    mTaskHandler.removeCallbacks(mDateTimeRunnable);
+                    mTaskHandler.removeCallbacks(mLogCheckRunnable);
+                    /*if (restartActivity) {
+                        startActivity();
+                    }*/
+                    mClientMessenger = null;
+                    break;
+
+                case MSG_GET_STATUS:
+                    Bundle status = new Bundle();
+                    status.putBoolean("isRecording", getIsRecording());
+                    messageClient(MSG_GET_STATUS, status);
+                    break;
+
+                case MSG_START_COUNTDOWN:
+                    setAlarmAndCountdown();
+                    break;
+
+                case MSG_STOP_COUNTDOWN:
+                    stopAlarmAndCountdown();
+                    break;
+
+                case MSG_MANUAL_QUESTIONNAIRE:
+                    // User has initiated questionnaire manually without/before timer
+                    startQuestionnaire("manual");
+                    LogIHAB.log("Taking Questionnaire: manual");
+                    break;
+
+                case MSG_PROPOSITION_ACCEPTED:
+                    // User has accepted proposition to start a new questionnaire by selecting
+                    // "Start Questionnaire" item in User Menu
+                    startQuestionnaire("auto");
+                    LogIHAB.log("Taking Questionnaire: auto");
+                    break;
+
+                case MSG_QUESTIONNAIRE_FINISHED:
+                    LogIHAB.log("Questionnaire finished");
+                    break;
+
+                case MSG_ISMENU:
+                    isMenu = true;
+                    break;
+
+                case MSG_QUESTIONNAIRE_ACTIVE:
+                    isMenu = false;
+                    isActiveQuestionnaire = true;
+                    mEventTimer.stopTimer();
+                    isTimerRunning = false;
+                    Log.i(LOG, "Questionnaire active");
+                    break;
+
+                case MSG_CHECK_FOR_PREFERENCES:
+                    if (!msg.getData().isEmpty()) {
+                        Bundle prefs = msg.getData();
+                        updatePreferences(prefs);
+                    }
+                    checkForPreferences();
+                    break;
+
+                case MSG_RECORDING_STOPPED:
+                    Log.d(LOG, "Stop caching audio");
+                    LogIHAB.log("Stop caching audio");
+                    //audioRecorder.close();
+                    //setIsRecording(false);
+                    //messageClient(MSG_GET_STATUS);
+                    break;
+
+                case MSG_CHUNK_RECORDED:
+
+                    LogIHAB.log("CHUNK RECORDED");
+
+                    AudioFileIO.setChunkId(getChunkId());
+
+                    String filename = msg.getData().getString("filename");
+                    addProccessingBuffer(idxRecording, filename);
+                    idxRecording = (idxRecording + 1) % processingBufferSize;
+
+                    LogIHAB.log("isProcessing: " + getIsProcessing() + ", isRecording: " + getIsRecording());
+
+                    if (!getIsProcessing()) {
+
+                        LogIHAB.log("Start Processing");
+
+                        Bundle settings = getPreferences();
+
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(mServiceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    }
+
+                    if (keepAudioCache) {
+                        new SingleMediaScanner(context, new File(filename));
+                    }
+
+                    Log.d(LOG, "New cache: " + filename);
+                    Logger.info("New cache:\t{}", filename);
+                    LogIHAB.log("New cache:\t" + filename);
+
+                    break;
+
+                case MSG_CHUNK_PROCESSED:
+
+                    ArrayList<String> featureFiles = msg.getData().
+                            getStringArrayList("featureFiles");
+
+                    if (!keepAudioCache) {
+                        AudioFileIO.deleteFile(processingBuffer[idxProcessing]);
+                    }
+
+                    for (String file : featureFiles) {
+                        if (file != null) {
+                            new SingleMediaScanner(context, new File(file));
+                        }
+                    }
+
+                    deleteProccessingBuffer(idxProcessing);
+                    idxProcessing = (idxProcessing + 1) % processingBufferSize;
+
+                    if (processingBuffer[idxProcessing] != null) {
+                        Bundle settings = getPreferences();
+
+                        settings.putString("filename", processingBuffer[idxProcessing]);
+                        MainProcessingThread processingThread =
+                                new MainProcessingThread(mServiceMessenger, settings);
+                        setIsProcessing(true);
+                        processingThread.start();
+                    } else {
+                        setIsProcessing(false);
+                    }
+
+                    break;
+
+                case MSG_APPLICATION_SHUTDOWN:
+
+
+                    LogIHAB.log("Shutdown");
+                    break;
+
+                /*case MSG_BATTERY_LEVEL_INFO:
+                    float batteryLevel = msg.getData().getFloat("batteryLevel");
+                    Logger.info("battery level: " + batteryLevel);
+                    LogIHAB.log("battery level: " + batteryLevel);
+                    Log.e(LOG, "Battery Level Info: "+batteryLevel);
+                    break;*/
+
+                case MSG_BATTERY_CRITICAL:
+                    //TODO: Test this case
+                    LogIHAB.log("CRITICAL battery level: active");
+                    mInputProfile.batteryCritical();
+
+                    break;
+/*
+                case MSG_CHARGING_OFF:
+                    LogIHAB.log("Charging: inactive");
+                    isCharging = false;
+
+                    mVibration.singleBurst();
+                    break;
+
+                case MSG_CHARGING_ON:
+                    isCharging = true;
+                    LogIHAB.log("Charging: active");
+
+                    mVibration.singleBurst();
+                    break;
+
+                case MSG_CHARGING_ON_PRE:
+                    isCharging = true;
+                    break;*/
+
+                default:
+                    super.handleMessage(msg);
+                    break;
+            }
         }
     }
 
