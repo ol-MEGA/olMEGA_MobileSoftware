@@ -146,6 +146,10 @@ public class InputProfile_A2DP implements InputProfile {
     @Override
     public void setInterface() {
 
+        if (mBluetoothAdapter == null) {
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        }
+
         if (!ControlService.getIsCharging() && mBluetoothAdapter.isEnabled()) {
             Log.e(LOG, "Setting interface");
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
