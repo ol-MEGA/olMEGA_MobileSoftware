@@ -84,14 +84,14 @@ public class StateCharging implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
+    public void bluetoothConnected() {
+        LogIHAB.log(LOG + ":" + "bluetoothConnected()");
         // No bluetooth during charging state
     }
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
+    public void bluetoothDisconnected() {
+        LogIHAB.log(LOG + ":" + "bluetoothDisconnected()");
         // No bluetooth during charging state
     }
 
@@ -152,5 +152,15 @@ public class StateCharging implements AppState {
     public void timeIncorrect() {
         LogIHAB.log(LOG + ":" + "timeIncorrect()");
         qpa.getMenuPage().hideTime();
+    }
+
+    @Override
+    public void startRecording() {
+        LogIHAB.log(LOG + ":" + "startRecording()");
+    }
+
+    @Override
+    public void stopRecording() {
+        LogIHAB.log(LOG + ":" + "stopRecording()");
     }
 }

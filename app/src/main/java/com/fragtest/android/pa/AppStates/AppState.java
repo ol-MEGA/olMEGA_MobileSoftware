@@ -18,9 +18,9 @@ public interface AppState {
 
     void chargeOff();
 
-    void bluetoothPresent();
+    void bluetoothConnected();
 
-    void bluetoothNotPresent();
+    void bluetoothDisconnected();
 
     void batteryLow();
 
@@ -39,5 +39,9 @@ public interface AppState {
     void timeCorrect();
 
     void timeIncorrect();
+
+    void startRecording();
+
+    void stopRecording();
 
 }

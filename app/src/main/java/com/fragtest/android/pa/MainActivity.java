@@ -1038,9 +1038,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(LOG, "recording state: " + mServiceIsRecording);
 
                     if (isBluetoothPresent && !ControlService.isStandalone) {
-                        mAppState.bluetoothPresent();
+                        mAppState.bluetoothConnected();
                     } else if (!ControlService.isStandalone) {
-                        mAppState.bluetoothNotPresent();
+                        mAppState.bluetoothDisconnected();
                     }
 
                     break;
@@ -1052,19 +1052,21 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_RECORDING:
 
-                    if (!ControlService.isStandalone) {
-                        mAppState.bluetoothPresent();
+                    /*if (!ControlService.isStandalone) {
+                        mAppState.bluetoothConnected();
                         isBluetoothPresent = true;
-                    }
+                    }*/
+                    mAppState.startRecording();
 
                     break;
 
                 case ControlService.MSG_STOP_RECORDING:
 
-                    if (!ControlService.isStandalone) {
-                        mAppState.bluetoothNotPresent();
+                    /*if (!ControlService.isStandalone) {
+                        mAppState.bluetoothDisconnected();
                         isBluetoothPresent = false;
-                    }
+                    }*/
+                    mAppState.stopRecording();
 
                     break;
 
@@ -1076,6 +1078,18 @@ public class MainActivity extends AppCompatActivity {
                 case ControlService.MSG_TIME_INCORRECT:
 
                     mAppState.timeIncorrect();
+
+                    break;
+
+                case ControlService.MSG_BT_CONNECTED:
+
+                    mAppState.bluetoothConnected();
+
+                    break;
+
+                case ControlService.MSG_BT_DISCONNECTED:
+
+                    mAppState.bluetoothDisconnected();
 
                     break;
 

@@ -102,6 +102,11 @@ public class StateConnecting implements AppState {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
         mainActivity.setBTLogoDisconnected();
         stopConnecting();
+
+        Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
+
+        mainActivity.setState(mainActivity.getStateError());
+        mainActivity.mAppState.setInterface();
     }
 
     @Override
@@ -119,20 +124,13 @@ public class StateConnecting implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
-        stopConnecting();
-        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
-        mainActivity.setState(mainActivity.getStateRunning());
-        mainActivity.mAppState.setInterface();
+    public void bluetoothConnected() {
+
     }
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
-        mainActivity.setBTLogoDisconnected();
-        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
+    public void bluetoothDisconnected() {
+
     }
 
     @Override
@@ -204,9 +202,26 @@ public class StateConnecting implements AppState {
         mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
-        Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
+        //Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
 
-        mainActivity.setState(mainActivity.getStateError());
+        //mainActivity.setState(mainActivity.getStateError());
+        //mainActivity.mAppState.setInterface();
+    }
+
+    @Override
+    public void startRecording() {
+        LogIHAB.log(LOG + ":" + "startRecording()");
+        stopConnecting();
+        mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
+        mainActivity.setBTLogoConnected();
+        mainActivity.setState(mainActivity.getStateRunning());
         mainActivity.mAppState.setInterface();
+    }
+
+    @Override
+    public void stopRecording() {
+        LogIHAB.log(LOG + ":" + "stopRecording()");
+        mainActivity.setBTLogoDisconnected();
+        mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 }

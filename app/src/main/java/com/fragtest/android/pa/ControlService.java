@@ -77,8 +77,6 @@ public class ControlService extends Service {
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_NO_TIMER = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
-    public static final int MSG_BT_CONNECTED = 18;
-    public static final int MSG_BT_DISCONNECTED = 19;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -116,6 +114,10 @@ public class ControlService extends Service {
     public static final int MSG_CHARGING_ON_PRE = 66;
     public static final int MSG_TIME_CORRECT = 67;
     public static final int MSG_TIME_INCORRECT = 68;
+
+    // 7* - hardware
+    public static final int MSG_BT_CONNECTED = 71;
+    public static final int MSG_BT_DISCONNECTED = 72;
 
     private static int mChunkId = 1;
 

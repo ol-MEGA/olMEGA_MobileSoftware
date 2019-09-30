@@ -78,14 +78,14 @@ public class StateRunning implements AppState {
     }
 
     @Override
-    public void bluetoothPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothPresent()");
+    public void bluetoothConnected() {
+        LogIHAB.log(LOG + ":" + "bluetoothConnected()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 
     @Override
-    public void bluetoothNotPresent() {
-        LogIHAB.log(LOG + ":" + "bluetoothNotPresent()");
+    public void bluetoothDisconnected() {
+        LogIHAB.log(LOG + ":" + "bluetoothDisconnected()");
         mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.setState(mainActivity.getStateConnecting());
@@ -152,5 +152,17 @@ public class StateRunning implements AppState {
     public void timeIncorrect() {
         LogIHAB.log(LOG + ":" + "timeIncorrect()");
         qpa.getMenuPage().hideTime();
+    }
+
+    @Override
+    public void startRecording() {
+        LogIHAB.log(LOG + ":" + "startRecording()");
+    }
+
+    @Override
+    public void stopRecording() {
+        LogIHAB.log(LOG + ":" + "stopRecording()");
+        mainActivity.setState(mainActivity.getStateConnecting());
+        mainActivity.mAppState.setInterface();
     }
 }
