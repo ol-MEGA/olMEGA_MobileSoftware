@@ -46,9 +46,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     };
     private boolean isCountDownRunning = false;
     private boolean isInForeGround = false;
-    private boolean isMenu = false;
-    // Stores all active Views
-    public ListOfViews mListOfViews;
+    private static final int UI_STATE_MENU = 1;
     private boolean needsIncreasing = false;
     private boolean isPrefsInForeGround = false;
     private int mCountDownInterval = 30;
@@ -74,6 +72,18 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private ArrayList<String> mQuestionList;
     private IntentFilter batteryFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
     private Intent batteryStatus;
+    private static final int UI_STATE_HELP = 2;
+    private static final int UI_STATE_QUEST = 3;
+    private static int UI_STATE;
+    private final Runnable mTimeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (UI_STATE == UI_STATE_MENU || UI_STATE == UI_STATE_HELP) {
+                mMenuPage.setTime();
+                mCountDownHandler.postDelayed(this, mUpdateIntervalTime);
+            }
+        }
+    };
 
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
@@ -95,16 +105,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
             mCountDownHandler.postDelayed(this, mUpdateIntervalBattery);
         }
     };
-
-    private final Runnable mTimeRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (isMenu) {
-                mMenuPage.setTime();
-                mCountDownHandler.postDelayed(this, mUpdateIntervalTime);
-            }
-        }
-    };
+    //private boolean isMenu = false;
+    // Stores all active Views
+    public ListOfViews mListOfViews;
     private boolean isImmersive;
 
     public QuestionnairePagerAdapter(MainActivity mainActivity, ViewPager viewPager, boolean immersive) {
@@ -123,10 +126,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mMainActivity.mLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                if (isMenu) {
+                if (UI_STATE == UI_STATE_MENU) {
                     createHelpScreen();
-                } else {
+                } else if (UI_STATE == UI_STATE_HELP) {
+                    backToMenu();
+                    mMainActivity.mAppState.closeHelp();
+                } else if (UI_STATE == UI_STATE_QUEST) {
                     mMainActivity.mAppState.finishQuest();
                 }
             }
@@ -206,11 +211,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         needsIncreasing = false;
         setBatteryLogo();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_INACTIVE);
+
     }
 
     public void backToMenu() {
 
-        isMenu = true;
+        //isMenu = true;
         sendMessage(ControlService.MSG_ISMENU);
         // Instantiates a MenuPage Object based on Contents of raw XML File
         mMenuPage = new MenuPage(mMainActivity, this);
@@ -225,6 +231,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         onResume();
 
         mCountDownHandler.post(mTimeRunnable);
+
+        UI_STATE = UI_STATE_MENU;
     }
 
     public void returnToQuestionnaire() {
@@ -233,7 +241,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         removeView(mCurrentItemBeforeMessage);
         notifyDataSetChanged();
         mViewPager.setCurrentItem(mCurrentItemBeforeMessage);
-        mMainActivity.startRecordingFalseSwipes();
+        MainActivity.startRecordingFalseSwipes();
     }
 
     public void createHelpScreen() {
@@ -254,13 +262,15 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
+
+        UI_STATE = UI_STATE_HELP;
     }
 
     // Initialise questionnaire based on new input parameters
     public void createQuestionnaire(ArrayList<String> questionList, String head, String foot,
                                     String surveyUri, String motivation) {
 
-        isMenu = false;
+        //isMenu = false;
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
         mQuestionList = questionList;
@@ -289,6 +299,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mViewPager.setCurrentItem(0);
         setArrows(0);
         setQuestionnaireProgressBar();
+
+        UI_STATE = UI_STATE_QUEST;
     }
 
     // Initialise questionnaire based on last input parameters (only used in case of reversion)
@@ -315,6 +327,8 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         setArrows(0);
         setQuestionnaireProgressBar();
         needsIncreasing = false;
+
+        UI_STATE = UI_STATE_QUEST;
     }
 
     public void hideQuestionnaireProgressBar() {
@@ -706,7 +720,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Information about current state (menu/questionnaire)
     public boolean isMenu() {
-        return isMenu;
+        return UI_STATE == UI_STATE_MENU || UI_STATE == UI_STATE_HELP;
     }
 
     // Message service for communication with ControlService
