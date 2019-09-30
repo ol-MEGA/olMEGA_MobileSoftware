@@ -97,6 +97,7 @@ public class AudioRecorder {
 
         ControlService.setIsRecording(true);
         mContext.messageClient(ControlService.MSG_START_RECORDING);
+        mContext.getVibration().singleBurst();
 
         audioRecord.startRecording();
 
@@ -186,6 +187,7 @@ public class AudioRecorder {
             e.printStackTrace();
         }*/
         Log.e(LOG, "Recording stopped.");
+        mContext.getVibration().singleBurst();
     }
 
 }

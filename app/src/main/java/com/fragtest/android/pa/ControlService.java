@@ -262,15 +262,15 @@ public class ControlService extends Service {
 
             // only announce on change
             if (plugged && !ControlService.getIsCharging()) {
+                // a change towards charging
                 mInputProfile.chargingOn();
                 mVibration.singleBurst();
-                // a change towards charging
                 messageClient(ControlService.MSG_CHARGING_ON);
                 ControlService.setIsCharging(true);
             } else if (!plugged && ControlService.getIsCharging()) {
+                // a change towards not charging
                 mVibration.singleBurst();
                 mInputProfile.chargingOff();
-                // a change towards not charging
                 messageClient(ControlService.MSG_CHARGING_OFF);
                 ControlService.setIsCharging(false);
             }
@@ -477,6 +477,10 @@ public class ControlService extends Service {
         sharedPreferences.edit().putInt("chunkId", mChunkId).apply();
         LogIHAB.log("Returning chunk id: " + mChunkId);
         return mChunkId;
+    }
+
+    public Vibration getVibration() {
+        return mVibration;
     }
 
     private boolean checkLog() {
