@@ -1,15 +1,7 @@
 package com.fragtest.android.pa.InputProfile;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.media.AudioDeviceInfo;
-import android.media.AudioManager;
-import android.media.AudioRecord;
 import android.os.Handler;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
@@ -20,7 +12,7 @@ import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 
-public class InputProfile_A2DP implements InputProfile {
+public class InputProfile_USB implements InputProfile {
 
     private BluetoothAdapter mBluetoothAdapter;
     private ControlService mContext;
@@ -32,6 +24,7 @@ public class InputProfile_A2DP implements InputProfile {
     private int mWaitInterval = 100;
     private boolean mIsBound = false;
 
+    /*
     //The BroadcastReceiver that listens for bluetooth broadcasts
     private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
         @Override
@@ -113,31 +106,12 @@ public class InputProfile_A2DP implements InputProfile {
                 mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
             }
         }
-    };
+    };*/
 
-    public InputProfile_A2DP(ControlService context, Messenger serviceMessenger) {
+    public InputProfile_USB(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
-        this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         this.mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
-
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        mContext.registerReceiver(mBluetoothStateReceiver, filter);
-
-        if (!mBluetoothAdapter.isEnabled()) {
-            mBluetoothAdapter.enable();
-
-            /*if (mSharedPreferences.contains("BTDevice")) {
-                String btdevice = mSharedPreferences.getString("BTDevice", null);
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                device.createBond();
-                LogIHAB.log("Connecting to device: " + device.getAddress());
-            }*/
-        }
 
     }
 

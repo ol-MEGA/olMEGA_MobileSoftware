@@ -107,17 +107,18 @@ public class ControlService extends Service {
 
     // 6* - application
     public static final int MSG_APPLICATION_SHUTDOWN = 61;
-    public static final int MSG_BATTERY_CRITICAL = 62;
-    public static final int MSG_BATTERY_LEVEL_INFO = 63;
-    public static final int MSG_CHARGING_OFF = 64;
-    public static final int MSG_CHARGING_ON = 65;
-    public static final int MSG_CHARGING_ON_PRE = 66;
     public static final int MSG_TIME_CORRECT = 67;
     public static final int MSG_TIME_INCORRECT = 68;
 
     // 7* - hardware
     public static final int MSG_BT_CONNECTED = 71;
     public static final int MSG_BT_DISCONNECTED = 72;
+    public static final int MSG_BATTERY_CRITICAL = 73;
+    public static final int MSG_BATTERY_NORMAL = 74;
+    //public static final int MSG_BATTERY_LEVEL_INFO = 75;
+    public static final int MSG_CHARGING_OFF = 76;
+    public static final int MSG_CHARGING_ON = 77;
+    //public static final int MSG_CHARGING_ON_PRE = 78;
 
     private static int mChunkId = 1;
 
