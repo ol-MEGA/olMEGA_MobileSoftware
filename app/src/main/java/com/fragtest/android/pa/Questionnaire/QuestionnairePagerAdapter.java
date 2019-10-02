@@ -66,7 +66,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private float batteryPlaceholderWeight;
     private int[] batteryStates;
     private boolean bBatteryCritical = false;
-    private boolean isCharging = false;
+
     private int mBatteryState = -1;
     private float batteryLevel = 1.0f;
     private String mMotivation = "";
@@ -162,10 +162,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         });
 
         mCountDownHandler.post(mBatteryRunnable);
-    }
-
-    public void setIsCharging(boolean val) {
-        isCharging = val;
     }
 
     public MenuPage getMenuPage() {

@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
             mBatteryReg, mBatteryProg, mCharging;
 
     private boolean mServiceIsBound;
+    private boolean isCharging = false;
     private boolean mServiceIsRecording;
     private boolean isPrefsInForeGround = false;
     private boolean isActivityRunning = false;
@@ -404,11 +405,18 @@ public class MainActivity extends AppCompatActivity {
         return mStateRunning;
     }
 
+    public boolean getIsCharging() {
+        return isCharging;
+    }
 
     /**
      * QPA Modifiers
      **/
 
+
+    public void setIsCharging(boolean val) {
+        isCharging = val;
+    }
 
     public void finishQuestionnaire() {
         mAppState.finishQuest();
@@ -1009,18 +1017,24 @@ public class MainActivity extends AppCompatActivity {
                             break;
                     }
 
-                    mAppState = mStateConnecting;
+                    Log.e(LOG, "IS CHARGING: " + getIsCharging());
+
+                    if (!getIsCharging()) {
+                        mAppState = mStateConnecting;
+                    } else {
+                        mAppState = mStateCharging;
+                    }
                     mAppState.setInterface();
                     break;
 
                 case MSG_CHARGING_ON:
                     mAppState.chargeOn();
-                    mAdapter.setIsCharging(true);
+                    setIsCharging(true);
                     break;
 
                 case MSG_CHARGING_OFF:
                     mAppState.chargeOff();
-                    mAdapter.setIsCharging(false);
+                    setIsCharging(false);
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
