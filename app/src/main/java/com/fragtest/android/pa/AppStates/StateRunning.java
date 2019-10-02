@@ -34,7 +34,7 @@ public class StateRunning implements AppState {
         qpa.getMenuPage().resetQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_START_COUNTDOWN);
-        mainActivity.setBTLogoConnected();
+        //mainActivity.setBTLogoConnected();
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
@@ -86,7 +86,7 @@ public class StateRunning implements AppState {
     @Override
     public void bluetoothDisconnected() {
         LogIHAB.log(LOG + ":" + "bluetoothDisconnected()");
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.setState(mainActivity.getStateConnecting());
         mainActivity.mAppState.setInterface();

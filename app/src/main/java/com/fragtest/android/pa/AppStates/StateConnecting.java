@@ -69,7 +69,7 @@ public class StateConnecting implements AppState {
             qpa.getMenuPage().hideCountdownText();
             qpa.getMenuPage().clearQuestionnaireCallback();
             mainActivity.mCharging.setVisibility(View.INVISIBLE);
-            mainActivity.setBTLogoDisconnected();
+            //mainActivity.setBTLogoDisconnected();
             mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
             mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
             mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
@@ -100,7 +100,7 @@ public class StateConnecting implements AppState {
     public void noQuest() {
         LogIHAB.log(LOG + ":" + "NoQuest()");
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_QUEST);
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
         stopConnecting();
 
         Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");
@@ -213,7 +213,7 @@ public class StateConnecting implements AppState {
         LogIHAB.log(LOG + ":" + "startRecording()");
         stopConnecting();
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
+        //mainActivity.setBTLogoConnected();
         mainActivity.setState(mainActivity.getStateRunning());
         mainActivity.mAppState.setInterface();
     }
@@ -221,7 +221,7 @@ public class StateConnecting implements AppState {
     @Override
     public void stopRecording() {
         LogIHAB.log(LOG + ":" + "stopRecording()");
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
     }
 }

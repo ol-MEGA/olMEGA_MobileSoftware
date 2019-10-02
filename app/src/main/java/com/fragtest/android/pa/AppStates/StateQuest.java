@@ -78,14 +78,14 @@ public class StateQuest implements AppState {
     public void bluetoothConnected() {
         LogIHAB.log(LOG + ":" + "bluetoothConnected()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
+        //mainActivity.setBTLogoConnected();
     }
 
     @Override
     public void bluetoothDisconnected() {
         LogIHAB.log(LOG + ":" + "bluetoothDisconnected()");
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
     }
 
     @Override

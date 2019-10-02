@@ -22,6 +22,7 @@ import com.fragtest.android.pa.Core.LogIHAB;
 
 public class InputProfile_A2DP implements InputProfile {
 
+    private final String INPUT_PROFILE = "A2DP";
     private BluetoothAdapter mBluetoothAdapter;
     private ControlService mContext;
     private AudioRecorder mAudioRecorder;
@@ -38,14 +39,11 @@ public class InputProfile_A2DP implements InputProfile {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-
                 setInterface();
-
                 Log.e(LOG, "BT connected.");
                 LogIHAB.log("Bluetooth: connected");
             } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                 stopRecording();
-
                 Log.e(LOG, "BT disconnected.");
                 LogIHAB.log("Bluetooth: disconnected");
             }
@@ -79,7 +77,7 @@ public class InputProfile_A2DP implements InputProfile {
                 AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {
-                    Log.e(LOG, "Device");
+                    Log.e(LOG, "Device: " + device.getType());
                     if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP && device.isSource()) {
                         mAudioRecorder.setPreferredDevice(device);
                         found = true;
@@ -119,7 +117,19 @@ public class InputProfile_A2DP implements InputProfile {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        this.mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
+    }
+
+    @Override
+    public String getInputProfile() {
+        return this.INPUT_PROFILE;
+    }
+
+    @Override
+    public void setInterface() {
+
+        if (mBluetoothAdapter == null) {
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        }
 
         // Register broadcasts receiver for bluetooth state change
         IntentFilter filter = new IntentFilter();
@@ -137,15 +147,6 @@ public class InputProfile_A2DP implements InputProfile {
                 device.createBond();
                 LogIHAB.log("Connecting to device: " + device.getAddress());
             }*/
-        }
-
-    }
-
-    @Override
-    public void setInterface() {
-
-        if (mBluetoothAdapter == null) {
-            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         }
 
         if (!ControlService.getIsCharging() && mBluetoothAdapter.isEnabled()) {
@@ -203,7 +204,6 @@ public class InputProfile_A2DP implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        //setInterface();
         mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 

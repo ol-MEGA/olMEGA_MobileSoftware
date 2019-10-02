@@ -49,13 +49,15 @@
             android:title="Activate timer"
             android:summary="Start questionnaire at defined intervals" />
 
-        <SwitchPreference
+        <ListPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:defaultValue="false"
-            android:key="standalone"
-            android:title="Standalone Mode"
-            android:summary="No Bluetooth transmitter needed" />
+            android:defaultValue="STANDALONE"
+            android:entries="@array/inputProfile"
+            android:entryValues="@array/inputProfile"
+            android:key="inputProfile"
+            android:summary="%s"
+            android:title="Operation Mode" />
 
 
     </PreferenceCategory>

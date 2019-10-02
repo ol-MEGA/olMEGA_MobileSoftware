@@ -33,8 +33,12 @@ import com.fragtest.android.pa.Core.MessageList_toClient;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.InputProfile.InputProfile;
 import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
+import com.fragtest.android.pa.InputProfile.InputProfile_Blank;
+import com.fragtest.android.pa.InputProfile.InputProfile_STANDALONE;
+import com.fragtest.android.pa.InputProfile.InputProfile_USB;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
 
 import org.pmw.tinylog.Logger;
@@ -64,6 +68,7 @@ public class ControlService extends Service {
     static final String LOG = "ControlService";
     public static final boolean isStandalone = false;
     static final int CURRENT_YEAR = 2018;
+    public static final int MSG_STATE_CHANGE = 18;
 
     /**
      * Constants for messaging. Should(!) be self-explanatory.
@@ -77,6 +82,7 @@ public class ControlService extends Service {
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_NO_TIMER = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
+    public static boolean IS_SERVICE_BOUND = false;
 
     // 2* - alarm
     public static final int MSG_ALARM_RECEIVED = 21;
@@ -119,6 +125,17 @@ public class ControlService extends Service {
     public static final int MSG_CHARGING_OFF = 76;
     public static final int MSG_CHARGING_ON = 77;
     //public static final int MSG_CHARGING_ON_PRE = 78;
+    //public static String INPUT_PROFILE = "";
+    //public static final String INPUT_PROFILE_A2DP = "A2DP";
+    //public static final String INPUT_PROFILE_USB = "USB";
+    public static INPUT_CONFIG INPUT;
+
+    private InputProfile mInputProfile;
+    private InputProfile_STANDALONE mInputProfile_STANDALONE;
+    private InputProfile_A2DP mInputProfile_A2DP;
+    private InputProfile_USB mInputProfile_USB;
+
+    private String INPUT_PROFILE_STATUS = "";
 
     private static int mChunkId = 1;
 
@@ -187,8 +204,6 @@ public class ControlService extends Service {
     static boolean isProcessing = false;
     static final Object recordingLock = new Object();
     static final Object processingLock = new Object();
-    private InputProfile mInputProfile;
-    private InputProfile_A2DP mInputProfile_A2DP;
 
     public static final boolean useLogMode = true;
 
@@ -297,16 +312,33 @@ public class ControlService extends Service {
         }
     };
 
-    public static boolean getIsCharging() {
-        return isCharging;
-    }
-
     final Messenger mMessengerHandler = new Messenger(new MessageHandler());
 
     /**
      * Thread-safe status variables
      */
 
+
+    public static boolean getIsCharging() {
+        return isCharging;
+    }
+
+    /**
+     * Input Profiles
+     */
+
+
+    public InputProfile getInputProfile_USB() {
+        return mInputProfile_USB;
+    }
+
+    public InputProfile getInputProfile_A2DP() {
+        return mInputProfile_A2DP;
+    }
+
+    public InputProfile getInputProfile_STANDALONE() {
+        return mInputProfile_STANDALONE;
+    }
 
     public static void setIsCharging(boolean charging) {
         isCharging = charging;
@@ -397,8 +429,17 @@ public class ControlService extends Service {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
 
+        mInputProfile = new InputProfile_Blank();
+        mInputProfile_STANDALONE = new InputProfile_STANDALONE(this, mServiceMessenger);
         mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
-        mInputProfile = mInputProfile_A2DP;
+        mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        String inputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
+
+        Log.e(LOG, "IP: " + inputProfile);
+
+        setInputProfile(inputProfile);
 
         Log.e(LOG, "ControlService started");
     }
@@ -430,24 +471,6 @@ public class ControlService extends Service {
             return true;
         }
     }
-
-    /*private void announceBTDisconnected() {
-        if (!isStandalone) {
-            Log.e(LOG, "BTDEVICES not connected.");
-            stopRecording();
-            isBluetoothPresent = false;
-            mVibration.singleBurst();
-        }
-    }
-
-    private void announceBTConnected() {
-        if (!isStandalone) {
-            Log.e(LOG, "BTDEVICES connected.");
-            startRecording();
-            isBluetoothPresent = true;
-            mTaskHandler.removeCallbacks(mResetBTAdapterRunnable);
-        }
-    }*/
 
     @Override
     public void onDestroy() {
@@ -565,6 +588,50 @@ public class ControlService extends Service {
         }
     }
 
+    private void setInputProfile(String inputProfile) {
+
+        if (!inputProfile.equals(INPUT_PROFILE_STATUS) || INPUT_PROFILE_STATUS.equals("")) {
+
+            mInputProfile.cleanUp();
+
+            switch (inputProfile) {
+                case "A2DP":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.A2DP.toString();
+                    mInputProfile = getInputProfile_A2DP();
+                    INPUT = INPUT_CONFIG.A2DP;
+                    break;
+                /*case "RFCOMM":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.RFCOMM.toString();
+                    mInputProfile = getStateRFCOMM();
+                    INPUT = INPUT_CONFIG.RFCOMM;
+                    break;*/
+                case "USB":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.USB.toString();
+                    mInputProfile = getInputProfile_USB();
+                    INPUT = INPUT_CONFIG.USB;
+                    break;
+                case "STANDALONE":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.STANDALONE.toString();
+                    mInputProfile = getInputProfile_STANDALONE();
+                    INPUT = INPUT_CONFIG.STANDALONE;
+                    break;
+            }
+
+            mInputProfile.setInterface();
+            if (IS_SERVICE_BOUND) {
+                mInputProfile.registerClient();
+            }
+
+            LogIHAB.log("Input Profile changed to: " + INPUT.toString());
+            Log.e(LOG, "Input Profile changed to: " + INPUT.toString());
+
+            Bundle bundle = new Bundle();
+            bundle.putString("inputProfile", INPUT.toString());
+
+            messageClient(MSG_STATE_CHANGE, bundle);
+        }
+    }
+
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
 
@@ -591,6 +658,8 @@ public class ControlService extends Service {
 
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
+
+        String inputProfile = dataPreferences.getString("inputProfile", INPUT.toString());
 
         isWave = dataPreferences.getBoolean("isWave", isWave);
         isTimer = dataPreferences.getBoolean("isTimer", isTimer);
@@ -620,6 +689,7 @@ public class ControlService extends Service {
         editor.putStringSet("features", activeFeatures);
         // String
         editor.putString("whichQuest", mSelectQuestionnaire);
+        editor.putString("inputProfile", inputProfile);
         editor.putString("filterHpFrequency", "" + filterHpFrequency);
         editor.putString("samplerate", "" + samplerate);
         editor.putString("chunklengthInS", "" + chunklengthInS);
@@ -644,6 +714,7 @@ public class ControlService extends Service {
             isTimerRunning = false;
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
         }
+
     }
 
     private Bundle getPreferences() {
@@ -907,6 +978,8 @@ public class ControlService extends Service {
 
                 case MSG_REGISTER_CLIENT:
 
+                    IS_SERVICE_BOUND = true;
+
                     /*Configurator.defaultConfig()
                             .writer(new FileWriter(FILENAME_LOG_tmp))
                             .level(Level.INFO)
@@ -935,6 +1008,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_UNREGISTER_CLIENT:
+
+                    IS_SERVICE_BOUND = false;
 
                     mInputProfile.unregisterClient();
 
@@ -996,7 +1071,8 @@ public class ControlService extends Service {
                         Bundle prefs = msg.getData();
                         updatePreferences(prefs);
                     }
-                    checkForPreferences();
+                    String inputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
+                    setInputProfile(inputProfile);
                     break;
 
                 case MSG_RECORDING_STOPPED:

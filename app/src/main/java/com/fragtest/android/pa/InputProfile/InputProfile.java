@@ -4,6 +4,8 @@ public interface InputProfile {
 
     void setInterface();
 
+    String getInputProfile();
+
     void cleanUp();
 
     void registerClient();

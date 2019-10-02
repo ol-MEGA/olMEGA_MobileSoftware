@@ -35,7 +35,7 @@ public class StateCharging implements AppState {
         qpa.getMenuPage().hideErrorList();
         qpa.getMenuPage().hideCountdownText();
         qpa.getMenuPage().clearQuestionnaireCallback();
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
 
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.mCharging.setVisibility(View.VISIBLE);

@@ -20,7 +20,7 @@
         <item>16000</item>
     </string-array>
 
-    <string-array name="operationMode">
+    <string-array name="inputProfile">
         <item>A2DP</item>
         <item>RFCOMM</item>
         <item>USB</item>

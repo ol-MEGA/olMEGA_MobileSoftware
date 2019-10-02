@@ -1,7 +1,14 @@
 package com.fragtest.android.pa.InputProfile;
 
-import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.hardware.usb.UsbManager;
+import android.media.AudioDeviceInfo;
+import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.os.Handler;
 import android.os.Messenger;
 import android.preference.PreferenceManager;
@@ -14,51 +21,15 @@ import com.fragtest.android.pa.Core.LogIHAB;
 
 public class InputProfile_USB implements InputProfile {
 
-    private BluetoothAdapter mBluetoothAdapter;
+    private final String INPUT_PROFILE = "USB";
     private ControlService mContext;
     private AudioRecorder mAudioRecorder;
     private Messenger mServiceMessenger;
-    private String LOG = "InputProfile_A2DP";
+    private String LOG = "InputProfile_USB";
     private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
     private int mWaitInterval = 100;
     private boolean mIsBound = false;
-
-    /*
-    //The BroadcastReceiver that listens for bluetooth broadcasts
-    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-
-                setInterface();
-
-                Log.e(LOG, "BT connected.");
-                LogIHAB.log("Bluetooth: connected");
-            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                stopRecording();
-
-                Log.e(LOG, "BT disconnected.");
-                LogIHAB.log("Bluetooth: disconnected");
-            }
-        }
-    };
-
-    // This Runnable has the purpose of delaying a release of AudioRecorder to avoid null pointer
-    private Runnable mAudioReleaseRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (mAudioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
-                mAudioRecorder.release();
-                mAudioRecorder = null;
-                mTaskHandler.removeCallbacks(mAudioReleaseRunnable);
-            } else {
-                mTaskHandler.postDelayed(mAudioReleaseRunnable, mWaitInterval);
-            }
-        }
-    };
-
     // This Runnable scans for available audio devices and acts if an A2DP device is present
     private Runnable mFindDeviceRunnable = new Runnable() {
         @Override
@@ -72,8 +43,8 @@ public class InputProfile_USB implements InputProfile {
                 AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {
-                    Log.e(LOG, "Device");
-                    if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP && device.isSource()) {
+                    Log.e(LOG, "Device: " + device.getType());
+                    if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
                         mAudioRecorder.setPreferredDevice(device);
                         found = true;
                         Log.e(LOG, "FOUND! - breaking loop.");
@@ -95,6 +66,19 @@ public class InputProfile_USB implements InputProfile {
         }
     };
 
+    // This Runnable has the purpose of delaying a release of AudioRecorder to avoid null pointer
+    private Runnable mAudioReleaseRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mAudioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
+                mAudioRecorder.release();
+                mAudioRecorder = null;
+                mTaskHandler.removeCallbacks(mAudioReleaseRunnable);
+            } else {
+                mTaskHandler.postDelayed(mAudioReleaseRunnable, mWaitInterval);
+            }
+        }
+    };
     // This Runnable has the purpose of delaying/waiting until the application is ready again
     private Runnable mSetInterfaceRunnable = new Runnable() {
         @Override
@@ -106,23 +90,46 @@ public class InputProfile_USB implements InputProfile {
                 mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
             }
         }
-    };*/
+    };
+    // This BroadcastReceiver listens to attachment of a USB device
+    private final BroadcastReceiver mUSBReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            switch (action) {
+                case UsbManager.ACTION_USB_DEVICE_ATTACHED:
+                    Log.e(LOG, "USB attached.");
+                    setInterface();
+                    break;
+                case UsbManager.ACTION_USB_DEVICE_DETACHED:
+                    Log.e(LOG, "USB detached.");
+                    Log.e(LOG, "DEVICE DETACHED: " + UsbManager.EXTRA_DEVICE);
+                    stopRecording();
+                    break;
+            }
+        }
+    };
 
     public InputProfile_USB(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
-        this.mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
+        //this.mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
+    }
 
+    @Override
+    public String getInputProfile() {
+        return this.INPUT_PROFILE;
     }
 
     @Override
     public void setInterface() {
 
-        if (mBluetoothAdapter == null) {
-            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
+        // Register Broadcast Receiver to keep a log of USB Activity ...
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        mContext.registerReceiver(mUSBReceiver, filter);
 
-        if (!ControlService.getIsCharging() && mBluetoothAdapter.isEnabled()) {
+        if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
 
@@ -149,12 +156,11 @@ public class InputProfile_USB implements InputProfile {
     public void cleanUp() {
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
-        mContext.unregisterReceiver(mBluetoothStateReceiver);
+        mContext.unregisterReceiver(mUSBReceiver);
         Log.e(LOG, "audiorecorder:" + mAudioRecorder);
         if (mAudioRecorder != null) {
             stopRecording();
         }
-        mBluetoothAdapter = null;
     }
 
     @Override
@@ -177,7 +183,6 @@ public class InputProfile_USB implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        //setInterface();
         mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 
@@ -214,7 +219,7 @@ public class InputProfile_USB implements InputProfile {
 
     private void stopRecording() {
         if (ControlService.getIsRecording()) {
-            Log.d(LOG, "Requesting stop caching audio");
+            Log.e(LOG, "Requesting stop caching audio");
             LogIHAB.log("Requesting stop caching audio");
             mAudioRecorder.stop();
             mTaskHandler.post(mAudioReleaseRunnable);

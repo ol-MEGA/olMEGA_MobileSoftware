@@ -37,7 +37,7 @@ public class StateError implements AppState {
         qpa.getMenuPage().clearQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-        mainActivity.setBTLogoDisconnected();
+        //mainActivity.setBTLogoDisconnected();
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
@@ -78,7 +78,7 @@ public class StateError implements AppState {
     public void bluetoothConnected() {
         LogIHAB.log(LOG + ":" + "bluetoothConnected()");
         mainActivity.removeError(MainActivity.AppErrors.ERROR_NO_BT);
-        mainActivity.setBTLogoConnected();
+        //mainActivity.setBTLogoConnected();
 
         if (!mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_NO_QUEST.getErrorMessage()) &&
                 !mainActivity.mErrorList.contains(MainActivity.AppErrors.ERROR_BATT_CRITICAL.getErrorMessage())) {

@@ -49,6 +49,7 @@ import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.MessageList;
+import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import org.pmw.tinylog.Logger;
@@ -91,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
     private final static int MY_PERMISSIONS_WAKE_LOCK = 5;
     private final static int MY_PERMISSIONS_DISABLE_KEYGUARD = 6;
     private final static int MY_PERMISSIONS_CAMERA = 7;
+
+    public INPUT_CONFIG mServiceState;
 
     final Messenger mMessageHandler = new Messenger(new MessageHandler());
     private Messenger mServiceMessenger;
@@ -180,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
             mErrorList.remove(error.getErrorMessage());
         }
     }
+
 
     /*
     // Battery Status Receiver
@@ -332,6 +336,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
+        dataPreferences.putString("inputProfile", sharedPreferences.getString("inputProfile", "STANDALONE"));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
@@ -410,30 +415,40 @@ public class MainActivity extends AppCompatActivity {
         messageService(ControlService.MSG_QUESTIONNAIRE_FINISHED);
     }
 
-    public void setBTLogoConnected() {
-        if (!ControlService.isStandalone) {
-            mRecord.setBackgroundTintList(
-                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                            R.color.BatteryGreen, null)));
-        } else {
-            setBTLogoAirplaneMode();
+    public void setLogoActive() {
+
+        switch (mServiceState) {
+
+            case A2DP:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.BatteryGreen, null)));
+                break;
+
+            /*case RFCOMM:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.BatteryGreen, null)));
+                break;*/
+
+            case USB:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.JadeRed, null)));
+                break;
+
+            case STANDALONE:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.AirplaneBlue, null)));
+                break;
         }
     }
 
-    public void setBTLogoDisconnected() {
-        if (!ControlService.isStandalone) {
-            mRecord.setBackgroundTintList(
-                    ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                            R.color.darkerGray, null)));
-        } else {
-            setBTLogoAirplaneMode();
-        }
-    }
-
-    public void setBTLogoAirplaneMode() {
+    public void setLogoInactive() {
         mRecord.setBackgroundTintList(
                 ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                        R.color.AirplaneBlue, null)));
+                        R.color.darkerGray, null)));
     }
 
     private void setConfigVisibility() {
@@ -545,18 +560,15 @@ public class MainActivity extends AppCompatActivity {
             mStateRunning = new StateRunning(this, mAdapter);
             mStateConnecting = new StateConnecting(this, mAdapter);
 
-            if (ControlService.isStandalone) {
-                mAppState = mStateRunning;
-            } else {
-                mAppState = mStateConnecting;
-            }
+            mAppState = mStateConnecting;
+
             mAppState.setInterface();
 
             mAdapter.checkBatteryCritical();
 
-            if (ControlService.isStandalone) {
-                setBTLogoAirplaneMode();
-            }
+            //if (ControlService.isStandalone) {
+            //setBTLogoAirplaneMode();
+            //}
 
             isActivityRunning = true;
         }
@@ -973,6 +985,34 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what) {
 
+                case ControlService.MSG_STATE_CHANGE:
+
+                    switch (msg.getData().getString("inputProfile", "")) {
+                        case "A2DP":
+                            mServiceState = INPUT_CONFIG.A2DP;
+                            //removeError(AppErrors.ERROR_NO_USB);
+                            break;
+                        /*case "RFCOMM":
+                            mServiceState = INPUT_CONFIG.RFCOMM;
+                            //removeError(AppErrors.ERROR_NO_USB);
+                            break;*/
+                        case "USB":
+                            mServiceState = INPUT_CONFIG.USB;
+                            //removeError(AppErrors.ERROR_NO_BT);
+                            //setLogoActive();
+                            break;
+                        case "STANDALONE":
+                            mServiceState = INPUT_CONFIG.STANDALONE;
+                            //removeError(AppErrors.ERROR_NO_BT);
+                            //removeError(AppErrors.ERROR_NO_USB);
+                            //setLogoActive();
+                            break;
+                    }
+
+                    mAppState = mStateConnecting;
+                    mAppState.setInterface();
+                    break;
+
                 case MSG_CHARGING_ON:
                     mAppState.chargeOn();
                     mAdapter.setIsCharging(true);
@@ -1057,6 +1097,7 @@ public class MainActivity extends AppCompatActivity {
                         isBluetoothPresent = true;
                     }*/
                     mAppState.startRecording();
+                    setLogoActive();
 
                     break;
 
@@ -1067,6 +1108,7 @@ public class MainActivity extends AppCompatActivity {
                         isBluetoothPresent = false;
                     }*/
                     mAppState.stopRecording();
+                    setLogoInactive();
 
                     break;
 
