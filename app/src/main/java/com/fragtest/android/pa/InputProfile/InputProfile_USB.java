@@ -40,6 +40,7 @@ public class InputProfile_USB implements InputProfile {
 
                 AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
+
                 AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {

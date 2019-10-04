@@ -185,31 +185,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    /*
-    // Battery Status Receiver
-    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context ctxt, Intent intent) {
-            int tempPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-            boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
-                    tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
-
-            // only announce on change
-            if (plugged && !ControlService.isCharging) {
-                mAppState.chargeOn();
-                // a change towards charging
-                messageService(ControlService.MSG_CHARGING_ON);
-            } else if (!plugged && ControlService.isCharging) {
-                mAppState.chargeOff();
-                // a change towards not charging
-                messageService(ControlService.MSG_CHARGING_OFF);
-            }
-            ControlService.setIsCharging(plugged);
-            mAdapter.setIsCharging(plugged);
-        }
-    };*/
-
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -425,6 +400,10 @@ public class MainActivity extends AppCompatActivity {
 
     public void setLogoActive() {
 
+        if (mServiceState == null) {
+            mServiceState = INPUT_CONFIG.STANDALONE;
+        }
+
         switch (mServiceState) {
 
             case A2DP:
@@ -433,11 +412,11 @@ public class MainActivity extends AppCompatActivity {
                                 R.color.BatteryGreen, null)));
                 break;
 
-            /*case RFCOMM:
+            case RFCOMM:
                 mRecord.setBackgroundTintList(
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                 R.color.BatteryGreen, null)));
-                break;*/
+                break;
 
             case USB:
                 mRecord.setBackgroundTintList(
@@ -512,6 +491,10 @@ public class MainActivity extends AppCompatActivity {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+        // Obtain last known system state from preferences (otherwise initialized as standalone)
+        mServiceState = INPUT_CONFIG.toState(sharedPreferences.getString("serviceState", INPUT_CONFIG.STANDALONE.name()));
+
+
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
@@ -555,8 +538,6 @@ public class MainActivity extends AppCompatActivity {
             doBindService();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-            //registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
             handleNewPagerAdapter();
 
             mAdapter.createMenu();
@@ -573,10 +554,6 @@ public class MainActivity extends AppCompatActivity {
             mAppState.setInterface();
 
             mAdapter.checkBatteryCritical();
-
-            //if (ControlService.isStandalone) {
-            //setBTLogoAirplaneMode();
-            //}
 
             isActivityRunning = true;
         }
@@ -605,9 +582,11 @@ public class MainActivity extends AppCompatActivity {
             Log.i(LOG, "onDestroy");
         }
         super.onDestroy();
+
+        sharedPreferences.edit().putString("serviceState", mServiceState.name()).apply();
+
         messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();
-        //unregisterReceiver(mBatInfoReceiver);
     }
 
     @Override
@@ -671,7 +650,10 @@ public class MainActivity extends AppCompatActivity {
         isForcedAnswer = sharedPreferences.getBoolean("forceAnswer", true);
         isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
 
+        // Unset the device admin programmatically so the app can be uninstalled.
         if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {
+
+
             mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
         }
 
@@ -987,13 +969,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
 
-            if (BuildConfig.DEBUG) {
-                Log.d(LOG, "Message received: " + msg.what);
-            }
+            Log.d(LOG, "Message received: " + msg.what);
 
             switch (msg.what) {
 
                 case ControlService.MSG_STATE_CHANGE:
+
+                    setLogoInactive();
 
                     switch (msg.getData().getString("inputProfile", "")) {
                         case "A2DP":
@@ -1038,9 +1020,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case MSG_NO_QUESTIONNAIRE_FOUND:
-
                     mAppState.noQuest();
-
                     break;
 
                 case MSG_CHANGE_PREFERENCE:

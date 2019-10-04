@@ -635,8 +635,6 @@ public class ControlService extends Service {
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
 
-        //sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-
         // preferences
         isTimer = sharedPreferences.getBoolean("isTimer", true);
         isWave = sharedPreferences.getBoolean("isWave", false);

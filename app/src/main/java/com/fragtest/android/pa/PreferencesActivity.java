@@ -1,9 +1,13 @@
 package com.fragtest.android.pa;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.SwitchPreference;
+import android.support.v7.app.AlertDialog;
 
 import com.fragtest.android.pa.Core.FileIO;
 
@@ -35,6 +39,17 @@ public class PreferencesActivity extends PreferenceActivity {
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
             includeQuestList();
+            SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
+            deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    if (!((SwitchPreference) preference).isChecked()) {
+                        confirmUnsetDeviceOwner();
+                    }
+                    return true;
+                }
+            });
+
         }
 
 
@@ -55,5 +70,27 @@ public class PreferencesActivity extends PreferenceActivity {
                 listPreferenceQuest.setSelectable(false);
             }
         }
+
+        private void confirmUnsetDeviceOwner() {
+
+            new AlertDialog.Builder(getActivity(), R.style.SwipeDialogTheme)
+                    .setTitle(R.string.app_name)
+                    .setMessage(R.string.deviceOwnerMessage)
+                    .setPositiveButton(R.string.deviceOwnerYes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                        }
+                    })
+                    .setNegativeButton(R.string.deviceOwnerNo, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
+                            deviceOwnerPref.setChecked(false);
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
+        }
+
     }
 }

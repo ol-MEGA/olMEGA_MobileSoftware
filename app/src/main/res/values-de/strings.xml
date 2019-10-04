@@ -18,6 +18,10 @@
     <string name="menuBack">Zurück</string>
     <string name="menuHelp">Hilfe</string>
 
+    <string name="deviceOwnerMessage">Wirklich den Device Owner abschalten?</string>
+    <string name="deviceOwnerYes">Ja</string>
+    <string name="deviceOwnerNo">Nein</string>
+
     <string name="help_headline">Bedienung des\nFragebogens</string>
     <string name="help_intro">Innerhalb des Fragebogens begegnen Ihnen hauptsächlich zwei Arten von Antworten:</string>
     <string name="help_head_singl">Einfachantworten</string>

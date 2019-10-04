@@ -34,6 +34,10 @@
     <string name="swipeMessage">Please answer the question first.</string>
     <string name="swipeOkay">Okay</string>
 
+    <string name="deviceOwnerMessage">Really unset Device Owner?</string>
+    <string name="deviceOwnerYes">Yes</string>
+    <string name="deviceOwnerNo">No</string>
+
     <string name="pref_head_Questionnaire">Questionnaire</string>
     <string name="pref_head_General">General</string>
     <string name="pref_head_Recording">Recording</string>
