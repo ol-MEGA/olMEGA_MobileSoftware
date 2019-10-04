@@ -50,6 +50,7 @@ public class AudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT
         );
 
+        Log.e(LOG, "Creating new with values: " + chunklengthInBytes + ", " + samplerate + ", " + bufferSize);
 
         audioRecord = new AudioRecord(
                 MediaRecorder.AudioSource.VOICE_RECOGNITION,
@@ -58,6 +59,9 @@ public class AudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize
         );
+
+        Log.e(LOG, "Done.");
+
 
         recordingThread = new Thread(new Runnable() {
             @Override
@@ -84,6 +88,7 @@ public class AudioRecorder {
 
     public void stop() {
         stopRecording = true;
+        audioRecord.stop();
     }
 
     public void release() {
@@ -158,8 +163,6 @@ public class AudioRecorder {
             String filename = fileIO.filename;
             fileIO.closeDataOutStream();
 
-            //mContext.messageService(ControlService.MSG_CHUNK_RECORDED);
-
             // report back to service
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
@@ -174,18 +177,10 @@ public class AudioRecorder {
             }
         }
 
-        audioRecord.stop();
-
         mContext.messageClient(ControlService.MSG_STOP_RECORDING);
         mContext.messageService(ControlService.MSG_RECORDING_STOPPED);
         ControlService.setIsRecording(false);
 
-        /*Message msg = Message.obtain(null, ControlService.MSG_RECORDING_STOPPED);
-        try {
-            messenger.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }*/
         Log.e(LOG, "Recording stopped.");
         mContext.getVibration().singleBurst();
     }

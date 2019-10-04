@@ -121,13 +121,8 @@ public class ControlService extends Service {
     public static final int MSG_BT_DISCONNECTED = 72;
     public static final int MSG_BATTERY_CRITICAL = 73;
     public static final int MSG_BATTERY_NORMAL = 74;
-    //public static final int MSG_BATTERY_LEVEL_INFO = 75;
     public static final int MSG_CHARGING_OFF = 76;
     public static final int MSG_CHARGING_ON = 77;
-    //public static final int MSG_CHARGING_ON_PRE = 78;
-    //public static String INPUT_PROFILE = "";
-    //public static final String INPUT_PROFILE_A2DP = "A2DP";
-    //public static final String INPUT_PROFILE_USB = "USB";
     public static INPUT_CONFIG INPUT;
 
     private InputProfile mInputProfile;
@@ -365,12 +360,6 @@ public class ControlService extends Service {
         Log.d(LOG,"onLowMemory");
     }
 
-    public static boolean getIsRecording() {
-        synchronized (recordingLock) {
-            return isRecording;
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(LOG, "onBind");
@@ -402,12 +391,6 @@ public class ControlService extends Service {
         super.dump(fd, writer, args);
     }
 
-    public static void setIsRecording(boolean status) {
-        synchronized (recordingLock) {
-            isRecording = status;
-        }
-    }
-
     @Override
     public void onCreate() {
 
@@ -436,8 +419,6 @@ public class ControlService extends Service {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         String inputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
-
-        Log.e(LOG, "IP: " + inputProfile);
 
         setInputProfile(inputProfile);
 
@@ -712,7 +693,6 @@ public class ControlService extends Service {
             isTimerRunning = false;
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
         }
-
     }
 
     private Bundle getPreferences() {
@@ -826,13 +806,10 @@ public class ControlService extends Service {
         }
     }
 
-    private void stopAlarmAndCountdown() {
-
-        Log.e(LOG, "Cancelling Alarm.");
-
-        isTimerRunning = false;
-        mEventTimer.stopTimer();
-        mVibration.repeatingBurstOff();
+    public static boolean getIsRecording() {
+        synchronized (recordingLock) {
+            return isRecording;
+        }
     }
 
     // Load new questionnaire (initiated after quest change in preferences)
@@ -1190,6 +1167,23 @@ public class ControlService extends Service {
                     break;
             }
         }
+    }
+
+    public static void setIsRecording(boolean status) {
+        synchronized (recordingLock) {
+            isRecording = status;
+        }
+    }
+
+    private void stopAlarmAndCountdown() {
+
+        Log.e(LOG, "Cancelling Alarm.");
+
+        isTimerRunning = false;
+        if (mEventTimer != null) {
+            mEventTimer.stopTimer();
+        }
+        mVibration.repeatingBurstOff();
     }
 
     static void setIsProcessing(boolean status) {

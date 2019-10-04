@@ -182,6 +182,7 @@ public class InputProfile_A2DP implements InputProfile {
             stopRecording();
         }
         mBluetoothAdapter = null;
+        //mTaskHandler.post(mAudioReleaseRunnable);
     }
 
     @Override

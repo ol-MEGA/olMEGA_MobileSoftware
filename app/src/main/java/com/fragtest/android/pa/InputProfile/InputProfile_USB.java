@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -19,6 +20,9 @@ import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 
+import java.util.HashMap;
+
+
 public class InputProfile_USB implements InputProfile {
 
     private final String INPUT_PROFILE = "USB";
@@ -28,20 +32,33 @@ public class InputProfile_USB implements InputProfile {
     private String LOG = "InputProfile_USB";
     private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
-    private int mWaitInterval = 100;
+    private int mWaitInterval = 500;
     private boolean mIsBound = false;
+    private boolean isUSBPresent = false;
+
     // This Runnable scans for available audio devices and acts if an A2DP device is present
     private Runnable mFindDeviceRunnable = new Runnable() {
         @Override
         public void run() {
 
-            if (mIsBound && !ControlService.getIsCharging()) {
+            Log.e(LOG, "isBound: " + mIsBound);
+            Log.e(LOG, "GetIsCharging: " + ControlService.getIsCharging());
+            Log.e(LOG, "checkUSB: " + checkUSBDevice());
+
+            if (mIsBound && !ControlService.getIsCharging() && checkUSBDevice()) {
                 Log.e(LOG, "Looking for device.");
+                Log.e(LOG, "AudioRecorder: " + mAudioRecorder);
 
                 AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
+                AudioDeviceInfo[] devices = new AudioDeviceInfo[0];
 
-                AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
+                try {
+                    devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
+                } catch (NullPointerException e) {
+                    Log.e(LOG, "No Audio Device found.");
+                }
+                Log.e(LOG, "List length: " + devices.length);
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {
                     Log.e(LOG, "Device: " + device.getType());
@@ -61,7 +78,7 @@ public class InputProfile_USB implements InputProfile {
                     mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
                 }
             } else {
-                Log.e(LOG, "Client not yet bound. Retrying soon.");
+                Log.e(LOG, "Device allocation not possible. Retrying in " + mWaitInterval + "ms.");
                 mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
             }
         }
@@ -71,12 +88,15 @@ public class InputProfile_USB implements InputProfile {
     private Runnable mAudioReleaseRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mAudioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
-                mAudioRecorder.release();
-                mAudioRecorder = null;
-                mTaskHandler.removeCallbacks(mAudioReleaseRunnable);
-            } else {
-                mTaskHandler.postDelayed(mAudioReleaseRunnable, mWaitInterval);
+
+            if (mAudioRecorder != null) {
+                if (mAudioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
+                    mAudioRecorder.release();
+                    mAudioRecorder = null;
+                    mTaskHandler.removeCallbacks(mAudioReleaseRunnable);
+                } else {
+                    mTaskHandler.postDelayed(mAudioReleaseRunnable, mWaitInterval);
+                }
             }
         }
     };
@@ -113,7 +133,6 @@ public class InputProfile_USB implements InputProfile {
     public InputProfile_USB(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
-        //this.mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
     }
 
     @Override
@@ -139,6 +158,7 @@ public class InputProfile_USB implements InputProfile {
             boolean isWave = mSharedPreferences.getBoolean("isWave", true);
 
             if (mAudioRecorder == null) {
+                Log.e(LOG, "Creating new Audiorecorder.");
                 mAudioRecorder = new AudioRecorder(
                         mContext,
                         mServiceMessenger,
@@ -146,6 +166,7 @@ public class InputProfile_USB implements InputProfile {
                         Integer.parseInt(samplerate),
                         isWave);
             }
+            Log.e(LOG, "Posting Find Runnable.");
 
             mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
         } else {
@@ -162,6 +183,13 @@ public class InputProfile_USB implements InputProfile {
         if (mAudioRecorder != null) {
             stopRecording();
         }
+        //mTaskHandler.post(mAudioReleaseRunnable);
+    }
+
+    private boolean checkUSBDevice() {
+        UsbManager manager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
+        HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
+        return (deviceList == null || deviceList.size() != 0);
     }
 
     @Override
