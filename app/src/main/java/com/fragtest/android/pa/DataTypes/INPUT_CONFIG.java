@@ -4,7 +4,8 @@ public enum INPUT_CONFIG {
     A2DP,
     RFCOMM,
     USB,
-    STANDALONE;
+    STANDALONE,
+    INTERNAL_MIC;
 
     public static INPUT_CONFIG toState(String myEnumString) {
         try {

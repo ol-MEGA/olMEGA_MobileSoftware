@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -20,36 +19,18 @@ import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 
-public class InputProfile_A2DP implements InputProfile {
+public class InputProfile_INTERNAL_MIC implements InputProfile {
 
-    private final String INPUT_PROFILE = "A2DP";
+    private final String INPUT_PROFILE = "INTERNALMIC";
     private BluetoothAdapter mBluetoothAdapter;
     private ControlService mContext;
     private AudioRecorder mAudioRecorder;
     private Messenger mServiceMessenger;
-    private String LOG = "InputProfile_A2DP";
+    private String LOG = "InputProfile_INTERNALMIC";
     private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
-    private int mWaitInterval = 100;
+    private int mWaitInterval = 500;
     private boolean mIsBound = false;
-
-    //The BroadcastReceiver that listens for bluetooth broadcasts
-    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                setInterface();
-                Log.e(LOG, "BT connected.");
-                LogIHAB.log("Bluetooth: connected");
-            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                stopRecording();
-                Log.e(LOG, "BT disconnected.");
-                LogIHAB.log("Bluetooth: disconnected");
-            }
-        }
-    };
-
     // This Runnable has the purpose of delaying a release of AudioRecorder to avoid null pointer
     private Runnable mAudioReleaseRunnable = new Runnable() {
         @Override
@@ -63,7 +44,6 @@ public class InputProfile_A2DP implements InputProfile {
             }
         }
     };
-
     // This Runnable scans for available audio devices and acts if an A2DP device is present
     private Runnable mFindDeviceRunnable = new Runnable() {
         @Override
@@ -78,7 +58,7 @@ public class InputProfile_A2DP implements InputProfile {
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {
                     Log.e(LOG, "Device: " + device.getType());
-                    if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP && device.isSource()) {
+                    if (device.getType() == AudioDeviceInfo.TYPE_BUILTIN_MIC && device.isSource()) {
                         mAudioRecorder.setPreferredDevice(device);
                         found = true;
                         Log.e(LOG, "FOUND! - breaking loop.");
@@ -99,7 +79,6 @@ public class InputProfile_A2DP implements InputProfile {
             }
         }
     };
-
     // This Runnable has the purpose of delaying/waiting until the application is ready again
     private Runnable mSetInterfaceRunnable = new Runnable() {
         @Override
@@ -112,11 +91,26 @@ public class InputProfile_A2DP implements InputProfile {
             }
         }
     };
+    //The BroadcastReceiver that listens for bluetooth broadcasts
+    private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
+                setInterface();
+                Log.e(LOG, "BT connected.");
+                LogIHAB.log("Bluetooth: connected");
+            } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
+                stopRecording();
+                Log.e(LOG, "BT disconnected.");
+                LogIHAB.log("Bluetooth: disconnected");
+            }
+        }
+    };
 
-    public InputProfile_A2DP(ControlService context, Messenger serviceMessenger) {
+    public InputProfile_INTERNAL_MIC(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
-        this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
@@ -127,29 +121,8 @@ public class InputProfile_A2DP implements InputProfile {
     @Override
     public void setInterface() {
 
-        if (mBluetoothAdapter == null) {
-            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        }
 
-        // Register broadcasts receiver for bluetooth state change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
-        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        mContext.registerReceiver(mBluetoothStateReceiver, filter);
-
-        if (!mBluetoothAdapter.isEnabled()) {
-            mBluetoothAdapter.enable();
-
-            /*if (mSharedPreferences.contains("BTDevice")) {
-                String btdevice = mSharedPreferences.getString("BTDevice", null);
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                device.createBond();
-                LogIHAB.log("Connecting to device: " + device.getAddress());
-            }*/
-        }
-
-        if (!ControlService.getIsCharging() && mBluetoothAdapter.isEnabled()) {
+        if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
 
@@ -176,13 +149,10 @@ public class InputProfile_A2DP implements InputProfile {
     public void cleanUp() {
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
-        mContext.unregisterReceiver(mBluetoothStateReceiver);
         Log.e(LOG, "audiorecorder:" + mAudioRecorder);
         if (mAudioRecorder != null) {
             stopRecording();
         }
-        mBluetoothAdapter = null;
-        //mTaskHandler.post(mAudioReleaseRunnable);
     }
 
     @Override

@@ -202,6 +202,7 @@ public class InputProfile_USB implements InputProfile {
     public void unregisterClient() {
         Log.e(LOG, "Client Unregistered");
         mIsBound = false;
+        stopRecording();
     }
 
     @Override

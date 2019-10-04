@@ -24,6 +24,7 @@
         <item>A2DP</item>
         <item>RFCOMM</item>
         <item>USB</item>
+        <item>INTERNAL_MIC</item>
         <item>STANDALONE</item>
     </string-array>
 

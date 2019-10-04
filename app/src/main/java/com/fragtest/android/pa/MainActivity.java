@@ -996,6 +996,9 @@ public class MainActivity extends AppCompatActivity {
                             //removeError(AppErrors.ERROR_NO_USB);
                             //setLogoActive();
                             break;
+                        case "INTERNAL_MIC":
+                            mServiceState = INPUT_CONFIG.INTERNAL_MIC;
+                            break;
                     }
 
                     Log.e(LOG, "IS CHARGING: " + getIsCharging());

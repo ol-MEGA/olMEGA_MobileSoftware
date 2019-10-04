@@ -37,6 +37,7 @@ import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
 import com.fragtest.android.pa.InputProfile.InputProfile;
 import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
 import com.fragtest.android.pa.InputProfile.InputProfile_Blank;
+import com.fragtest.android.pa.InputProfile.InputProfile_INTERNAL_MIC;
 import com.fragtest.android.pa.InputProfile.InputProfile_STANDALONE;
 import com.fragtest.android.pa.InputProfile.InputProfile_USB;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
@@ -129,6 +130,7 @@ public class ControlService extends Service {
     private InputProfile_STANDALONE mInputProfile_STANDALONE;
     private InputProfile_A2DP mInputProfile_A2DP;
     private InputProfile_USB mInputProfile_USB;
+    private InputProfile_INTERNAL_MIC mInputProfile_INTERNAL_MIC;
 
     private String INPUT_PROFILE_STATUS = "";
 
@@ -335,6 +337,10 @@ public class ControlService extends Service {
         return mInputProfile_STANDALONE;
     }
 
+    public InputProfile getinputProfile_INTERNAL_MIC() {
+        return mInputProfile_INTERNAL_MIC;
+    }
+
     public static void setIsCharging(boolean charging) {
         isCharging = charging;
         Log.e(LOG, "Charging set: " + getIsCharging());
@@ -416,6 +422,7 @@ public class ControlService extends Service {
         mInputProfile_STANDALONE = new InputProfile_STANDALONE(this, mServiceMessenger);
         mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
         mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
+        mInputProfile_INTERNAL_MIC = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         String inputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
@@ -595,6 +602,11 @@ public class ControlService extends Service {
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.STANDALONE.toString();
                     mInputProfile = getInputProfile_STANDALONE();
                     INPUT = INPUT_CONFIG.STANDALONE;
+                    break;
+                case "INTERNAL_MIC":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.INTERNAL_MIC.toString();
+                    mInputProfile = getinputProfile_INTERNAL_MIC();
+                    INPUT = INPUT_CONFIG.INTERNAL_MIC;
                     break;
             }
 
