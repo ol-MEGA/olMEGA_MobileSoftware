@@ -766,8 +766,6 @@ public class ControlService extends Service {
             messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
         }
 
-
-
         // processing
         HashSet<String> tempFeatures = new HashSet<>();
         tempFeatures.add("PSD");
@@ -954,6 +952,7 @@ public class ControlService extends Service {
                 status == BatteryManager.BATTERY_PLUGGED_USB);
         if (ControlService.getIsCharging()) {
             mInputProfile.chargingOnPre();
+            messageClient(MSG_CHARGING_ON);
         }
 
         // It is safe to say, that the display is illuminated on system/application startup

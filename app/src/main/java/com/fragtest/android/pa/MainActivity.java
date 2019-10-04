@@ -573,7 +573,6 @@ public class MainActivity extends AppCompatActivity {
                 Context.DEVICE_POLICY_SERVICE);
         setDefaultCosuPolicies(USE_KIOSK_MODE);
         enableKioskMode(USE_KIOSK_MODE);
-
     }
 
     @Override
