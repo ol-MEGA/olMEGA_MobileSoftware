@@ -38,6 +38,7 @@ import com.fragtest.android.pa.InputProfile.InputProfile;
 import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
 import com.fragtest.android.pa.InputProfile.InputProfile_Blank;
 import com.fragtest.android.pa.InputProfile.InputProfile_INTERNAL_MIC;
+import com.fragtest.android.pa.InputProfile.InputProfile_RFCOMM;
 import com.fragtest.android.pa.InputProfile.InputProfile_STANDALONE;
 import com.fragtest.android.pa.InputProfile.InputProfile_USB;
 import com.fragtest.android.pa.Processing.MainProcessingThread;
@@ -132,6 +133,24 @@ public class ControlService extends Service {
     private InputProfile_A2DP mInputProfile_A2DP;
     private InputProfile_USB mInputProfile_USB;
     private InputProfile_INTERNAL_MIC mInputProfile_INTERNAL_MIC;
+    private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case "android.intent.action.SCREEN_ON":
+                        Logger.info("Display: on");
+                        LogIHAB.log("Display: on");
+                        break;
+                    case "android.intent.action.SCREEN_OFF":
+                        Logger.info("Display: off");
+                        LogIHAB.log("Display: off");
+                        break;
+                }
+            }
+        }
+    };
     private String mNewInputProfile = "";
 
     private String INPUT_PROFILE_STATUS = "";
@@ -269,7 +288,7 @@ public class ControlService extends Service {
             isQuestionnairePending = true;
         }
     };
-
+    private InputProfile_RFCOMM mInputProfile_RFCOMM;
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -288,26 +307,10 @@ public class ControlService extends Service {
             } else if (!plugged && ControlService.getIsCharging()) {
                 // a change towards not charging
                 mVibration.singleBurst();
+                Log.e(LOG, "A Change towards not charging.");
                 mInputProfile.chargingOff();
                 messageClient(ControlService.MSG_CHARGING_OFF);
                 ControlService.setIsCharging(false);
-            }
-        }
-    };
-
-    private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            switch (action) {
-                case "android.intent.action.SCREEN_ON":
-                    Logger.info("Display: on");
-                    LogIHAB.log("Display: on");
-                    break;
-                case "android.intent.action.SCREEN_OFF":
-                    Logger.info("Display: off");
-                    LogIHAB.log("Display: off");
-                    break;
             }
         }
     };
@@ -341,7 +344,14 @@ public class ControlService extends Service {
         return mInputProfile_STANDALONE;
     }
 
-    public InputProfile getinputProfile_INTERNAL_MIC() {
+    private Runnable SetInputProfileTask = new Runnable() {
+        @Override
+        public void run() {
+            runInputProfileChange();
+        }
+    };
+
+    public InputProfile getInputProfile_INTERNAL_MIC() {
         return mInputProfile_INTERNAL_MIC;
     }
 
@@ -400,13 +410,6 @@ public class ControlService extends Service {
         Log.e(LOG,"onDump");
         super.dump(fd, writer, args);
     }
-
-    private Runnable SetInputProfileTask = new Runnable() {
-        @Override
-        public void run() {
-            runInputProfileChange();
-        }
-    };
 
     private boolean checkTime() {
         // Check whether system time has correct year (devices tend to fall back to 1970 on startup)
@@ -475,21 +478,6 @@ public class ControlService extends Service {
 
     private boolean checkLog() {
 
-        // TODO: Once LogIHAB has been verified, this part (and all Logger.info()) is obsolete
-        /*File fLog_tmp = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp);
-
-        if (!fLog_tmp.exists()) {
-            try{
-                fLog_tmp.createNewFile();
-                Log.d(LOG, "Log file created");
-            } catch (IOException e) {
-                Log.d(LOG, "Error creating Log file");
-            }
-        }
-
-        new SingleMediaScanner(context, fLog_tmp);
-        Log.d(LOG, "Log file checked.");
-*/
         File fLog = new File(FileIO.getFolderPath() + File.separator + FILENAME_LOG);
 
         if (!fLog.exists()) {
@@ -552,13 +540,9 @@ public class ControlService extends Service {
         }
     }
 
-    /*class SetInputProfileTask implements Runnable {
-        String inputProfile;
-        SetInputProfileTask(String inputProfile) { this.inputProfile = inputProfile; }
-        public void run() {
-            runInputProfileChange(inputProfile);
-        }
-    }*/
+    public InputProfile getInputProfile_RFCOMM() {
+        return mInputProfile_RFCOMM;
+    }
 
     @Override
     public void onCreate() {
@@ -572,9 +556,9 @@ public class ControlService extends Service {
                 .writer(new FileWriter(FileIO.getFolderPath() + File.separator + FILENAME_LOG_tmp, false, true))
                 .level(Level.INFO)
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
-                .activate();
+                .activate();*/
 
-        Logger.info("Service onCreate");*/
+
         LogIHAB.log("Service onCreate");
 
 
@@ -586,62 +570,20 @@ public class ControlService extends Service {
         mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
         mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
         mInputProfile_INTERNAL_MIC = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
+        mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
 
-        //mTaskHandler.post(SetInputProfileTask);
-
         setInputProfile();
-        //finishInputProfileChange();
 
         Log.e(LOG, "ControlService started");
     }
 
     private void setInputProfile() {
-
         if (!mNewInputProfile.equals(INPUT_PROFILE_STATUS) || INPUT_PROFILE_STATUS.equals("")) {
-
             mInputProfile.cleanUp();
-
             mTaskHandler.post(SetInputProfileTask);
-
-            /*mInputProfile.cleanUp();
-
-            switch (inputProfile) {
-                case "A2DP":
-                    INPUT_PROFILE_STATUS = INPUT_CONFIG.A2DP.toString();
-                    mInputProfile = getInputProfile_A2DP();
-                    //mInputProfile = new InputProfile_A2DP(this, mServiceMessenger);
-                    INPUT = INPUT_CONFIG.A2DP;
-                    break;
-                case "RFCOMM":
-                    INPUT_PROFILE_STATUS = INPUT_CONFIG.RFCOMM.toString();
-                    mInputProfile = getStateRFCOMM();
-                    INPUT = INPUT_CONFIG.RFCOMM;
-                    break;
-                case "USB":
-                    INPUT_PROFILE_STATUS = INPUT_CONFIG.USB.toString();
-                    mInputProfile = getInputProfile_USB();
-                    //mInputProfile = new InputProfile_USB(this, mServiceMessenger);
-                    INPUT = INPUT_CONFIG.USB;
-                    break;
-                case "STANDALONE":
-                    INPUT_PROFILE_STATUS = INPUT_CONFIG.STANDALONE.toString();
-                    mInputProfile = getInputProfile_STANDALONE();
-                    //mInputProfile = new InputProfile_STANDALONE(this, mServiceMessenger);
-                    INPUT = INPUT_CONFIG.STANDALONE;
-                    messageService(MSG_AUDIORECORD_RELEASED);
-                    break;
-                case "INTERNAL_MIC":
-                    INPUT_PROFILE_STATUS = INPUT_CONFIG.INTERNAL_MIC.toString();
-                    mInputProfile = getinputProfile_INTERNAL_MIC();
-                    //mInputProfile = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
-                    INPUT = INPUT_CONFIG.INTERNAL_MIC;
-                    break;
-            }
-            mTaskHandler.postDelayed(SetInputProfileTask, 500);
-            //finishInputProfileChange();*/
         }
     }
 
@@ -659,11 +601,11 @@ public class ControlService extends Service {
                     mInputProfile = getInputProfile_A2DP();
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
-                /*case "RFCOMM":
+                case "RFCOMM":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.RFCOMM.toString();
-                    mInputProfile = getStateRFCOMM();
+                    mInputProfile = getInputProfile_RFCOMM();
                     INPUT = INPUT_CONFIG.RFCOMM;
-                    break;*/
+                    break;
                 case "USB":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.USB.toString();
                     mInputProfile = getInputProfile_USB();
@@ -676,7 +618,7 @@ public class ControlService extends Service {
                     break;
                 case "INTERNAL_MIC":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.INTERNAL_MIC.toString();
-                    mInputProfile = getinputProfile_INTERNAL_MIC();
+                    mInputProfile = getInputProfile_INTERNAL_MIC();
                     INPUT = INPUT_CONFIG.INTERNAL_MIC;
                     break;
             }
@@ -699,22 +641,6 @@ public class ControlService extends Service {
             mTaskHandler.postDelayed(SetInputProfileTask, mSetInputProfileInterval);
         }
     }
-
-    /*
-    private void finishInputProfileChange() {
-        mInputProfile.setInterface();
-        if (IS_SERVICE_BOUND) {
-            mInputProfile.registerClient();
-        }
-
-        LogIHAB.log("Input Profile changed to: " + INPUT.toString());
-        Log.e(LOG, "Input Profile changed to: " + INPUT.toString());
-
-        Bundle bundle = new Bundle();
-        bundle.putString("inputProfile", INPUT.toString());
-
-        messageClient(MSG_STATE_CHANGE, bundle);
-    }*/
 
     // Load preset values from shared preferences, default values from external class InitValues
     private void initialiseValues() {
@@ -1073,7 +999,7 @@ public class ControlService extends Service {
                     setupApplication();
 
                     mInputProfile.registerClient();
-                    mInputProfile.setInterface();
+                    //mInputProfile.setInterface();
 
                     mTaskHandler.post(mDateTimeRunnable);
                     mTaskHandler.post(mLogCheckRunnable);

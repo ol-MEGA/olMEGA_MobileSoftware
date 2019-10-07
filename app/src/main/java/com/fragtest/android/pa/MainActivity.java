@@ -415,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
             case RFCOMM:
                 mRecord.setBackgroundTintList(
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                R.color.BatteryGreen, null)));
+                                R.color.BatteryYellow, null)));
                 break;
 
             case USB:
@@ -986,10 +986,10 @@ public class MainActivity extends AppCompatActivity {
                             mServiceState = INPUT_CONFIG.A2DP;
                             //removeError(AppErrors.ERROR_NO_USB);
                             break;
-                        /*case "RFCOMM":
+                        case "RFCOMM":
                             mServiceState = INPUT_CONFIG.RFCOMM;
                             //removeError(AppErrors.ERROR_NO_USB);
-                            break;*/
+                            break;
                         case "USB":
                             mServiceState = INPUT_CONFIG.USB;
                             //removeError(AppErrors.ERROR_NO_BT);
