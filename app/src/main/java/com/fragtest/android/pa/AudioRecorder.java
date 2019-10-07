@@ -34,6 +34,7 @@ public class AudioRecorder {
     private Messenger messenger;
     private int samplerate;
     private ControlService mContext;
+    private static int INSTANCE = 0;
 
 
     public AudioRecorder(ControlService context, Messenger _messenger, int _chunklengthInS, int _samplerate, boolean _isWave) {
@@ -50,16 +51,26 @@ public class AudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT
         );
 
+        INSTANCE += 1;
+        Log.e(LOG, "INSTANCE: " + INSTANCE);
+
         Log.e(LOG, "Creating new with values: " + chunklengthInBytes + ", " + samplerate + ", " + bufferSize);
 
-        audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
-                samplerate,
-                AudioFormat.CHANNEL_IN_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bufferSize
-        );
+        Log.e(LOG, "Or is it still going?: " + audioRecord);
 
+        try {
+            audioRecord = new AudioRecord(
+                    MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                    samplerate,
+                    AudioFormat.CHANNEL_IN_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+            );
+            Log.e(LOG, "Trying.");
+        } catch (Exception e) {
+            Log.e(LOG, "THERE WAS A PROBLEM: ");
+            e.printStackTrace();
+        }
         Log.e(LOG, "Done.");
 
 
@@ -81,6 +92,10 @@ public class AudioRecorder {
         return audioRecord.getRecordingState();
     }
 
+    public int getState() {
+        return audioRecord.getState();
+    }
+
     public void setPreferredDevice(AudioDeviceInfo device) {
         audioRecord.setPreferredDevice(device);
         Log.e(LOG, "Recording device set through AudioRecord: " + audioRecord.getPreferredDevice());
@@ -93,6 +108,7 @@ public class AudioRecorder {
 
     public void release() {
         audioRecord.release();
+        INSTANCE = 0;
         Log.e(LOG, "AudioRecorder released");
     }
 

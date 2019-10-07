@@ -17,6 +17,11 @@ public class InputProfile_Blank implements InputProfile {
     }
 
     @Override
+    public boolean getIsAudioRecorderClosed() {
+        return true;
+    }
+
+    @Override
     public void registerClient() {
 
     }

@@ -20,6 +20,9 @@ import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.AudioFileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class InputProfile_A2DP implements InputProfile {
 
     private final String INPUT_PROFILE = "A2DP";
@@ -28,9 +31,10 @@ public class InputProfile_A2DP implements InputProfile {
     private AudioRecorder mAudioRecorder;
     private Messenger mServiceMessenger;
     private String LOG = "InputProfile_A2DP";
-    private SharedPreferences mSharedPreferences;
+    //private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
-    private int mWaitInterval = 100;
+    private int mWaitInterval = 200;
+    private int mReleaseInterval = 0;
     private boolean mIsBound = false;
 
     //The BroadcastReceiver that listens for bluetooth broadcasts
@@ -74,7 +78,15 @@ public class InputProfile_A2DP implements InputProfile {
 
                 AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
-                AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
+                Log.e(LOG, "audioManager: " + audioManager);
+
+                ArrayList<AudioDeviceInfo> devices = new ArrayList<>();
+                try {
+                    AudioDeviceInfo[] devicesTmp = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
+                    devices = new ArrayList<>(Arrays.asList(devicesTmp));
+                } catch (Exception e) {
+                    Log.e(LOG, "That didn't work out.");
+                }
                 boolean found = false;
                 for (AudioDeviceInfo device : devices) {
                     Log.e(LOG, "Device: " + device.getType());
@@ -140,31 +152,33 @@ public class InputProfile_A2DP implements InputProfile {
 
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
-
-            /*if (mSharedPreferences.contains("BTDevice")) {
-                String btdevice = mSharedPreferences.getString("BTDevice", null);
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(btdevice);
-                device.createBond();
-                LogIHAB.log("Connecting to device: " + device.getAddress());
-            }*/
         }
 
         if (!ControlService.getIsCharging() && mBluetoothAdapter.isEnabled()) {
             Log.e(LOG, "Setting interface");
-            mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
 
-            String chunklengthInS = mSharedPreferences.getString("chunklengthInS", "60");
-            String samplerate = mSharedPreferences.getString("samplerate", "48000");
-            boolean isWave = mSharedPreferences.getBoolean("isWave", true);
+            String chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
+            String samplerate = sharedPreferences.getString("samplerate", "48000");
+            boolean isWave = sharedPreferences.getBoolean("isWave", true);
+
+            Log.e(LOG, "AUDIORECORDER: " + mAudioRecorder);
 
             if (mAudioRecorder == null) {
-                mAudioRecorder = new AudioRecorder(
-                        mContext,
-                        mServiceMessenger,
-                        Integer.parseInt(chunklengthInS),
-                        Integer.parseInt(samplerate),
-                        isWave);
+                try {
+                    mAudioRecorder = new AudioRecorder(
+                            mContext,
+                            mServiceMessenger,
+                            Integer.parseInt(chunklengthInS),
+                            Integer.parseInt(samplerate),
+                            isWave);
+                } catch (Exception e) {
+                    Log.e(LOG, "THIS WASNT GOOD:");
+                    e.printStackTrace();
+                }
             }
+
+            Log.e(LOG, "Got it:" + mAudioRecorder.getState());
 
             mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
         } else {
@@ -176,13 +190,23 @@ public class InputProfile_A2DP implements InputProfile {
     public void cleanUp() {
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
-        mContext.unregisterReceiver(mBluetoothStateReceiver);
+        try {
+            mContext.unregisterReceiver(mBluetoothStateReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG, "Receiver not registered.");
+        }
+
         Log.e(LOG, "audiorecorder:" + mAudioRecorder);
         if (mAudioRecorder != null) {
             stopRecording();
         }
         mBluetoothAdapter = null;
-        //mTaskHandler.post(mAudioReleaseRunnable);
+        System.gc();
+    }
+
+    @Override
+    public boolean getIsAudioRecorderClosed() {
+        return (mAudioRecorder == null || mAudioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED);
     }
 
     @Override
@@ -195,7 +219,7 @@ public class InputProfile_A2DP implements InputProfile {
     public void unregisterClient() {
         Log.e(LOG, "Client Unregistered");
         mIsBound = false;
-        stopRecording();
+        cleanUp();
     }
 
     @Override
@@ -245,7 +269,7 @@ public class InputProfile_A2DP implements InputProfile {
             Log.d(LOG, "Requesting stop caching audio");
             LogIHAB.log("Requesting stop caching audio");
             mAudioRecorder.stop();
-            mTaskHandler.post(mAudioReleaseRunnable);
+            mTaskHandler.postDelayed(mAudioReleaseRunnable, mReleaseInterval);
         }
     }
 }

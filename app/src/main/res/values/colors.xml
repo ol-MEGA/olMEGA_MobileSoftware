@@ -16,5 +16,7 @@
     <color name="BatteryGreen">#5ec800</color>
     <color name="BatteryYellow">#ffd200</color> <!-- #ffd200 -->
 
+    <color name="InternalMicOrange">#ffa500</color>
+
     <color name="lighterBlue">#AAAAFF</color>
 </resources>

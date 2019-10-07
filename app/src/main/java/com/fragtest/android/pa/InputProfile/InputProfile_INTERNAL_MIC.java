@@ -30,6 +30,7 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
     private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
     private int mWaitInterval = 500;
+    private int mReleaseInterval = 0;
     private boolean mIsBound = false;
     // This Runnable has the purpose of delaying a release of AudioRecorder to avoid null pointer
     private Runnable mAudioReleaseRunnable = new Runnable() {
@@ -121,7 +122,6 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
     @Override
     public void setInterface() {
 
-
         if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
@@ -153,6 +153,12 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
         if (mAudioRecorder != null) {
             stopRecording();
         }
+        System.gc();
+    }
+
+    @Override
+    public boolean getIsAudioRecorderClosed() {
+        return (mAudioRecorder == null || mAudioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED);
     }
 
     @Override
@@ -165,7 +171,7 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
     public void unregisterClient() {
         Log.e(LOG, "Client Unregistered");
         mIsBound = false;
-        stopRecording();
+        cleanUp();
     }
 
     @Override
@@ -215,7 +221,7 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
             Log.d(LOG, "Requesting stop caching audio");
             LogIHAB.log("Requesting stop caching audio");
             mAudioRecorder.stop();
-            mTaskHandler.post(mAudioReleaseRunnable);
+            mTaskHandler.postDelayed(mAudioReleaseRunnable, mReleaseInterval);
         }
     }
 }

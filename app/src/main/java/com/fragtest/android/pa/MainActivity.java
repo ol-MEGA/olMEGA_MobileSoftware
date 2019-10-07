@@ -429,6 +429,11 @@ public class MainActivity extends AppCompatActivity {
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                 R.color.AirplaneBlue, null)));
                 break;
+            case INTERNAL_MIC:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.InternalMicOrange, null)));
+                break;
         }
     }
 

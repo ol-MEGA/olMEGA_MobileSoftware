@@ -8,6 +8,8 @@ public interface InputProfile {
 
     void cleanUp();
 
+    boolean getIsAudioRecorderClosed();
+
     void registerClient();
 
     void unregisterClient();

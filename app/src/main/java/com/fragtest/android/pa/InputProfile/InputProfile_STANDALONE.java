@@ -48,6 +48,13 @@ public class InputProfile_STANDALONE implements InputProfile {
     @Override
     public void cleanUp() {
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+        mContext.messageClient(ControlService.MSG_STOP_RECORDING);
+        System.gc();
+    }
+
+    @Override
+    public boolean getIsAudioRecorderClosed() {
+        return true;
     }
 
     @Override
@@ -60,6 +67,8 @@ public class InputProfile_STANDALONE implements InputProfile {
     public void unregisterClient() {
         Log.e(LOG, "Client Unregistered");
         mIsBound = false;
+        mContext.messageClient(ControlService.MSG_STOP_RECORDING);
+        cleanUp();
     }
 
     @Override

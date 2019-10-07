@@ -33,6 +33,7 @@ public class InputProfile_USB implements InputProfile {
     private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
     private int mWaitInterval = 500;
+    private int mReleaseInterval = 0;
     private boolean mIsBound = false;
     private boolean isUSBPresent = false;
 
@@ -43,7 +44,7 @@ public class InputProfile_USB implements InputProfile {
 
             Log.e(LOG, "isBound: " + mIsBound);
             Log.e(LOG, "GetIsCharging: " + ControlService.getIsCharging());
-            Log.e(LOG, "checkUSB: " + checkUSBDevice());
+            //Log.e(LOG, "checkUSB: " + checkUSBDevice());
 
             if (mIsBound && !ControlService.getIsCharging() && checkUSBDevice()) {
                 Log.e(LOG, "Looking for device.");
@@ -51,7 +52,11 @@ public class InputProfile_USB implements InputProfile {
 
                 AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
+                Log.e(LOG, "1");
+
                 AudioDeviceInfo[] devices = new AudioDeviceInfo[0];
+
+                Log.e(LOG, "2");
 
                 try {
                     devices = audioManager.getDevices(AudioManager.GET_DEVICES_INPUTS);
@@ -63,6 +68,12 @@ public class InputProfile_USB implements InputProfile {
                 for (AudioDeviceInfo device : devices) {
                     Log.e(LOG, "Device: " + device.getType());
                     if (device.getType() == AudioDeviceInfo.TYPE_USB_DEVICE && device.isSource()) {
+
+                        int[] rates = device.getSampleRates();
+                        for (int rate : rates) {
+                            Log.e(LOG, "Rate: " + rate);
+                        }
+
                         mAudioRecorder.setPreferredDevice(device);
                         found = true;
                         Log.e(LOG, "FOUND! - breaking loop.");
@@ -88,6 +99,8 @@ public class InputProfile_USB implements InputProfile {
     private Runnable mAudioReleaseRunnable = new Runnable() {
         @Override
         public void run() {
+
+            Log.e(LOG, "RECORD STATE: " + mAudioRecorder.getRecordingState());
 
             if (mAudioRecorder != null) {
                 if (mAudioRecorder.getRecordingState() != AudioRecord.RECORDSTATE_RECORDING) {
@@ -116,16 +129,18 @@ public class InputProfile_USB implements InputProfile {
     private final BroadcastReceiver mUSBReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            switch (action) {
-                case UsbManager.ACTION_USB_DEVICE_ATTACHED:
-                    Log.e(LOG, "USB attached.");
-                    setInterface();
-                    break;
-                case UsbManager.ACTION_USB_DEVICE_DETACHED:
-                    Log.e(LOG, "USB detached.");
-                    Log.e(LOG, "DEVICE DETACHED: " + UsbManager.EXTRA_DEVICE);
-                    stopRecording();
-                    break;
+            if (action != null) {
+                switch (action) {
+                    case UsbManager.ACTION_USB_DEVICE_ATTACHED:
+                        Log.e(LOG, "USB attached.");
+                        setInterface();
+                        break;
+                    case UsbManager.ACTION_USB_DEVICE_DETACHED:
+                        Log.e(LOG, "USB detached.");
+                        Log.e(LOG, "DEVICE DETACHED: " + UsbManager.EXTRA_DEVICE);
+                        stopRecording();
+                        break;
+                }
             }
         }
     };
@@ -178,12 +193,22 @@ public class InputProfile_USB implements InputProfile {
     public void cleanUp() {
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
-        mContext.unregisterReceiver(mUSBReceiver);
+        try {
+            mContext.unregisterReceiver(mUSBReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.e(LOG, "Receiver not registered.");
+        }
+
         Log.e(LOG, "audiorecorder:" + mAudioRecorder);
         if (mAudioRecorder != null) {
             stopRecording();
         }
-        //mTaskHandler.post(mAudioReleaseRunnable);
+        System.gc();
+    }
+
+    @Override
+    public boolean getIsAudioRecorderClosed() {
+        return (mAudioRecorder == null || mAudioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED);
     }
 
     private boolean checkUSBDevice() {
@@ -202,7 +227,7 @@ public class InputProfile_USB implements InputProfile {
     public void unregisterClient() {
         Log.e(LOG, "Client Unregistered");
         mIsBound = false;
-        stopRecording();
+        cleanUp();
     }
 
     @Override
@@ -252,7 +277,7 @@ public class InputProfile_USB implements InputProfile {
             Log.e(LOG, "Requesting stop caching audio");
             LogIHAB.log("Requesting stop caching audio");
             mAudioRecorder.stop();
-            mTaskHandler.post(mAudioReleaseRunnable);
+            mTaskHandler.postDelayed(mAudioReleaseRunnable, mReleaseInterval);
         }
     }
 }
