@@ -590,9 +590,9 @@ public class ControlService extends Service {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
 
-        mTaskHandler.post(SetInputProfileTask);
+        //mTaskHandler.post(SetInputProfileTask);
 
-        //setInputProfile(inputProfile);
+        setInputProfile();
         //finishInputProfileChange();
 
         Log.e(LOG, "ControlService started");
