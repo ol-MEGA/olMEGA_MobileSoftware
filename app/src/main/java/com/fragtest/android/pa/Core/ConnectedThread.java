@@ -65,7 +65,6 @@ public class ConnectedThread extends Thread {
 
         this.isReleased = false;
         INSTANCE += 1;
-        Log.e(LOG, "INSTANCE: " + INSTANCE);
 
         try {
             tmpIn = mmSocket.getInputStream();
@@ -77,17 +76,9 @@ public class ConnectedThread extends Thread {
 
         try {
             bis = new BufferedInputStream(tmpIn);
-            Log.e(LOG, "AVAILABLE: " + (bis == null) + ", Socket: " + mmSocket.isConnected());
         } catch (Exception e) {
-            Log.e(LOG, "PROBLEM CREATING BIS: " + e.toString());
+            Log.e(LOG, "Unable to create Buffered Input Stream: " + e.toString());
         }
-
-
-
-        //InputStream tmpIn = null;
-        //OutputStream tmpOut = null;
-        // Get the input and output streams, using temp objects because
-        // member streams are final
 
     }
 
@@ -97,14 +88,10 @@ public class ConnectedThread extends Thread {
         ControlService.setIsRecording(true);
         mContext.messageClient(ControlService.MSG_START_RECORDING);
 
-        Log.e(LOG, "So siehts aus: In: " + tmpIn + ", Out: " + tmpOut + ", bis: " + bis);
-
         int buffer_size = block_size * 4;
         int additionalBytesCount = 6;
         int count = 0, tmpByte;
         RingBuffer ringBuffer = new RingBuffer(buffer_size + additionalBytesCount);
-
-
 
         numBlocks = 0;
         lostBlocks = 0;
@@ -137,7 +124,6 @@ public class ConnectedThread extends Thread {
                     e.printStackTrace();
                 }
             }
-
 
             // chunk loop
             int bytesWritten = 0;
