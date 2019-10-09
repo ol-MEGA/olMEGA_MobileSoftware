@@ -757,8 +757,6 @@ public class ControlService extends Service {
                     mSelectQuestionnaire = null;
                 }
 
-                Log.i(LOG, "XXX choosing: "+mSelectQuestionnaire);
-
                 if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
                     mSelectQuestionnaire = fileList[0];
                     if (BuildConfig.DEBUG) {
@@ -851,6 +849,17 @@ public class ControlService extends Service {
             }
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
         }
+    }
+
+    private void stopAlarmAndCountdown() {
+
+        Log.e(LOG, "Cancelling Alarm.");
+
+        isTimerRunning = false;
+        if (mEventTimer != null) {
+            mEventTimer.stopTimer();
+        }
+        mVibration.repeatingBurstOff();
     }
 
     // Starts a new questionnaire, motivation can be {"auto", "manual"}
@@ -1154,17 +1163,9 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_APPLICATION_SHUTDOWN:
-
-
                     LogIHAB.log("Shutdown");
+                    mInputProfile.applicationShutdown();
                     break;
-
-                /*case MSG_BATTERY_LEVEL_INFO:
-                    float batteryLevel = msg.getData().getFloat("batteryLevel");
-                    Logger.info("battery level: " + batteryLevel);
-                    LogIHAB.log("battery level: " + batteryLevel);
-                    Log.e(LOG, "Battery Level Info: "+batteryLevel);
-                    break;*/
 
                 case MSG_BATTERY_CRITICAL:
                     //TODO: Test this case
@@ -1172,24 +1173,6 @@ public class ControlService extends Service {
                     mInputProfile.batteryCritical();
 
                     break;
-/*
-                case MSG_CHARGING_OFF:
-                    LogIHAB.log("Charging: inactive");
-                    isCharging = false;
-
-                    mVibration.singleBurst();
-                    break;
-
-                case MSG_CHARGING_ON:
-                    isCharging = true;
-                    LogIHAB.log("Charging: active");
-
-                    mVibration.singleBurst();
-                    break;
-
-                case MSG_CHARGING_ON_PRE:
-                    isCharging = true;
-                    break;*/
 
                 default:
                     super.handleMessage(msg);
@@ -1198,23 +1181,10 @@ public class ControlService extends Service {
         }
     }
 
-
-
     public static void setIsRecording(boolean status) {
         synchronized (recordingLock) {
             isRecording = status;
         }
-    }
-
-    private void stopAlarmAndCountdown() {
-
-        Log.e(LOG, "Cancelling Alarm.");
-
-        isTimerRunning = false;
-        if (mEventTimer != null) {
-            mEventTimer.stopTimer();
-        }
-        mVibration.repeatingBurstOff();
     }
 
     static void setIsProcessing(boolean status) {

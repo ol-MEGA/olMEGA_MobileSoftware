@@ -137,10 +137,12 @@ public class InputProfile_RFCOMM implements InputProfile {
                     if (bt.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET) {
 
                         mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(bt.getAddress());
-                        try {
-                            mSocket.close();
-                        } catch (Exception e){
-                            Log.e(LOG, "Unable to close Socket: " + e.toString());
+                        if (mSocket != null) {
+                            try {
+                                mSocket.close();
+                            } catch (Exception e) {
+                                Log.e(LOG, "Unable to close Socket: " + e.toString());
+                            }
                         }
                         mSocket = null;
 
@@ -214,24 +216,11 @@ public class InputProfile_RFCOMM implements InputProfile {
         filterBT.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         mContext.registerReceiver(mBluetoothStateReceiver, filterBT);
 
-
-        /*IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
-        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        mContext.registerReceiver(mBTReceiver, intentFilter);*/
-
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
 
         mBluetoothAdapter.cancelDiscovery();
-
-        // Yes - it's spelled like that.
-        /*
-        String action = "android.bleutooth.device.action.UUID";
-        IntentFilter filterUUID = new IntentFilter(action);
-        mContext.registerReceiver(mUUIDReceiver, filterUUID);*/
 
         if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
@@ -250,15 +239,11 @@ public class InputProfile_RFCOMM implements InputProfile {
 
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         try {
             mContext.unregisterReceiver(mBluetoothStateReceiver);
         } catch (IllegalArgumentException e) {
             Log.e(LOG, "Receiver not registered: mBluetoothStateReceiver");
-        }
-        try {
-            mContext.unregisterReceiver(mUUIDReceiver);
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG, "Receiver not registered: mUUIDReceiver");
         }
         try {
             mContext.unregisterReceiver(mUUIDReceiver);

@@ -8,6 +8,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 
 import com.fragtest.android.pa.Core.FileIO;
 
@@ -45,6 +46,23 @@ public class PreferencesActivity extends PreferenceActivity {
                 public boolean onPreferenceChange(Preference preference, Object o) {
                     if (!((SwitchPreference) preference).isChecked()) {
                         confirmUnsetDeviceOwner();
+                    }
+                    return true;
+                }
+            });
+
+            final ListPreference sampleratePref = (ListPreference) findPreference("samplerate");
+
+            ListPreference inputProfilePref = (ListPreference) findPreference("inputProfile");
+            inputProfilePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    if (o.equals("RFCOMM")) {
+                        Log.e(LOG, "Chosen input profile: " + o + ". Setting Samplerate to 16000.");
+                        sampleratePref.setValue("16000");
+                    } else {
+                        Log.e(LOG, "Chosen input profile: " + preference.getSummary() + ". Setting Samplerate to 48000.");
+                        sampleratePref.setValue("48000");
                     }
                     return true;
                 }

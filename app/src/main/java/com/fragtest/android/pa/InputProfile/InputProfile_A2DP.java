@@ -33,7 +33,7 @@ public class InputProfile_A2DP implements InputProfile {
     private String LOG = "InputProfile_A2DP";
     //private SharedPreferences mSharedPreferences;
     private Handler mTaskHandler = new Handler();
-    private int mWaitInterval = 200;
+    private int mWaitInterval = 500;
     private int mReleaseInterval = 0;
     private boolean mIsBound = false;
 
