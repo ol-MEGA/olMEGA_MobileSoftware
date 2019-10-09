@@ -93,28 +93,32 @@ public class InputProfile_RFCOMM implements InputProfile {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (action != null) {
-                if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
-                    //setInterface();
+                switch(action) {
 
-                    // Save list of paired devices
-                    /*Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-                    for (BluetoothDevice bt : pairedDevices) {
-                        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-                        sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
-                        Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
-                    }*/
-                    /*try {
-                        mSocket.connect();
-                    } catch (Exception e) {
-                        Log.e(LOG, "I HATE THIS.");
-                    }*/
-                    startRecording();
-                    Log.e(LOG, "BT connected.");
-                    LogIHAB.log("Bluetooth: connected");
-                } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
-                    stopRecording();
-                    Log.e(LOG, "BT disconnected.");
-                    LogIHAB.log("Bluetooth: disconnected");
+                    case BluetoothDevice.ACTION_ACL_CONNECTED:
+                        BluetoothDevice bt1 = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        Log.e(LOG, "Connected to " + bt1);
+
+                        Log.e(LOG, "Proper device: " + mBluetoothDevice);
+
+                        Log.e(LOG, "Same? " + (bt1 == mBluetoothDevice));
+
+                        if (bt1.equals(mBluetoothDevice)) {
+                            startRecording();
+                        }
+                        break;
+
+                    case BluetoothDevice.ACTION_ACL_DISCONNECTED:
+                        BluetoothDevice bt2 = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                        Log.e(LOG, "Disconnected from " + bt2);
+
+                        Log.e(LOG, "Proper device: " + mBluetoothDevice);
+                        Log.e(LOG, "Same? " + (bt2 == mBluetoothDevice));
+
+                        if (bt2.equals(mBluetoothDevice)) {
+                            stopRecording();
+                        }
+                        break;
                 }
             }
         }
@@ -158,7 +162,7 @@ public class InputProfile_RFCOMM implements InputProfile {
 
                         Log.e(LOG, "This looks promising:" + bt.getAddress() + ", Type: " + bt.getType());
 
-                        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(bt.getAddress());
+                        mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(bt.getAddress());
                         try {
                             mSocket.close();
                         }catch(Exception e){
@@ -229,7 +233,7 @@ public class InputProfile_RFCOMM implements InputProfile {
 
                   // mTaskHandler.postDelayed(mSocketConnectRunnable, mSocketInterval);
 
-                    mConnectedThread = new ConnectedThread(mSocket, mServiceMessenger, mChunklengthInS, mIsWave);
+                    mConnectedThread = new ConnectedThread(mSocket, mServiceMessenger, mChunklengthInS, mIsWave, mContext);
                     mConnectedThread.setPriority(Thread.MAX_PRIORITY);
                     //startRecording();
                 }

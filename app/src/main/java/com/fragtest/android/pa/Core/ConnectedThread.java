@@ -55,12 +55,13 @@ public class ConnectedThread extends Thread {
 
     // Sampling Rate is fixed for now
     public ConnectedThread(BluetoothSocket socket, Messenger _messenger, int _chunkLengthInS,
-                           boolean isWave) {
+                           boolean isWave, ControlService context) {
 
         this.mMessenger = _messenger;
         this.chunklengthInS = _chunkLengthInS;
         this.isWave = isWave;
         this.mmSocket = socket;
+        this.mContext = context;
 
         this.isReleased = false;
         INSTANCE += 1;
@@ -94,8 +95,7 @@ public class ConnectedThread extends Thread {
 
         isRecording = true;
         ControlService.setIsRecording(true);
-
-
+        mContext.messageClient(ControlService.MSG_START_RECORDING);
 
         Log.e(LOG, "So siehts aus: In: " + tmpIn + ", Out: " + tmpOut + ", bis: " + bis);
 
@@ -117,9 +117,6 @@ public class ConnectedThread extends Thread {
         byte[] buffer = new byte[buffer_size];
         int bytesToWrite = 0, bytesRemaining = 0;
 
-        // getFromId stream to write audio data to flash memory
-
-
         // recording loop
         while (isRecording) {
 
@@ -131,16 +128,15 @@ public class ConnectedThread extends Thread {
                     isWave
             );
 
-
             // write remaining data from last block
-            /*if (bytesRemaining > 0) {
+            if (bytesRemaining > 0) {
                 try {
                     outputStream.write(buffer, bytesToWrite, bytesRemaining);
                     bytesRemaining = 0;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }*/
+            }
 
 
             // chunk loop
@@ -231,10 +227,10 @@ public class ConnectedThread extends Thread {
                     e.printStackTrace();
                 }
             }
-
-
-
         }
+
+        ControlService.setIsRecording(false);
+        mContext.messageClient(ControlService.MSG_STOP_RECORDING);
 
     }
 

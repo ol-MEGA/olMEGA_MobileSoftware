@@ -1198,6 +1198,8 @@ public class ControlService extends Service {
         }
     }
 
+
+
     public static void setIsRecording(boolean status) {
         synchronized (recordingLock) {
             isRecording = status;
