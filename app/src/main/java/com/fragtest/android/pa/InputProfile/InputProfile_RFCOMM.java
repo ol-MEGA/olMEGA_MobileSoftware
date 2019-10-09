@@ -22,12 +22,13 @@ import com.fragtest.android.pa.Core.ConnectedThread;
 import com.fragtest.android.pa.Core.LogIHAB;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.UUID;
 
 public class InputProfile_RFCOMM implements InputProfile {
 
-    private static final UUID MY_UUID = UUID.fromString("0000110E-0000-1000-8000-00805F9B34FB");
+    private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private final String INPUT_PROFILE = "RFCOMM";
     ConnectedThread mConnectedThread = null;
     private BluetoothAdapter mBluetoothAdapter;
@@ -37,6 +38,18 @@ public class InputProfile_RFCOMM implements InputProfile {
     private AudioRecorder mAudioRecorder;
     private Messenger mServiceMessenger;
     private String LOG = "InputProfile_RFCOMM";
+
+    //private SharedPreferences mSharedPreferences;
+    private Handler mTaskHandler = new Handler();
+    private int mWaitInterval = 200;
+    private int mReleaseInterval = 0;
+    private int mSocketInterval = 1000;
+    private boolean mIsBound = false;
+    private int mChunklengthInS;
+    private boolean mIsWave;
+    private int mSamplerate = 16000;
+
+
     private final BroadcastReceiver mUUIDReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -50,16 +63,16 @@ public class InputProfile_RFCOMM implements InputProfile {
             //Parse the UUIDs and get the one you are interested in
         }
     };
-    //private SharedPreferences mSharedPreferences;
-    private Handler mTaskHandler = new Handler();
-    private int mWaitInterval = 200;
-    private int mReleaseInterval = 0;
-    private int mSocketInterval = 1000;
-    private boolean mIsBound = false;
-    private int mChunklengthInS;
-    private boolean mIsWave;
-    private int mSamplerate = 16000;
-    // This Runnable has the purpose of delaying a release of AudioRecorder to avoid null pointer
+
+    private final BroadcastReceiver mBTReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.e(LOG, "ACTION: " + action);
+        }
+    };
+
+    // This Runnable has the purpose of delaying a release of mConnectedThread to avoid null pointer
     private Runnable mAudioReleaseRunnable = new Runnable() {
         @Override
         public void run() {
@@ -73,6 +86,7 @@ public class InputProfile_RFCOMM implements InputProfile {
             }
         }
     };
+
     //The BroadcastReceiver that listens for bluetooth broadcasts
     private final BroadcastReceiver mBluetoothStateReceiver = new BroadcastReceiver() {
         @Override
@@ -83,13 +97,17 @@ public class InputProfile_RFCOMM implements InputProfile {
                     //setInterface();
 
                     // Save list of paired devices
-                    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                    /*Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
                     for (BluetoothDevice bt : pairedDevices) {
                         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
                         sharedPreferences.edit().putString("BTDevice", bt.getAddress()).apply();
                         Log.i(LOG, "CONNECTED TO: " + bt.getAddress());
-                    }
-
+                    }*/
+                    /*try {
+                        mSocket.connect();
+                    } catch (Exception e) {
+                        Log.e(LOG, "I HATE THIS.");
+                    }*/
                     startRecording();
                     Log.e(LOG, "BT connected.");
                     LogIHAB.log("Bluetooth: connected");
@@ -101,9 +119,13 @@ public class InputProfile_RFCOMM implements InputProfile {
             }
         }
     };
+
     private Runnable mSocketConnectRunnable = new Runnable() {
         @Override
         public void run() {
+
+            Log.e(LOG, "Connection Runnable.");
+
             if (!mSocket.isConnected()) {
                 try {
                     mSocket.connect();
@@ -112,8 +134,9 @@ public class InputProfile_RFCOMM implements InputProfile {
                 }
                 mTaskHandler.postDelayed(mSocketConnectRunnable, mSocketInterval);
             } else {
-                mTaskHandler.removeCallbacks(mSocketConnectRunnable);
+                Log.e(LOG, "ALREADY CONNECTED.");
             }
+            mTaskHandler.removeCallbacks(mSocketConnectRunnable);
         }
     };
 
@@ -133,18 +156,68 @@ public class InputProfile_RFCOMM implements InputProfile {
 
                     if (bt.getBluetoothClass().getDeviceClass() == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET) {
 
-                        Log.e(LOG, "This looks promising:" + bt.getAddress());
+                        Log.e(LOG, "This looks promising:" + bt.getAddress() + ", Type: " + bt.getType());
 
                         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(bt.getAddress());
+                        try {
+                            mSocket.close();
+                        }catch(Exception e){
+
+                        }
                         mSocket = null;
 
+                        //mBluetoothAdapter.cancelDiscovery();
+
+                        //device.createBond();
+/*
+                        Class<?> clazz = mBluetoothAdapter.getRemoteDevice(bt.getAddress()).getClass();
+                        Class<?>[] paramTypes = new Class<?>[] {Integer.TYPE};
+
+                        try {
+                            Method m = clazz.getMethod("createRfcommSocket", paramTypes);
+                            Object[] params = new Object[]{Integer.valueOf(2)};
+
+                            mSocket = (BluetoothSocket) m.invoke(mBluetoothAdapter.getRemoteDevice(bt.getAddress()), params);
+                            mSocket.close();
+                            mSocket.connect();
+                        } catch (Exception e) {
+                            Log.e(LOG, "NOPE!");
+                        }*/
+
+
+                        try {
+                            Class<?> clazz = mBluetoothAdapter.getRemoteDevice(bt.getAddress()).getClass();
+                            Class<?>[] paramTypes = new Class<?>[]{Integer.TYPE};
+
+                            Method m = clazz.getMethod("createRfcommSocket", paramTypes);
+                            Object[] params = new Object[]{Integer.valueOf(1)};
+
+                            mSocket = (BluetoothSocket) m.invoke(mBluetoothAdapter.getRemoteDevice(bt.getAddress()), params);
+                            mSocket.connect();
+                        } catch (Exception e) {
+                            Log.e(LOG, "SOMETHING SUCKS: " + e.toString());
+                        }
+
+
+
+/*
                         try {
 
-                            mSocket = device.createInsecureRfcommSocketToServiceRecord(MY_UUID);
-                        } catch (IOException e) {
+                            mSocket = (BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(device,2);
+                            //mSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+
+
+                        /*} catch (IOException e) {
                             Log.e(LOG, "Socket connection failed\n" + e.toString() + "\n");
-                            mConnectedThread = null;
-                        }
+                            mSocket = null;*/ /*
+                        } catch (NoSuchMethodException e) {
+                            Log.e(LOG, "No Such Method: " + e.toString());
+                        } catch (java.lang.IllegalAccessException e) {
+                            Log.e(LOG, "Illegal Access: " + e.toString());
+                        } catch (java.lang.reflect.InvocationTargetException e) {
+                            Log.e(LOG, "Some other weird shit.");
+                        }*/
+
                         if (mConnectedThread != null) {
                             mConnectedThread.cancel();
                             mConnectedThread = null;
@@ -153,15 +226,19 @@ public class InputProfile_RFCOMM implements InputProfile {
                         Log.e(LOG, "SOCKET: " + mSocket);
                     }
 
-                    mConnectedThread = new ConnectedThread(mSocket, mServiceMessenger, mChunklengthInS, mIsWave);
 
+                  // mTaskHandler.postDelayed(mSocketConnectRunnable, mSocketInterval);
+
+                    mConnectedThread = new ConnectedThread(mSocket, mServiceMessenger, mChunklengthInS, mIsWave);
+                    mConnectedThread.setPriority(Thread.MAX_PRIORITY);
+                    //startRecording();
                 }
 
 
-            } //else {
-            // Log.e(LOG, "Client not yet bound. Retrying soon.");
-            //mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
-            //}
+            } else {
+                Log.e(LOG, "Client not yet bound. Retrying soon.");
+                //mTaskHandler.postDelayed(mFindDeviceRunnable, mWaitInterval);
+            }
         }
     };
 
@@ -205,14 +282,25 @@ public class InputProfile_RFCOMM implements InputProfile {
         filterBT.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
         mContext.registerReceiver(mBluetoothStateReceiver, filterBT);
 
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        mContext.registerReceiver(mBTReceiver, intentFilter);
+
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
 
+        //mBluetoothAdapter.startDiscovery();
+
+        mBluetoothAdapter.cancelDiscovery();
+
         // Yes - it's spelled like that.
-        //String action = "android.bleutooth.device.action.UUID";
-        //IntentFilter filterUUID = new IntentFilter(action);
-        //mContext.registerReceiver(mUUIDReceiver, filterUUID);
+        String action = "android.bleutooth.device.action.UUID";
+        IntentFilter filterUUID = new IntentFilter(action);
+        mContext.registerReceiver(mUUIDReceiver, filterUUID);
 
         if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
@@ -252,7 +340,10 @@ public class InputProfile_RFCOMM implements InputProfile {
 
     @Override
     public boolean getIsAudioRecorderClosed() {
-        return mConnectedThread.getIsReleased();
+        if (mConnectedThread != null) {
+            return mConnectedThread.getIsReleased();
+        }
+        return true;
     }
 
     @Override
@@ -330,4 +421,6 @@ public class InputProfile_RFCOMM implements InputProfile {
             }
         }
     }
+
+
 }
