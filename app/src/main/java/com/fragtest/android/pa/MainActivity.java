@@ -415,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
             case RFCOMM:
                 mRecord.setBackgroundTintList(
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
-                                R.color.BatteryYellow, null)));
+                                R.color.RfcommViolet, null)));
                 break;
 
             case USB:

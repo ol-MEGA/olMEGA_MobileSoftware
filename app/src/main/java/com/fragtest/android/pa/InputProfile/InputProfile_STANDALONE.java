@@ -5,6 +5,7 @@ import android.os.Messenger;
 import android.util.Log;
 
 import com.fragtest.android.pa.ControlService;
+import com.fragtest.android.pa.Core.LogIHAB;
 
 public class InputProfile_STANDALONE implements InputProfile {
 
@@ -41,6 +42,9 @@ public class InputProfile_STANDALONE implements InputProfile {
 
     @Override
     public void setInterface() {
+
+        LogIHAB.log(LOG);
+
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
         mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }

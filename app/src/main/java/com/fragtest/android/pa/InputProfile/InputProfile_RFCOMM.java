@@ -203,6 +203,8 @@ public class InputProfile_RFCOMM implements InputProfile {
     @Override
     public void setInterface() {
 
+        LogIHAB.log(LOG);
+
         Log.e(LOG, "Requested setInterface()");
 
         if (mBluetoothAdapter == null) {

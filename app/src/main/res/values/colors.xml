@@ -17,6 +17,7 @@
     <color name="BatteryYellow">#ffd200</color> <!-- #ffd200 -->
 
     <color name="InternalMicOrange">#ffa500</color>
+    <color name="RfcommViolet">#7F00FF</color>
 
     <color name="lighterBlue">#AAAAFF</color>
 </resources>

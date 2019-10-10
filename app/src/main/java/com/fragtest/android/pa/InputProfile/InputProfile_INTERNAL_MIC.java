@@ -122,6 +122,8 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
     @Override
     public void setInterface() {
 
+        LogIHAB.log(LOG);
+
         if (!ControlService.getIsCharging()) {
             Log.e(LOG, "Setting interface");
             mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);

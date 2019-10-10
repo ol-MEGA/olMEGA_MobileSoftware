@@ -158,6 +158,8 @@ public class InputProfile_USB implements InputProfile {
     @Override
     public void setInterface() {
 
+        LogIHAB.log(LOG);
+
         // Register Broadcast Receiver to keep a log of USB Activity ...
         IntentFilter filter = new IntentFilter();
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);

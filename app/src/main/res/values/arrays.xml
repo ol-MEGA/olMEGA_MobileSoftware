@@ -20,8 +20,15 @@
         <item>16000</item>
     </string-array>
 
-    <string-array name="inputProfile">
+    <string-array name="inputProfileWithA2DP">
         <item>A2DP</item>
+        <item>RFCOMM</item>
+        <item>USB</item>
+        <item>INTERNAL_MIC</item>
+        <item>STANDALONE</item>
+    </string-array>
+
+    <string-array name="inputProfile">
         <item>RFCOMM</item>
         <item>USB</item>
         <item>INTERNAL_MIC</item>

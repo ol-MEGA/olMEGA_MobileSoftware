@@ -139,6 +139,8 @@ public class InputProfile_A2DP implements InputProfile {
     @Override
     public void setInterface() {
 
+        LogIHAB.log(LOG);
+
         if (mBluetoothAdapter == null) {
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         }

@@ -1,8 +1,17 @@
 package com.fragtest.android.pa.InputProfile;
 
+import com.fragtest.android.pa.Core.LogIHAB;
+
 public class InputProfile_Blank implements InputProfile {
+
+    private String LOG = "InputProfile_Blank";
+
+    public InputProfile_Blank() { }
+
     @Override
     public void setInterface() {
+
+        LogIHAB.log(LOG);
 
     }
 

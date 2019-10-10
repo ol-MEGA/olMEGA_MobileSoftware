@@ -10,7 +10,9 @@ import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
+import com.fragtest.android.pa.Core.DeviceName;
 import com.fragtest.android.pa.Core.FileIO;
+import com.fragtest.android.pa.Core.LogIHAB;
 
 import static com.fragtest.android.pa.R.xml.preferences;
 
@@ -33,6 +35,8 @@ public class PreferencesActivity extends PreferenceActivity {
 
     public static class Preferences extends PreferenceFragment {
 
+        private final String DEVICE_WITH_A2DP = "LGE Car Hammerhead";
+
         @Override
         public void onCreate(Bundle savedInstanceState){
             super.onCreate(savedInstanceState);
@@ -51,18 +55,33 @@ public class PreferencesActivity extends PreferenceActivity {
                 }
             });
 
+            final ListPreference inputProfilePref = (ListPreference) findPreference("inputProfile");
             final ListPreference sampleratePref = (ListPreference) findPreference("samplerate");
+            final SwitchPreference downsamplePref = (SwitchPreference) findPreference("downsample");
 
-            ListPreference inputProfilePref = (ListPreference) findPreference("inputProfile");
+            if (DeviceName.getDeviceName().equals(DEVICE_WITH_A2DP)) {
+                inputProfilePref.setEntries(R.array.inputProfileWithA2DP);
+                inputProfilePref.setEntryValues(R.array.inputProfileWithA2DP);
+            } else {
+                inputProfilePref.setEntries(R.array.inputProfile);
+                inputProfilePref.setEntryValues(R.array.inputProfile);
+            }
+
             inputProfilePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
                     if (o.equals("RFCOMM")) {
-                        Log.e(LOG, "Chosen input profile: " + o + ". Setting Samplerate to 16000.");
+                        String messsage = "Chosen input profile: " + o + ". Setting Samplerate to 16000 and disabling downsampling by factor 2.";
+                        Log.e(LOG, messsage);
+                        LogIHAB.log(messsage);
                         sampleratePref.setValue("16000");
+                        downsamplePref.setChecked(false);
                     } else {
-                        Log.e(LOG, "Chosen input profile: " + preference.getSummary() + ". Setting Samplerate to 48000.");
+                        String message = "Chosen input profile: " + o + ". Setting Samplerate to 48000 and enabling downsampling by factor 2.";
+                        Log.e(LOG, message);
+                        LogIHAB.log(message);
                         sampleratePref.setValue("48000");
+                        downsamplePref.setChecked(true);
                     }
                     return true;
                 }
