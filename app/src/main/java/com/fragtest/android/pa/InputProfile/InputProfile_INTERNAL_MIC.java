@@ -149,12 +149,15 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
 
     @Override
     public void cleanUp() {
-        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
-        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         Log.e(LOG, "audiorecorder:" + mAudioRecorder);
         if (mAudioRecorder != null) {
             stopRecording();
         }
+
+        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
+        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         System.gc();
     }
 

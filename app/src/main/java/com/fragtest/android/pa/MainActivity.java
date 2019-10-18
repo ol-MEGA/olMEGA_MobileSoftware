@@ -1,6 +1,7 @@
 package com.fragtest.android.pa;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
@@ -17,6 +18,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -33,6 +35,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -117,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean showConfigButton = false;
     private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
+
+    private long durationTemp = 0;
+    private long durationLongClick = 10*1000;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
@@ -475,13 +481,24 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    // Timer enabling long click for user access to preferences menu
+    private CountDownTimer timerLongClick = new CountDownTimer(durationLongClick, 200) {
+        @Override
+        public void onTick(long l) {}
+        @Override
+        public void onFinish() {
+            startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+            isPrefsInForeGround = true;
+            mAdapter.setPrefsInForeGround(isPrefsInForeGround);
+        }
+    };
 
 
     /**
      * Lifecycle methods
      */
 
-
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -537,6 +554,23 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                     isPrefsInForeGround = true;
                     mAdapter.setPrefsInForeGround(isPrefsInForeGround);
+                }
+            });
+
+            mLogo.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    switch (motionEvent.getAction()){
+                        case MotionEvent.ACTION_DOWN:
+                            //Start timer
+                            timerLongClick.start();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            //Clear timer
+                            timerLongClick.cancel();
+                            break;
+                    }
+                    return false;
                 }
             });
 

@@ -47,6 +47,7 @@ public class InputProfile_RFCOMM implements InputProfile {
     private int mChunklengthInS;
     private boolean mIsWave;
     private int mSamplerate = 16000;
+    private boolean mKeepOpen = false;
 
 
     private final BroadcastReceiver mUUIDReceiver = new BroadcastReceiver() {
@@ -98,6 +99,8 @@ public class InputProfile_RFCOMM implements InputProfile {
                         BluetoothDevice bt2 = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                         if (bt2.equals(mBluetoothDevice)) {
                             stopRecording();
+                            mBluetoothDevice = null;
+                            mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
                         }
                         break;
                 }
@@ -129,7 +132,7 @@ public class InputProfile_RFCOMM implements InputProfile {
         @Override
         public void run() {
 
-            if (mIsBound && !ControlService.getIsCharging()) {
+            if (mIsBound && !ControlService.getIsCharging() && mBluetoothDevice == null) {
 
                 Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
                 for (BluetoothDevice bt : pairedDevices) {
@@ -170,9 +173,11 @@ public class InputProfile_RFCOMM implements InputProfile {
                 }
 
 
+
             } else {
                 Log.e(LOG, "Client not yet bound. Retrying soon.");
             }
+
         }
     };
 
@@ -205,6 +210,8 @@ public class InputProfile_RFCOMM implements InputProfile {
 
         LogIHAB.log(LOG);
 
+        mKeepOpen = false;
+
         Log.e(LOG, "Requested setInterface()");
 
         if (mBluetoothAdapter == null) {
@@ -221,6 +228,8 @@ public class InputProfile_RFCOMM implements InputProfile {
         if (!mBluetoothAdapter.isEnabled()) {
             mBluetoothAdapter.enable();
         }
+
+        mBluetoothDevice = null;
 
         mBluetoothAdapter.cancelDiscovery();
 
@@ -242,10 +251,12 @@ public class InputProfile_RFCOMM implements InputProfile {
         mTaskHandler.removeCallbacks(mFindDeviceRunnable);
         mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
 
-        try {
-            mContext.unregisterReceiver(mBluetoothStateReceiver);
-        } catch (IllegalArgumentException e) {
-            Log.e(LOG, "Receiver not registered: mBluetoothStateReceiver");
+        if (!mKeepOpen) {
+            try {
+                mContext.unregisterReceiver(mBluetoothStateReceiver);
+            } catch (IllegalArgumentException e) {
+                Log.e(LOG, "Receiver not registered: mBluetoothStateReceiver");
+            }
         }
         try {
             mContext.unregisterReceiver(mUUIDReceiver);
@@ -289,6 +300,7 @@ public class InputProfile_RFCOMM implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
+        mBluetoothDevice = null;
         mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 

@@ -193,8 +193,7 @@ public class InputProfile_USB implements InputProfile {
 
     @Override
     public void cleanUp() {
-        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
-        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         try {
             mContext.unregisterReceiver(mUSBReceiver);
         } catch (IllegalArgumentException e) {
@@ -205,6 +204,10 @@ public class InputProfile_USB implements InputProfile {
         if (mAudioRecorder != null) {
             stopRecording();
         }
+
+        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
+        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         System.gc();
     }
 

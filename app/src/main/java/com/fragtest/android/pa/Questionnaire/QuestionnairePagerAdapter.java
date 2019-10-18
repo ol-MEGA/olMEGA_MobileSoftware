@@ -137,6 +137,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 }
             }
         });
+
         mMainActivity.mArrowBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

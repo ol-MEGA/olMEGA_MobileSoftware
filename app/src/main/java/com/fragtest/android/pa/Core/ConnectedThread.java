@@ -21,7 +21,7 @@ import java.util.Arrays;
 public class ConnectedThread extends Thread {
 
     private static final int RECORDER_SAMPLERATE = 16000;
-    private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
+    private static final int RECORDER_CHANNELS = 2;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private static int N_BITS = 16;
     private static int INSTANCE = 0;
@@ -63,7 +63,7 @@ public class ConnectedThread extends Thread {
         this.mmSocket = socket;
         this.mContext = context;
 
-        this.isReleased = false;
+        this.isReleased = true;
         INSTANCE += 1;
 
         try {
@@ -85,6 +85,7 @@ public class ConnectedThread extends Thread {
     public void run() {
 
         isRecording = true;
+        isReleased = false;
         ControlService.setIsRecording(true);
         mContext.messageClient(ControlService.MSG_START_RECORDING);
 
@@ -100,6 +101,10 @@ public class ConnectedThread extends Thread {
         byte[] lastAudioBlock = new byte[buffer_size];
 
         chunklengthInBytes = (chunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
+
+
+        Log.e(LOG, "CLIS: " + chunklengthInS + ", SampleRate: " + RECORDER_SAMPLERATE + ", CHAN: " + RECORDER_CHANNELS + ", N_BITS: " + N_BITS + ", CHLIB: " + chunklengthInBytes);
+
 
         byte[] buffer = new byte[buffer_size];
         int bytesToWrite = 0, bytesRemaining = 0;
@@ -162,18 +167,21 @@ public class ConnectedThread extends Thread {
                         if (outputStream != null) {
                             for (int countSample = 0; countSample < buffer_size; countSample += 2) {
                                 short int16 = (short) (((lastAudioBlock[countSample + 1] & 0xFF) << 8) | (lastAudioBlock[countSample] & 0xFF));
-                                /*if (is32bitRecording) {
+
+                                if (is32bitRecording) {
                                     int int32 = int16 << (16 - AudioVolume);
                                     outputStream.write((byte)(int32 >> 24));
                                     outputStream.write((byte)(int32 >> 16));
                                     outputStream.write((byte)(int32 >> 8));
                                     outputStream.write((byte)(int32));
+
                                 } else {
-*/
-                                outputStream.write(int16 >> 8);
-                                outputStream.write(int16);
-                                bytesWritten += 4;
-                                //}
+
+                                    /** MULTIPLIED BY 4 TO INCREASE AUDIBILITY **/ 
+                                    outputStream.write(4*int16 >> 8);
+                                    outputStream.write(4*int16);
+                                    bytesWritten += 2; // 4?
+                                }
                             }
 
                             outputStream.flush();
@@ -195,6 +203,8 @@ public class ConnectedThread extends Thread {
                 } catch (Exception e) {
                     Log.e(LOG, "Error.");
                     e.printStackTrace();
+
+                    stopRecording();
                 }
             }
 
@@ -233,6 +243,7 @@ public class ConnectedThread extends Thread {
 
         tmpIn = null;
         tmpOut = null;
+        mmOutStream = null;
 
         isReleased = true;
         INSTANCE = 0;

@@ -992,11 +992,6 @@ public class ControlService extends Service {
 
                     IS_SERVICE_BOUND = true;
 
-                    /*Configurator.defaultConfig()
-                            .writer(new FileWriter(FILENAME_LOG_tmp))
-                            .level(Level.INFO)
-                            .activate();
-*/
                     Log.e(LOG, "msg: " + msg);
                     Log.i(LOG, "Client registered to service");
 
@@ -1090,9 +1085,6 @@ public class ControlService extends Service {
                 case MSG_RECORDING_STOPPED:
                     Log.d(LOG, "Stop caching audio");
                     LogIHAB.log("Stop caching audio");
-                    //audioRecorder.close();
-                    //setIsRecording(false);
-                    //messageClient(MSG_GET_STATUS);
                     break;
 
                 case MSG_CHUNK_RECORDED:
@@ -1184,6 +1176,11 @@ public class ControlService extends Service {
     public static void setIsRecording(boolean status) {
         synchronized (recordingLock) {
             isRecording = status;
+        }
+        if (isRecording) {
+            LogIHAB.log("Bluetooth: connected");
+        } else {
+            LogIHAB.log("Bluetooth: disconnected");
         }
     }
 

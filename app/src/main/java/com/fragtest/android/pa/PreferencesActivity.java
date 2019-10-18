@@ -62,6 +62,9 @@ public class PreferencesActivity extends PreferenceActivity {
             if (DeviceName.getDeviceName().equals(DEVICE_WITH_A2DP)) {
                 inputProfilePref.setEntries(R.array.inputProfileWithA2DP);
                 inputProfilePref.setEntryValues(R.array.inputProfileWithA2DP);
+                String message = "Device: " + DEVICE_WITH_A2DP + " qualifies for use with A2DP protocol.";
+                Log.e(LOG, message);
+                LogIHAB.log(message);
             } else {
                 inputProfilePref.setEntries(R.array.inputProfile);
                 inputProfilePref.setEntryValues(R.array.inputProfile);

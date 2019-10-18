@@ -190,8 +190,7 @@ public class InputProfile_A2DP implements InputProfile {
 
     @Override
     public void cleanUp() {
-        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
-        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         try {
             mContext.unregisterReceiver(mBluetoothStateReceiver);
         } catch (IllegalArgumentException e) {
@@ -202,6 +201,10 @@ public class InputProfile_A2DP implements InputProfile {
         if (mAudioRecorder != null) {
             stopRecording();
         }
+
+        mTaskHandler.removeCallbacks(mFindDeviceRunnable);
+        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+
         mBluetoothAdapter = null;
         System.gc();
     }
