@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBluetoothPresent = false;
 
     //private long durationTemp = 0;
-    private long durationLongClick = 2*1000;
+    private long durationLongClick = 5*1000;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
@@ -543,7 +543,8 @@ public class MainActivity extends AppCompatActivity {
 
             mFileIO = new FileIO();
 
-            // KIOSK mode can only ever be disabled if allowed to do so by file "config" in directory
+            // KIOSK mode can only ever be disabled if allowed to do so by file "config" in IHAB
+            // directory and then still needs to be manually disabled via preferences menu
             ALLOW_KIOSK_MODE_DISABLED = mFileIO.checkConfigFile();
             boolean tmpEnableKioskMode = sharedPreferences.getBoolean("enableKioskMode", true);
             if (!tmpEnableKioskMode && ALLOW_KIOSK_MODE_DISABLED) {
