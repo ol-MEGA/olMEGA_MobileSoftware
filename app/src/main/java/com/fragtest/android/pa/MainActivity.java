@@ -73,8 +73,9 @@ import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 
 public class MainActivity extends AppCompatActivity {
 
-    private boolean USE_KIOSK_MODE = true;
-    public static boolean USE_DEVELOPER_MODE = false;
+    private boolean ALLOW_KIOSK_MODE_DISABLED = false;
+    private boolean USE_KIOSK_MODE = false;
+    //public static boolean USE_DEVELOPER_MODE = false;
     private Locale LANGUAGE_CODE = Locale.GERMANY;
     //private Locale LANGUAGE_CODE = Locale.ENGLISH;
 
@@ -117,12 +118,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean isQuestionnairePresent = true;
     //private boolean isCharging = false;
     private boolean isTimer = false;
-    private boolean showConfigButton = false;
-    private boolean showRecordingButton = true;
+    //private boolean showConfigButton = false;
+    //private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
 
-    private long durationTemp = 0;
-    private long durationLongClick = 10*1000;
+    //private long durationTemp = 0;
+    private long durationLongClick = 2*1000;
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
@@ -269,7 +270,7 @@ public class MainActivity extends AppCompatActivity {
     public void handleNewPagerAdapter() {
         mViewPager = null;
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, USE_KIOSK_MODE);
+        mAdapter = new QuestionnairePagerAdapter(this, mViewPager, getKioskMode());
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
@@ -450,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setConfigVisibility() {
-        if (showConfigButton) {
+        if (!getKioskMode()) {
             mConfig.setVisibility(View.VISIBLE);
         } else {
             mConfig.setVisibility(View.GONE);
@@ -541,11 +542,16 @@ public class MainActivity extends AppCompatActivity {
             mCharging = findViewById(R.id.charging);
 
             mFileIO = new FileIO();
-            showConfigButton = mFileIO.checkConfigFile();
-            if (showConfigButton) {
-                USE_KIOSK_MODE = false;
-                USE_DEVELOPER_MODE = true;
+
+            // KIOSK mode can only ever be disabled if allowed to do so by file "config" in directory
+            ALLOW_KIOSK_MODE_DISABLED = mFileIO.checkConfigFile();
+            boolean tmpEnableKioskMode = sharedPreferences.getBoolean("enableKioskMode", true);
+            if (!tmpEnableKioskMode && ALLOW_KIOSK_MODE_DISABLED) {
+                setKioskMode(false);
+            } else {
+                setKioskMode(true);
             }
+
             setConfigVisibility();
 
             mConfig.setOnClickListener(new View.OnClickListener() {
@@ -603,6 +609,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }*/
 
+
         // KIOSK MODE
         ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -610,8 +617,10 @@ public class MainActivity extends AppCompatActivity {
         mAdminComponentName = deviceAdmin;
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
-        setDefaultCosuPolicies(USE_KIOSK_MODE);
-        enableKioskMode(USE_KIOSK_MODE);
+
+
+        setDefaultCosuPolicies(getKioskMode());
+        setKioskMode(getKioskMode());
     }
 
     @Override
@@ -662,7 +671,7 @@ public class MainActivity extends AppCompatActivity {
         // KIOSK MODE related
         ActivityManager activityManager = (ActivityManager) getApplicationContext()
                 .getSystemService(Context.ACTIVITY_SERVICE);
-        if (USE_KIOSK_MODE) {
+        if (getKioskMode()) {
             activityManager.moveTaskToFront(getTaskId(), 0);
         }
     }
@@ -683,17 +692,22 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.onResume();
         super.onResume();
 
-        hideSystemUI(USE_KIOSK_MODE);
-
         isForcedAnswer = sharedPreferences.getBoolean("forceAnswer", true);
         isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
 
         // Unset the device admin programmatically so the app can be uninstalled.
         if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {
-
-
             mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
         }
+
+        if (sharedPreferences.getBoolean("enableKioskMode", true)) {
+            setKioskMode(true);
+        } else {
+            setKioskMode(false);
+        }
+
+        hideSystemUI(getKioskMode());
+        setConfigVisibility();
 
         //Set the system brightness using the brightness variable value
         /*boolean maxBrightness = sharedPreferences.getBoolean("maxBrightness", false);
@@ -720,11 +734,11 @@ public class MainActivity extends AppCompatActivity {
     public void onWindowFocusChanged(boolean hasFocus) {
         // Little hack since the Power button seems to be inaccessible at this point
         super.onWindowFocusChanged(hasFocus);
-        if (!hasFocus && USE_KIOSK_MODE) {
+        if (!hasFocus && getKioskMode()) {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
             getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-            enableKioskMode(true);
+            setKioskMode(true);
         }
     }
 
@@ -734,9 +748,9 @@ public class MainActivity extends AppCompatActivity {
 
         Log.e(LOG, "EVENT: " + event.getKeyCode());
 
-        if (blockedKeys.contains(event.getKeyCode()) && USE_KIOSK_MODE) {
+        if (blockedKeys.contains(event.getKeyCode()) && getKioskMode()) {
             return true;
-        } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && USE_KIOSK_MODE) {
+        } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && getKioskMode()) {
             Log.e(LOG, "POWER BUTTON WAS PRESSED");
             return super.dispatchKeyEvent(event);
         } else {
@@ -747,7 +761,7 @@ public class MainActivity extends AppCompatActivity {
     // When back button is pressed, questionnaire navigates one page backwards, menu does nothing
     @Override
     public void onBackPressed() {
-        if (!mAdapter.isMenu() && USE_KIOSK_MODE) {
+        if (!mAdapter.isMenu() && getKioskMode()) {
             if (mViewPager.getCurrentItem() != 0) {
                 mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
             } else {
@@ -779,19 +793,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void enableKioskMode(boolean enabled) {
+    private void setKioskMode(boolean enabled) {
         try {
-            if (enabled && USE_KIOSK_MODE) {
+            if (enabled) {
                 if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
                     startLockTask();
+                    USE_KIOSK_MODE = true;
                 } else {
+                    stopLockTask();
                     Toast.makeText(this, "Kiosk not permitted", Toast.LENGTH_SHORT).show();
+                    USE_KIOSK_MODE = false;
                 }
+            } else if (ALLOW_KIOSK_MODE_DISABLED) {
+                USE_KIOSK_MODE = false;
+                stopLockTask();
             }
+            setConfigVisibility();
         } catch (Exception e) {
             Logger.info("Unable to start KIOSK mode");
             LogIHAB.log("Unable to start KIOSK mode");
         }
+    }
+
+    public boolean getKioskMode() {
+        return USE_KIOSK_MODE;
     }
 
     public void hideSystemUI(boolean isImmersive) {

@@ -516,7 +516,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
                 ContextCompat.getColor(mMainActivity, R.color.JadeRed));
         mMainActivity.mRegress.setBackgroundColor(
                 ContextCompat.getColor(mMainActivity, R.color.JadeGray));
-        if (MainActivity.USE_DEVELOPER_MODE) {
+        if (!mMainActivity.getKioskMode()) {
             mMainActivity.mLogo.setEnabled(true);
         } else {
             mMainActivity.mLogo.setEnabled(false);

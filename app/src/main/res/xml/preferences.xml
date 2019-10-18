@@ -148,6 +148,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
+            android:key="enableKioskMode"
+            android:summary="For experimenters only"
+            android:title="Enable Kiosk Mode"
+            />
+
+        <SwitchPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="false"
             android:key="unsetDeviceAdmin"
             android:summary="For uninstall only"
             android:title="Unset Device Administrator" />
