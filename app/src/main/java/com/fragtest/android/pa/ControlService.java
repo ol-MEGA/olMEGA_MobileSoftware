@@ -347,7 +347,13 @@ public class ControlService extends Service {
     private Runnable SetInputProfileTask = new Runnable() {
         @Override
         public void run() {
-            runInputProfileChange();
+            if (!mNewInputProfile.equals(INPUT_PROFILE_STATUS) || INPUT_PROFILE_STATUS.equals("")) {
+                mInputProfile.cleanUp();
+                mTaskHandler.removeCallbacks(SetInputProfileTask);
+                runInputProfileChange();
+            } else {
+                mTaskHandler.postDelayed(SetInputProfileTask, mSetInputProfileInterval);
+            }
         }
     };
 
@@ -558,9 +564,7 @@ public class ControlService extends Service {
                 .formatPattern("{date:yyyy-MM-dd_HH:mm:ss.SSS}\t{message}")
                 .activate();*/
 
-
         LogIHAB.log("Service onCreate");
-
 
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
@@ -581,10 +585,7 @@ public class ControlService extends Service {
     }
 
     private void setInputProfile() {
-        if (!mNewInputProfile.equals(INPUT_PROFILE_STATUS) || INPUT_PROFILE_STATUS.equals("")) {
-            mInputProfile.cleanUp();
-            mTaskHandler.post(SetInputProfileTask);
-        }
+       mTaskHandler.post(SetInputProfileTask);
     }
 
     private void runInputProfileChange() {
@@ -1002,13 +1003,16 @@ public class ControlService extends Service {
 
                     setupApplication();
 
-                    mInputProfile.registerClient();
+
                     //mInputProfile.setInterface();
 
                     mTaskHandler.post(mDateTimeRunnable);
                     mTaskHandler.post(mLogCheckRunnable);
                     mTaskHandler.post(mActivityCheckRunnable);
 
+                    setInputProfile();
+                    mInputProfile.registerClient();
+                    mInputProfile.setInterface();
 
                     checkTime();
                     checkLog();
