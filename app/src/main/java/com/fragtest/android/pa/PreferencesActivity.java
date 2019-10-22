@@ -44,7 +44,7 @@ public class PreferencesActivity extends PreferenceActivity {
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
             includeQuestList();
-            SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
+            /*SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
             deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
@@ -53,7 +53,7 @@ public class PreferencesActivity extends PreferenceActivity {
                     }
                     return true;
                 }
-            });
+            });*/
 
             final ListPreference inputProfilePref = (ListPreference) findPreference("inputProfile");
             final ListPreference sampleratePref = (ListPreference) findPreference("samplerate");

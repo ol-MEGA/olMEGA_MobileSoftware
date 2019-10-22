@@ -3,7 +3,6 @@ package com.fragtest.android.pa;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -73,8 +72,8 @@ import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 
 public class MainActivity extends AppCompatActivity {
 
-    private boolean ALLOW_KIOSK_MODE_DISABLED = false;
-    private boolean USE_KIOSK_MODE = false;
+    //private boolean ALLOW_KIOSK_MODE_DISABLED = false;
+    private boolean USE_KIOSK_MODE = true;
     //public static boolean USE_DEVELOPER_MODE = false;
     private Locale LANGUAGE_CODE = Locale.GERMANY;
     //private Locale LANGUAGE_CODE = Locale.ENGLISH;
@@ -127,8 +126,8 @@ public class MainActivity extends AppCompatActivity {
 
     // RELEVANT FOR KIOSK MODE
     private FileIO mFileIO;
-    private ComponentName mAdminComponentName;
-    private DevicePolicyManager mDevicePolicyManager;
+    //private ComponentName mAdminComponentName;
+    //private DevicePolicyManager mDevicePolicyManager;
     private final List blockedKeys = new ArrayList(Arrays.asList(KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP));
 
     // Preferences
@@ -545,13 +544,13 @@ public class MainActivity extends AppCompatActivity {
 
             // KIOSK mode can only ever be disabled if allowed to do so by file "config" in IHAB
             // directory and then still needs to be manually disabled via preferences menu
-            ALLOW_KIOSK_MODE_DISABLED = mFileIO.checkConfigFile();
+            /*ALLOW_KIOSK_MODE_DISABLED = mFileIO.checkConfigFile();
             boolean tmpEnableKioskMode = sharedPreferences.getBoolean("enableKioskMode", true);
-            if (!tmpEnableKioskMode && ALLOW_KIOSK_MODE_DISABLED) {
-                setKioskMode(false);
+            if (!tmpEnableKioskMode && ALLOW_KIOSK_MODE_DISABLED) {*/
+                setKioskMode(false);/*
             } else {
                 setKioskMode(true);
-            }
+            }*/
 
             setConfigVisibility();
 
@@ -612,7 +611,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // KIOSK MODE
-        ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
+        /*ComponentName deviceAdmin = new ComponentName(this, AdminReceiver.class);
         mDevicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
         mDevicePolicyManager.setLockTaskPackages(deviceAdmin, new String[]{getPackageName()});
         mAdminComponentName = deviceAdmin;
@@ -621,7 +620,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         setDefaultCosuPolicies(getKioskMode());
-        setKioskMode(getKioskMode());
+        setKioskMode(getKioskMode());*/
+        setKioskMode(false);
     }
 
     @Override
@@ -697,15 +697,15 @@ public class MainActivity extends AppCompatActivity {
         isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
 
         // Unset the device admin programmatically so the app can be uninstalled.
-        if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {
+        /*if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {
             mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
-        }
+        }*/
 
-        if (sharedPreferences.getBoolean("enableKioskMode", true)) {
+        /*if (sharedPreferences.getBoolean("enableKioskMode", true)) {
             setKioskMode(true);
-        } else {
-            setKioskMode(false);
-        }
+        } else {*/
+            setKioskMode(true);/*
+        }*/
 
         hideSystemUI(getKioskMode());
         setConfigVisibility();
@@ -786,18 +786,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void setUserRestriction(String restriction, boolean disallow) {
         if (disallow) {
-            mDevicePolicyManager.addUserRestriction(mAdminComponentName,
-                    restriction);
+            //mDevicePolicyManager.addUserRestriction(mAdminComponentName,
+            //        restriction);
         } else {
-            mDevicePolicyManager.clearUserRestriction(mAdminComponentName,
-                    restriction);
+            //mDevicePolicyManager.clearUserRestriction(mAdminComponentName,
+            //        restriction);
         }
     }
+
 
     private void setKioskMode(boolean enabled) {
         try {
             if (enabled) {
-                if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
+                /*if (mDevicePolicyManager.isLockTaskPermitted(this.getPackageName())) {
                     startLockTask();
                     USE_KIOSK_MODE = true;
                 } else {
@@ -807,7 +808,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else if (ALLOW_KIOSK_MODE_DISABLED) {
                 USE_KIOSK_MODE = false;
-                stopLockTask();
+                stopLockTask();*/
+                USE_KIOSK_MODE = true;
             }
             setConfigVisibility();
         } catch (Exception e) {
