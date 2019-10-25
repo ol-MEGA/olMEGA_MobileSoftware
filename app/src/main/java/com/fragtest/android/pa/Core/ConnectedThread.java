@@ -177,9 +177,8 @@ public class ConnectedThread extends Thread {
 
                                 } else {
 
-                                    /** MULTIPLIED BY 4 TO INCREASE AUDIBILITY **/ 
-                                    outputStream.write(4*int16 >> 8);
-                                    outputStream.write(4*int16);
+                                    outputStream.write(int16 >> 8);
+                                    outputStream.write(int16);
                                     bytesWritten += 2; // 4?
                                 }
                             }
