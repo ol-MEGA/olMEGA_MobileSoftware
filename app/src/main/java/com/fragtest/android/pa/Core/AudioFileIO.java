@@ -89,7 +89,7 @@ public class AudioFileIO {
             FileOutputStream os = new FileOutputStream( file, false );
             stream = new DataOutputStream( new BufferedOutputStream( os ));
 
-            // Write zeros. This will be filed with a proper header on close.
+            // Write zeros. This will be filled with a proper header on close.
             // Alternatively, FileChannel might be used.
             if ( isWave ) {
                 int nBytes = 44; // length of the WAV (RIFF) header
@@ -186,8 +186,11 @@ public class AudioFileIO {
             int fileLength = (int) raFile.length(); // [bytes]
             int chunkSize  = fileLength - 8;
             int dataSize   = fileLength - 44;
-            short blockAlign  = (short) (( channels) * (bitsize % 8));
+            short blockAlign  = (short) (( channels) * (bitsize / 8));
             int bytesPerSec = samplerate * blockAlign;
+
+            Log.e(LOG,  "Bytes/s: " + bytesPerSec + ", BlockAlign: " + blockAlign);
+
 
             // RIFF-Header
             raFile.write(GROUP_ID);

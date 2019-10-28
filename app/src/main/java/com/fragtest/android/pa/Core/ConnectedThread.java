@@ -102,10 +102,6 @@ public class ConnectedThread extends Thread {
 
         chunklengthInBytes = (chunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
 
-
-        Log.e(LOG, "CLIS: " + chunklengthInS + ", SampleRate: " + RECORDER_SAMPLERATE + ", CHAN: " + RECORDER_CHANNELS + ", N_BITS: " + N_BITS + ", CHLIB: " + chunklengthInBytes);
-
-
         byte[] buffer = new byte[buffer_size];
         int bytesToWrite = 0, bytesRemaining = 0;
 
@@ -141,7 +137,11 @@ public class ConnectedThread extends Thread {
                     ringBuffer.addByte((byte) bis.read());
                     count++;
 
-                    if (ringBuffer.getByte(0) == (byte) 0x0 && ringBuffer.getByte(-1) == (byte) 0x80 && ringBuffer.getByte(-(buffer_size + 5)) == (byte) 0x7F && ringBuffer.getByte(-(buffer_size + 4)) == (byte) 0xFF) {
+                    if (ringBuffer.getByte(0) == (byte) 0x0
+                            && ringBuffer.getByte(-1) == (byte) 0x80
+                            && ringBuffer.getByte(-(buffer_size + 5)) == (byte) 0x7F
+                            && ringBuffer.getByte(-(buffer_size + 4)) == (byte) 0xFF) {
+
                         count = 0;
                         lastAudioBlock = Arrays.copyOf(ringBuffer.data(-(buffer_size + 3), buffer_size), buffer_size);
                         AudioVolume = (short) (((ringBuffer.getByte(-2) & 0xFF) << 8) | (ringBuffer.getByte(-3) & 0xFF));
@@ -177,8 +177,10 @@ public class ConnectedThread extends Thread {
 
                                 } else {
 
-                                    outputStream.write(int16 >> 8);
+                                    /** Exchanged the following two lines for each other to tackle big endian/little endian problem **/
                                     outputStream.write(int16);
+                                    outputStream.write(int16 >> 8);
+
                                     bytesWritten += 2; // 4?
                                 }
                             }
