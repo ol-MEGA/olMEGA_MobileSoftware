@@ -729,6 +729,8 @@ public class ControlService extends Service {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         // recording
         samplerate = sharedPreferences.getString("samplerate","16000");
         chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
@@ -980,6 +982,15 @@ public class ControlService extends Service {
         checkForPreferences();
     }
 
+    private void obtainCalibration() {
+
+        float[] calib = mFileIO.obtainCalibration();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.edit().putFloat("calib_L", calib[0]).apply();
+        sharedPreferences.edit().putFloat("calib_R", calib[1]).apply();
+
+    }
+
     class MessageHandler extends Handler {
 
         @Override
@@ -1001,8 +1012,9 @@ public class ControlService extends Service {
                     LogIHAB.log("Processing message list of length: " + mMessageList.getLength());
                     mMessageList.work();
 
-                    setupApplication();
+                    obtainCalibration();
 
+                    setupApplication();
 
                     //mInputProfile.setInterface();
 

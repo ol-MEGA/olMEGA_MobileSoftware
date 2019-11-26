@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Scanner;
 
 /**
  * Created by ulrikkowalk on 23.03.17.
@@ -26,6 +27,7 @@ public class FileIO {
     static final String FOLDER_MAIN = "IHAB";
     private static final String FOLDER_DATA = "data";
     private static final String FOLDER_QUEST = "quest";
+    private static final String FOLDER_CALIB = "calibration";
     private static final String FILE_NAME = "questionnairecheckboxgroup.xml";
     private static final String LOG = "FileIO";
     // File the system looks for in order to show preferences, needs to be in main directory
@@ -78,6 +80,33 @@ public class FileIO {
         File fileConfig = new File(getFolderPath() + File.separator + FOLDER_DATA +
                 File.separator + FILE_CONFIG);
         return fileConfig.delete();
+    }
+
+    public float[] obtainCalibration() {
+
+        // Obtain working Directory
+        File dir = new File(getFolderPath() + "/" + FOLDER_CALIB);
+        // Address Basis File in working Directory
+        File file = new File(dir, "calib.txt");
+
+        float[] calib = new float[] {0.0f, 0.0f};
+
+        try {
+            Scanner sc = new Scanner(file);
+            // we just need to use \\Z as delimiter
+            sc.useDelimiter(" ");
+
+            calib[0] = Float.valueOf(sc.next());
+            calib[1] = Float.valueOf(sc.next());
+
+            for (int i = 0; i < 2; i++) {
+                Log.e(LOG, "CALIB: " + calib[i]);
+            }
+
+        } catch (Exception e) {}
+
+        return calib;
+
     }
 
     public boolean scanForQuestionnaire(String questName) {
