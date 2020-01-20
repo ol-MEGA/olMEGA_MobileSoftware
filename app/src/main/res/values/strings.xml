@@ -65,5 +65,7 @@
     <string name="pref_downsample_title">Downsampling</string>
     <string name="pref_downsample_summary">Downsample audio (fixed factor 2)</string>
 
+    <string name="pref_button_scan">Scan devices</string>
+
 
 </resources>

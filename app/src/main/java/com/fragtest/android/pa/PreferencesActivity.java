@@ -1,5 +1,7 @@
 package com.fragtest.android.pa;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -9,10 +11,15 @@ import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import com.fragtest.android.pa.Core.DeviceName;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.DataTypes.StringAndString;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 import static com.fragtest.android.pa.R.xml.preferences;
 
@@ -36,6 +43,14 @@ public class PreferencesActivity extends PreferenceActivity {
     public static class Preferences extends PreferenceFragment {
 
         private final String DEVICE_WITH_A2DP = "LGE Car Hammerhead";
+
+        // Member fields
+        private BluetoothAdapter mBtAdapter;
+        private ArrayAdapter<String> mPairedDevicesArrayAdapter;
+        private Set<BluetoothDevice> pairedDevices;
+        private Preference scanButton;
+        private String[] listDevices = new String[];
+
 
         @Override
         public void onCreate(Bundle savedInstanceState){
@@ -73,7 +88,7 @@ public class PreferencesActivity extends PreferenceActivity {
             inputProfilePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
-                    if (o.equals("RFCOMM")) {
+                    if (o.equals("RFCOMM") || o.equals("PHANTOM")) {
                         String messsage = "Chosen input profile: " + o + ". Setting Samplerate to 16000 and disabling downsampling by factor 2.";
                         Log.e(LOG, messsage);
                         LogIHAB.log(messsage);
@@ -89,6 +104,10 @@ public class PreferencesActivity extends PreferenceActivity {
                     return true;
                 }
             });
+
+            doDiscovery();
+
+
 
         }
 
@@ -129,6 +148,45 @@ public class PreferencesActivity extends PreferenceActivity {
                     })
                     .setCancelable(false)
                     .show();
+        }
+
+        // Start device discover with the BluetoothAdapter
+        private void doDiscovery() {
+
+            // Remove all element from the list
+            //mPairedDevicesArrayAdapter.clear();
+            ArrayList<StringAndString> tmpList = new ArrayList<>();
+
+            // If there are paired devices, add each one to the ArrayAdapter
+            if (pairedDevices.size() > 0) {
+                for (BluetoothDevice device : pairedDevices) {
+                    //mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                    tmpList.add(new StringAndString(device.getName(), device.getAddress()));
+                }
+            } //lse {
+                //String strNoFound = getIntent().getStringExtra("no_devices_found");
+                //if(strNoFound == null)
+                //String strNoFound = "No devices found";
+                //mPairedDevicesArrayAdapter.add(strNoFound);
+                //tmpList.add(strNoFound);
+            //}
+
+            // Indicate scanning in the title
+            //String strScanning = getIntent().getStringExtra("scanning");
+            //if(strScanning == null)
+            //    strScanning = "Scanning for devices...";
+            //setProgressBarIndeterminateVisibility(true);
+            //setTitle(strScanning);
+
+            // Turn on sub-title for new devices
+            // findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
+            // If we're already discovering, stop it
+            if (mBtAdapter.isDiscovering()) {
+                mBtAdapter.cancelDiscovery();
+            }
+
+            // Request discover from BluetoothAdapter
+            mBtAdapter.startDiscovery();
         }
     }
 }

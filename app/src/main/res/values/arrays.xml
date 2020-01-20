@@ -23,6 +23,7 @@
     <string-array name="inputProfileWithA2DP">
         <item>A2DP</item>
         <item>RFCOMM</item>
+        <item>PHANTOM</item>
         <item>USB</item>
         <item>INTERNAL_MIC</item>
         <item>STANDALONE</item>
@@ -39,6 +40,8 @@
         <item>10</item>
         <item>5</item>
     </integer-array>
+
+    <string-array name="devices"></string-array>
 
     <string-array name="permissionMessages">
         <item>Please grant permission to read/write storage</item>

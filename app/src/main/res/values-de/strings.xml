@@ -35,4 +35,6 @@
         Antworten sich gegenseitig ausschließen. Das Programm merkt dies und wählt dann
         automatisch eine Antwort wieder ab.</string>
     <string name="help_button_ready">Fertig</string>
+
+    <string name="pref_button_scan">Scanne Geräte</string>
 </resources>
