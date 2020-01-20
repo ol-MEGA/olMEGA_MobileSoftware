@@ -56,4 +56,9 @@
     <integer-array name="battery_placeholder_weight">
         <item name="battery_placeholder_weight">3</item>
     </integer-array>
+
+    <string-array name="fontSize">
+        <item>Tablet</item>
+        <item>Smartphone</item>
+    </string-array>
 </resources>

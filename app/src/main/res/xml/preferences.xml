@@ -40,6 +40,17 @@
             android:title="Autostart"
             android:summary="Start app with system" />
 
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="Normal"
+            android:entries="@array/fontSize"
+            android:entryValues="@array/fontSize"
+            android:key="fontSize"
+            android:summary="%s"
+            android:title="Font Size"
+            />
+
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
