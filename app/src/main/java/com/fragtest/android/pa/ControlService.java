@@ -984,10 +984,10 @@ public class ControlService extends Service {
 
     private void obtainCalibration() {
 
-        float[] calib = mFileIO.obtainCalibration();
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sharedPreferences.edit().putFloat("calib_L", calib[0]).apply();
-        sharedPreferences.edit().putFloat("calib_R", calib[1]).apply();
+        //float[] calib = mFileIO.obtainCalibration();
+        //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        //sharedPreferences.edit().putFloat("calib_L", calib[0]).apply();
+        //sharedPreferences.edit().putFloat("calib_R", calib[1]).apply();
 
     }
 

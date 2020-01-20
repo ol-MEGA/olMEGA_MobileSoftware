@@ -38,12 +38,12 @@
     <dimen name="answerLayoutPadding_Right">16dp</dimen>
     <dimen name="answerLayoutPadding_Bottom">16dp</dimen>
 
-    <dimen name="textSizeMenu">10sp</dimen>
-    <dimen name="textSizeQuestion">10sp</dimen>
-    <dimen name="textSizeAnswer">8sp</dimen>
-    <dimen name="textSizeProposed">26sp</dimen>
-    <dimen name="textSizeAnswerHelp">7sp</dimen>
-    <dimen name="textSizeHelpLogo">24sp</dimen>
+    <dimen name="textSizeMenu">32sp</dimen>
+    <dimen name="textSizeQuestion">28sp</dimen>
+    <dimen name="textSizeAnswer">24sp</dimen>
+    <dimen name="textSizeProposed">64sp</dimen>
+    <dimen name="textSizeAnswerHelp">24sp</dimen>
+    <dimen name="textSizeHelpLogo">28sp</dimen>
 
     <dimen name="minHeightRadio">20px</dimen>
     <dimen name="minHeightCheckBox">20px</dimen>
@@ -68,8 +68,8 @@
 
     <dimen name="battery_margin_left">1dp</dimen>
     <dimen name="battery_margin_right">1dp</dimen>
-    <dimen name="batteryWidth">12dp</dimen>
-    <dimen name="batteryHeight">24dp</dimen>
+    <dimen name="batteryWidth">16dp</dimen>
+    <dimen name="batteryHeight">32dp</dimen>
     <dimen name="battery_margin_top">4dp</dimen>
     <dimen name="battery_margin_bottom">4dp</dimen>
 

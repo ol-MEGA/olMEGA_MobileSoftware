@@ -122,6 +122,8 @@ public class MainActivity extends AppCompatActivity {
     //private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
 
+    private boolean isTablet = false;
+
     //private long durationTemp = 0;
     private long durationLongClick = 5*1000;
 
