@@ -8,6 +8,8 @@ public interface InputProfile {
 
     void cleanUp();
 
+    void setDevice(String sDeviceName);
+
     boolean getIsAudioRecorderClosed();
 
     void registerClient();

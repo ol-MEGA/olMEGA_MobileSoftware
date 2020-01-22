@@ -624,6 +624,10 @@ public class ControlService extends Service {
                     break;
             }
 
+            // In case new bluetooth device was chosen
+            String sDeviceName = sharedPreferences.getString("listDevice", "");
+            mInputProfile.setDevice(sDeviceName);
+
             mInputProfile.setInterface();
             if (IS_SERVICE_BOUND) {
                 mInputProfile.registerClient();
@@ -669,6 +673,7 @@ public class ControlService extends Service {
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
 
         String inputProfile = dataPreferences.getString("inputProfile", INPUT.toString());
+        String listDevices =  dataPreferences.getString("listDevices", "");
 
         isWave = dataPreferences.getBoolean("isWave", isWave);
         isTimer = dataPreferences.getBoolean("isTimer", isTimer);
@@ -699,6 +704,7 @@ public class ControlService extends Service {
         // String
         editor.putString("whichQuest", mSelectQuestionnaire);
         editor.putString("inputProfile", inputProfile);
+        editor.putString("listDevices", listDevices);
         editor.putString("filterHpFrequency", "" + filterHpFrequency);
         editor.putString("samplerate", "" + samplerate);
         editor.putString("chunklengthInS", "" + chunklengthInS);
@@ -1085,6 +1091,7 @@ public class ControlService extends Service {
                     }
                     mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
                     setInputProfile();
+
                     break;
 
                 case MSG_RECORDING_STOPPED:

@@ -48,17 +48,30 @@ public class PreferencesActivity extends PreferenceActivity {
         private BluetoothAdapter mBtAdapter;
         private ArrayAdapter<String> mPairedDevicesArrayAdapter;
         private Set<BluetoothDevice> pairedDevices;
-        private Preference scanButton;
-        private String[] listDevices = new String[];
+        private String[] listDevices;
 
 
         @Override
         public void onCreate(Bundle savedInstanceState){
             super.onCreate(savedInstanceState);
 
+            doDiscovery();
+
+            // Register for broadcasts when a device is discovered
+            //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            //this.registerReceiver(mReceiver, filter);
+
+            // Register for broadcasts when discovery has finished
+            //filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            //this.registerReceiver(mReceiver, filter);
+
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
+            // Switch list dummy for actual present questionnaire files
             includeQuestList();
+
+            includeDevicesList();
+
             SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
             deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -105,8 +118,6 @@ public class PreferencesActivity extends PreferenceActivity {
                 }
             });
 
-            doDiscovery();
-
 
 
         }
@@ -127,6 +138,8 @@ public class PreferencesActivity extends PreferenceActivity {
                 listPreferenceQuest.setSummary(R.string.noQuestionnaires);
                 listPreferenceQuest.setSelectable(false);
             }
+
+            //doDiscovery();
         }
 
         private void confirmUnsetDeviceOwner() {
@@ -150,8 +163,25 @@ public class PreferencesActivity extends PreferenceActivity {
                     .show();
         }
 
+        private void includeDevicesList() {
+            ListPreference listPreferenceDevices = (ListPreference) findPreference("listDevices");
+            if (listDevices.length > 0) {
+                listPreferenceDevices.setEntries(listDevices);
+                listPreferenceDevices.setEntryValues(listDevices);
+                listPreferenceDevices.setDefaultValue(listDevices[0]);
+            } else {
+                listPreferenceDevices.setSummary("Unable to find devices.");
+                listPreferenceDevices.setSelectable(false);
+            }
+        }
+
         // Start device discover with the BluetoothAdapter
         private void doDiscovery() {
+
+            // Get the local Bluetooth adapter
+            mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+            // Get a set of currently paired devices
+            pairedDevices = mBtAdapter.getBondedDevices();
 
             // Remove all element from the list
             //mPairedDevicesArrayAdapter.clear();
@@ -162,31 +192,24 @@ public class PreferencesActivity extends PreferenceActivity {
                 for (BluetoothDevice device : pairedDevices) {
                     //mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                     tmpList.add(new StringAndString(device.getName(), device.getAddress()));
+                    Log.e(LOG, "DEVICE FOUND: " + device.getName() + ", Address: " + device.getAddress());
                 }
-            } //lse {
-                //String strNoFound = getIntent().getStringExtra("no_devices_found");
-                //if(strNoFound == null)
-                //String strNoFound = "No devices found";
-                //mPairedDevicesArrayAdapter.add(strNoFound);
-                //tmpList.add(strNoFound);
-            //}
-
-            // Indicate scanning in the title
-            //String strScanning = getIntent().getStringExtra("scanning");
-            //if(strScanning == null)
-            //    strScanning = "Scanning for devices...";
-            //setProgressBarIndeterminateVisibility(true);
-            //setTitle(strScanning);
-
-            // Turn on sub-title for new devices
-            // findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
-            // If we're already discovering, stop it
-            if (mBtAdapter.isDiscovering()) {
-                mBtAdapter.cancelDiscovery();
+            } else {
+                Log.e(LOG, "NO DEVICES FOUND.");//lse {
             }
 
+            listDevices = new String[pairedDevices.size()];
+            for (int iItem = 0; iItem < listDevices.length; iItem++) {
+                listDevices[iItem] = tmpList.get(iItem).getName();
+            }
+
+            // If we're already discovering, stop it
+            //if (mBtAdapter.isDiscovering()) {
+            //    mBtAdapter.cancelDiscovery();
+            //}
+
             // Request discover from BluetoothAdapter
-            mBtAdapter.startDiscovery();
+            //mBtAdapter.startDiscovery();
         }
     }
 }

@@ -57,6 +57,9 @@ public class InputProfile_STANDALONE implements InputProfile {
     }
 
     @Override
+    public void setDevice(String sDeviceName) {}
+
+    @Override
     public boolean getIsAudioRecorderClosed() {
         return true;
     }

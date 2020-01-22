@@ -210,6 +210,9 @@ public class InputProfile_A2DP implements InputProfile {
     }
 
     @Override
+    public void setDevice(String sDeviceName) {}
+
+    @Override
     public boolean getIsAudioRecorderClosed() {
         return (mAudioRecorder == null || mAudioRecorder.getRecordingState() == AudioRecord.RECORDSTATE_STOPPED);
     }

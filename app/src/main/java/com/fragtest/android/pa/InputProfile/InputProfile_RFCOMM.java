@@ -272,6 +272,11 @@ public class InputProfile_RFCOMM implements InputProfile {
     }
 
     @Override
+    public void setDevice(String sDeviceName) {
+
+    }
+
+    @Override
     public boolean getIsAudioRecorderClosed() {
         if (mConnectedThread != null) {
             return mConnectedThread.getIsReleased();

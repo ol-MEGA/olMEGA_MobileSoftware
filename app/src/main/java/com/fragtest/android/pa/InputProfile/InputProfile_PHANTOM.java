@@ -1,5 +1,7 @@
 package com.fragtest.android.pa.InputProfile;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.os.Messenger;
@@ -11,9 +13,8 @@ import com.fragtest.android.pa.Core.RingBuffer;
 import com.fragtest.android.pa.library.BluetoothSPP;
 import com.fragtest.android.pa.library.BluetoothState;
 
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Set;
 
 public class InputProfile_PHANTOM implements InputProfile {
 
@@ -73,6 +74,26 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     }
 
+    @Override
+    public void setDevice(String sDeviceName) {
+
+        // Get the local Bluetooth adapter
+        BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Get a set of currently paired devices
+        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+
+        if (pairedDevices.size() > 0) {
+            for (BluetoothDevice device : pairedDevices) {
+                //mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+                if (device.getName().equals(sDeviceName)) {
+
+                    Log.e(LOG, "Connecting to: " + device.getName() + ", Address: " + device.getAddress());
+                } else {
+                    Log.e(LOG, "NO DEVICES FOUND.");//lse {
+                }
+            }
+        }
+    }
 
     private void initBluetooth()
     {
@@ -143,7 +164,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         }
     }
 
-    private void setVolume()
+    /*private void setVolume()
     {
         AudioVolume = Math.max(Math.min(AudioVolume, 9), -9);
         byte[] bytes = Charset.forName("UTF-8").encode(CharBuffer.wrap("V+" + AudioVolume)).array();
@@ -158,7 +179,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         if (isAdaptiveBitshift)
             bytes = Charset.forName("UTF-8").encode(CharBuffer.wrap("B1")).array();
         bt.send(bytes, false);
-    }
+    }*/
 
 
     @Override

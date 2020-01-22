@@ -276,6 +276,10 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
     }
 
+    private void connectToDevice(String sDeviceName) {
+
+    }
+
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
             new ViewPager.OnPageChangeListener() {
 
@@ -320,6 +324,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
         dataPreferences.putString("inputProfile", sharedPreferences.getString("inputProfile", "STANDALONE"));
+        dataPreferences.putString("listDevices", sharedPreferences.getString("listDevices", ""));
         // Boolean
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
@@ -553,8 +558,6 @@ public class MainActivity extends AppCompatActivity {
                 setKioskMode(true);
             }
 
-            setConfigVisibility();
-
             mConfig.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -701,11 +704,16 @@ public class MainActivity extends AppCompatActivity {
             mDevicePolicyManager.clearDeviceOwnerApp(this.getPackageName());
         }
 
-        if (sharedPreferences.getBoolean("enableKioskMode", true)) {
+        setKioskMode(sharedPreferences.getBoolean("enableKioskMode", true));
+
+        String sDeviceName = sharedPreferences.getString("listDevices", "");
+        connectToDevice(sDeviceName);
+
+        /*if (sharedPreferences.getBoolean("enableKioskMode", true)) {
             setKioskMode(true);
         } else {
             setKioskMode(false);
-        }
+        }*/
 
         hideSystemUI(getKioskMode());
         setConfigVisibility();
