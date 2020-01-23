@@ -130,7 +130,11 @@ public class InputProfile_PHANTOM implements InputProfile {
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {
                     if (state == BluetoothState.STATE_CONNECTED) {
-                        startRecording();
+                        if (!ControlService.getIsCharging()){
+                            startRecording();
+                        } else {
+                            stopRecording();
+                        }
                         Log.d("_IHA_", "Bluetooth Connected");
                     } else if (state == BluetoothState.STATE_CONNECTING) {
                         Log.e(LOG, "Bluetooth State changed: STATE_CONNECTING");
@@ -232,14 +236,16 @@ public class InputProfile_PHANTOM implements InputProfile {
         if (nSamples < chunklengthInSamples) {
             try {
                 outputStream.write(data);
-                /*for (int iSample = 0; iSample < data.length; iSample += 1) {
-                    outputStream.write(data[iSample]);
-                    outputStream.write(data[iSample] >> 8);
-                }*/
+                //for (int iSample = 0; iSample < data.length; iSample += 2) {
+                //    outputStream.write((data[0] & 0xff) | (short) (data[1] << 8));
+                //}
                 outputStream.flush();
             } catch (Exception e) {e.printStackTrace();}
 
         } else {
+
+            nSamples = 0;
+            nBlockCount = 0;
 
             Log.e(LOG, "SUPER: Samples: " + nSamples);
             Log.e(LOG, "SUPER: Blocks: " + nBlockCount);
@@ -269,8 +275,6 @@ public class InputProfile_PHANTOM implements InputProfile {
                     mIsWave
             );
 
-            nSamples = 0;
-            nBlockCount = 0;
         }
 
 
@@ -322,18 +326,19 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-
+        startRecording();
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-
+        stopRecording();
     }
 
     @Override
     public void chargingOnPre() {
         Log.e(LOG, "CharginOnPre");
+        stopRecording();
     }
 
     @Override
