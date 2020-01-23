@@ -42,6 +42,11 @@
             android:screenOrientation="portrait" >
         </activity>
 
+        <activity
+            android:name=".DeviceList"
+            android:screenOrientation="portrait" >
+        </activity>
+
         <!-- Receiver needed for Alarm function -->
         <receiver android:name=".Core.EventReceiver"
             android:enabled="true"/>

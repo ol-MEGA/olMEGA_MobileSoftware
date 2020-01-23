@@ -31,6 +31,7 @@
 
     <string-array name="inputProfile">
         <item>RFCOMM</item>
+        <item>PHANTOM</item>
         <item>USB</item>
         <item>INTERNAL_MIC</item>
         <item>STANDALONE</item>

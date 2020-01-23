@@ -59,17 +59,17 @@
             android:summary="%s"
             android:title="Operation Mode" />
 
-        <ListPreference
+        <!--<ListPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:key="listDevices"
             android:title="Connect to Device"
             android:dialogTitle="Connect to Device"
-            android:summary="%s"/>
+            android:summary="%s"/>-->
 
-        <!--<Preference android:title="Scan"
-            android:key="@string/pref_button_scan"
-            android:summary="@string/pref_button_scan"/>-->
+        <Preference android:title="Connect"
+            android:summary="@string/pref_button_scan"
+            android:key="connect"/>
 
 
     </PreferenceCategory>

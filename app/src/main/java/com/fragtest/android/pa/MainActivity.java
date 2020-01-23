@@ -52,7 +52,7 @@ import com.fragtest.android.pa.AppStates.StateRunning;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.MessageList;
-import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
+import com.fragtest.android.pa.InputProfile.INPUT_CONFIG;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 
 import org.pmw.tinylog.Logger;
@@ -416,6 +416,8 @@ public class MainActivity extends AppCompatActivity {
             mServiceState = INPUT_CONFIG.STANDALONE;
         }
 
+        Log.e(LOG, "SERIVCE STATE: " + mServiceState.toString());
+
         switch (mServiceState) {
 
             case A2DP:
@@ -428,6 +430,12 @@ public class MainActivity extends AppCompatActivity {
                 mRecord.setBackgroundTintList(
                         ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
                                 R.color.RfcommViolet, null)));
+                break;
+
+            case PHANTOM:
+                mRecord.setBackgroundTintList(
+                        ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),
+                                R.color.PhantomDarkBlue, null)));
                 break;
 
             case USB:
@@ -561,6 +569,10 @@ public class MainActivity extends AppCompatActivity {
             mConfig.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    //Intent intent = new Intent(getApplicationContext(), PreferencesActivity.class);
+                    //startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
+
                     startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                     isPrefsInForeGround = true;
                     mAdapter.setPrefsInForeGround(isPrefsInForeGround);
@@ -626,6 +638,8 @@ public class MainActivity extends AppCompatActivity {
         setDefaultCosuPolicies(getKioskMode());
         setKioskMode(getKioskMode());
     }
+
+
 
     @Override
     protected void onDestroy() {
@@ -1056,6 +1070,10 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case "RFCOMM":
                             mServiceState = INPUT_CONFIG.RFCOMM;
+                            //removeError(AppErrors.ERROR_NO_USB);
+                            break;
+                        case "PHANTOM":
+                            mServiceState = INPUT_CONFIG.PHANTOM;
                             //removeError(AppErrors.ERROR_NO_USB);
                             break;
                         case "USB":

@@ -33,11 +33,12 @@ import com.fragtest.android.pa.Core.MessageList_toClient;
 import com.fragtest.android.pa.Core.SingleMediaScanner;
 import com.fragtest.android.pa.Core.Vibration;
 import com.fragtest.android.pa.Core.XMLReader;
-import com.fragtest.android.pa.DataTypes.INPUT_CONFIG;
+import com.fragtest.android.pa.InputProfile.INPUT_CONFIG;
 import com.fragtest.android.pa.InputProfile.InputProfile;
 import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
 import com.fragtest.android.pa.InputProfile.InputProfile_Blank;
 import com.fragtest.android.pa.InputProfile.InputProfile_INTERNAL_MIC;
+import com.fragtest.android.pa.InputProfile.InputProfile_PHANTOM;
 import com.fragtest.android.pa.InputProfile.InputProfile_RFCOMM;
 import com.fragtest.android.pa.InputProfile.InputProfile_STANDALONE;
 import com.fragtest.android.pa.InputProfile.InputProfile_USB;
@@ -133,6 +134,8 @@ public class ControlService extends Service {
     private InputProfile_A2DP mInputProfile_A2DP;
     private InputProfile_USB mInputProfile_USB;
     private InputProfile_INTERNAL_MIC mInputProfile_INTERNAL_MIC;
+    private InputProfile_RFCOMM mInputProfile_RFCOMM;
+    private InputProfile_PHANTOM mInputProfile_PHANTOM;
     private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -288,7 +291,7 @@ public class ControlService extends Service {
             isQuestionnairePending = true;
         }
     };
-    private InputProfile_RFCOMM mInputProfile_RFCOMM;
+
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -336,12 +339,24 @@ public class ControlService extends Service {
         return mInputProfile_USB;
     }
 
+    public InputProfile getInputProfile_RFCOMM() {
+        return mInputProfile_RFCOMM;
+    }
+
+    public InputProfile getInputProfile_PHANTOM() {
+        return mInputProfile_PHANTOM;
+    }
+
     public InputProfile getInputProfile_A2DP() {
         return mInputProfile_A2DP;
     }
 
     public InputProfile getInputProfile_STANDALONE() {
         return mInputProfile_STANDALONE;
+    }
+
+    public InputProfile getInputProfile_INTERNAL_MIC() {
+        return mInputProfile_INTERNAL_MIC;
     }
 
     private Runnable SetInputProfileTask = new Runnable() {
@@ -356,10 +371,6 @@ public class ControlService extends Service {
             }
         }
     };
-
-    public InputProfile getInputProfile_INTERNAL_MIC() {
-        return mInputProfile_INTERNAL_MIC;
-    }
 
     public static void setIsCharging(boolean charging) {
         isCharging = charging;
@@ -546,10 +557,6 @@ public class ControlService extends Service {
         }
     }
 
-    public InputProfile getInputProfile_RFCOMM() {
-        return mInputProfile_RFCOMM;
-    }
-
     @Override
     public void onCreate() {
 
@@ -575,6 +582,7 @@ public class ControlService extends Service {
         mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
         mInputProfile_INTERNAL_MIC = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
         mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
+        mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
@@ -606,6 +614,11 @@ public class ControlService extends Service {
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.RFCOMM.toString();
                     mInputProfile = getInputProfile_RFCOMM();
                     INPUT = INPUT_CONFIG.RFCOMM;
+                    break;
+                case "PHANTOM":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.PHANTOM.toString();
+                    mInputProfile = getInputProfile_PHANTOM();
+                    INPUT = INPUT_CONFIG.PHANTOM;
                     break;
                 case "USB":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.USB.toString();
@@ -673,7 +686,7 @@ public class ControlService extends Service {
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
 
         String inputProfile = dataPreferences.getString("inputProfile", INPUT.toString());
-        String listDevices =  dataPreferences.getString("listDevices", "");
+        String address =  dataPreferences.getString("address", "");
 
         isWave = dataPreferences.getBoolean("isWave", isWave);
         isTimer = dataPreferences.getBoolean("isTimer", isTimer);
@@ -704,7 +717,7 @@ public class ControlService extends Service {
         // String
         editor.putString("whichQuest", mSelectQuestionnaire);
         editor.putString("inputProfile", inputProfile);
-        editor.putString("listDevices", listDevices);
+        editor.putString("address", address);
         editor.putString("filterHpFrequency", "" + filterHpFrequency);
         editor.putString("samplerate", "" + samplerate);
         editor.putString("chunklengthInS", "" + chunklengthInS);
@@ -742,6 +755,7 @@ public class ControlService extends Service {
         chunklengthInS = sharedPreferences.getString("chunklengthInS", "60");
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", keepAudioCache);
         isWave = sharedPreferences.getBoolean("isWave", isWave);
+
 
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);

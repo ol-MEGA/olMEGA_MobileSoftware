@@ -18,6 +18,7 @@
 
     <color name="InternalMicOrange">#ffa500</color>
     <color name="RfcommViolet">#7F00FF</color>
+    <color name="PhantomDarkBlue">#000099</color>
 
     <color name="lighterBlue">#AAAAFF</color>
 </resources>

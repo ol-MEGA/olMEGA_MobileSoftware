@@ -222,7 +222,8 @@ public class InputProfile_USB implements InputProfile {
     private boolean checkUSBDevice() {
         UsbManager manager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
         HashMap<String, UsbDevice> deviceList = manager.getDeviceList();
-        return (deviceList == null || deviceList.size() != 0);
+        // USed to be: deviceList==null -> bug?
+        return (deviceList != null || deviceList.size() != 0);
     }
 
     @Override

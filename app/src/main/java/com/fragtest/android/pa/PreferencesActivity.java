@@ -1,13 +1,18 @@
 package com.fragtest.android.pa;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -17,7 +22,11 @@ import com.fragtest.android.pa.Core.DeviceName;
 import com.fragtest.android.pa.Core.FileIO;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.DataTypes.StringAndString;
+import com.fragtest.android.pa.library.BluetoothSPP;
+import com.fragtest.android.pa.library.BluetoothState;
 
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -49,28 +58,53 @@ public class PreferencesActivity extends PreferenceActivity {
         private ArrayAdapter<String> mPairedDevicesArrayAdapter;
         private Set<BluetoothDevice> pairedDevices;
         private String[] listDevices;
+        private BluetoothSPP bt;
 
+        private void initBluetooth()
+        {
+            bt = new BluetoothSPP(getContext());
+            if (bt.isBluetoothEnabled() == true) {
+                bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
+                    public void onServiceStateChanged(int state) {
+                        if (state == BluetoothState.STATE_CONNECTED) {
+                            //BlockCount = 0;
+                            Log.e(LOG, "Bluetooth State changed: STATE_CONNECTED");
+                            //Log.e(LOG, "Bluetooth Connected");
+                            //((Button)findViewById(R.id.button_Link)).setEnabled(false);
+                        } else if (state == BluetoothState.STATE_CONNECTING) {
+                            Log.e(LOG, "Bluetooth State changed: STATE_CONNECTING");
+                        } else if (state == BluetoothState.STATE_LISTEN)
+                        {
+                            Log.e(LOG,"Bluetooth State changed: STATE_LISTEN");
+                            //((Button)findViewById(R.id.button_Link)).setEnabled(true);
+                        }
+                        else if (state == BluetoothState.STATE_NONE) {
+                            Log.e(LOG, "Bluetooth State changed: STATE_NONE");
+                        }
+                    }
+                });
+
+                bt.setupService();
+                bt.startService(BluetoothState.DEVICE_OTHER);
+            }
+            else{
+                bt.enable();
+                initBluetooth();
+            }
+        }
 
         @Override
         public void onCreate(Bundle savedInstanceState){
             super.onCreate(savedInstanceState);
 
-            doDiscovery();
-
-            // Register for broadcasts when a device is discovered
-            //IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-            //this.registerReceiver(mReceiver, filter);
-
-            // Register for broadcasts when discovery has finished
-            //filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-            //this.registerReceiver(mReceiver, filter);
+            initBluetooth();
 
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
             // Switch list dummy for actual present questionnaire files
             includeQuestList();
 
-            includeDevicesList();
+            //includeDevicesList();
 
             SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
             deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -84,8 +118,6 @@ public class PreferencesActivity extends PreferenceActivity {
             });
 
             final ListPreference inputProfilePref = (ListPreference) findPreference("inputProfile");
-            final ListPreference sampleratePref = (ListPreference) findPreference("samplerate");
-            final SwitchPreference downsamplePref = (SwitchPreference) findPreference("downsample");
 
             if (DeviceName.getDeviceName().equals(DEVICE_WITH_A2DP)) {
                 inputProfilePref.setEntries(R.array.inputProfileWithA2DP);
@@ -98,28 +130,73 @@ public class PreferencesActivity extends PreferenceActivity {
                 inputProfilePref.setEntryValues(R.array.inputProfile);
             }
 
+            setOptionsBasedOnOperationMode(inputProfilePref.getEntry().toString());
+
             inputProfilePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
-                    if (o.equals("RFCOMM") || o.equals("PHANTOM")) {
-                        String messsage = "Chosen input profile: " + o + ". Setting Samplerate to 16000 and disabling downsampling by factor 2.";
-                        Log.e(LOG, messsage);
-                        LogIHAB.log(messsage);
-                        sampleratePref.setValue("16000");
-                        downsamplePref.setChecked(false);
-                    } else {
-                        String message = "Chosen input profile: " + o + ". Setting Samplerate to 48000 and enabling downsampling by factor 2.";
-                        Log.e(LOG, message);
-                        LogIHAB.log(message);
-                        sampleratePref.setValue("48000");
-                        downsamplePref.setChecked(true);
-                    }
+                    setOptionsBasedOnOperationMode(o.toString());
                     return true;
                 }
             });
 
+            Preference prefScan = findPreference("connect");
+            prefScan.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent intent = new Intent(getActivity().getApplicationContext(), DeviceList.class);
+                    startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
+                    return false;
+                }
+            });
 
+        }
 
+        private void setOptionsBasedOnOperationMode(String mode) {
+
+            final ListPreference sampleratePref = (ListPreference) findPreference("samplerate");
+            final SwitchPreference downsamplePref = (SwitchPreference) findPreference("downsample");
+            final Preference scanPref = findPreference("connect");
+
+            if (mode.equals("RFCOMM") || mode.equals("PHANTOM")) {
+                String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2. Also Scan enabled.";
+                Log.e(LOG, messsage);
+                LogIHAB.log(messsage);
+                sampleratePref.setValue("16000");
+                downsamplePref.setChecked(false);
+                scanPref.setEnabled(true);
+            } else {
+                String message = "Chosen input profile: " + mode + ". Setting Samplerate to 48000 and enabling downsampling by factor 2. Also Scan disabled.";
+                Log.e(LOG, message);
+                LogIHAB.log(message);
+                sampleratePref.setValue("48000");
+                downsamplePref.setChecked(true);
+                scanPref.setEnabled(false);
+            }
+        }
+
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            super.onActivityResult(requestCode, resultCode, data);
+            if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE && resultCode == Activity.RESULT_OK)
+            {
+                bt.connect(data);
+
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+                sharedPreferences.edit().putString("address", data.toString()).apply();
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        bt.send(Charset.forName("UTF-8").encode(CharBuffer.wrap("STOREMAC")).array(), false);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                bt.disconnect();
+                            }
+                        }, 1000);
+                    }
+                }, 2000);
+            }
         }
 
         private void includeQuestList() {

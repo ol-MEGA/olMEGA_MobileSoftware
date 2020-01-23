@@ -1,8 +1,9 @@
-package com.fragtest.android.pa.DataTypes;
+package com.fragtest.android.pa.InputProfile;
 
 public enum INPUT_CONFIG {
     A2DP,
     RFCOMM,
+    PHANTOM,
     USB,
     STANDALONE,
     INTERNAL_MIC;
