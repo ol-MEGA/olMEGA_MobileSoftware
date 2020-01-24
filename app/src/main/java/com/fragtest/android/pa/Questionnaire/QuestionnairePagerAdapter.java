@@ -165,6 +165,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         mCountDownHandler.post(mBatteryRunnable);
     }
 
+    public void hideCountdown() {
+        hideQuestionnaireProgressBar();
+        mMenuPage.hideCountdownText();
+    }
+
     public MenuPage getMenuPage() {
         return mMenuPage;
     }

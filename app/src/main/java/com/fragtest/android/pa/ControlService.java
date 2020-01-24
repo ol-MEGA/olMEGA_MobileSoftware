@@ -729,7 +729,7 @@ public class ControlService extends Service {
 
         isQuestionnairePresent = mFileIO.setupFirstUse(this);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // recording
         samplerate = sharedPreferences.getString("samplerate","16000");
@@ -803,7 +803,9 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplication());
+
+        if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire) && sharedPreferences.getBoolean("isTimer", true)) {
 
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();

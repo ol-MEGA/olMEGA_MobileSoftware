@@ -69,6 +69,8 @@ import static com.fragtest.android.pa.ControlService.MSG_CHARGING_OFF;
 import static com.fragtest.android.pa.ControlService.MSG_CHARGING_ON;
 import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
+import static com.fragtest.android.pa.ControlService.MSG_START_COUNTDOWN;
+import static com.fragtest.android.pa.ControlService.MSG_STOP_COUNTDOWN;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -314,6 +316,9 @@ public class MainActivity extends AppCompatActivity {
             };
 
     private void shipPreferencesToControlService() {
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         // Load information from shared preferences and bundle them
         Bundle dataPreferences = new Bundle();
         // String
@@ -516,6 +521,8 @@ public class MainActivity extends AppCompatActivity {
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+        isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
+
         // Obtain last known system state from preferences (otherwise initialized as standalone)
         mServiceState = INPUT_CONFIG.toState(sharedPreferences.getString("serviceState", INPUT_CONFIG.STANDALONE.name()));
 
@@ -691,6 +698,27 @@ public class MainActivity extends AppCompatActivity {
 
             //TODO: CHeck whether this still applies
             shipPreferencesToControlService();
+
+            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean isTimerNew = sharedPreferences.getBoolean("isTimer", isTimer);
+
+            Log.e(LOG, "Old Timer: " + isTimer + ", New Timer: " + isTimerNew);
+
+            if (isTimerNew != isTimer) {
+                if (isTimerNew) {
+                    Log.e(LOG, "Starting countdown.");
+                    messageService(MSG_START_COUNTDOWN);
+                    mAdapter.startCountDown();
+
+                } else {
+                    Log.e(LOG, "Stopping countdown.");
+                    messageService(MSG_STOP_COUNTDOWN);
+                    mAdapter.stopCountDown();
+                    mAdapter.hideCountdown();
+                }
+            }
+            isTimer = isTimerNew;
+
         }
         mAdapter.onResume();
         super.onResume();
