@@ -73,7 +73,6 @@ public class InputProfile_PHANTOM implements InputProfile {
     public InputProfile_PHANTOM(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
-        //this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
@@ -91,7 +90,6 @@ public class InputProfile_PHANTOM implements InputProfile {
         mChunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
         mIsWave = sharedPreferences.getBoolean("isWave", true);
 
-
         chunklengthInBytes = (mChunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
         chunklengthInSamples = RECORDER_SAMPLERATE * mChunklengthInS * RECORDER_CHANNELS;
 
@@ -106,32 +104,13 @@ public class InputProfile_PHANTOM implements InputProfile {
     public void cleanUp() {
 
         Log.e(LOG, "Cleaning up.");
-        //isAudioRecorderRunning = false;
-        //if (ControlService.getIsRecording()) {
         stopRecording();
-        //}
+
 
     }
 
     @Override
     public void setDevice(String sDeviceName) {
-
-        // Get the local Bluetooth adapter
-        /*BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-        // Get a set of currently paired devices
-        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
-
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices) {
-                //mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                if (device.getName().equals(sDeviceName)) {
-
-                    Log.e(LOG, "Connecting to: " + device.getName() + ", Address: " + device.getAddress());
-                } else {
-                    Log.e(LOG, "NO DEVICES FOUND.");//lse {
-                }
-            }
-        }*/
     }
 
     private void initBluetooth()
@@ -228,10 +207,10 @@ public class InputProfile_PHANTOM implements InputProfile {
 
                 }
             });
-            if (run) {
-                bt.setupService();
-                bt.startService(BluetoothState.DEVICE_OTHER);
-            }
+            //if (run) {
+            //    bt.setupService();
+            //    bt.startService(BluetoothState.DEVICE_OTHER);
+            //}
         }
         else if (run) {
             isAudioRecorderRunning = false;
@@ -412,7 +391,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                 mIsWave
         );
 
-        initBluetooth();
+        //initBluetooth();
         //initAudioTrack();
 
         ControlService.setIsRecording(true);
