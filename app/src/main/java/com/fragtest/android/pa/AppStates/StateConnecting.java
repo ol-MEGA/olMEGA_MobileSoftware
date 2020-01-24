@@ -57,7 +57,11 @@ public class StateConnecting implements AppState {
 
     @Override
     public void setInterface() {
+
         LogIHAB.log(LOG + ":" + "setInterface()");
+
+        mainActivity.setLogoInactive();
+
         if (!ControlService.isStandalone) {
             qpa.hideQuestionnaireProgressBar();
             qpa.stopCountDown();

@@ -39,6 +39,8 @@ public class StateError implements AppState {
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
         //mainActivity.setBTLogoDisconnected();
 
+        mainActivity.setLogoInactive();
+
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);
     }

@@ -2,8 +2,10 @@ package com.fragtest.android.pa.InputProfile;
 
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -61,6 +63,13 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private int nSamples;
 
+    private Runnable stopRunnable = new Runnable() {
+        @Override
+        public void run() {
+            run = false;
+        }
+    };
+
     public InputProfile_PHANTOM(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
@@ -75,11 +84,8 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void setInterface() {
 
-        LogIHAB.log(LOG);
-
-
         Log.e(LOG, "Requested setInterface()");
-        initBluetooth();
+        LogIHAB.log(LOG);
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
         mChunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
@@ -89,6 +95,11 @@ public class InputProfile_PHANTOM implements InputProfile {
         chunklengthInBytes = (mChunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
         chunklengthInSamples = RECORDER_SAMPLERATE * mChunklengthInS * RECORDER_CHANNELS;
 
+        startRecording();
+
+        //initBluetooth();
+        //initAudioTrack();
+
     }
 
     @Override
@@ -97,7 +108,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         Log.e(LOG, "Cleaning up.");
         //isAudioRecorderRunning = false;
         //if (ControlService.getIsRecording()) {
-            stopRecording();
+        stopRecording();
         //}
 
     }
@@ -126,7 +137,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     private void initBluetooth()
     {
         bt = new BluetoothSPP(this.mContext);
-        if (bt.isBluetoothEnabled() == true) {
+        if (bt.isBluetoothEnabled()) {
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {
                     if (state == BluetoothState.STATE_CONNECTED) {
@@ -172,7 +183,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                                         long tmpBlockCount = BlockCount;
                                         AudioBlock = Arrays.copyOf(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize), AudioBufferSize);
 
-                                        sendData(AudioBlock);
+                                        writeData(AudioBlock);
 
                                         AudioVolume = (short)(((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
                                         BlockCount = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
@@ -217,28 +228,54 @@ public class InputProfile_PHANTOM implements InputProfile {
 
                 }
             });
-            bt.setupService();
-            bt.startService(BluetoothState.DEVICE_OTHER);
+            if (run) {
+                bt.setupService();
+                bt.startService(BluetoothState.DEVICE_OTHER);
+            }
         }
-        else{
+        else if (run) {
             isAudioRecorderRunning = false;
             bt.enable();
             initBluetooth();
         }
     }
 
-    private void sendData(byte[] data) {
+    private void initAudioTrack() {
+        if (audioTrack == null) {
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_MUSIC,
+                    RECORDER_SAMPLERATE,
+                    RECORDER_CHANNELS,
+                    RECORDER_AUDIO_ENCODING,
+                    BufferElements2Rec,
+                    AudioTrack.MODE_STREAM);
+            audioTrack.play();
+        }
+    }
+
+    private void writeData(byte[] data) {
 
         nBlockCount++;
+
+        if (nSamples == 0) {
+            outputStream = fileIO.openDataOutStream(
+                    RECORDER_SAMPLERATE,
+                    RECORDER_CHANNELS,
+                    RECORDER_AUDIO_ENCODING,
+                    mIsWave
+            );
+        }
 
         nSamples += block_size * RECORDER_CHANNELS;
 
         if (nSamples < chunklengthInSamples) {
             try {
                 outputStream.write(data);
-                //for (int iSample = 0; iSample < data.length; iSample += 2) {
-                //    outputStream.write((data[0] & 0xff) | (short) (data[1] << 8));
-                //}
+                for (int iSample = 0; iSample < data.length; iSample+=2) {
+                    outputStream.write(data[iSample] >> 8);
+                    outputStream.write(data[iSample+1]);
+
+                }
                 outputStream.flush();
             } catch (Exception e) {e.printStackTrace();}
 
@@ -268,12 +305,12 @@ public class InputProfile_PHANTOM implements InputProfile {
                 }
             }
 
-            outputStream = fileIO.openDataOutStream(
+            /*outputStream = fileIO.openDataOutStream(
                     RECORDER_SAMPLERATE,
                     RECORDER_CHANNELS,
                     RECORDER_AUDIO_ENCODING,
                     mIsWave
-            );
+            );*/
 
         }
 
@@ -332,13 +369,13 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        stopRecording();
+        cleanUp();
     }
 
     @Override
     public void chargingOnPre() {
         Log.e(LOG, "CharginOnPre");
-        stopRecording();
+        cleanUp();
     }
 
     @Override
@@ -349,7 +386,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     @Override
     public void applicationShutdown() {
-
+        cleanUp();
     }
 
     private void startRecording() {
@@ -375,6 +412,9 @@ public class InputProfile_PHANTOM implements InputProfile {
                 mIsWave
         );
 
+        initBluetooth();
+        //initAudioTrack();
+
         ControlService.setIsRecording(true);
         mContext.messageClient(ControlService.MSG_START_RECORDING);
 
@@ -383,7 +423,30 @@ public class InputProfile_PHANTOM implements InputProfile {
     private void stopRecording() {
 
         Log.e(LOG, "Requested stop recording");
-        run = false;
+
+        Handler handler = new Handler();
+        handler.post(stopRunnable);
+
+        if (fileIO != null && isAudioRecorderRunning) {
+            String filename = fileIO.filename;
+            fileIO.closeDataOutStream();
+
+            // report back to service
+            Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
+            if (msg != null) {
+                Bundle dataSend = new Bundle();
+                dataSend.putString("filename", filename);
+                msg.setData(dataSend);
+                try {
+                    mServiceMessenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //audioTrack.stop();
+        //audioTrack.release();
 
     }
 

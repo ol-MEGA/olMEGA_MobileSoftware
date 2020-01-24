@@ -158,7 +158,14 @@ public class PreferencesActivity extends PreferenceActivity {
             final SwitchPreference downsamplePref = (SwitchPreference) findPreference("downsample");
             final Preference scanPref = findPreference("connect");
 
-            if (mode.equals("RFCOMM") || mode.equals("PHANTOM")) {
+            if (mode.equals("RFCOMM")) {
+                String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2.";
+                Log.e(LOG, messsage);
+                LogIHAB.log(messsage);
+                sampleratePref.setValue("16000");
+                downsamplePref.setChecked(false);
+                scanPref.setEnabled(false);
+            } else if (mode.equals("PHANTOM")) {
                 String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2. Also Scan enabled.";
                 Log.e(LOG, messsage);
                 LogIHAB.log(messsage);
@@ -172,6 +179,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("48000");
                 downsamplePref.setChecked(true);
                 scanPref.setEnabled(false);
+                bt.cancelDiscovery();
             }
         }
 

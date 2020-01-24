@@ -720,8 +720,8 @@ public class MainActivity extends AppCompatActivity {
 
         setKioskMode(sharedPreferences.getBoolean("enableKioskMode", true));
 
-        String sDeviceName = sharedPreferences.getString("listDevices", "");
-        connectToDevice(sDeviceName);
+        //String sDeviceName = sharedPreferences.getString("listDevices", "");
+        //connectToDevice(sDeviceName);
 
         /*if (sharedPreferences.getBoolean("enableKioskMode", true)) {
             setKioskMode(true);

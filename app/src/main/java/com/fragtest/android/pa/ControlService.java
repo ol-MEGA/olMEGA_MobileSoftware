@@ -1103,6 +1103,7 @@ public class ControlService extends Service {
                         Bundle prefs = msg.getData();
                         updatePreferences(prefs);
                     }
+                    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
                     setInputProfile();
 
