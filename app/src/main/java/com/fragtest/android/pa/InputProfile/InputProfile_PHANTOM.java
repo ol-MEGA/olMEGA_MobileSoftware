@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -93,10 +94,8 @@ public class InputProfile_PHANTOM implements InputProfile {
         chunklengthInBytes = (mChunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
         chunklengthInSamples = RECORDER_SAMPLERATE * mChunklengthInS * RECORDER_CHANNELS;
 
-        startRecording();
-
-        //initBluetooth();
-        //initAudioTrack();
+        initBluetooth();
+        initAudioTrack();
 
     }
 
@@ -105,7 +104,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         Log.e(LOG, "Cleaning up.");
         stopRecording();
-
+        bt = null;
 
     }
 
@@ -119,6 +118,10 @@ public class InputProfile_PHANTOM implements InputProfile {
         if (bt.isBluetoothEnabled()) {
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {
+
+                    PowerManager powerManager = (PowerManager) mContext.getSystemService(mContext.POWER_SERVICE);
+                    PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag");
+
                     if (state == BluetoothState.STATE_CONNECTED) {
                         if (!ControlService.getIsCharging()){
                             startRecording();
@@ -129,10 +132,23 @@ public class InputProfile_PHANTOM implements InputProfile {
                     } else if (state == BluetoothState.STATE_CONNECTING) {
                         Log.e(LOG, "Bluetooth State changed: STATE_CONNECTING");
                     } else if (state == BluetoothState.STATE_LISTEN) {
+
                         Log.e(LOG, "Bluetooth State changed: STATE_LISTEN");
+
+                        if (wakeLock.isHeld()) {
+                            wakeLock.release();
+                        }
                     } else if (state == BluetoothState.STATE_NONE) {
+
                         Log.e(LOG, "Bluetooth State changed: STATE_NONE");
-                        stopRecording();
+
+                        if (wakeLock.isHeld()) {
+                            wakeLock.release();
+                        }
+                        //stopRecording();
+                    } else
+                    {
+                        if (wakeLock.isHeld()) wakeLock.release();
                     }
                 }
             });
@@ -186,8 +202,8 @@ public class InputProfile_PHANTOM implements InputProfile {
                             if (countSamples == 0)
                             {
                                 countBlocks++;
-                                //if (audioTrack != null)
-                                //    audioTrack.write(AudioBlock, 0, AudioBufferSize);
+                                if (audioTrack != null)
+                                    audioTrack.write(AudioBlock, 0, AudioBufferSize);
                                 /*runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -317,7 +333,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     @Override
     public boolean getIsAudioRecorderClosed() {
-        Log.e(LOG, "CLOSED: " + run);
+        Log.e(LOG, "CLOSED: " + !run);
         return !run;
     }
 

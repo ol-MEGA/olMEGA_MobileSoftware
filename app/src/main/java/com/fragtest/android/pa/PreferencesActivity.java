@@ -60,7 +60,12 @@ public class PreferencesActivity extends PreferenceActivity {
         private String[] listDevices;
         private BluetoothSPP bt;
 
-        private void initBluetooth()
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            bt = null;
+        }
+/*private void initBluetooth()
         {
             bt = new BluetoothSPP(getContext());
             if (bt.isBluetoothEnabled() == true) {
@@ -91,13 +96,11 @@ public class PreferencesActivity extends PreferenceActivity {
                 bt.enable();
                 initBluetooth();
             }
-        }
+        }*/
 
         @Override
         public void onCreate(Bundle savedInstanceState){
             super.onCreate(savedInstanceState);
-
-            initBluetooth();
 
             // Load preference from XMl resource
             addPreferencesFromResource(preferences);
@@ -165,6 +168,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
                 scanPref.setEnabled(false);
+                //bt = null;
             } else if (mode.equals("PHANTOM")) {
                 String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2. Also Scan enabled.";
                 Log.e(LOG, messsage);
@@ -172,6 +176,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
                 scanPref.setEnabled(true);
+                //initBluetooth();
             } else {
                 String message = "Chosen input profile: " + mode + ". Setting Samplerate to 48000 and enabling downsampling by factor 2. Also Scan disabled.";
                 Log.e(LOG, message);
@@ -179,7 +184,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("48000");
                 downsamplePref.setChecked(true);
                 scanPref.setEnabled(false);
-                bt.cancelDiscovery();
+                //bt = null;
             }
         }
 
