@@ -32,13 +32,13 @@
 
     <PreferenceCategory android:title="General">
 
-        <SwitchPreference
+        <!--<SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="true"
             android:key="autostart"
             android:title="Autostart"
-            android:summary="Start app with system" />
+            android:summary="Start app with system" />-->
 
         <SwitchPreference
             android:layout_width="wrap_content"
