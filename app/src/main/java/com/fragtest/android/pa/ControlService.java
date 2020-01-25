@@ -127,6 +127,7 @@ public class ControlService extends Service {
     public static final int MSG_BATTERY_NORMAL = 74;
     public static final int MSG_CHARGING_OFF = 76;
     public static final int MSG_CHARGING_ON = 77;
+    public static final int MSG_NEW_ADDRESS = 78;
     public static INPUT_CONFIG INPUT;
 
     private InputProfile mInputProfile;
@@ -156,7 +157,7 @@ public class ControlService extends Service {
     };
     private String mNewInputProfile = "";
 
-    private String INPUT_PROFILE_STATUS = "";
+    private String INPUT_PROFILE_STATUS;
 
     private static int mChunkId = 1;
 
@@ -561,6 +562,9 @@ public class ControlService extends Service {
     public void onCreate() {
 
         Log.e(LOG, "onCreate");
+
+        // Obtain last Profile status
+        INPUT_PROFILE_STATUS = PreferenceManager.getDefaultSharedPreferences(this).getString("inputProfile" ,"");
 
         mMessageList = new MessageList_toClient(this);
 

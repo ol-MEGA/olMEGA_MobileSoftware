@@ -115,6 +115,9 @@ public class InputProfile_PHANTOM implements InputProfile {
     private void initBluetooth()
     {
         bt = new BluetoothSPP(this.mContext);
+        String address = PreferenceManager.getDefaultSharedPreferences(mContext).getString("address", "");
+        Log.e(LOG, "STATE ADDRESS: " + address);
+        //bt.connect(address);
         if (bt.isBluetoothEnabled()) {
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {
@@ -128,7 +131,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                         } else {
                             stopRecording();
                         }
-                        Log.d("_IHA_", "Bluetooth Connected");
+                        Log.e(LOG, "Bluetooth State changed: STATE_CONNECTED");
                     } else if (state == BluetoothState.STATE_CONNECTING) {
                         Log.e(LOG, "Bluetooth State changed: STATE_CONNECTING");
                     } else if (state == BluetoothState.STATE_LISTEN) {

@@ -507,6 +507,37 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    /*public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE && resultCode == Activity.RESULT_OK)
+        {
+            //bt.connect(data);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("address", data.toString());
+
+            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+            //sharedPreferences.edit().putString("address", data.toString()).apply();
+
+            //new Handler().postDelayed(new Runnable() {
+            //    @Override
+            //    public void run() {
+            //        bt.send(Charset.forName("UTF-8").encode(CharBuffer.wrap("STOREMAC")).array(), false);
+            //        new Handler().postDelayed(new Runnable() {
+            //            @Override
+            //            public void run() {
+            //                bt.disconnect();
+            //            }
+            //        }, 1000);
+            //    }
+            //}, 2000);
+
+            Log.e(LOG, "GOT THE ADDRESS: " + data.toString());
+
+            messageService(MSG_NEW_ADDRESS, bundle);
+        }
+    }
+*/
 
     /**
      * Lifecycle methods

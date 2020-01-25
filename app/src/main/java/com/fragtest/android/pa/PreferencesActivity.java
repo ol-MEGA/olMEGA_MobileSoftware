@@ -65,7 +65,7 @@ public class PreferencesActivity extends PreferenceActivity {
             super.onDestroy();
             bt = null;
         }
-/*private void initBluetooth()
+        private void initBluetooth()
         {
             bt = new BluetoothSPP(getContext());
             if (bt.isBluetoothEnabled() == true) {
@@ -96,7 +96,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 bt.enable();
                 initBluetooth();
             }
-        }*/
+        }
 
         @Override
         public void onCreate(Bundle savedInstanceState){
@@ -106,8 +106,6 @@ public class PreferencesActivity extends PreferenceActivity {
             addPreferencesFromResource(preferences);
             // Switch list dummy for actual present questionnaire files
             includeQuestList();
-
-            //includeDevicesList();
 
             SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
             deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -168,7 +166,6 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
                 scanPref.setEnabled(false);
-                //bt = null;
             } else if (mode.equals("PHANTOM")) {
                 String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2. Also Scan enabled.";
                 Log.e(LOG, messsage);
@@ -176,7 +173,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
                 scanPref.setEnabled(true);
-                //initBluetooth();
+                initBluetooth();
             } else {
                 String message = "Chosen input profile: " + mode + ". Setting Samplerate to 48000 and enabling downsampling by factor 2. Also Scan disabled.";
                 Log.e(LOG, message);
@@ -184,7 +181,6 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("48000");
                 downsamplePref.setChecked(true);
                 scanPref.setEnabled(false);
-                //bt = null;
             }
         }
 
@@ -195,7 +191,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 bt.connect(data);
 
                 SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                sharedPreferences.edit().putString("address", data.toString()).apply();
+                sharedPreferences.edit().putString("address", Charset.forName("UTF-8").encode(CharBuffer.wrap("STOREMAC")).array().toString()).apply();
 
                 new Handler().postDelayed(new Runnable() {
                     @Override
