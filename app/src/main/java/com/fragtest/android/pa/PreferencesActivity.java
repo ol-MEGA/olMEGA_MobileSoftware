@@ -5,14 +5,12 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -69,7 +67,7 @@ public class PreferencesActivity extends PreferenceActivity {
         {
             bt = new BluetoothSPP(getContext());
             if (bt.isBluetoothEnabled() == true) {
-                bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
+                /*bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                     public void onServiceStateChanged(int state) {
                         if (state == BluetoothState.STATE_CONNECTED) {
                             //BlockCount = 0;
@@ -87,7 +85,7 @@ public class PreferencesActivity extends PreferenceActivity {
                             Log.e(LOG, "Bluetooth State changed: STATE_NONE");
                         }
                     }
-                });
+                });*/
 
                 bt.setupService();
                 bt.startService(BluetoothState.DEVICE_OTHER);
@@ -173,7 +171,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
                 scanPref.setEnabled(true);
-                initBluetooth();
+                //initBluetooth();
             } else {
                 String message = "Chosen input profile: " + mode + ". Setting Samplerate to 48000 and enabling downsampling by factor 2. Also Scan disabled.";
                 Log.e(LOG, message);
@@ -188,10 +186,10 @@ public class PreferencesActivity extends PreferenceActivity {
             super.onActivityResult(requestCode, resultCode, data);
             if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE && resultCode == Activity.RESULT_OK)
             {
+                bt = new BluetoothSPP(getContext());
+                bt.setupService();
+                bt.startService(BluetoothState.DEVICE_OTHER);
                 bt.connect(data);
-
-                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getContext());
-                sharedPreferences.edit().putString("address", Charset.forName("UTF-8").encode(CharBuffer.wrap("STOREMAC")).array().toString()).apply();
 
                 new Handler().postDelayed(new Runnable() {
                     @Override
@@ -204,7 +202,7 @@ public class PreferencesActivity extends PreferenceActivity {
                             }
                         }, 1000);
                     }
-                }, 2000);
+                }, 100);
             }
         }
 

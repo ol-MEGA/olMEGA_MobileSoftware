@@ -114,10 +114,11 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private void initBluetooth()
     {
-        bt = new BluetoothSPP(this.mContext);
-        String address = PreferenceManager.getDefaultSharedPreferences(mContext).getString("address", "");
-        Log.e(LOG, "STATE ADDRESS: " + address);
-        //bt.connect(address);
+        bt = new BluetoothSPP(mContext);
+        bt.setupService();
+        bt.startService(BluetoothState.DEVICE_OTHER);
+
+
         if (bt.isBluetoothEnabled()) {
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {

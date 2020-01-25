@@ -550,8 +550,6 @@ public class MainActivity extends AppCompatActivity {
         mStatContext = this;
         mMessageList = new MessageList(this);
 
-        LogIHAB.log("Standalone Mode: " + ControlService.isStandalone);
-
         setSystemLocale();
 
         checkForPermissions();
@@ -559,7 +557,7 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Obtain last known system state from preferences (otherwise initialized as standalone)
-        mServiceState = INPUT_CONFIG.toState(sharedPreferences.getString("serviceState", INPUT_CONFIG.STANDALONE.name()));
+        mServiceState = INPUT_CONFIG.toState(sharedPreferences.getString("inputProfile", INPUT_CONFIG.STANDALONE.name()));
 
 
         if (!isActivityRunning) {
@@ -679,7 +677,7 @@ public class MainActivity extends AppCompatActivity {
         }
         super.onDestroy();
 
-        sharedPreferences.edit().putString("serviceState", mServiceState.name()).apply();
+        sharedPreferences.edit().putString("inputProfile", mServiceState.name()).apply();
 
         messageService(MSG_APPLICATION_SHUTDOWN);
         doUnbindService();

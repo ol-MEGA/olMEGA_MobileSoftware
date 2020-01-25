@@ -563,9 +563,6 @@ public class ControlService extends Service {
 
         Log.e(LOG, "onCreate");
 
-        // Obtain last Profile status
-        INPUT_PROFILE_STATUS = PreferenceManager.getDefaultSharedPreferences(this).getString("inputProfile" ,"");
-
         mMessageList = new MessageList_toClient(this);
 
         // log file
@@ -589,6 +586,7 @@ public class ControlService extends Service {
         mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
 
         setInputProfile();
@@ -689,7 +687,7 @@ public class ControlService extends Service {
         // Extract preferences from data Bundle
         mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
 
-        String inputProfile = dataPreferences.getString("inputProfile", INPUT.toString());
+        String inputProfile = dataPreferences.getString("inputProfile", INPUT_PROFILE_STATUS);
         String address =  dataPreferences.getString("address", "");
 
         isWave = dataPreferences.getBoolean("isWave", isWave);
