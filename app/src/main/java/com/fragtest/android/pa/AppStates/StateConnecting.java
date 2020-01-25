@@ -29,6 +29,8 @@ public class StateConnecting implements AppState {
         @Override
         public void run() {
             stopConnecting();
+            // Test whether this is okay
+            //mainActivity.setState(mainActivity.getStateError());
         }
     };
 

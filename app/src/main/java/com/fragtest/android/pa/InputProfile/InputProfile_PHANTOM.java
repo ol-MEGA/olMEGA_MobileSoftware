@@ -1,5 +1,6 @@
 package com.fragtest.android.pa.InputProfile;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.SharedPreferences;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -40,6 +41,8 @@ public class InputProfile_PHANTOM implements InputProfile {
     private ControlService mContext;
     private Messenger mServiceMessenger;
 
+    private BluetoothAdapter mBluetoothAdapter;
+
     private static final int block_size = 64;
     private static final int RECORDER_SAMPLERATE = 16000;
     private int AudioBufferSize = block_size * 4;
@@ -71,9 +74,11 @@ public class InputProfile_PHANTOM implements InputProfile {
         }
     };
 
+
     public InputProfile_PHANTOM(ControlService context, Messenger serviceMessenger) {
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
+        this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
     @Override
@@ -86,6 +91,11 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         Log.e(LOG, "Requested setInterface()");
         LogIHAB.log(LOG);
+
+        if (!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
+        }
+        mBluetoothAdapter.cancelDiscovery();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.mContext);
         mChunklengthInS = Integer.parseInt(sharedPreferences.getString("chunklengthInS", "60"));
@@ -104,6 +114,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         Log.e(LOG, "Cleaning up.");
         stopRecording();
+        finishFile();
         bt = null;
 
     }
@@ -115,24 +126,22 @@ public class InputProfile_PHANTOM implements InputProfile {
     private void initBluetooth()
     {
         bt = new BluetoothSPP(mContext);
-        bt.setupService();
-        bt.startService(BluetoothState.DEVICE_OTHER);
-
 
         if (bt.isBluetoothEnabled()) {
+
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
                 public void onServiceStateChanged(int state) {
 
                     PowerManager powerManager = (PowerManager) mContext.getSystemService(mContext.POWER_SERVICE);
                     PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag");
 
+                    Log.e(LOG, "Bluetooth State changed: STATE_CONNECTED");
                     if (state == BluetoothState.STATE_CONNECTED) {
                         if (!ControlService.getIsCharging()){
                             startRecording();
                         } else {
                             stopRecording();
                         }
-                        Log.e(LOG, "Bluetooth State changed: STATE_CONNECTED");
                     } else if (state == BluetoothState.STATE_CONNECTING) {
                         Log.e(LOG, "Bluetooth State changed: STATE_CONNECTING");
                     } else if (state == BluetoothState.STATE_LISTEN) {
@@ -156,6 +165,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                     }
                 }
             });
+
             bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
                 public void onDataReceived(byte[] data) {
 
@@ -227,12 +237,11 @@ public class InputProfile_PHANTOM implements InputProfile {
 
                 }
             });
-            //if (run) {
-            //    bt.setupService();
-            //    bt.startService(BluetoothState.DEVICE_OTHER);
-            //}
+            bt.setupService();
+            bt.startService(BluetoothState.DEVICE_OTHER);
+
         }
-        else if (run) {
+        else {
             isAudioRecorderRunning = false;
             bt.enable();
             initBluetooth();
@@ -249,6 +258,29 @@ public class InputProfile_PHANTOM implements InputProfile {
                     BufferElements2Rec,
                     AudioTrack.MODE_STREAM);
             audioTrack.play();
+        }
+    }
+
+    private void finishFile() {
+
+        try {
+            outputStream.flush();
+        } catch (Exception e) {}
+
+        String filename = fileIO.filename;
+        fileIO.closeDataOutStream();
+
+        // report back to service
+        Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
+        if (msg != null) {
+            Bundle dataSend = new Bundle();
+            dataSend.putString("filename", filename);
+            msg.setData(dataSend);
+            try {
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -269,11 +301,12 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         if (nSamples < chunklengthInSamples) {
             try {
-                outputStream.write(data);
-                for (int iSample = 0; iSample < data.length; iSample+=2) {
-                    outputStream.write(data[iSample] >> 8);
-                    outputStream.write(data[iSample+1]);
+                //outputStream.write(data);
+                for (int iSample = 0; iSample < data.length-1; iSample += 2) {
 
+                    short int16 = (short) (((data[iSample + 1] & 0xFF) << 8) | (data[iSample] & 0xFF));
+
+                    outputStream.write(int16);
                 }
                 outputStream.flush();
             } catch (Exception e) {e.printStackTrace();}

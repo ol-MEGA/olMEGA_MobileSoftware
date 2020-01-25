@@ -202,7 +202,7 @@ public class PreferencesActivity extends PreferenceActivity {
                             }
                         }, 1000);
                     }
-                }, 100);
+                }, 200);
             }
         }
 
