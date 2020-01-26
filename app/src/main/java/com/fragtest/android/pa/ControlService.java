@@ -622,6 +622,11 @@ public class ControlService extends Service {
                     mInputProfile = getInputProfile_INTERNAL_MIC();
                     INPUT = INPUT_CONFIG.INTERNAL_MIC;
                     break;
+                default:
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.STANDALONE.toString();
+                    mInputProfile = getInputProfile_STANDALONE();
+                    INPUT = INPUT_CONFIG.STANDALONE;
+                    break;
             }
 
             mInputProfile.setInterface();
