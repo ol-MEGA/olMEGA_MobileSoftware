@@ -71,6 +71,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         @Override
         public void run() {
             run = false;
+            bt.stopService();
         }
     };
 

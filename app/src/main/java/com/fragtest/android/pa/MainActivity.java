@@ -176,11 +176,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public ArrayList<String> mErrorList = new ArrayList<>();
+    //public ArrayList<String> mErrorList_Standalone = new ArrayList<>();
 
     public void addError(AppErrors error) {
         if (!mErrorList.contains(error.getErrorMessage())) {
             // In case of Standalone Mode, no BT error is needed
-            if (!(ControlService.isStandalone && error == AppErrors.ERROR_NO_BT)) {
+            if (!(getInputProfile() == INPUT_CONFIG.STANDALONE && error == AppErrors.ERROR_NO_BT)) {
                 mErrorList.add(error.getErrorMessage());
             }
         }
@@ -274,10 +275,6 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(0);
         mViewPager.addOnPageChangeListener(myOnPageChangeListener);
-    }
-
-    private void connectToDevice(String sDeviceName) {
-
     }
 
     private ViewPager.OnPageChangeListener myOnPageChangeListener =
@@ -394,6 +391,10 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean getIsCharging() {
         return isCharging;
+    }
+
+    public INPUT_CONFIG getInputProfile() {
+        return mServiceState;
     }
 
     /**
@@ -559,7 +560,6 @@ public class MainActivity extends AppCompatActivity {
         // Obtain last known system state from preferences (otherwise initialized as standalone)
         mServiceState = INPUT_CONFIG.toState(sharedPreferences.getString("inputProfile", INPUT_CONFIG.STANDALONE.name()));
 
-
         if (!isActivityRunning) {
             super.onCreate(savedInstanceState);
 
@@ -598,9 +598,6 @@ public class MainActivity extends AppCompatActivity {
             mConfig.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    //Intent intent = new Intent(getApplicationContext(), PreferencesActivity.class);
-                    //startActivityForResult(intent, BluetoothState.REQUEST_CONNECT_DEVICE);
 
                     startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
                     isPrefsInForeGround = true;
@@ -748,15 +745,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setKioskMode(sharedPreferences.getBoolean("enableKioskMode", true));
-
-        //String sDeviceName = sharedPreferences.getString("listDevices", "");
-        //connectToDevice(sDeviceName);
-
-        /*if (sharedPreferences.getBoolean("enableKioskMode", true)) {
-            setKioskMode(true);
-        } else {
-            setKioskMode(false);
-        }*/
 
         hideSystemUI(getKioskMode());
         setConfigVisibility();

@@ -223,10 +223,12 @@ public class MenuPage extends AppCompatActivity {
 
         // Error View
         mErrorView = new ListView(mMainActivity);
+
         mErrorAdapter = new ArrayAdapter<>(
                 mMainActivity,
                 android.R.layout.simple_list_item_1,
-                mErrorList );
+                mErrorList);
+
         LinearLayout.LayoutParams tempErrorParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 0, 0.3f);

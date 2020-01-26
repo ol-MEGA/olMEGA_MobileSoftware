@@ -5,6 +5,7 @@ import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.InputProfile.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -34,6 +35,9 @@ public class StateRunning implements AppState {
         qpa.getMenuPage().resetQuestionnaireCallback();
         mainActivity.mCharging.setVisibility(View.INVISIBLE);
         mainActivity.messageService(ControlService.MSG_START_COUNTDOWN);
+        if (mainActivity.getInputProfile() == INPUT_CONFIG.STANDALONE) {
+            mainActivity.setLogoActive();
+        }
         //mainActivity.setBTLogoConnected();
 
         Log.e(LOG, LOG);

@@ -5,6 +5,7 @@ import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
+import com.fragtest.android.pa.InputProfile.INPUT_CONFIG;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
 import com.fragtest.android.pa.R;
@@ -30,7 +31,8 @@ public class StateConnecting implements AppState {
         public void run() {
             stopConnecting();
             // Test whether this is okay
-            //mainActivity.setState(mainActivity.getStateError());
+            mainActivity.setState(mainActivity.getStateError());
+            mainActivity.mAppState.setInterface();
         }
     };
 
@@ -64,7 +66,7 @@ public class StateConnecting implements AppState {
 
         mainActivity.setLogoInactive();
 
-        if (!ControlService.isStandalone) {
+        if (mainActivity.getInputProfile() != INPUT_CONFIG.STANDALONE) {
             qpa.hideQuestionnaireProgressBar();
             qpa.stopCountDown();
             qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoConnecting));
@@ -85,6 +87,7 @@ public class StateConnecting implements AppState {
 
             Log.e(LOG, LOG);
         } else {
+            stopConnecting();
             mainActivity.setState(mainActivity.getStateRunning());
             mainActivity.mAppState.setInterface();
         }
