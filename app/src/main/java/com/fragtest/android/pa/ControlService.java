@@ -670,8 +670,41 @@ public class ControlService extends Service {
 
     private void updatePreferences(Bundle dataPreferences) {
 
-        // Extract preferences from data Bundle
-        mSelectQuestionnaire = dataPreferences.getString("whichQuest", mSelectQuestionnaire);
+        if (isQuestionnairePresent) {
+            String[] fileList = mFileIO.scanQuestOptions();
+
+            if (fileList.length == 0) {
+                Log.e(LOG, "No Questionnaires available.");
+                messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
+                isQuestionnairePresent = false;
+            } else {
+                // Load questionnaire if selected, otherwise load default
+                mSelectQuestionnaire = dataPreferences.getString("whichQuest", fileList[0]);
+
+                if (mTempQuestionnaire == null || mTempQuestionnaire.isEmpty() ) {
+                    mTempQuestionnaire = "";
+                }
+
+                if (!mFileIO.scanForQuestionnaire(mSelectQuestionnaire)) {
+                    mSelectQuestionnaire = null;
+                }
+
+                if (mSelectQuestionnaire == null || mSelectQuestionnaire.isEmpty()) {
+                    mSelectQuestionnaire = fileList[0];
+                    if (BuildConfig.DEBUG) {
+                        Log.i(LOG, "Using default questionnaire: " + mSelectQuestionnaire);
+                    }
+                }
+            }
+        } else {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("whichQuest", "").apply();
+            if (BuildConfig.DEBUG) {
+                Log.e(LOG, "No Questionnaires available.");
+            }
+            messageClient(MSG_NO_QUESTIONNAIRE_FOUND);
+        }
+
 
         String inputProfile = dataPreferences.getString("inputProfile", INPUT.toString());
 
@@ -808,9 +841,16 @@ public class ControlService extends Service {
 
     private void setAlarmAndCountdown() {
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplication());
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mSelectQuestionnaire = sharedPreferences.getString("whichQuest", "");
+
+        Log.e(LOG, "SHOUL HERE: " + mSelectQuestionnaire);
+        Log.e(LOG, "SHOUL HAS TIMER: " + mFileIO.scanForQuestionnaire(mSelectQuestionnaire));
+        Log.e(LOG, "SHOUL WAHTS TOIMER:" + sharedPreferences.getBoolean("isTimer", true));
 
         if (mFileIO.scanForQuestionnaire(mSelectQuestionnaire) && sharedPreferences.getBoolean("isTimer", true)) {
+
+            Log.e(LOG, "SHOUL. PIEP");
 
             mXmlReader = new XMLReader(this, mSelectQuestionnaire);
             questionnaireHasTimer = mXmlReader.getQuestionnaireHasTimer();
@@ -819,6 +859,8 @@ public class ControlService extends Service {
             if (questionnaireHasTimer) {
 
                 mTimerInterval = mXmlReader.getNewTimerInterval();
+
+                Log.e(LOG, "SHOULDVBEEN istimeron: " + isTimerRunning);
 
                 if (!isTimerRunning) {
 
@@ -832,6 +874,8 @@ public class ControlService extends Service {
                     dataCountdown.putInt("finalCountDown", mFinalCountDown);
                     dataCountdown.putInt("countDownInterval", mTimerInterval);
                     messageClient(MSG_SET_COUNTDOWN_TIME, dataCountdown);
+
+                    Log.e(LOG, "SHOULDVBEEN");
 
                 } else {
                     // Usually when app is restarted
