@@ -329,6 +329,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         UI_STATE = UI_STATE_QUEST;
     }
 
+    public void hideCountdown() {
+        hideQuestionnaireProgressBar();
+        mMenuPage.hideCountdownText();
+    }
+
     public void hideQuestionnaireProgressBar() {
         View progress = mMainActivity.mProgress;
         View regress = mMainActivity.mRegress;
