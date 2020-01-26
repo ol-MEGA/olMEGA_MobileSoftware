@@ -72,6 +72,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         public void run() {
             run = false;
             bt.stopService();
+            mContext.getVibration().singleBurst();
         }
     };
 
@@ -283,6 +284,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                 e.printStackTrace();
             }
         }
+        ControlService.setIsRecording(false);
     }
 
     private void writeData(byte[] data) {
@@ -438,18 +440,19 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         run = true;
         fileIO = new AudioFileIO();
-        outputStream = fileIO.openDataOutStream(
+        /*outputStream = fileIO.openDataOutStream(
                 RECORDER_SAMPLERATE,
                 RECORDER_CHANNELS,
                 RECORDER_AUDIO_ENCODING,
                 mIsWave
-        );
+        );*/
 
         //initBluetooth();
         //initAudioTrack();
 
         ControlService.setIsRecording(true);
         mContext.messageClient(ControlService.MSG_START_RECORDING);
+        mContext.getVibration().singleBurst();
 
     }
 
