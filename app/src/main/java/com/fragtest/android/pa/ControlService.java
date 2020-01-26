@@ -884,7 +884,9 @@ public class ControlService extends Service {
         if (mEventTimer != null) {
             mEventTimer.stopTimer();
         }
-        mVibration.repeatingBurstOff();
+        if (mVibration != null) {
+            mVibration.repeatingBurstOff();
+        }
     }
 
     // Starts a new questionnaire, motivation can be {"auto", "manual"}

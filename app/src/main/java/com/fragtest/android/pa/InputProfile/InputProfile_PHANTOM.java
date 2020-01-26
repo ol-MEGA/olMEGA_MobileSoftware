@@ -50,7 +50,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     private byte[] AudioBlock = new byte[AudioBufferSize];
 
     private int BufferElements2Rec = 2048; // block_size * 16; // want to play 2048 (2K) since 2 bytes we use only 1024
-    private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
+    private static final int RECORDER_CHANNELS = 2; //AudioFormat.CHANNEL_IN_STEREO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private AudioTrack audioTrack = null;
 
@@ -171,6 +171,8 @@ public class InputProfile_PHANTOM implements InputProfile {
             bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
                 public void onDataReceived(byte[] data) {
 
+                    Log.e(LOG, "STATE: DATA: " + data.length);
+
                     isAudioRecorderRunning = true;
 
                     while (isAudioRecorderRunning && run) {
@@ -194,7 +196,9 @@ public class InputProfile_PHANTOM implements InputProfile {
                                         long tmpBlockCount = BlockCount;
                                         AudioBlock = Arrays.copyOf(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize), AudioBufferSize);
 
-                                        writeData(AudioBlock);
+
+
+
 
                                         AudioVolume = (short)(((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
                                         BlockCount = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
@@ -217,6 +221,8 @@ public class InputProfile_PHANTOM implements InputProfile {
 
                             if (countSamples == 0)
                             {
+                                writeData(AudioBlock);
+
                                 countBlocks++;
                                 if (audioTrack != null)
                                     audioTrack.write(AudioBlock, 0, AudioBufferSize);
@@ -304,13 +310,12 @@ public class InputProfile_PHANTOM implements InputProfile {
 
         if (nSamples < chunklengthInSamples) {
             try {
-                //outputStream.write(data);
-                for (int iSample = 0; iSample < data.length-1; iSample += 2) {
-
+                outputStream.write(data);
+                /*for (int iSample = 0; iSample < data.length-1; iSample += 2) {
                     short int16 = (short) (((data[iSample + 1] & 0xFF) << 8) | (data[iSample] & 0xFF));
-
                     outputStream.write(int16);
-                }
+                }*/
+
                 outputStream.flush();
             } catch (Exception e) {e.printStackTrace();}
 
@@ -318,11 +323,6 @@ public class InputProfile_PHANTOM implements InputProfile {
 
             nSamples = 0;
             nBlockCount = 0;
-
-            Log.e(LOG, "SUPER: Samples: " + nSamples);
-            Log.e(LOG, "SUPER: Blocks: " + nBlockCount);
-            Log.e(LOG, "SUPER: New chunk");
-            Log.e(LOG, "SUPER: ChunkLengthInBytes: " + chunklengthInBytes);
 
             String filename = fileIO.filename;
             fileIO.closeDataOutStream();
