@@ -585,6 +585,8 @@ public class ControlService extends Service {
         mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
         mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
+        mInputProfile.cleanUp();
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
@@ -1012,6 +1014,7 @@ public class ControlService extends Service {
         public void handleMessage(Message msg) {
 
             Log.d(LOG, "Received Message: " + msg.what);
+            Log.e(LOG, "msg: " + msg.what);
 
             switch (msg.what) {
 
@@ -1019,7 +1022,7 @@ public class ControlService extends Service {
 
                     IS_SERVICE_BOUND = true;
 
-                    Log.e(LOG, "msg: " + msg);
+
                     Log.i(LOG, "Client registered to service");
 
                     LogIHAB.log("Client registered to service");
@@ -1119,6 +1122,8 @@ public class ControlService extends Service {
                     break;
 
                 case MSG_CHUNK_RECORDED:
+
+                    Log.e(LOG, "STATE: CHUNK RECORDED");
 
                     LogIHAB.log("CHUNK RECORDED");
 

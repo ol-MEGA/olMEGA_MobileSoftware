@@ -23,6 +23,8 @@ import com.fragtest.android.pa.library.BluetoothState;
 
 import java.io.DataOutputStream;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class InputProfile_PHANTOM implements InputProfile {
 
@@ -37,6 +39,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private boolean isAudioRecorderRunning = false;
     private boolean isAdaptiveBitshift = false;
+    private boolean IsBluetoothConnectionPingNecessary = false;
 
     private ControlService mContext;
     private Messenger mServiceMessenger;
@@ -51,6 +54,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private int BufferElements2Rec = 2048; // block_size * 16; // want to play 2048 (2K) since 2 bytes we use only 1024
     private static final int RECORDER_CHANNELS = 2; //AudioFormat.CHANNEL_IN_STEREO;
+    private static final int PLAYBACK_CHANNELS = AudioFormat.CHANNEL_IN_STEREO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private AudioTrack audioTrack = null;
 
@@ -78,6 +82,9 @@ public class InputProfile_PHANTOM implements InputProfile {
 
 
     public InputProfile_PHANTOM(ControlService context, Messenger serviceMessenger) {
+
+        Log.e(LOG, "PHANTOM");
+
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -137,8 +144,15 @@ public class InputProfile_PHANTOM implements InputProfile {
                     PowerManager powerManager = (PowerManager) mContext.getSystemService(mContext.POWER_SERVICE);
                     PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag");
 
+                    IsBluetoothConnectionPingNecessary = false;
+
                     Log.e(LOG, "Bluetooth State changed: STATE_CONNECTED");
                     if (state == BluetoothState.STATE_CONNECTED) {
+
+                        if (!wakeLock.isHeld()) {
+                            wakeLock.acquire();
+                        }
+
                         if (!ControlService.getIsCharging()){
                             startRecording();
                         } else {
@@ -161,8 +175,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                             wakeLock.release();
                         }
                         //stopRecording();
-                    } else
-                    {
+                    } else {
                         if (wakeLock.isHeld()) wakeLock.release();
                     }
                 }
@@ -170,90 +183,59 @@ public class InputProfile_PHANTOM implements InputProfile {
 
             bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
                 public void onDataReceived(byte[] data) {
-
-                    Log.e(LOG, "STATE: DATA: " + data.length);
-
-                    isAudioRecorderRunning = true;
-
-                    while (isAudioRecorderRunning && run) {
-
-                        //int DataBlockSize, lastBlockCount;
-                        for (int i = 0; i < data.length; i++) {
-                            ringBuffer.addByte(data[i]);
-                            countSamples++;
-                            //nSamples++;
-                            if (additionalBytesCount != 12)
-                                Log.e(LOG, additionalBytesCount + "");
-
-                            if (ringBuffer.getByte(-2) == (byte) 0x00 && ringBuffer.getByte(-3) == (byte) 0x80) {
-                                switch (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF)) { // Check Protocol-Version
-                                    case 1:
+                    for (int i = 0; i < data.length; i++)
+                    {
+                        IsBluetoothConnectionPingNecessary = true;
+                        ringBuffer.addByte(data[i]);
+                        countSamples++;
+                        if (ringBuffer.getByte(-2) == (byte) 0x00 && ringBuffer.getByte(-3) == (byte) 0x80) {
+                            switch (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF)) { // Check Protocol-Version
+                                case 1:
+                                    if ((ringBuffer.getByte(2 - (AudioBufferSize + 12)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + 12)) == (byte) 0x7F))
                                         additionalBytesCount = 12;
-                                        break;
-                                }
-                                if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
-                                    if (ringBuffer.getByte(0) == checksum) {
-                                        long tmpBlockCount = BlockCount;
-                                        AudioBlock = Arrays.copyOf(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize), AudioBufferSize);
-
-
-
-
-
-                                        AudioVolume = (short)(((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
-                                        BlockCount = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
-                                        if (tmpBlockCount < BlockCount) {
-                                            lostBlockCount += BlockCount - (tmpBlockCount + 1);
-                                            completeBlockCount += BlockCount - tmpBlockCount;
-                                            if (BlockCount - (tmpBlockCount + 1) > 0)
-                                                Log.e(LOG, tmpBlockCount + " - " + BlockCount + " = " + (BlockCount - (tmpBlockCount + 1)) + "\t" + completeBlockCount);
-                                        }
-                                    }
-                                    countSamples = 0;
-                                    checksum = data[i];
-                                }
+                                    break;
                             }
-                            else if (additionalBytesCount > 0 && countSamples == AudioBufferSize + additionalBytesCount) {
+                            if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
+                                if (ringBuffer.getByte(0) == checksum) {
+                                    long tmpBlockCount = BlockCount;
+                                    AudioBlock = Arrays.copyOf(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize), AudioBufferSize);
+                                    AudioVolume = (short)(((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
+                                    BlockCount = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
+                                    if (tmpBlockCount < BlockCount) {
+                                        bt.send(" ", false);
+                                        lostBlockCount += BlockCount - (tmpBlockCount + 1);
+                                        completeBlockCount += BlockCount - tmpBlockCount;
+                                    }
+                                    writeData(AudioBlock);
+                                }
                                 countSamples = 0;
-                                corruptBlocks++;
-                            }
-                            checksum ^= data[i];
-
-                            if (countSamples == 0)
-                            {
-                                writeData(AudioBlock);
-
+                                checksum = data[i];
                                 countBlocks++;
-                                if (audioTrack != null)
-                                    audioTrack.write(AudioBlock, 0, AudioBufferSize);
-                                /*runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        //((TextView) findViewById(R.id.textViewVolume)).setText(String.format("%d", AudioVolume));
-                                        //((TextView) findViewById(R.id.textCorruptValue)).setText(String.format("%.3f", ((double) corruptBlocks / (double) countBlocks) * 100.0));
-                                        //((TextView) findViewById(R.id.textLostValue)).setText(String.format("%.3f", ((double) lostBlockCount / (double) completeBlockCount) * 100.0));
-                                        //((TextView) findViewById(R.id.textCorruptRealNumbersLabel)).setText(String.format("%d", corruptBlocks));
-                                        //((TextView) findViewById(R.id.textLostRealNumbersLabel)).setText(String.format("%d", lostBlockCount));
-                                    }
-                                });*/
                             }
                         }
-
-
+                        if (additionalBytesCount > 0 && countSamples == AudioBufferSize + additionalBytesCount) {
+                            countSamples = 0;
+                            corruptBlocks++;
+                            countBlocks++;
+                        }
+                        checksum ^= data[i];
                     }
-
-
                 }
             });
             bt.setupService();
             bt.startService(BluetoothState.DEVICE_OTHER);
-
-        }
-        else {
-            isAudioRecorderRunning = false;
+        } else {
             bt.enable();
             initBluetooth();
         }
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (IsBluetoothConnectionPingNecessary) {
+                    bt.send(" ", false);
+                }
+            }
+        }, 0, 100);
     }
 
     private void initAudioTrack() {
@@ -261,7 +243,7 @@ public class InputProfile_PHANTOM implements InputProfile {
             audioTrack = new AudioTrack(
                     AudioManager.STREAM_MUSIC,
                     RECORDER_SAMPLERATE,
-                    RECORDER_CHANNELS,
+                    PLAYBACK_CHANNELS,
                     RECORDER_AUDIO_ENCODING,
                     BufferElements2Rec,
                     AudioTrack.MODE_STREAM);
@@ -275,22 +257,25 @@ public class InputProfile_PHANTOM implements InputProfile {
             outputStream.flush();
         } catch (Exception e) {}
 
-        String filename = fileIO.filename;
-        fileIO.closeDataOutStream();
+        try {
+            String filename = fileIO.filename;
+            fileIO.closeDataOutStream();
 
-        // report back to service
-        Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
-        if (msg != null) {
-            Bundle dataSend = new Bundle();
-            dataSend.putString("filename", filename);
-            msg.setData(dataSend);
-            try {
-                mServiceMessenger.send(msg);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            // report back to service
+            Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
+            if (msg != null) {
+                Bundle dataSend = new Bundle();
+                dataSend.putString("filename", filename);
+                msg.setData(dataSend);
+                try {
+                    mServiceMessenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-        ControlService.setIsRecording(false);
+            ControlService.setIsRecording(false);
+        } catch (Exception e) {}
+
     }
 
     private void writeData(byte[] data) {
@@ -330,6 +315,7 @@ public class InputProfile_PHANTOM implements InputProfile {
             // report back to service
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
+
                 Bundle dataSend = new Bundle();
                 dataSend.putString("filename", filename);
                 msg.setData(dataSend);
