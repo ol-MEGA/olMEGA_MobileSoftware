@@ -156,6 +156,11 @@ public class InputProfile_USB implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public void setInterface() {
 
         LogIHAB.log(LOG);

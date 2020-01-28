@@ -132,6 +132,11 @@ public class InputProfile_A2DP implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public String getInputProfile() {
         return this.INPUT_PROFILE;
     }

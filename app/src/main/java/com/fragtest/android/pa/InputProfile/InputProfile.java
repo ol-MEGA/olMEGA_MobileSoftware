@@ -4,6 +4,9 @@ public interface InputProfile {
 
     void setInterface();
 
+    // Only interesting for CHARGING Profile
+    void setState(String inputProfile);
+
     String getInputProfile();
 
     void cleanUp();

@@ -1,12 +1,29 @@
 package com.fragtest.android.pa.InputProfile;
 
+import android.os.Messenger;
+
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
 
-public class InputProfile_Blank implements InputProfile {
+public class InputProfile_CHARGING implements InputProfile {
 
     private String LOG = "InputProfile_Blank";
+    private final String INPUT_PROFILE = "CHARGING";
+    private String mProfile_State;
+    private ControlService mContext;
+    private Messenger mServiceMessenger;
 
-    public InputProfile_Blank() { }
+
+    public InputProfile_CHARGING(ControlService context, Messenger serviceMessenger) {
+        this.mContext = context;
+        this.mServiceMessenger = serviceMessenger;
+    }
+
+    @Override
+    public void setState(String inputProfile) {
+        this.mProfile_State = inputProfile;
+    }
+
 
     @Override
     public void setInterface() {
@@ -16,13 +33,8 @@ public class InputProfile_Blank implements InputProfile {
     }
 
     @Override
-    public void setState(String inputProfile) {
-
-    }
-
-    @Override
     public String getInputProfile() {
-        return "";
+        return this.INPUT_PROFILE;
     }
 
     @Override
@@ -60,7 +72,7 @@ public class InputProfile_Blank implements InputProfile {
 
     @Override
     public void chargingOff() {
-
+        this.mContext.setInputProfile(this.mProfile_State);
     }
 
     @Override

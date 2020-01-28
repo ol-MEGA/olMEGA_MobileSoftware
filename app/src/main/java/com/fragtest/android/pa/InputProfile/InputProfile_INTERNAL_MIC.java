@@ -120,6 +120,11 @@ public class InputProfile_INTERNAL_MIC implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public void setInterface() {
 
         LogIHAB.log(LOG);

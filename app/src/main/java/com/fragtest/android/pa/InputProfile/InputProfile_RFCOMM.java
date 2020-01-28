@@ -201,6 +201,11 @@ public class InputProfile_RFCOMM implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public String getInputProfile() {
         return this.INPUT_PROFILE;
     }

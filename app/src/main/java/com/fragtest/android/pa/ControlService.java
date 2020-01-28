@@ -37,6 +37,7 @@ import com.fragtest.android.pa.InputProfile.INPUT_CONFIG;
 import com.fragtest.android.pa.InputProfile.InputProfile;
 import com.fragtest.android.pa.InputProfile.InputProfile_A2DP;
 import com.fragtest.android.pa.InputProfile.InputProfile_Blank;
+import com.fragtest.android.pa.InputProfile.InputProfile_CHARGING;
 import com.fragtest.android.pa.InputProfile.InputProfile_INTERNAL_MIC;
 import com.fragtest.android.pa.InputProfile.InputProfile_PHANTOM;
 import com.fragtest.android.pa.InputProfile.InputProfile_RFCOMM;
@@ -131,6 +132,7 @@ public class ControlService extends Service {
     public static INPUT_CONFIG INPUT;
 
     private InputProfile mInputProfile;
+    private InputProfile_CHARGING mInputProfile_CHARGING;
     private InputProfile_STANDALONE mInputProfile_STANDALONE;
     private InputProfile_A2DP mInputProfile_A2DP;
     private InputProfile_USB mInputProfile_USB;
@@ -180,7 +182,7 @@ public class ControlService extends Service {
     final Messenger mServiceMessenger = new Messenger(new MessageHandler());
 
     // preferences
-    private boolean isTimer, isWave, keepAudioCache, filterHp, downsample,
+    private boolean isTimer = true, isWave, keepAudioCache, filterHp, downsample,
             showConfigButton, showRecordingButton, questionnaireHasTimer;
 
     private int mFinalCountDown, mTimerInterval;
@@ -203,6 +205,8 @@ public class ControlService extends Service {
     private int mSetInputProfileInterval = 200;
     // Questionnaire-Timer
     EventTimer mEventTimer;
+
+    private String inputProfile_State;
 
     private FileIO mFileIO;
 
@@ -293,6 +297,7 @@ public class ControlService extends Service {
         }
     };
 
+
     // Battery Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
@@ -335,6 +340,10 @@ public class ControlService extends Service {
      * Input Profiles
      */
 
+
+    public InputProfile_CHARGING getInputProfile_CHARGING() {
+        return mInputProfile_CHARGING;
+    }
 
     public InputProfile getInputProfile_USB() {
         return mInputProfile_USB;
@@ -460,6 +469,7 @@ public class ControlService extends Service {
     @Override
     public void onDestroy() {
         Log.d(LOG, "onDestroy");
+
         stopAlarmAndCountdown();
 
         mInputProfile.onDestroy();
@@ -596,7 +606,18 @@ public class ControlService extends Service {
         Log.e(LOG, "ControlService started");
     }
 
-    private void setInputProfile() {
+    public void setInputProfile(String inputProfile) {
+        mNewInputProfile = inputProfile;
+        setInputProfile();
+    }
+
+    public void setChargingProfile() {
+        inputProfile_State = mInputProfile.getInputProfile();
+        mNewInputProfile = "CHARGING";
+        setInputProfile();
+    }
+
+    public void setInputProfile() {
        mTaskHandler.post(SetInputProfileTask);
     }
 
@@ -639,11 +660,17 @@ public class ControlService extends Service {
                     mInputProfile = getInputProfile_INTERNAL_MIC();
                     INPUT = INPUT_CONFIG.INTERNAL_MIC;
                     break;
+                case "CHARGING":
+                    INPUT_PROFILE_STATUS = INPUT_CONFIG.CHARGING.toString();
+                    mInputProfile = getInputProfile_CHARGING();
+                    INPUT = INPUT_CONFIG.CHARGING;
+                    mInputProfile.setState(inputProfile_State);
+                    break;
             }
 
             // In case new bluetooth device was chosen
-            String sDeviceName = sharedPreferences.getString("listDevice", "");
-            mInputProfile.setDevice(sDeviceName);
+            //String sDeviceName = sharedPreferences.getString("listDevice", "");
+            //mInputProfile.setDevice(sDeviceName);
 
             mInputProfile.setInterface();
             if (IS_SERVICE_BOUND) {

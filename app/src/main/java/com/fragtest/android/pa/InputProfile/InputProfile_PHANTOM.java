@@ -96,6 +96,11 @@ public class InputProfile_PHANTOM implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public void setInterface() {
 
         Log.e(LOG, "Requested setInterface()");

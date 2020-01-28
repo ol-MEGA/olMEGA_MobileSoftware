@@ -41,6 +41,11 @@ public class InputProfile_STANDALONE implements InputProfile {
     }
 
     @Override
+    public void setState(String inputProfile) {
+
+    }
+
+    @Override
     public void setInterface() {
 
         LogIHAB.log(LOG);
