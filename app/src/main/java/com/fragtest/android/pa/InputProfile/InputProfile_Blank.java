@@ -1,12 +1,16 @@
 package com.fragtest.android.pa.InputProfile;
 
+import com.fragtest.android.pa.ControlService;
 import com.fragtest.android.pa.Core.LogIHAB;
 
 public class InputProfile_Blank implements InputProfile {
 
     private String LOG = "InputProfile_Blank";
+    private ControlService mContext;
 
-    public InputProfile_Blank() { }
+    public InputProfile_Blank(ControlService context) {
+        this.mContext = context;
+    }
 
     @Override
     public void setInterface() {
@@ -65,7 +69,7 @@ public class InputProfile_Blank implements InputProfile {
 
     @Override
     public void chargingOn() {
-
+        mContext.setChargingProfile();
     }
 
     @Override

@@ -158,8 +158,8 @@ public class ControlService extends Service {
         }
     };
     private String mNewInputProfile = "";
-
     private String INPUT_PROFILE_STATUS;
+    private String inputProfile_State = "STANDALONE";
 
     private static int mChunkId = 1;
 
@@ -205,8 +205,6 @@ public class ControlService extends Service {
     private int mSetInputProfileInterval = 200;
     // Questionnaire-Timer
     EventTimer mEventTimer;
-
-    private String inputProfile_State;
 
     private FileIO mFileIO;
 
@@ -587,7 +585,8 @@ public class ControlService extends Service {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         showNotification();
 
-        mInputProfile = new InputProfile_Blank();
+        mInputProfile = new InputProfile_Blank(this);
+        mInputProfile_CHARGING = new InputProfile_CHARGING(this, mServiceMessenger);
         mInputProfile_STANDALONE = new InputProfile_STANDALONE(this, mServiceMessenger);
         mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
         mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
@@ -595,7 +594,7 @@ public class ControlService extends Service {
         mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
         mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
-        mInputProfile.cleanUp();
+        //mInputProfile.cleanUp();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");

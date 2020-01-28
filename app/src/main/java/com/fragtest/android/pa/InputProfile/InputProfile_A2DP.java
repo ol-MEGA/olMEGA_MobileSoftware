@@ -243,13 +243,14 @@ public class InputProfile_A2DP implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
+        //mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        stopRecording();
+        //stopRecording();
+        mContext.setChargingProfile();
     }
 
     @Override

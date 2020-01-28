@@ -91,14 +91,15 @@ public class InputProfile_STANDALONE implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
+        //mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
-        mContext.messageClient(ControlService.MSG_STOP_RECORDING);
+        //mTaskHandler.removeCallbacks(mSetInterfaceRunnable);
+        //mContext.messageClient(ControlService.MSG_STOP_RECORDING);
+        mContext.setChargingProfile();
     }
 
     @Override

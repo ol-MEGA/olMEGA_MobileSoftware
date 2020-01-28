@@ -106,6 +106,11 @@ public class BasicProcessingThread extends Thread {
             e.printStackTrace();
         }
 
+        // Added to prevent null arrays
+        if (buffer == null) {
+        	buffer = new byte[0];
+		}
+
         int blocks = buffer.length / 4;
 
 		float[][] audioData = new float[2][blocks];

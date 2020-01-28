@@ -310,14 +310,15 @@ public class InputProfile_RFCOMM implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        mBluetoothDevice = null;
-        mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
+        //mBluetoothDevice = null;
+        //mTaskHandler.postDelayed(mSetInterfaceRunnable, mWaitInterval);
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        stopRecording();
+        //stopRecording();
+        mContext.setChargingProfile();
     }
 
     @Override

@@ -129,7 +129,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         Log.e(LOG, "Cleaning up.");
         stopRecording();
         finishFile();
-        bt = null;
+        //bt = null;
 
     }
 
@@ -389,19 +389,20 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        startRecording();
+        //startRecording();
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        cleanUp();
+        //cleanUp();
+        mContext.setChargingProfile();
     }
 
     @Override
     public void chargingOnPre() {
         Log.e(LOG, "CharginOnPre");
-        cleanUp();
+        //cleanUp();
     }
 
     @Override
