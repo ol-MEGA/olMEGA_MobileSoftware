@@ -63,7 +63,8 @@ public class PreferencesActivity extends PreferenceActivity {
             super.onDestroy();
             bt = null;
         }
-        private void initBluetooth()
+
+        /*private void initBluetooth()
         {
             bt = new BluetoothSPP(getContext());
             if (bt.isBluetoothEnabled() == true) {
@@ -87,14 +88,14 @@ public class PreferencesActivity extends PreferenceActivity {
                     }
                 });*/
 
-                bt.setupService();
+                /*bt.setupService();
                 bt.startService(BluetoothState.DEVICE_OTHER);
             }
             else{
                 bt.enable();
                 initBluetooth();
             }
-        }
+        }*/
 
         @Override
         public void onCreate(Bundle savedInstanceState){
