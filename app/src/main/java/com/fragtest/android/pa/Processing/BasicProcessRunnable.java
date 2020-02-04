@@ -103,7 +103,6 @@ public class BasicProcessRunnable implements Runnable {
 						blockData[ii][kk] = audioData[ii][kk + (iBlock - 1) * procHopSize];
 					}
 				}
-
 				process(blockData);
 			}
 

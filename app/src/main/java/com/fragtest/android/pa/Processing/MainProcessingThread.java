@@ -44,6 +44,8 @@ public class MainProcessingThread extends BasicProcessingThread{
 
 		if (isActiveFeature("PSD")) {
 
+			Log.e(LOG, "STATE: Trying PSD.");
+
 			long start = System.currentTimeMillis();
 
 			// CPSD takes nProcSeconds of audio data, recursively computes and averages
@@ -58,11 +60,12 @@ public class MainProcessingThread extends BasicProcessingThread{
 			
 			nProcSamples = (int) (nProcSeconds * samplerate);
 			nProcOutSamples = (int) (nOutSeconds * samplerate);
-			
+
 			nHop = nProcSamples;
             // next power of two;
 			int NFFT = 1 << (32 - Integer.numberOfLeadingZeros(nBlockSize - 1));
-			nFeatures = 2 * (NFFT + 2); 			
+			nFeatures = 2 * (NFFT + 2);
+
 			PSD cpsdRunnable = new PSD(audioData, nProcSamples, nHop, nProcOutSamples,
                     nFeatures, processMessenger);
 

@@ -374,7 +374,9 @@ public class ControlService extends Service {
                 mInputProfile.cleanUp();
                 mTaskHandler.removeCallbacks(SetInputProfileTask);
                 runInputProfileChange();
-            } else {
+            } /*else {
+                mInputProfile.setInterface();
+            }*/ else {
                 mTaskHandler.postDelayed(SetInputProfileTask, mSetInputProfileInterval);
             }
         }
@@ -594,7 +596,7 @@ public class ControlService extends Service {
         mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
         mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
-        //mInputProfile.cleanUp();
+        mInputProfile.cleanUp();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");

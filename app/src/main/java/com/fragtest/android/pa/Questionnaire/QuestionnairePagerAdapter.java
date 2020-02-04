@@ -513,7 +513,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     // Sets up visible control elements for questionnaire i.e. navigation symbols
     private void setControlsQuestionnaire() {
 
-        mMainActivity.mLogo.setText("IHAB");
+        mMainActivity.mLogo.setText(R.string.app_name);
         mMainActivity.mArrowForward.setVisibility(View.VISIBLE);
         mMainActivity.mArrowBack.setVisibility(View.VISIBLE);
         mMainActivity.mRevert.setVisibility(View.VISIBLE);

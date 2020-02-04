@@ -150,6 +150,14 @@ public class PreferencesActivity extends PreferenceActivity {
                 }
             });
 
+            SwitchPreference enableKioskMode = (SwitchPreference) findPreference("enableKioskMode");
+            FileIO fileIO = new FileIO();
+            if (fileIO.checkConfigFile()) {
+                enableKioskMode.setEnabled(true);
+            } else {
+                enableKioskMode.setChecked(true);
+                enableKioskMode.setEnabled(false);
+            }
         }
 
         private void setOptionsBasedOnOperationMode(String mode) {

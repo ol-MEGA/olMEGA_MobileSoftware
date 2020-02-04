@@ -263,7 +263,7 @@ public class AnswerTypeSliderFree extends AnswerType {
     private boolean rescaleSliderOnline(MotionEvent motionEvent) {
         int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
         try {
-            setProgressPixels(nValueSelected);
+            setProgressPixels(nValueSelected+200); // +200 to fit on bigger screen
         } catch (Exception e) {
             e.printStackTrace();
         }

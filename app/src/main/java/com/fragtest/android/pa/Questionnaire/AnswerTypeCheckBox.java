@@ -149,9 +149,13 @@ public class AnswerTypeCheckBox extends AnswerType {
     }
 
     private void unCheckExclusive() {
+
         final CheckBox checkBox = (CheckBox) mParent.layoutAnswer.findViewById(mExclusiveId);
-        checkBox.setChecked(false);
-        mQuestionnaire.removeIdFromEvaluationList(mExclusiveId);
+
+        try {
+            checkBox.setChecked(false);
+            mQuestionnaire.removeIdFromEvaluationList(mExclusiveId);
+        } catch (Exception e) {}
     }
 
     private void unCheckEverythingElse() {

@@ -16,6 +16,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -597,6 +598,12 @@ public class MainActivity extends AppCompatActivity {
                 setKioskMode(true);
             }
 
+            // Disable WiFi if no config file is present -> user mode
+            if (!ALLOW_KIOSK_MODE_DISABLED) {
+                WifiManager wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                wifiManager.setWifiEnabled(false);
+            }
+
             mConfig.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -1122,12 +1129,15 @@ public class MainActivity extends AppCompatActivity {
                             break;
                         case "STANDALONE":
                             mServiceState = INPUT_CONFIG.STANDALONE;
-                            //removeError(AppErrors.ERROR_NO_BT);
+                            removeError(AppErrors.ERROR_NO_BT);
                             //removeError(AppErrors.ERROR_NO_USB);
                             //setLogoActive();
                             break;
                         case "INTERNAL_MIC":
                             mServiceState = INPUT_CONFIG.INTERNAL_MIC;
+                            break;
+                        case "CHARGING":
+                            mServiceState = INPUT_CONFIG.CHARGING;
                             break;
                     }
 

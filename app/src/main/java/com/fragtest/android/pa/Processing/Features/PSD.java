@@ -18,11 +18,12 @@ public class PSD extends BasicProcessRunnable {
 
 	@Override
 	public void process(float[][] data) {
+
 		super.process(data);
 		
 		double blockDuration = 0.025;
 		int blockSize = (int) (blockDuration * samplingrate);
-				
+
 		appendFeature(cpsd(data[0], data[1], blockSize, samplingrate));
 	}
 	

@@ -172,6 +172,7 @@ public class Question extends AppCompatActivity {
                         isDefault,
                         isExclusive
                 ));
+
             }
 
             if (stringArray[iA].contains("default")) {
