@@ -352,20 +352,17 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void chargingOff() {
         Log.e(LOG, "CharginOff");
-        //startRecording();
     }
 
     @Override
     public void chargingOn() {
         Log.e(LOG, "CharginOn");
-        //cleanUp();
         mContext.setChargingProfile();
     }
 
     @Override
     public void chargingOnPre() {
         Log.e(LOG, "CharginOnPre");
-        //cleanUp();
     }
 
     @Override
@@ -411,6 +408,17 @@ public class InputProfile_PHANTOM implements InputProfile {
         mContext.getVibration().singleBurst();
     }
 
+    private void AudioTransmissionStart() {
+        Log.d(LOG, "Transmission: START");
+    }
+
+
+    private void AudioTransmissionEnd() {
+        Log.d(LOG, "Transmission: END");
+        stopRecording();
+    }
+
+
     class ConnectedThread extends Thread {
         private final InputStream mmInStream;
         private boolean initialized = false;
@@ -427,13 +435,13 @@ public class InputProfile_PHANTOM implements InputProfile {
             int alivePingTimeout = 100, i, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0;
             byte[] data = new byte[1024], emptyAudioBlock = new byte[AudioBufferSize];
             byte checksum = 0;
-            int timeoutBlockLimit = 50, millisPerBlock = block_size * 1000 / RECORDER_SAMPLERATE;
+            int timeoutBlockLimit = 500, millisPerBlock = block_size * 1000 / RECORDER_SAMPLERATE;
             BlockCount = 0;
             lostBlockCount = 0;
             initialized = false;
             Long lastBluetoothPingTimer = System.currentTimeMillis(), lastEmptyPackageTimer = System.currentTimeMillis(), lastStreamTimer = System.currentTimeMillis();
             try {
-                while (true && run) {
+                while (true) {
                     if (mmInStream.available() >= data.length) {
                         mmInStream.read(data, 0, data.length);
                         for (i = 0; i < data.length; i++) {
@@ -450,7 +458,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                                 if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
                                     if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
                                         if (!initialized) {
-                                            //AudioTransmissionStart();
+                                            AudioTransmissionStart();
                                             initialized = true;
                                         }
                                         AudioVolume = (short) (((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
@@ -476,8 +484,8 @@ public class InputProfile_PHANTOM implements InputProfile {
                             }
                         }
                         lastEmptyPackageTimer = System.currentTimeMillis();
-                    } else if (initialized && System.currentTimeMillis() - lastEmptyPackageTimer > millisPerBlock * timeoutBlockLimit) {
-                        for (long count = 0; count < timeoutBlockLimit; count++) {
+                    } else if (initialized && System.currentTimeMillis() - lastEmptyPackageTimer > timeoutBlockLimit) {
+                        for (long count = 0; count < timeoutBlockLimit / millisPerBlock; count++) {
                             BlockCount++;
                             lostBlockCount++;
                             lastBlockNumber++;
@@ -491,9 +499,11 @@ public class InputProfile_PHANTOM implements InputProfile {
                             bt.send(" ", false);
                             lastBluetoothPingTimer = System.currentTimeMillis();
                         }
-                        if (System.currentTimeMillis() - lastStreamTimer > 20 * 1000) // 20 seconds
+                        if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
                         {
-                            //if (initialized) AudioTransmissionEnd();
+                            if (initialized) {
+                                AudioTransmissionEnd();
+                            }
                             bt.getBluetoothService().connectionLost();
                             bt.getBluetoothService().start(false);
                         }

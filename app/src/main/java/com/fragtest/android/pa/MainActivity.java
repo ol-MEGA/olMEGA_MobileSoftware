@@ -326,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putString("inputProfile", sharedPreferences.getString("inputProfile", "STANDALONE"));
         dataPreferences.putString("listDevices", sharedPreferences.getString("listDevices", ""));
         // Boolean
+        dataPreferences.putBoolean("autoStartActivity", sharedPreferences.getBoolean("autoStartActivity", false));
         dataPreferences.putBoolean("isWave", sharedPreferences.getBoolean("isWave", InitValues.isWave));
         dataPreferences.putBoolean("isTimer", sharedPreferences.getBoolean("isTimer", InitValues.isTimer));
         //dataPreferences.putBoolean("isLocked", sharedPreferences.getBoolean("isLocked", InitValues.isLocked));

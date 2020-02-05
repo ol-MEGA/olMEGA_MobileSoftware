@@ -44,8 +44,6 @@ public class MainProcessingThread extends BasicProcessingThread{
 
 		if (isActiveFeature("PSD")) {
 
-			Log.e(LOG, "STATE: Trying PSD.");
-
 			long start = System.currentTimeMillis();
 
 			// CPSD takes nProcSeconds of audio data, recursively computes and averages

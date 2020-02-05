@@ -15,30 +15,15 @@
 
     </PreferenceCategory>
 
-<!--
-    <PreferenceCategory android:title="Hide Preferences">
+    <PreferenceCategory android:title="General">
 
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
-            android:checked="false"
-            android:key="isLocked"
-            android:title="Hide Preferences"
-            android:summary="Make preferences menu invisible" />
-
-    </PreferenceCategory>
-    -->
-
-    <PreferenceCategory android:title="General">
-
-        <!--<SwitchPreference
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:defaultValue="true"
-            android:key="autostart"
+            android:key="autoStartActivity"
             android:title="Autostart"
-            android:summary="Start app with system" />-->
+            android:summary="Keep Activity running" />
 
         <SwitchPreference
             android:layout_width="wrap_content"

@@ -273,7 +273,14 @@ public class ControlService extends Service {
                 return true;
             }
         }
-        return false;
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        if (sharedPreferences.getBoolean("autoStartActivity", false)) {
+            startActivity();
+            return true;
+        } else {
+            return false;
+        }
+        //return false;
     }
 
     private EventReceiver mAlarmReceiver = new EventReceiver() {
@@ -727,6 +734,8 @@ public class ControlService extends Service {
         downsample = dataPreferences.getBoolean("downsample", downsample);
         keepAudioCache = dataPreferences.getBoolean("keepAudioCache", keepAudioCache);
 
+        boolean autoStartActivity = dataPreferences.getBoolean("autoStartActivity", false);
+
         samplerate = dataPreferences.getString("samplerate", "" + samplerate);
         chunklengthInS = dataPreferences.getString("chunklengthInS", "" + chunklengthInS);
 
@@ -737,6 +746,7 @@ public class ControlService extends Service {
         // Editor accumulates new preferences and writes them to shared preferences
         SharedPreferences.Editor editor = sharedPreferences.edit();
         // Boolean
+        editor.putBoolean("autoStartActivity", autoStartActivity);
         editor.putBoolean("keepAudioCache", keepAudioCache);
         editor.putBoolean("isWave", isWave);
         editor.putBoolean("isTimer", isTimer);
