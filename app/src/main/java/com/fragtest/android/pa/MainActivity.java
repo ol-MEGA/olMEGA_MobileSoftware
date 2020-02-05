@@ -740,7 +740,6 @@ public class MainActivity extends AppCompatActivity {
             isPrefsInForeGround = false;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
 
-            //TODO: CHeck whether this still applies
             shipPreferencesToControlService();
 
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
