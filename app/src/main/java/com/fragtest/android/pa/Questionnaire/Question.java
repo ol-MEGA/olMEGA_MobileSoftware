@@ -240,6 +240,10 @@ public class Question extends AppCompatActivity {
         return mTypeAnswer;
     }
 
+    public ArrayList<Integer> getFilterId() {
+        return this.mFilterIds;
+    }
+
     public int getNumAnswers() {
         return mNumAnswers;
     }

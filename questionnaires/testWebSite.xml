@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="1800" deviation="300"></timer>
+
+        <title>
+            <text>Hörsituation_frei</text>
+        </title>
+		
+
+		//1)
+		<question
+			id="10101"
+			type="website">
+			<label>
+				<text>Externer Fragebogen:</text>
+			</label>
+			<option id="10101_01">
+			     //<text>dttint.hoertech.de/clients/ema/index.php</text>
+                <text>http://dttint.hoertech.de/clients/ema/index.php?ClientId=p1201</text>
+			  //<text>http://www.michaelellis.de</text>
+			</option>
+		</question>
+
+
+		//16)
+		<question id="10126" type="radio">
+            <label>
+                <text>How impaired do you feel?</text>
+            </label>
+            <option id="10126_01">
+                <text>Extremely impaired</text>
+            </option>
+            <option id="10126_02">
+                <text>Very much</text>
+            </option>
+            <option id="10126_03">
+                <text>Pretty much</text>
+            </option>
+            <option id="10126_04">
+                <text>Medium</text>
+            </option>
+			<option id="10126_05">
+                <text>Not much</text>
+            </option>
+			<option id="10126_06">
+                <text>Hardly</text>
+            </option>
+			<option id="10126_07">
+                <text>Not impaired at all</text>
+            </option>
+        </question>
+
+        <finish>
+            <text>Thank you!</text>
+        </finish>
+    </survey>
+</mobiquest>
