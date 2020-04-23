@@ -79,11 +79,11 @@ public class AnswerTypeWebsite extends AnswerType {
                     Units.getScreenHeight() - buttonParams.bottomMargin - buttonParams.topMargin - 650
             );
 
-            Log.e(LOG, "URL: " + webView.getUrl());
+            //Log.e(LOG, "URL: " + webView.getUrl());
+            //Log.e(LOG, "SCREENHEIGHT: " + Units.getScreenHeight());
 
-            Log.e(LOG, "SCREENHEIGHT: " + Units.getScreenHeight());
-
-            mParent.layoutAnswer.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BatteryGreen));
+            mParent.layoutAnswer.setBackgroundColor(ContextCompat.getColor(mContext, R.color.WebGray));
+            mParent.scrollContent.setBackgroundColor(ContextCompat.getColor(mContext, R.color.WebGray));
 
             mParent.layoutAnswer.addView(webView, webViewParams);
             mParent.layoutAnswer.addView(button, buttonParams);
