@@ -7,14 +7,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 
 import com.fragtest.android.pa.Core.DeviceName;
 import com.fragtest.android.pa.Core.FileIO;
@@ -114,6 +117,20 @@ public class PreferencesActivity extends PreferenceActivity {
                         confirmUnsetDeviceOwner();
                     }
                     return true;
+                }
+            });
+
+            // Set Summary of Client ID to current Value
+            EditTextPreference clientID = (EditTextPreference) findPreference("clientID");
+            clientID.setSummary(clientID.getText());
+            // Update with change
+            clientID.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    EditTextPreference clientID = (EditTextPreference) preference;
+                    clientID.setSummary(o.toString());
+                    clientID.setText(o.toString());
+                    return false;
                 }
             });
 

@@ -43,30 +43,34 @@ public class Questionnaire {
     private MetaData mMetaData;
     private String mHead, mFoot, mSurveyURI, mMotivation, mVersion;
     private boolean isImmersive = false;
+    private String clientID;
 
     public Questionnaire(MainActivity mainActivity, String head, String foot, String surveyUri,
-                         String motivation, String version, QuestionnairePagerAdapter contextQPA) {
+                         String motivation, String version, QuestionnairePagerAdapter contextQPA,
+                         String clientID) {
 
-        mMainActivity = mainActivity;
-        mContextQPA = contextQPA;
-        mHead = head;
-        mFoot = foot;
-        mSurveyURI = surveyUri;
-        mMotivation = motivation;
-        mEvaluationList = new EvaluationList();
-        mQuestionList = new ArrayList<>();
-        mFileIO = new FileIO();
-        mQuestionInfo = new ArrayList<>();
-        mMandatoryInfo = new MandatoryInfo();
-        mVersion = version;
+        this.mMainActivity = mainActivity;
+        this.mContextQPA = contextQPA;
+        this.mHead = head;
+        this.mFoot = foot;
+        this.mSurveyURI = surveyUri;
+        this.mMotivation = motivation;
+        this.mEvaluationList = new EvaluationList();
+        this.mQuestionList = new ArrayList<>();
+        this.mFileIO = new FileIO();
+        this.mQuestionInfo = new ArrayList<>();
+        this.mMandatoryInfo = new MandatoryInfo();
+        this.mVersion = version;
+        this.clientID = clientID;
     }
 
     public void setUp(ArrayList<String> questionList) {
 
-        mMetaData = new MetaData(mMainActivity, mHead, mFoot, mSurveyURI, mMotivation, mVersion);
-        mMetaData.initialise();
-        mQuestionList = questionList;
-        mNumPages = mQuestionList.size();
+        this.mMetaData = new MetaData(this.mMainActivity, this.mHead, this.mFoot,
+                this.mSurveyURI, this.mMotivation, this.mVersion);
+        this.mMetaData.initialise();
+        this.mQuestionList = questionList;
+        this.mNumPages = this.mQuestionList.size();
 
         putAllQuestionsInQuestionInfo();
     }
@@ -74,8 +78,8 @@ public class Questionnaire {
     // Generate a Layout for Question at desired Position based on String Blueprint
     Question createQuestion(int position) {
 
-        String sQuestionBlueprint = mQuestionList.get(position);
-        Question question = new Question(sQuestionBlueprint, mMainActivity);
+        String sQuestionBlueprint = this.mQuestionList.get(position);
+        Question question = new Question(sQuestionBlueprint, this.mMainActivity);
 
         return question;
     }
@@ -83,7 +87,7 @@ public class Questionnaire {
     // Builds the Layout of each Stage Question
     LinearLayout generateView(Question question, boolean immersive) {
 
-        isImmersive = immersive;
+        this.isImmersive = immersive;
 
         // Are the answers to this specific Question grouped as Radio Button Group?
         boolean isRadio = false;
@@ -92,6 +96,7 @@ public class Questionnaire {
         boolean isSliderFree = false;
         boolean isEmoji = false;
         boolean isText = false;
+        boolean isWebsite = false;
         boolean isFinish = false;
         boolean isPhotograph = false;
 
@@ -136,6 +141,9 @@ public class Questionnaire {
                 mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
+
+        final AnswerTypeWebsite answerTypeWebsite = new AnswerTypeWebsite(
                 mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
@@ -202,6 +210,11 @@ public class Questionnaire {
                         answerTypeEmoji.addAnswer(nAnswerId, sAnswer, isDefault);
                         break;
                     }
+                    case "website": {
+                        isWebsite = true;
+                        answerTypeWebsite.addAnswer(sAnswer, this.clientID);
+                        break;
+                    }
                     case "photograph": {
                         isPhotograph = true;
                         answerTypePhotograph.addAnswer(sAnswer, nAnswerId);
@@ -247,6 +260,10 @@ public class Questionnaire {
         if (isRadio) {
             answerTypeRadio.buildView();
             answerTypeRadio.addClickListener();
+        }
+
+        if (isWebsite) {
+            answerTypeWebsite.buildView();
         }
 
         if (isFinish) {

@@ -66,6 +66,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private float batteryPlaceholderWeight;
     private int[] batteryStates;
     private boolean bBatteryCritical = false;
+    private String clientID;
 
     private int mBatteryState = -1;
     private float batteryLevel = 1.0f;
@@ -266,8 +267,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
     // Initialise questionnaire based on new input parameters
     public void createQuestionnaire(ArrayList<String> questionList, String head, String foot,
-                                    String surveyUri, String motivation) {
+                                    String surveyUri, String motivation, String clientID) {
 
+        this.clientID = clientID;
         //isMenu = false;
         stopCountDown();
         sendMessage(ControlService.MSG_QUESTIONNAIRE_ACTIVE);
@@ -279,7 +281,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI,
-                mMotivation, mVersion, this);
+                mMotivation, mVersion, this, this.clientID);
         mQuestionnaire.setUp(questionList);
         mNUM_PAGES = mQuestionnaire.getNumPages();
         mViewPager.setOffscreenPageLimit(1);
@@ -306,7 +308,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         // Instantiates a Questionnaire Object based on Contents of raw XML File
         mQuestionnaire = new Questionnaire(mMainActivity, mHead, mFoot, mSurveyURI,
-                mMotivation, mVersion, this);
+                mMotivation, mVersion, this, this.clientID);
 
         mQuestionnaire.setUp(mQuestionList);
 

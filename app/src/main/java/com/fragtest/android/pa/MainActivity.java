@@ -320,6 +320,7 @@ public class MainActivity extends AppCompatActivity {
         Bundle dataPreferences = new Bundle();
         // String
         dataPreferences.putString("whichQuest", sharedPreferences.getString("whichQuest", ""));
+        dataPreferences.putString("clientID", sharedPreferences.getString("clientID", "0000"));
         dataPreferences.putString("samplerate", sharedPreferences.getString("samplerate", "" + InitValues.samplerate));
         dataPreferences.putString("chunklengthInS", sharedPreferences.getString("chunklengthInS", "" + InitValues.chunklengthInS));
         dataPreferences.putString("filterHpFrequency", sharedPreferences.getString("filterHpFrequency", "" + InitValues.filterHpFrequency));
@@ -633,7 +634,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             doBindService();
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
             handleNewPagerAdapter();
 
@@ -1188,13 +1189,17 @@ public class MainActivity extends AppCompatActivity {
 
                 case ControlService.MSG_START_QUESTIONNAIRE:
 
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+                            MainActivity.this);
+                    String clientID = prefs.getString("clientID", "0000");
+
                     Bundle dataQuest = msg.getData();
                     ArrayList<String> questionList = dataQuest.getStringArrayList("questionList");
                     String head = dataQuest.getString("head");
                     String foot = dataQuest.getString("foot");
                     String surveyUri = dataQuest.getString("surveyUri");
                     String motivation = dataQuest.getString("motivation");
-                    mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation);
+                    mAdapter.createQuestionnaire(questionList, head, foot, surveyUri, motivation, clientID);
                     mAppState.startQuest();
 
                     break;

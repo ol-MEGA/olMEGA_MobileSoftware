@@ -18,9 +18,7 @@
 				<text>Externer Fragebogen:</text>
 			</label>
 			<option id="10101_01">
-			     //<text>dttint.hoertech.de/clients/ema/index.php</text>
-                <text>http://dttint.hoertech.de/clients/ema/index.php?ClientId=p1201</text>
-			  //<text>http://www.michaelellis.de</text>
+                <text>http://dttint.hoertech.de/clients/ema/index.php?ClientId=</text>
 			</option>
 		</question>
 

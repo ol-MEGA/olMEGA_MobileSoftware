@@ -17,6 +17,13 @@
 
     <PreferenceCategory android:title="General">
 
+        <EditTextPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:key="clientID"
+            android:title="Client ID"
+            />
+
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

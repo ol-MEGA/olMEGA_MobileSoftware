@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -31,12 +32,14 @@ public class AnswerTypeWebsite extends AnswerType {
 
     private static String LOG_STRING = "AnswerTypeWebsite";
     private String url;
+    private String clientID;
     private Button button;
     private LayoutInflater inflater;
     private Context context;
 
 
-    public AnswerTypeWebsite(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
+    public AnswerTypeWebsite(Context context, Questionnaire questionnaire, AnswerLayout qParent,
+                             int nQuestionId, boolean isImmersive) {
 
         super(context, questionnaire, qParent, nQuestionId);
 
@@ -45,8 +48,9 @@ public class AnswerTypeWebsite extends AnswerType {
 
     }
 
-    public void addAnswer(String url) {
+    public void addAnswer(String url, String clientID) {
         this.url = url;
+        this.clientID = clientID;
     }
 
     public void buildView() {
@@ -56,7 +60,7 @@ public class AnswerTypeWebsite extends AnswerType {
             WebView webView = new WebView(mContext);
             webView.setWebViewClient(new WebViewClient());
             webView.getSettings().setJavaScriptEnabled(true);
-            webView.loadUrl(this.url);
+            webView.loadUrl(this.url + this.clientID);
 
             this.button = new Button(mContext);
 
@@ -75,7 +79,7 @@ public class AnswerTypeWebsite extends AnswerType {
                     Units.getScreenHeight() - buttonParams.bottomMargin - buttonParams.topMargin - 650
             );
 
-            Log.e(LOG, "URL: " + this.url);
+            Log.e(LOG, "URL: " + webView.getUrl());
 
             Log.e(LOG, "SCREENHEIGHT: " + Units.getScreenHeight());
 

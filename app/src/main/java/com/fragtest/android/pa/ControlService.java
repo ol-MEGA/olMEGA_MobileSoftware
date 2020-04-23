@@ -798,7 +798,6 @@ public class ControlService extends Service {
         keepAudioCache = sharedPreferences.getBoolean("keepAudioCache", keepAudioCache);
         isWave = sharedPreferences.getBoolean("isWave", isWave);
 
-
         // Use automatic timer
         isTimer = sharedPreferences.getBoolean("isTimer", isTimer);
 
