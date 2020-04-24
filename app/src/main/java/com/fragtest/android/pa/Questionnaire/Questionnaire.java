@@ -264,6 +264,7 @@ public class Questionnaire {
 
         if (isWebsite) {
             answerTypeWebsite.buildView();
+            answerTypeWebsite.addClickListener();
         }
 
         if (isFinish) {

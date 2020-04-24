@@ -315,6 +315,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             };
 
+    public void nextQuestion() {
+        if (mViewPager.getCurrentItem() < mAdapter.getCount() - 1) {
+            mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+        }
+    }
+
     private void shipPreferencesToControlService() {
         // Load information from shared preferences and bundle them
         Bundle dataPreferences = new Bundle();

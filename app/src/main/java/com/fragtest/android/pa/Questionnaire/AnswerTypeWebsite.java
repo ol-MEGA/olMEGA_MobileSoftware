@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.R;
 
 
@@ -44,7 +45,7 @@ public class AnswerTypeWebsite extends AnswerType {
         super(context, questionnaire, qParent, nQuestionId);
 
         this.context = context;
-        inflater = LayoutInflater.from(context);
+        this.inflater = LayoutInflater.from(context);
 
     }
 
@@ -104,7 +105,12 @@ public class AnswerTypeWebsite extends AnswerType {
 
     public void addClickListener() {
 
-        //button.
+        this.button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((MainActivity) context).nextQuestion();
+            }
+        });
 
     }
 
