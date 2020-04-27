@@ -3,25 +3,25 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
-    <PreferenceCategory android:title="Questionnaire">
+    <PreferenceCategory android:title="@string/pref_head_Questionnaire">
 
         <ListPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:key="whichQuest"
-            android:title="Select questionnaire"
-            android:dialogTitle="Select questionnaire"
+            android:title="@string/pref_whichQuest_title"
+            android:dialogTitle="@string/pref_whichQuest_dialogTitle"
             android:summary="%s"/>
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="General">
+    <PreferenceCategory android:title="@string/pref_head_General">
 
         <EditTextPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:key="clientID"
-            android:title="Client ID"
+            android:title="@string/pref_clientID"
             />
 
         <SwitchPreference
@@ -29,8 +29,8 @@
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="autoStartActivity"
-            android:title="Autostart"
-            android:summary="Keep Activity running" />
+            android:title="@string/pref_autostart_title"
+            android:summary="@string/pref_autostart_summary" />
 
         <SwitchPreference
             android:layout_width="wrap_content"
@@ -38,8 +38,8 @@
             android:defaultValue="true"
             android:checked="true"
             android:key="isTimer"
-            android:title="Activate timer"
-            android:summary="Start questionnaire at defined intervals" />
+            android:title="@string/pref_activateTimer_title"
+            android:summary="@string/pref_activateTimer_summary" />
 
         <ListPreference
             android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
             android:entryValues="@array/inputProfile"
             android:key="inputProfile"
             android:summary="%s"
-            android:title="Operation Mode" />
+            android:title="@string/pref_operationMode_title" />
 
         <!--<ListPreference
             android:layout_width="wrap_content"
@@ -59,14 +59,14 @@
             android:dialogTitle="Connect to Device"
             android:summary="%s"/>-->
 
-        <Preference android:title="Connect"
-            android:summary="@string/pref_button_scan"
+        <Preference android:title="@string/pref_button_scan_title"
+            android:summary="@string/pref_button_scan_summary"
             android:key="connect"/>
 
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Recording"
+    <PreferenceCategory android:title="@string/pref_head_Recording"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -77,13 +77,13 @@
             android:entries="@array/samplingrateEntries"
             android:entryValues="@array/samplingrateValues"
             android:key="samplerate"
-            android:summary="Recording sampling rate in Hz"
-            android:title="Sampling Rate" />
+            android:summary="@string/pref_samplerate_summary"
+            android:title="@string/pref_samplerate_title" />
 
         <EditTextPreference
             android:defaultValue="60"
             android:key="chunklengthInS"
-            android:title="Cache size in seconds"
+            android:title="@string/pref_chunklengthInS_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="keepAudioCache"
-            android:title="Keep cached audio data" />
+            android:title="@string/pref_keepAudioCache_title" />
 
         <SwitchPreference
             android:dependency="keepAudioCache"
@@ -100,11 +100,11 @@
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="isWave"
-            android:title="Cache in WAVE format" />
+            android:title="@string/pref_isWave_title" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="Processing"
+    <PreferenceCategory android:title="@string/pref_head_Processing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -114,14 +114,14 @@
             android:entries="@array/features"
             android:entryValues="@array/features"
             android:key="features"
-            android:title="Features"
+            android:title="@string/pref_features_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <SwitchPreference
             android:defaultValue="true"
             android:key="filterHp"
-            android:title="Highpass filter"
+            android:title="@string/pref_filterHp_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -129,15 +129,15 @@
             android:dependency="filterHp"
             android:defaultValue="100"
             android:key="filterHpFrequency"
-            android:title="Cutoff frequency in Hz"
+            android:title="@string/pref_filterHpFrequency_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <SwitchPreference
             android:defaultValue="true"
             android:key="downsample"
-            android:title="Downsampling"
-            android:summary="Downsample audio (fixed factor 2) "
+            android:title="@string/pref_downsample_title"
+            android:summary="@string/pref_downsample_summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
@@ -146,15 +146,16 @@
     <PreferenceCategory
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:title="Administration">
+        android:title="@string/pref_head_Administration"
+        android:layout="@layout/layout_preference_red">
 
         <SwitchPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="enableKioskMode"
-            android:summary="For experimenters only"
-            android:title="Enable Kiosk Mode"
+            android:summary="@string/pref_enableKioskMode_summary"
+            android:title="@string/pref_enableKioskMode_title"
             />
 
         <SwitchPreference
@@ -162,8 +163,8 @@
             android:layout_height="wrap_content"
             android:defaultValue="false"
             android:key="unsetDeviceAdmin"
-            android:summary="For uninstall only"
-            android:title="Unset Device Administrator" />
+            android:summary="@string/pref_unsetAdmin_summary"
+            android:title="@string/pref_unsetAdmin_title" />
 
 
     </PreferenceCategory>

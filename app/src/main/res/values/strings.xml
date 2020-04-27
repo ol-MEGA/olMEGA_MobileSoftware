@@ -16,6 +16,8 @@
     <string name="batteryCritical">• Battery level critical - Application stopped.</string>
     <string name="noUSB">• Unable to find USB device.</string>
 
+    <string name="noInternet">No internet connection available.</string>
+
     <string name="menuHelp">Help</string>
     <string name="menuBack">Back</string>
 
@@ -42,7 +44,17 @@
     <string name="pref_head_General">General</string>
     <string name="pref_head_Recording">Recording</string>
     <string name="pref_head_Processing">Processing</string>
+    <string name="pref_head_Administration">Administration</string>
 
+    <string name="pref_enableKioskMode_title">Enable Kiosk Mode</string>
+    <string name="pref_enableKioskMode_summary">For experimenters only</string>
+    <string name="pref_unsetAdmin_title">Unset Device Administrator</string>
+    <string name="pref_unsetAdmin_summary">For uninstall only</string>
+    <string name="pref_button_scan_title">Connect</string>
+    <string name="pref_button_scan_summary">Scan Devices</string>
+    <string name="pref_activateTimer_title">Activate timer</string>
+    <string name="pref_activateTimer_summary">Start questionnaire at defined intervals</string>
+    <string name="pref_clientID">ClientID</string>
     <string name="pref_whichQuest_title">Select questionnaire</string>
     <string name="pref_whichQuest_dialogTitle">Select questionnaire</string>
     <string name="pref_forceAnswer_title">Force answers</string>
@@ -65,7 +77,6 @@
     <string name="pref_downsample_title">Downsampling</string>
     <string name="pref_downsample_summary">Downsample audio (fixed factor 2)</string>
 
-    <string name="pref_button_scan">Scan devices</string>
 
 
 </resources>

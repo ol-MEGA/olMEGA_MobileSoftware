@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fragtest.android.pa.Core.Units;
@@ -80,9 +81,6 @@ public class AnswerTypeWebsite extends AnswerType {
                     Units.getScreenHeight() - buttonParams.bottomMargin - buttonParams.topMargin - 650
             );
 
-            //Log.e(LOG, "URL: " + webView.getUrl());
-            //Log.e(LOG, "SCREENHEIGHT: " + Units.getScreenHeight());
-
             mParent.layoutAnswer.setBackgroundColor(ContextCompat.getColor(mContext, R.color.WebGray));
             mParent.scrollContent.setBackgroundColor(ContextCompat.getColor(mContext, R.color.WebGray));
 
@@ -91,7 +89,17 @@ public class AnswerTypeWebsite extends AnswerType {
 
         } else {
 
-            Toast.makeText(this.context, "No network available", Toast.LENGTH_SHORT).show();
+            TextView info = new TextView(mContext);
+            info.setText(R.string.noInternet);
+            info.setTextSize(20.0f);
+            info.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            infoParams.topMargin = 150;
+
+            mParent.layoutAnswer.addView(info, infoParams);
+
             Log.e(LOG, "NO NETWORK AVAILABLE");
 
         }
@@ -105,12 +113,14 @@ public class AnswerTypeWebsite extends AnswerType {
 
     public void addClickListener() {
 
-        this.button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((MainActivity) context).nextQuestion();
-            }
-        });
+        if (isNetworkAvailable()) {
+            this.button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((MainActivity) context).nextQuestion();
+                }
+            });
+        }
 
     }
 
