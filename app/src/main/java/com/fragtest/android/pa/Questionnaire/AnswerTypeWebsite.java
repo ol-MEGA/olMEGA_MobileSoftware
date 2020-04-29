@@ -41,18 +41,22 @@ public class AnswerTypeWebsite extends AnswerType {
 
 
     public AnswerTypeWebsite(Context context, Questionnaire questionnaire, AnswerLayout qParent,
-                             int nQuestionId, boolean isImmersive) {
+                             int nQuestionId, boolean isImmersive, String clientID) {
 
         super(context, questionnaire, qParent, nQuestionId);
 
         this.context = context;
+        this.clientID = clientID;
         this.inflater = LayoutInflater.from(context);
 
     }
 
-    public void addAnswer(String url, String clientID) {
-        this.url = url;
-        this.clientID = clientID;
+    public void addAnswer(String url) {
+        if (url.contains("$clientID$")) {
+            this.url = url.replace("$clientID$", this.clientID);
+        } else {
+            this.url = url;
+        }
     }
 
     public void buildView() {
@@ -62,7 +66,9 @@ public class AnswerTypeWebsite extends AnswerType {
             WebView webView = new WebView(mContext);
             webView.setWebViewClient(new WebViewClient());
             webView.getSettings().setJavaScriptEnabled(true);
-            webView.loadUrl(this.url + this.clientID);
+            webView.loadUrl(this.url);
+
+            Log.e(LOG, "URL: " + this.url);
 
             this.button = new Button(mContext);
 
