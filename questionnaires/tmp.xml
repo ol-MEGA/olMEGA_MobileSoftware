@@ -9,9 +9,13 @@
             <text>Hörsituation_frei</text>
         </title>
 		
+		// One line comment
+		/* Here is a
+		slightly longer
+		comment */
 
 		//1)
-		<question id="10101" type="radio">
+		<question id="10101" type="radio" forceAnswer="true">
 		<label>
 		<text>Which record is the best?</text>
 		</label>
@@ -120,14 +124,26 @@
 			id="10107"
 			type="website">
 			<label>
-				<text>External source:</text>
+				<text>Externer Fragebogen:</text>
 			</label>
 			<option id="10107_01">
                 <text>https://tgm.jade-hs.de/projekte/ihab-rl</text>
 			</option>
 		</question>
+
+        //8)
+        <question
+            id="10108"
+            type="website">
+            <label>
+                <text>Test:</text>
+            </label>
+            <option id="10108_01">
+                <text>https://tgm.jade-hs.de/projekte/ihab-rl/index.php?ClientId=$clientID$</text>
+            </option>
+        </question>
 		
-		//8)
+		//9)
         <finish>
             <text>Thank you!</text>
         </finish>
