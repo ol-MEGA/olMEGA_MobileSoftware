@@ -16,8 +16,10 @@ import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.fragtest.android.pa.Core.DeviceName;
 import com.fragtest.android.pa.Core.FileIO;
@@ -109,6 +111,7 @@ public class PreferencesActivity extends PreferenceActivity {
             // Switch list dummy for actual present questionnaire files
             includeQuestList();
 
+
             SwitchPreference deviceOwnerPref = (SwitchPreference) findPreference("unsetDeviceAdmin");
             deviceOwnerPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -175,6 +178,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 enableKioskMode.setChecked(true);
                 enableKioskMode.setEnabled(false);
             }
+
         }
 
         private void setOptionsBasedOnOperationMode(String mode) {

@@ -15,10 +15,10 @@
 			id="10101"
 			type="website">
 			<label>
-				<text>Externer Fragebogen:</text>
+				<text>Test:</text>
 			</label>
 			<option id="10101_01">
-                <text>http://dttint.hoertech.de/clients/ema/index.php?ClientId=</text>
+                <text>http://dttint.hoertech.de/clients/ema/index.php?ClientId=$clientID$</text>
 			</option>
 		</question>
 

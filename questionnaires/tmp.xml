@@ -9,9 +9,19 @@
             <text>Hörsituation_frei</text>
         </title>
 		
+<<<<<<< HEAD
 
 		//1)
 		<question id="10101" type="radio">
+=======
+		// One line comment
+		/* Here is a
+		slightly longer
+		comment */
+
+		//1)
+		<question id="10101" type="radio" forceAnswer="true">
+>>>>>>> 0c10320258c214cd7ab135e7726a22e2fa6b2514
 		<label>
 		<text>Which record is the best?</text>
 		</label>
@@ -29,7 +39,11 @@
 		//2)
 		<question id="10102" type="checkbox">
 		<label>
+<<<<<<< HEAD
 		<text>Please select one or more colors.</text>
+=======
+		<text>Please select one or more.</text>
+>>>>>>> 0c10320258c214cd7ab135e7726a22e2fa6b2514
 		</label>
 		<option id="10102_01">
 		<text>Red</text>
@@ -126,8 +140,25 @@
                 <text>https://tgm.jade-hs.de/projekte/ihab-rl</text>
 			</option>
 		</question>
+<<<<<<< HEAD
 		
 		//8)
+=======
+
+        //8)
+        <question
+            id="10108"
+            type="website">
+            <label>
+                <text>Test:</text>
+            </label>
+            <option id="10108_01">
+                <text>https://tgm.jade-hs.de/projekte/ihab-rl/index.php?ClientId=$clientID$</text>
+            </option>
+        </question>
+		
+		//9)
+>>>>>>> 0c10320258c214cd7ab135e7726a22e2fa6b2514
         <finish>
             <text>Thank you!</text>
         </finish>

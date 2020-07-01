@@ -144,7 +144,8 @@ public class Questionnaire {
                 mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
 
         final AnswerTypeWebsite answerTypeWebsite = new AnswerTypeWebsite(
-                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive,
+                this.clientID);
 
         final AnswerTypeFinish answerTypeFinish = new AnswerTypeFinish(
                 mMainActivity, this, answerLayout);
@@ -212,7 +213,7 @@ public class Questionnaire {
                     }
                     case "website": {
                         isWebsite = true;
-                        answerTypeWebsite.addAnswer(sAnswer, this.clientID);
+                        answerTypeWebsite.addAnswer(sAnswer);
                         break;
                     }
                     case "photograph": {
@@ -264,6 +265,7 @@ public class Questionnaire {
 
         if (isWebsite) {
             answerTypeWebsite.buildView();
+            answerTypeWebsite.addClickListener();
         }
 
         if (isFinish) {
