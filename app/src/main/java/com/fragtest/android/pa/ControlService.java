@@ -303,7 +303,7 @@ public class ControlService extends Service {
     };
 
 
-    // Battery Status Receiver
+    // USB Charging Status Receiver
     private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context ctxt, Intent intent) {
@@ -311,21 +311,25 @@ public class ControlService extends Service {
             boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
-            // only announce on change
-            if (plugged && !ControlService.getIsCharging()) {
-                // a change towards charging
-                mInputProfile.chargingOn();
-                mVibration.singleBurst();
-                messageClient(ControlService.MSG_CHARGING_ON);
-                ControlService.setIsCharging(true);
-            } else if (!plugged && ControlService.getIsCharging()) {
-                // a change towards not charging
-                mVibration.singleBurst();
-                Log.e(LOG, "A Change towards not charging.");
-                mInputProfile.chargingOff();
-                messageClient(ControlService.MSG_CHARGING_OFF);
-                ControlService.setIsCharging(false);
-            }
+            //boolean bUSBCutsConnection = sharedPreferences.getBoolean("usbCutsConnection", true);
+
+            //if (bUSBCutsConnection) {
+                // only announce on change
+                if (plugged && !ControlService.getIsCharging()) {
+                    // a change towards charging
+                    mInputProfile.chargingOn();
+                    mVibration.singleBurst();
+                    messageClient(ControlService.MSG_CHARGING_ON);
+                    ControlService.setIsCharging(true);
+                } else if (!plugged && ControlService.getIsCharging()) {
+                    // a change towards not charging
+                    mVibration.singleBurst();
+                    Log.e(LOG, "A Change towards not charging.");
+                    mInputProfile.chargingOff();
+                    messageClient(ControlService.MSG_CHARGING_OFF);
+                    ControlService.setIsCharging(false);
+                }
+            //}
         }
     };
 
