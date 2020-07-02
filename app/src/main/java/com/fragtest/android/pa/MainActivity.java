@@ -342,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
         dataPreferences.putBoolean("showConfigButton", sharedPreferences.getBoolean("showConfigButton", InitValues.showConfigButton));
         dataPreferences.putBoolean("showRecordingButton", sharedPreferences.getBoolean("showRecordingButton", InitValues.showRecordingButton));
         dataPreferences.putBoolean("filterHp", sharedPreferences.getBoolean("filterHp", InitValues.filterHp));
+        dataPreferences.putBoolean("usbCutsConnection", sharedPreferences.getBoolean("usbCutsConnection", InitValues.usbCutsConnection));
         // String Set
         Set<String> activeFeatures = sharedPreferences.getStringSet("features", null);
         // String Set cannot be bundled natively, cast to ArrayList

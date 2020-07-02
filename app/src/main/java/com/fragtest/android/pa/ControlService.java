@@ -311,25 +311,25 @@ public class ControlService extends Service {
             boolean plugged = tempPlugged == BatteryManager.BATTERY_PLUGGED_USB ||
                     tempPlugged == BatteryManager.BATTERY_PLUGGED_AC;
 
-            //boolean bUSBCutsConnection = sharedPreferences.getBoolean("usbCutsConnection", true);
+            boolean bUSBCutsConnection = sharedPreferences.getBoolean("usbCutsConnection", true);
 
-            //if (bUSBCutsConnection) {
-                // only announce on change
-                if (plugged && !ControlService.getIsCharging()) {
-                    // a change towards charging
-                    mInputProfile.chargingOn();
-                    mVibration.singleBurst();
-                    messageClient(ControlService.MSG_CHARGING_ON);
-                    ControlService.setIsCharging(true);
-                } else if (!plugged && ControlService.getIsCharging()) {
-                    // a change towards not charging
-                    mVibration.singleBurst();
-                    Log.e(LOG, "A Change towards not charging.");
-                    mInputProfile.chargingOff();
-                    messageClient(ControlService.MSG_CHARGING_OFF);
-                    ControlService.setIsCharging(false);
-                }
-            //}
+            // Only cut connection if preference "USB Cuts Connection" is set
+            // only announce on change
+            if (plugged && !ControlService.getIsCharging() && bUSBCutsConnection) {
+                // a change towards charging
+                mInputProfile.chargingOn();
+                mVibration.singleBurst();
+                messageClient(ControlService.MSG_CHARGING_ON);
+                ControlService.setIsCharging(true);
+            } else if (!plugged && ControlService.getIsCharging()) {
+                // a change towards not charging
+                mVibration.singleBurst();
+                Log.e(LOG, "A Change towards not charging.");
+                mInputProfile.chargingOff();
+                messageClient(ControlService.MSG_CHARGING_OFF);
+                ControlService.setIsCharging(false);
+            }
+
         }
     };
 
@@ -680,10 +680,6 @@ public class ControlService extends Service {
                     break;
             }
 
-            // In case new bluetooth device was chosen
-            //String sDeviceName = sharedPreferences.getString("listDevice", "");
-            //mInputProfile.setDevice(sDeviceName);
-
             mInputProfile.setInterface();
             if (IS_SERVICE_BOUND) {
                 mInputProfile.registerClient();
@@ -737,6 +733,7 @@ public class ControlService extends Service {
         filterHpFrequency = dataPreferences.getString("filterHpFrequency", "" + filterHpFrequency);
         downsample = dataPreferences.getBoolean("downsample", downsample);
         keepAudioCache = dataPreferences.getBoolean("keepAudioCache", keepAudioCache);
+        boolean usbCutsConnection = dataPreferences.getBoolean("usbCutsConnection", true);
 
         boolean autoStartActivity = dataPreferences.getBoolean("autoStartActivity", false);
 
@@ -758,6 +755,7 @@ public class ControlService extends Service {
         editor.putBoolean("downsample", downsample);
         editor.putBoolean("showCofigButton", showConfigButton);
         editor.putBoolean("showRecordingButton", showRecordingButton);
+        editor.putBoolean("usbCutsConnection", usbCutsConnection);
         // String Set
         editor.putStringSet("features", activeFeatures);
         // String
@@ -1033,11 +1031,17 @@ public class ControlService extends Service {
 
         // Are we plugged in?
         int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        ControlService.setIsCharging(status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_PLUGGED_USB);
-        if (ControlService.getIsCharging()) {
-            mInputProfile.chargingOnPre();
-            messageClient(MSG_CHARGING_ON);
+
+        // Only cut connection if preference "USB Cuts Connection" is set
+        boolean bUSBCutsConnection = sharedPreferences.getBoolean("usbCutsConnection", true);
+
+        if (bUSBCutsConnection) {
+            ControlService.setIsCharging(status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_PLUGGED_USB);
+            if (ControlService.getIsCharging()) {
+                mInputProfile.chargingOnPre();
+                messageClient(MSG_CHARGING_ON);
+            }
         }
 
         // It is safe to say, that the display is illuminated on system/application startup

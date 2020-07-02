@@ -15,7 +15,8 @@ public class InitValues {
             filterHp = false,
             downsample = true,
             showConfigButton = true,
-            showRecordingButton = true;
+            showRecordingButton = true,
+            usbCutsConnection = true;
 
     public static int samplerate = 16000,
             chunklengthInS = 60,
@@ -36,6 +37,7 @@ public class InitValues {
         initBundle.putBoolean("downsample", downsample);
         initBundle.putBoolean("showConfigButton", showConfigButton);
         initBundle.putBoolean("showRecordingButton", showRecordingButton);
+        initBundle.putBoolean("usbCutsConnection", usbCutsConnection);
 
         initBundle.putInt("samplerate", samplerate);
         initBundle.putInt("chunklengthInS", chunklengthInS);
