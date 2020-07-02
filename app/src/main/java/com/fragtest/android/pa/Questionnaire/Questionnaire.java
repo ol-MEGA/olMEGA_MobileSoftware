@@ -134,11 +134,11 @@ public class Questionnaire {
 
         // In case of sliderFix type
         final AnswerTypeSliderFix answerSliderFix = new AnswerTypeSliderFix(
-                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), questionText, isImmersive);
 
         // In case of sliderFree type
         final AnswerTypeSliderFree answerSliderFree = new AnswerTypeSliderFree(
-                mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);
+                mMainActivity, this, answerLayout, question.getQuestionId(), questionText, isImmersive);
 
         final AnswerTypeText answerTypeText = new AnswerTypeText(
                 mMainActivity, this, answerLayout, question.getQuestionId(), isImmersive);

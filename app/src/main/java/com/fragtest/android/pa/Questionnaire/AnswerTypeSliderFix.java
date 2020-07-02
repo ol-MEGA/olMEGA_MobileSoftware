@@ -1,9 +1,12 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -14,6 +17,7 @@ import android.widget.TextView;
 
 import com.fragtest.android.pa.Core.Units;
 import com.fragtest.android.pa.DataTypes.StringAndInteger;
+import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.R;
 
 import java.util.ArrayList;
@@ -28,7 +32,7 @@ public class AnswerTypeSliderFix extends AnswerType {
     public static String LOG_STRING = "AnswerTypeSliderFix";
     //public final AnswerLayout parent;
     private final List<Integer> mListOfIds = new ArrayList<>();
-    //private final Context mContext;
+    private final MainActivity mContext;
     //private final List<StringAndInteger> mListOfAnswers;
     private final LinearLayout mHorizontalContainer;
     private final LinearLayout mAnswerListContainer;
@@ -37,24 +41,28 @@ public class AnswerTypeSliderFix extends AnswerType {
     private final RelativeLayout mSliderContainer;
     private final int width;
     private final int mUsableHeight;
+    private static final int mMinProgress = 10;
     //private final int mQuestionId;
     //private final Questionnaire mQuestionnaire;
     private int mDefaultAnswer = -1;
     private boolean isImmersive = false;
+    private QuestionText mQuestionText;
+
 
     // These serve to normalise pixel/value for now
     private int mMagicNumber1 = 140;
     private int mMagicNumber2 = 151;
 
-    public AnswerTypeSliderFix(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId, boolean immersive) {
+    public AnswerTypeSliderFix(MainActivity context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId, QuestionText questionText, boolean immersive) {
 
         super(context, questionnaire, qParent, nQuestionId);
 
-        //mContext = context;
+        mContext = context;
         //parent = qParent;
         //mQuestionnaire = questionnaire;
         //mListOfAnswers = new ArrayList<>();
         //mQuestionId = nQuestionId;
+        mQuestionText = questionText;
         isImmersive = immersive;
 
         // Slider Layout is predefined in XML
@@ -97,6 +105,7 @@ public class AnswerTypeSliderFix extends AnswerType {
         mAnswerListContainer.setOrientation(LinearLayout.VERTICAL);
         mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(
                 mContext, R.color.BackgroundColor));
+
         mAnswerListContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width - 100,
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -284,12 +293,14 @@ public class AnswerTypeSliderFix extends AnswerType {
 
     // Ensure values inside slider boundaries
     private float clipValuesToRange(float inVal) {
+
         int nPad = (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom);
         if (inVal < Units.getScreenHeight() - mUsableHeight - nPad) {
             inVal = Units.getScreenHeight() - mUsableHeight - nPad;
-        } else if (inVal > Units.getScreenHeight() - nPad) {
-            inVal = Units.getScreenHeight() - nPad;
+        } else if (inVal > Units.getScreenHeight() - nPad - mMinProgress) {
+            inVal = Units.getScreenHeight() - nPad - mMinProgress;
         }
+
         return inVal;
     }
 
@@ -305,20 +316,30 @@ public class AnswerTypeSliderFix extends AnswerType {
 
     // Enables quantisation of values (fixed choice options), counting from 0 (lowest)
     private int mapValuesToItems(float inVal) {
-        return (int) ((inVal - mMagicNumber2 - (Units.getScreenHeight() -
-                mUsableHeight - (int) mContext.getResources().getDimension(
-                R.dimen.answerLayoutPadding_Bottom))) / (mMagicNumber2));
+
+        int nTotalHeight = mRemainView.getHeight();
+
+        int topPadHeight = (int) (mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) +
+                mContext.getResources().getDimension(R.dimen.progressBarHeight) +
+                (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom));
+
+        return (int) ( (inVal - topPadHeight - mQuestionText.getQuestionHeight()) ) / (nTotalHeight / this.mListOfAnswers.size());
+
     }
 
     // Set progress/slider according to number of selected item (counting from 0)
     public void setProgressItem(int numItem) {
 
         int nHeightView = (mUsableHeight - mMagicNumber1)/(mListOfAnswers.size());
+
+
         int nPixProgress = (int) ((2 * (mListOfAnswers.size() - numItem) - 1) /
                 2.0f * nHeightView);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
     }
+
+
 }
 
 

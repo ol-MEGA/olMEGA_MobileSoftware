@@ -1,6 +1,7 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
@@ -34,18 +35,20 @@ public class AnswerTypeSliderFree extends AnswerType {
     private int mDefaultAnswer = -1;
     private int nTextViewHeight;
     private boolean isImmersive = false;
+private QuestionText mQuestion;
 
     // These serve to normalise pixel/value for now
     private int mMagicNumber1 = 140;
     private int mMagicNumber2 = 151;
 
     public AnswerTypeSliderFree(Context context, Questionnaire questionnaire,
-                                AnswerLayout qParent, int nQuestionId, boolean immersive) {
+                                AnswerLayout qParent, int nQuestionId, QuestionText questionText, boolean immersive) {
 
         super(context, questionnaire, qParent, nQuestionId);
 
         //TODO: Resolve magic numbers
 
+        mQuestion = questionText;
         isImmersive = immersive;
 
         // Slider Layout is predefined in XML
@@ -58,7 +61,10 @@ public class AnswerTypeSliderFree extends AnswerType {
                 1.f
         ));
 
-        mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive);
+        mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive) ;
+
+        Log.e(LOG, "USABLEHEIGHT:" + mUsableHeight);
+
 
         /**
          *
@@ -93,6 +99,7 @@ public class AnswerTypeSliderFree extends AnswerType {
         mAnswerListContainer.setOrientation(LinearLayout.VERTICAL);
         mAnswerListContainer.setBackgroundColor(ContextCompat.getColor(
                 mContext, R.color.BackgroundColor));
+
         mAnswerListContainer.setLayoutParams(new LinearLayout.LayoutParams(
                 width - 100,
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -103,13 +110,22 @@ public class AnswerTypeSliderFree extends AnswerType {
         mRemainView = mHorizontalContainer.findViewById(R.id.RemainView);
 
         mResizeView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.JadeRed));
+        mRemainView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
     }
 
     public void buildView() {
 
+        Log.e(LOG, "NUMBER: " + mListOfAnswers.size());
+        for (int iTmp = 0; iTmp < mListOfAnswers.size(); iTmp++) {
+            Log.e(LOG, "ans: " + mListOfAnswers.get(iTmp));
+        }
+
+
         // Iterate over all options and create a TextView for each one
         for (int iAnswer = 0; iAnswer < mListOfAnswers.size(); iAnswer++) {
             TextView textMark = new TextView(mContext);
+
+
             LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     0,
@@ -140,6 +156,7 @@ public class AnswerTypeSliderFree extends AnswerType {
             } else {
                 textMark.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
             }
+
             textMark.setGravity(Gravity.CENTER_VERTICAL);
             textMark.setLayoutParams(textParams);
             textMark.setBackgroundColor(ContextCompat.getColor(mContext, R.color.BackgroundColor));
@@ -189,6 +206,8 @@ public class AnswerTypeSliderFree extends AnswerType {
                     setProgressItem(numAnswer);
                     mQuestionnaire.removeQuestionIdFromEvaluationList(mQuestionId);
                     mQuestionnaire.addValueToEvaluationList(mQuestionId, getFractionFromProgress());
+
+                    Log.e(LOG, "Percent: " + getFractionFromProgress());
                 }
             });
         }
@@ -262,8 +281,9 @@ public class AnswerTypeSliderFree extends AnswerType {
     // Set progress  bar according to user input
     private boolean rescaleSliderOnline(MotionEvent motionEvent) {
         int nValueSelected = (int) clipValuesToRange(motionEvent.getRawY());
+
         try {
-            setProgressPixels(nValueSelected+200); // +200 to fit on bigger screen
+            setProgressPixels(nValueSelected); // +200 to fit on bigger screen
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -296,6 +316,7 @@ public class AnswerTypeSliderFree extends AnswerType {
     private boolean setProgressPixels(int nPixels) {
         mResizeView.getLayoutParams().height =
                 Units.getScreenHeight() -
+                        (int) mContext.getResources().getDimension(R.dimen.toolBarHeightWithPadding) -
                         (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom) -
                         nPixels;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
