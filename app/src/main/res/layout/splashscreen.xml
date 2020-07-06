@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/Canvas"
+    android:weightSum="1.4">
+
+    <View
+        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:src="@mipmap/ic_launcher"
+        android:layout_weight="0.3"/>
+
+    <LinearLayout
+        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_weight="0.6"
+        android:layout_gravity="center_vertical|center_horizontal">
+
+    <ImageView
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/videoView"
+        android:src="@drawable/logo"
+        android:layout_gravity="center"
+        />
+
+    </LinearLayout>
+
+    <View
+        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:src="@mipmap/ic_launcher"
+        android:layout_weight="0.5"/>
+
+</LinearLayout>
+

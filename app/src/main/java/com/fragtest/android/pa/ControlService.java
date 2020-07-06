@@ -280,7 +280,6 @@ public class ControlService extends Service {
         } else {
             return false;
         }
-        //return false;
     }
 
     private EventReceiver mAlarmReceiver = new EventReceiver() {

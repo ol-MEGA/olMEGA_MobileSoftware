@@ -79,4 +79,6 @@
     <dimen name="charging_width">10dp</dimen>
     <dimen name="charging_height">20dp</dimen>
 
+    <dimen name="splashScreenLogo_width">96dp</dimen>
+
 </resources>

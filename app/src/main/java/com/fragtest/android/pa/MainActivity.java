@@ -515,6 +515,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onFinish() {
             startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+            overridePendingTransition(R.anim.fadeout, R.anim.fadein);
             isPrefsInForeGround = true;
             mAdapter.setPrefsInForeGround(isPrefsInForeGround);
         }
@@ -619,6 +620,7 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
 
                     startActivity(new Intent(MainActivity.this, PreferencesActivity.class));
+                    overridePendingTransition(R.anim.fadeout, R.anim.fadein);
                     isPrefsInForeGround = true;
                     mAdapter.setPrefsInForeGround(isPrefsInForeGround);
                 }
