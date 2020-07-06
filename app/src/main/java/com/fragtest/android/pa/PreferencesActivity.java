@@ -61,6 +61,12 @@ public class PreferencesActivity extends PreferenceActivity {
         decorView.setSystemUiVisibility(uiOptions);
     }
 
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(R.anim.hold, R.anim.fadein);
+    }
+
     public static class Preferences extends PreferenceFragment {
 
         private final String DEVICE_WITH_A2DP = "LGE Car Hammerhead";

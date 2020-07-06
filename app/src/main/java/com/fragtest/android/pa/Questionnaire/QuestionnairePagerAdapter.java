@@ -261,7 +261,6 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
 
         notifyDataSetChanged();
         mViewPager.setCurrentItem(0);
-        
 
         UI_STATE = UI_STATE_HELP;
     }

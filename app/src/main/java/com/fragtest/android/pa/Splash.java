@@ -16,7 +16,7 @@ public class Splash extends AppCompatActivity {
 
     private final String LOG = "Splash";
     // Decide whether to show still image or video
-    private boolean showStill = false;
+    private boolean showStill = true;
     // Duration of wait
     private int SPLASH_DISPLAY_LENGTH = 0;
 
@@ -39,6 +39,21 @@ public class Splash extends AppCompatActivity {
             if (showStill) {
                 SPLASH_DISPLAY_LENGTH = 2500;
                 setContentView(R.layout.splashscreen);
+
+                /* New Handler to start the Menu-Activity
+                 * and close this Splash-Screen after some seconds.*/
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        /* Create an Intent that will start the Menu-Activity. */
+                        Intent mainIntent = new Intent(Splash.this, MainActivity.class);
+                        Splash.this.startActivity(mainIntent);
+                        overridePendingTransition(R.anim.fadeout, R.anim.fadein);
+                        Splash.this.finish();
+                        overridePendingTransition(R.anim.fadeout, R.anim.fadein);
+                    }
+                }, SPLASH_DISPLAY_LENGTH);
+
             } else {
                 SPLASH_DISPLAY_LENGTH = 3000;
                 setContentView(R.layout.splashvideo);
@@ -47,24 +62,24 @@ public class Splash extends AppCompatActivity {
                 videoView.setVideoURI(video);
                 videoView.setZOrderOnTop(true);
                 videoView.start();
+
+                /* New Handler to start the Menu-Activity
+                 * and close this Splash-Screen after some seconds.*/
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        /* Create an Intent that will start the Menu-Activity. */
+                        Intent mainIntent = new Intent(Splash.this, MainActivity.class);
+                        Splash.this.startActivity(mainIntent);
+                        overridePendingTransition(R.anim.hold, R.anim.fadein);
+                        Splash.this.finish();
+                        overridePendingTransition(R.anim.hold, R.anim.fadein);
+                    }
+                }, SPLASH_DISPLAY_LENGTH);
+
             }
 
         } catch (Exception ex) {
         }
-
-        /* New Handler to start the Menu-Activity
-         * and close this Splash-Screen after some seconds.*/
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                /* Create an Intent that will start the Menu-Activity. */
-                Intent mainIntent = new Intent(Splash.this, MainActivity.class);
-                Splash.this.startActivity(mainIntent);
-                overridePendingTransition(R.anim.hold, R.anim.fadein);
-                Splash.this.finish();
-                overridePendingTransition(R.anim.hold, R.anim.fadeout);
-            }
-        }, SPLASH_DISPLAY_LENGTH);
     }
-
 }
