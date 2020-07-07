@@ -208,6 +208,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 LogIHAB.log(messsage);
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
+                downsamplePref.setEnabled(false);
                 scanPref.setEnabled(false);
             } else if (mode.equals("PHANTOM")) {
                 String messsage = "Chosen input profile: " + mode + ". Setting Samplerate to 16000 and disabling downsampling by factor 2. Also Scan enabled.";
@@ -215,6 +216,8 @@ public class PreferencesActivity extends PreferenceActivity {
                 LogIHAB.log(messsage);
                 sampleratePref.setValue("16000");
                 downsamplePref.setChecked(false);
+
+                downsamplePref.setEnabled(false);
                 scanPref.setEnabled(true);
                 //initBluetooth();
             } else {
@@ -223,6 +226,7 @@ public class PreferencesActivity extends PreferenceActivity {
                 LogIHAB.log(message);
                 sampleratePref.setValue("48000");
                 downsamplePref.setChecked(true);
+                downsamplePref.setEnabled(true);
                 scanPref.setEnabled(false);
             }
         }
