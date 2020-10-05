@@ -99,6 +99,7 @@ public class Questionnaire {
         boolean isWebsite = false;
         boolean isFinish = false;
         boolean isPhotograph = false;
+        boolean isInfo = false;
 
         LinearLayout answerContainer = new LinearLayout(mMainActivity);
         answerContainer.setId(question.getQuestionId());
@@ -152,6 +153,9 @@ public class Questionnaire {
 
         final AnswerTypePhotograph answerTypePhotograph = new AnswerTypePhotograph(
                 mMainActivity, answerLayout);
+
+        final AnswerTypeInfo answerTypeInfo = new AnswerTypeInfo(
+                mMainActivity, this, answerLayout);
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -221,6 +225,11 @@ public class Questionnaire {
                         answerTypePhotograph.addAnswer(sAnswer, nAnswerId);
                         break;
                     }
+                    case "info": {
+                        isInfo = true;
+                        answerTypeInfo.addAnswer();
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
@@ -275,6 +284,10 @@ public class Questionnaire {
         if (isPhotograph) {
             answerTypePhotograph.buildView();
             answerTypePhotograph.addClickListener();
+        }
+
+        if (isInfo) {
+            answerTypeInfo.addClickListener();
         }
 
         return answerContainer;
