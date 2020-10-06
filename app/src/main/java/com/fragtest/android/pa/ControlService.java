@@ -71,11 +71,12 @@ public class ControlService extends Service {
 
     static final String LOG = "ControlService";
     public static final boolean isStandalone = false;
-    static final int CURRENT_YEAR = 2018;
+    static final int CURRENT_YEAR = 2020;
     public static final int MSG_STATE_CHANGE = 18;
 
     /**
      * Constants for messaging. Should(!) be self-explanatory.
+     * - ok, boomer
      */
 
     // 1* - general
@@ -86,6 +87,7 @@ public class ControlService extends Service {
     public static final int MSG_NO_QUESTIONNAIRE_FOUND = 15;
     public static final int MSG_NO_TIMER = 16;
     public static final int MSG_CHANGE_PREFERENCE = 17;
+    public static final int MSG_SWITCH_INPUTMODE = 18;
     public static boolean IS_SERVICE_BOUND = false;
 
     // 2* - alarm
@@ -203,6 +205,7 @@ public class ControlService extends Service {
     private int mActivityCheckTime = 10*1000;
     private int mDisableBTTime = 10*1000;
     private int mSetInputProfileInterval = 200;
+    private int mDelaySwitchProfile = 1000;
     // Questionnaire-Timer
     EventTimer mEventTimer;
 
@@ -617,6 +620,18 @@ public class ControlService extends Service {
         Log.e(LOG, "ControlService started");
     }
 
+    private void switchInputProfileBackAndForth() {
+        Log.e(LOG, "Switching back an forth to establish connection.");
+        // Save last state
+        String currentProfile =  mInputProfile.getInputProfile();
+        // Facilitate Input Profile switch to Standalone, i.e. cutting all connections
+        setInputProfile(getInputProfile_STANDALONE().getInputProfile());
+        // Switch back to last state
+        mNewInputProfile = currentProfile;
+        setInputProfileDelayed();
+
+    }
+
     public void setInputProfile(String inputProfile) {
         mNewInputProfile = inputProfile;
         setInputProfile();
@@ -629,7 +644,11 @@ public class ControlService extends Service {
     }
 
     public void setInputProfile() {
-       mTaskHandler.post(SetInputProfileTask);
+        mTaskHandler.post(SetInputProfileTask);
+    }
+
+    private void setInputProfileDelayed() {
+        mTaskHandler.postDelayed(SetInputProfileTask, mDelaySwitchProfile);
     }
 
     private void runInputProfileChange() {
@@ -1110,6 +1129,10 @@ public class ControlService extends Service {
                     Bundle status = new Bundle();
                     status.putBoolean("isRecording", getIsRecording());
                     messageClient(MSG_GET_STATUS, status);
+                    break;
+
+                case MSG_SWITCH_INPUTMODE:
+                    switchInputProfileBackAndForth();
                     break;
 
                 case MSG_START_COUNTDOWN:

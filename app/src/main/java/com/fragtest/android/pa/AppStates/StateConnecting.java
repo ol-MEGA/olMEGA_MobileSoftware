@@ -39,7 +39,8 @@ public class StateConnecting implements AppState {
     private Runnable mPollBTRunnable = new Runnable() {
         @Override
         public void run() {
-            mainActivity.messageService(ControlService.MSG_RESET_BT);
+            //mainActivity.messageService(ControlService.MSG_RESET_BT);
+            mainActivity.switchInputProfilesBackAndForth();
             mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
         }
     };

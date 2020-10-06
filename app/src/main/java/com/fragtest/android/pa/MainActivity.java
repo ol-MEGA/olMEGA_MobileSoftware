@@ -72,6 +72,7 @@ import static com.fragtest.android.pa.ControlService.MSG_NO_QUESTIONNAIRE_FOUND;
 import static com.fragtest.android.pa.ControlService.MSG_SET_COUNTDOWN_TIME;
 import static com.fragtest.android.pa.ControlService.MSG_START_COUNTDOWN;
 import static com.fragtest.android.pa.ControlService.MSG_STOP_COUNTDOWN;
+import static com.fragtest.android.pa.ControlService.MSG_SWITCH_INPUTMODE;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -521,6 +522,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    public void switchInputProfilesBackAndForth(){
+        messageService(MSG_SWITCH_INPUTMODE);
+    };
 
     /*public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -553,6 +557,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 */
+
+    // REMEMBER!
+    // requestPermissions(new String[]{
+    //                                Manifest.permission.READ_CONTACTS,
+    //                                Manifest.permission.ACCESS_FINE_LOCATION},
+    //                        ASK_MULTIPLE_PERMISSION_REQUEST_CODE);
 
     /**
      * Lifecycle methods
