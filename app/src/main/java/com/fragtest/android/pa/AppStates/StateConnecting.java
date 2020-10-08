@@ -83,7 +83,7 @@ public class StateConnecting implements AppState {
             mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
             mainActivity.mTaskHandler.post(mDotRunnable);
             // Have to run tests whether this is necessary
-            mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
+            //mainActivity.mTaskHandler.postDelayed(mPollBTRunnable, mDelayPollBT);
 
             Log.e(LOG, LOG);
         } else {
@@ -208,7 +208,7 @@ public class StateConnecting implements AppState {
         qpa.getMenuPage().mDots.setVisibility(View.INVISIBLE);
         mainActivity.mTaskHandler.removeCallbacks(mConnectingRunnable);
         mainActivity.mTaskHandler.removeCallbacks(mDotRunnable);
-        mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
+        //mainActivity.mTaskHandler.removeCallbacks(mPollBTRunnable);
         blockError = false;
 
         //Log.e(LOG, LOG + ":" + "State Connecting going on to Error..");

@@ -406,6 +406,7 @@ public class InputProfile_PHANTOM implements InputProfile {
         finishFile();
         mContext.messageClient(ControlService.MSG_STOP_RECORDING);
         mContext.getVibration().singleBurst();
+        mBluetoothAdapter.disable();
     }
 
     private void AudioTransmissionStart() {

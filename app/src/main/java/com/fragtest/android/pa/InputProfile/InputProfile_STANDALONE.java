@@ -1,5 +1,6 @@
 package com.fragtest.android.pa.InputProfile;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.Handler;
 import android.os.Messenger;
 import android.util.Log;
@@ -115,6 +116,7 @@ public class InputProfile_STANDALONE implements InputProfile {
 
     @Override
     public void applicationShutdown() {
-
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter.disable();
     }
 }

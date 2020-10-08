@@ -156,7 +156,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/progressBarHeight"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@color/JadeGray">
 
         <View
             android:id="@+id/progress"
