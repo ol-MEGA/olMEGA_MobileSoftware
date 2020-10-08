@@ -1,5 +1,6 @@
 package com.fragtest.android.pa.InputProfile;
 
+import android.bluetooth.BluetoothAdapter;
 import android.os.Messenger;
 
 import com.fragtest.android.pa.ControlService;
@@ -12,6 +13,7 @@ public class InputProfile_CHARGING implements InputProfile {
     private String mProfile_State;
     private ControlService mContext;
     private Messenger mServiceMessenger;
+    private BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 
     public InputProfile_CHARGING(ControlService context, Messenger serviceMessenger) {
@@ -27,9 +29,8 @@ public class InputProfile_CHARGING implements InputProfile {
 
     @Override
     public void setInterface() {
-
         LogIHAB.log(LOG);
-
+        mBluetoothAdapter.disable();
     }
 
     @Override
@@ -77,7 +78,6 @@ public class InputProfile_CHARGING implements InputProfile {
 
     @Override
     public void chargingOn() {
-
     }
 
     @Override
