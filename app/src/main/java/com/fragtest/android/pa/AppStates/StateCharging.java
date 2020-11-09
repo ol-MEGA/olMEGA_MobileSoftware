@@ -42,7 +42,7 @@ public class StateCharging implements AppState {
         mainActivity.addError(MainActivity.AppErrors.ERROR_NO_BT);
         mainActivity.mCharging.setVisibility(View.VISIBLE);
         mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-        mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
+        //mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
 
         Log.e(LOG, LOG);
         LogIHAB.log(LOG);

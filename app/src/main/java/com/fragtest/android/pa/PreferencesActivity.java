@@ -165,7 +165,9 @@ public class PreferencesActivity extends PreferenceActivity {
                 inputProfilePref.setEntryValues(R.array.inputProfile);
             }
 
-            setOptionsBasedOnOperationMode(inputProfilePref.getEntry().toString());
+            try {
+                setOptionsBasedOnOperationMode(inputProfilePref.getEntry().toString());
+            } catch(Exception e) {}
 
             inputProfilePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override

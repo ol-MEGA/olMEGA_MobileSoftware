@@ -25,6 +25,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.io.IOException;
@@ -75,13 +76,13 @@ public class BluetoothService {
         mHandler.obtainMessage(BluetoothState.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
     }
 
-    // Return the current connection state. 
+    // Return the current connection state.
     public synchronized int getState() {
         return mState;
     }
 
     // Start the chat service. Specifically start AcceptThread to begin a
-    // session in listening (server) mode. Called by the Activity onResume() 
+    // session in listening (server) mode. Called by the Activity onResume()
     public synchronized void start(boolean isAndroid) {
         // Cancel any thread attempting to make a connection
         if (mConnectThread != null) {
@@ -157,9 +158,9 @@ public class BluetoothService {
         }
 
         // Start the thread to manage the connection and perform transmissions
-        mConnectedThread = new ConnectedThread(socket, socketType);
-        mConnectedThread.setPriority(Thread.MAX_PRIORITY);
-        mConnectedThread.start();
+        this.mConnectedThread = new ConnectedThread(socket, socketType);
+        this.mConnectedThread.setPriority(Thread.MAX_PRIORITY);
+        this.mConnectedThread.start();
 
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(BluetoothState.MESSAGE_DEVICE_NAME);
@@ -168,7 +169,7 @@ public class BluetoothService {
         bundle.putString(BluetoothState.DEVICE_ADDRESS, device.getAddress());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
-
+        Log.d(TAG, "connected: STATE_CONNECTED " + mConnectedThread.toString());
         setState(BluetoothState.STATE_CONNECTED);
     }
 

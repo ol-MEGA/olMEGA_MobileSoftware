@@ -72,7 +72,9 @@ public class InputProfile_CHARGING implements InputProfile {
 
     @Override
     public void chargingOff() {
+        //this.mContext.setInputProfile(this.mContext.getInputProfile_PHANTOM().getInputProfile());
         this.mContext.setInputProfile(this.mProfile_State);
+        this.mContext.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES);
     }
 
     @Override

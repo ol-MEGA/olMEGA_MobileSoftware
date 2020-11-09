@@ -21,6 +21,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
+import android.support.v4.BuildConfig;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -132,13 +133,13 @@ public class ControlService extends Service {
     public static INPUT_CONFIG INPUT;
 
     private InputProfile mInputProfile;
-    private InputProfile_CHARGING mInputProfile_CHARGING;
-    private InputProfile_STANDALONE mInputProfile_STANDALONE;
-    private InputProfile_A2DP mInputProfile_A2DP;
-    private InputProfile_USB mInputProfile_USB;
-    private InputProfile_INTERNAL_MIC mInputProfile_INTERNAL_MIC;
-    private InputProfile_RFCOMM mInputProfile_RFCOMM;
-    private InputProfile_PHANTOM mInputProfile_PHANTOM;
+    //private InputProfile_CHARGING mInputProfile_CHARGING;
+    //private InputProfile_STANDALONE mInputProfile_STANDALONE;
+    //private InputProfile_A2DP mInputProfile_A2DP;
+    //private InputProfile_USB mInputProfile_USB;
+    //private InputProfile_INTERNAL_MIC mInputProfile_INTERNAL_MIC;
+    //private InputProfile_RFCOMM mInputProfile_RFCOMM;
+    //private InputProfile_PHANTOM mInputProfile_PHANTOM;
     private final BroadcastReceiver mDisplayReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -158,7 +159,7 @@ public class ControlService extends Service {
         }
     };
     private String mNewInputProfile = "";
-    private String INPUT_PROFILE_STATUS;
+    private String INPUT_PROFILE_STATUS = "";
     private String inputProfile_State = "STANDALONE";
 
     private static int mChunkId = 1;
@@ -348,7 +349,7 @@ public class ControlService extends Service {
      * Input Profiles
      */
 
-
+/*
     public InputProfile_CHARGING getInputProfile_CHARGING() {
         return mInputProfile_CHARGING;
     }
@@ -376,7 +377,7 @@ public class ControlService extends Service {
     public InputProfile getInputProfile_INTERNAL_MIC() {
         return mInputProfile_INTERNAL_MIC;
     }
-
+*/
     private Runnable SetInputProfileTask = new Runnable() {
         @Override
         public void run() {
@@ -598,19 +599,20 @@ public class ControlService extends Service {
         showNotification();
 
         mInputProfile = new InputProfile_Blank(this);
-        mInputProfile_CHARGING = new InputProfile_CHARGING(this, mServiceMessenger);
-        mInputProfile_STANDALONE = new InputProfile_STANDALONE(this, mServiceMessenger);
-        mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
-        mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
-        mInputProfile_INTERNAL_MIC = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
-        mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
-        mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
+        //mInputProfile_CHARGING = new InputProfile_CHARGING(this, mServiceMessenger);
+        //mInputProfile_STANDALONE = new InputProfile_STANDALONE(this, mServiceMessenger);
+        //mInputProfile_A2DP = new InputProfile_A2DP(this, mServiceMessenger);
+        //mInputProfile_USB = new InputProfile_USB(this, mServiceMessenger);
+        //mInputProfile_INTERNAL_MIC = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
+        //mInputProfile_RFCOMM = new InputProfile_RFCOMM(this, mServiceMessenger);
+        //mInputProfile_PHANTOM = new InputProfile_PHANTOM(this, mServiceMessenger);
 
         mInputProfile.cleanUp();
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");
+        //INPUT_PROFILE_STATUS = sharedPreferences.getString("inputProfile", "");
         mNewInputProfile = sharedPreferences.getString("inputProfile", "STANDALONE");
+        //inputProfile_State = mNewInputProfile;
 
         setInputProfile();
 
@@ -638,43 +640,48 @@ public class ControlService extends Service {
 
         if (mInputProfile.getIsAudioRecorderClosed()) {
 
+            mInputProfile.onDestroy();
+            mInputProfile = null;
+            System.gc();
+
             Log.e(LOG, "AudioRecorder is closed");
 
             switch (mNewInputProfile) {
                 case "A2DP":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.A2DP.toString();
-                    mInputProfile = getInputProfile_A2DP();
+                    mInputProfile = new InputProfile_A2DP(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.A2DP;
                     break;
                 case "RFCOMM":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.RFCOMM.toString();
-                    mInputProfile = getInputProfile_RFCOMM();
+                    mInputProfile = new InputProfile_RFCOMM(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.RFCOMM;
                     break;
                 case "PHANTOM":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.PHANTOM.toString();
-                    mInputProfile = getInputProfile_PHANTOM();
+                    mInputProfile = new InputProfile_PHANTOM(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.PHANTOM;
                     break;
                 case "USB":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.USB.toString();
-                    mInputProfile = getInputProfile_USB();
+                    mInputProfile = new InputProfile_USB(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.USB;
                     break;
                 case "STANDALONE":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.STANDALONE.toString();
-                    mInputProfile = getInputProfile_STANDALONE();
+                    mInputProfile = new InputProfile_STANDALONE(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.STANDALONE;
                     break;
                 case "INTERNAL_MIC":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.INTERNAL_MIC.toString();
-                    mInputProfile = getInputProfile_INTERNAL_MIC();
+                    mInputProfile = new InputProfile_INTERNAL_MIC(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.INTERNAL_MIC;
                     break;
                 case "CHARGING":
                     INPUT_PROFILE_STATUS = INPUT_CONFIG.CHARGING.toString();
-                    mInputProfile = getInputProfile_CHARGING();
+                    mInputProfile = new InputProfile_CHARGING(this, mServiceMessenger);
                     INPUT = INPUT_CONFIG.CHARGING;
+                    Log.d(LOG, "InputProfile_State:" + inputProfile_State);
                     mInputProfile.setState(inputProfile_State);
                     break;
             }
@@ -689,7 +696,6 @@ public class ControlService extends Service {
 
             Bundle bundle = new Bundle();
             bundle.putString("inputProfile", INPUT.toString());
-
             messageClient(MSG_STATE_CHANGE, bundle);
 
             mTaskHandler.removeCallbacks(SetInputProfileTask);
@@ -1236,7 +1242,7 @@ public class ControlService extends Service {
 
                 case MSG_APPLICATION_SHUTDOWN:
                     LogIHAB.log("Shutdown");
-                    mInputProfile.applicationShutdown();
+                    //mInputProfile.applicationShutdown();
                     break;
 
                 case MSG_BATTERY_CRITICAL:

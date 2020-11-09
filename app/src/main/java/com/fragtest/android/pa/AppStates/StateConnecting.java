@@ -79,7 +79,7 @@ public class StateConnecting implements AppState {
             mainActivity.mCharging.setVisibility(View.INVISIBLE);
             //mainActivity.setBTLogoDisconnected();
             mainActivity.messageService(ControlService.MSG_STOP_COUNTDOWN);
-            mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
+            //mainActivity.messageService(ControlService.MSG_CHECK_FOR_PREFERENCES, null);
             mainActivity.mTaskHandler.postDelayed(mConnectingRunnable, mDelayConnecting);
             mainActivity.mTaskHandler.post(mDotRunnable);
             // Have to run tests whether this is necessary

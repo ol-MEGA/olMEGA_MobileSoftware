@@ -23,6 +23,7 @@ import com.fragtest.android.pa.library.BluetoothState;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -79,13 +80,15 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     public InputProfile_PHANTOM(ControlService context, Messenger serviceMessenger) {
 
-        Log.e(LOG, "PHANTOM");
+        Log.d(LOG, "InputProfile_PHANTOM()");
 
         this.mContext = context;
         this.mServiceMessenger = serviceMessenger;
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         fileIO = new AudioFileIO();
+        initBluetooth();
+        //initAudioTrack();
     }
 
     @Override
@@ -101,7 +104,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     @Override
     public void setInterface() {
 
-        Log.e(LOG, "Requested setInterface()");
+        Log.d(LOG, "setInterface()");
         LogIHAB.log(LOG);
 
         if (!mBluetoothAdapter.isEnabled()) {
@@ -116,17 +119,22 @@ public class InputProfile_PHANTOM implements InputProfile {
         chunklengthInBytes = (mChunklengthInS * RECORDER_SAMPLERATE * RECORDER_CHANNELS * N_BITS / 8);
         chunklengthInSamples = RECORDER_SAMPLERATE * mChunklengthInS * RECORDER_CHANNELS;
 
-        initBluetooth();
-        initAudioTrack();
+        if (bt.getServiceState() == 0){
+            bt.startService(BluetoothState.DEVICE_OTHER);
+        }
 
     }
 
     @Override
     public void cleanUp() {
 
-        Log.e(LOG, "Cleaning up.");
+        Log.d(LOG, "cleanUp()");
         stopRecording();
-
+        try {
+            bt.stopService();
+            //bt.disconnect();
+            //mConnectedThread = null;
+        } catch(Exception e) {}
     }
 
     @Override
@@ -135,8 +143,9 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private void initBluetooth()
     {
-        bt = new BluetoothSPP(mContext);
+        Log.d(LOG, "initBluetooth()");
 
+        bt = new BluetoothSPP(mContext);
         if (bt.isBluetoothEnabled()) {
 
             bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
@@ -147,7 +156,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                         if (!wakeLock.isHeld()) {
                             wakeLock.acquire();
                         }
-                        Log.e(LOG, "STATE: CONNECTED");
+                        Log.d(LOG, "STATE: CONNECTED");
                         mConnectedThread = new ConnectedThread(bt.getBluetoothService().getConnectedThread().getInputStream());
                         mConnectedThread.setPriority(Thread.MAX_PRIORITY);
                         mConnectedThread.start();
@@ -157,12 +166,13 @@ public class InputProfile_PHANTOM implements InputProfile {
                         }
                         if (wakeLock.isHeld()) wakeLock.release();
                         if (state == BluetoothState.STATE_CONNECTING) {
-                            Log.e(LOG, "STATE: CONNECTING.");
+                            Log.d(LOG, "STATE: CONNECTING.");
                         } else if (state == BluetoothState.STATE_LISTEN) {
-                            Log.e(LOG, "STATE: LISTEN.");
+                            Log.d(LOG, "STATE: LISTEN.");
                         } else if (state == BluetoothState.STATE_NONE) {
-                            Log.e(LOG, "STATE: NONE.");
+                            Log.d(LOG, "STATE: NONE.");
                         }
+                        //mContext.messageClient(ControlService.MSG_STATE_CHANGE);
                     }
                 }
             });
@@ -184,6 +194,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     }
 
     private void initAudioTrack() {
+        Log.d(LOG, "initAudioTrack()");
         if (audioTrack == null) {
             audioTrack = new AudioTrack(
                     AudioManager.STREAM_MUSIC,
@@ -197,6 +208,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     }
 
     private void finishFile() {
+        Log.d(LOG, "finishFile()");
 
         try {
             outputStream.flush();
@@ -207,6 +219,7 @@ public class InputProfile_PHANTOM implements InputProfile {
             fileIO.closeDataOutStream();
 
             // report back to service
+            Log.d(LOG, "MSG_CHUNK_RECORDED");
             Message msg = Message.obtain(null, ControlService.MSG_CHUNK_RECORDED);
             if (msg != null) {
                 Bundle dataSend = new Bundle();
@@ -224,6 +237,7 @@ public class InputProfile_PHANTOM implements InputProfile {
     }
 
     private void writeData(byte[] data) {
+        Log.d(LOG, "writeData()");
 
         nBlockCount++;
 
@@ -327,19 +341,19 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     @Override
     public boolean getIsAudioRecorderClosed() {
-        Log.e(LOG, "CLOSED: " + !run);
+        Log.d(LOG, "getIsAudioRecorderClosed()");
         return !run;
     }
 
     @Override
     public void registerClient() {
-        Log.e(LOG, "Client Registered");
+        Log.d(LOG, "registerClient()");
 
     }
 
     @Override
     public void unregisterClient() {
-        Log.e(LOG, "Client Unregistered");
+        Log.d(LOG, "unregisterClient()");
 
         cleanUp();
     }
@@ -351,34 +365,46 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     @Override
     public void chargingOff() {
-        Log.e(LOG, "CharginOff");
+        Log.d(LOG, "chargingOff()");
     }
 
     @Override
     public void chargingOn() {
-        Log.e(LOG, "CharginOn");
+        Log.d(LOG, "chargingOn()");
+        try {
+            bt.stopService();
+            //bt.disconnect();
+            //mConnectedThread = null;
+        } catch(Exception e) {}
         mContext.setChargingProfile();
     }
 
     @Override
     public void chargingOnPre() {
-        Log.e(LOG, "CharginOnPre");
+        Log.d(LOG, "chargingOnPre()");
+        try {
+            bt.stopService();
+            //bt.disconnect();
+            //mConnectedThread = null;
+        } catch(Exception e) {}
     }
 
     @Override
     public void onDestroy() {
+        Log.d(LOG, "onDestroy()");
         cleanUp();
     }
 
 
     @Override
     public void applicationShutdown() {
+        Log.d(LOG, "applicationShutdown()");
         cleanUp();
     }
 
     private void startRecording() {
 
-        Log.e(LOG, "Requested start recording");
+        Log.d(LOG, "startRecording()");
 
         BlockCount = 0;
         completeBlockCount = 0;
@@ -400,7 +426,7 @@ public class InputProfile_PHANTOM implements InputProfile {
 
     private void stopRecording() {
 
-        Log.e(LOG, "Requested stop recording");
+        Log.d(LOG, "stopRecording()");
 
         run = false;
         finishFile();
@@ -409,28 +435,30 @@ public class InputProfile_PHANTOM implements InputProfile {
     }
 
     private void AudioTransmissionStart() {
-        Log.d(LOG, "Transmission: START");
+        Log.d(LOG, "AudioTransmissionStart()");
     }
 
 
     private void AudioTransmissionEnd() {
-        Log.d(LOG, "Transmission: END");
+        Log.d(LOG, "AudioTransmissionEnd()");
         stopRecording();
     }
 
+    enum initState {UNINITIALIZED, WAITING_FOR_CALIBRATION_VALUES, WAITING_FOR_AUDIOTRANSMISSION, INITIALIZED, STOP}
 
     class ConnectedThread extends Thread {
         private final InputStream mmInStream;
-        private boolean initialized = false;
+        public initState initializeState;
+        boolean isRunning = true;
+        public boolean useCalib = true;
+        private double[] calibValues = new double[]{Double.NaN, Double.NaN};
+        private double[] calibValuesInDB = new double[]{Double.NaN, Double.NaN};
 
         ConnectedThread(InputStream stream) {
             mmInStream = stream;
         }
 
         public void run() {
-
-            startRecording();
-
             RingBuffer ringBuffer = new RingBuffer(AudioBufferSize * 2);
             int alivePingTimeout = 100, i, lastBlockNumber = 0, currBlockNumber = 0, additionalBytesCount = 0;
             byte[] data = new byte[1024], emptyAudioBlock = new byte[AudioBufferSize];
@@ -438,72 +466,147 @@ public class InputProfile_PHANTOM implements InputProfile {
             int timeoutBlockLimit = 500, millisPerBlock = block_size * 1000 / RECORDER_SAMPLERATE;
             BlockCount = 0;
             lostBlockCount = 0;
-            initialized = false;
+            initializeState = initState.UNINITIALIZED;
             Long lastBluetoothPingTimer = System.currentTimeMillis(), lastEmptyPackageTimer = System.currentTimeMillis(), lastStreamTimer = System.currentTimeMillis();
             try {
-                while (true) {
+                while (isRunning) {
                     if (mmInStream.available() >= data.length) {
                         mmInStream.read(data, 0, data.length);
                         for (i = 0; i < data.length; i++) {
                             ringBuffer.addByte(data[i]);
                             checksum ^= ringBuffer.getByte(0);
                             if (ringBuffer.getByte(-2) == (byte) 0x00 && ringBuffer.getByte(-3) == (byte) 0x80) {
-                                if (!initialized) {
-                                    switch (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF)) { // Check Protocol-Version
-                                        case 1:
-                                            additionalBytesCount = 12;
-                                            break;
-                                    }
-                                }
-                                if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
-                                    if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
-                                        if (!initialized) {
-                                            AudioTransmissionStart();
-                                            initialized = true;
+                                switch (initializeState) {
+                                    case UNINITIALIZED:
+                                        Log.d(LOG, "ConnectedThread::RUN::UNINITIALIZED");
+                                        int protocollVersion = (((ringBuffer.getByte(-4) & 0xFF) << 8) | (ringBuffer.getByte(-5) & 0xFF));
+                                        switch (protocollVersion) { // Check Protocol-Version
+                                            case 1:
+                                                calibValuesInDB[0] = 0.0;
+                                                calibValuesInDB[1] = 0.0;
+                                                calibValues[0] = 1.0;
+                                                calibValues[1] = 1.0;
+                                                additionalBytesCount = 12;
+                                                initializeState = initState.WAITING_FOR_AUDIOTRANSMISSION;
+                                                break;
+                                            case 2:
+                                                calibValuesInDB[0] = Double.NaN;
+                                                calibValuesInDB[1] = Double.NaN;
+                                                calibValues[0] = Double.NaN;
+                                                calibValues[1] = Double.NaN;
+                                                additionalBytesCount = 12;
+                                                initializeState = initState.WAITING_FOR_CALIBRATION_VALUES;
+                                                break;
+                                            default:
+                                                Log.d(LOG, "Unknown Protocoll-Version");
                                         }
-                                        AudioVolume = (short) (((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
-                                        currBlockNumber = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
-                                        if (currBlockNumber < lastBlockNumber && lastBlockNumber - currBlockNumber > currBlockNumber + (65536 - lastBlockNumber))
-                                            currBlockNumber += 65536;
-                                        if (lastBlockNumber < currBlockNumber) {
-                                            BlockCount += currBlockNumber - lastBlockNumber;
-                                            lostBlockCount += currBlockNumber - lastBlockNumber - 1;
-                                            while (lastBlockNumber < currBlockNumber - 1) {
-                                                Log.d("_IHA_", "CurrentBlock: " + currBlockNumber + "\tLostBlocks: " + lostBlockCount);
-                                                writeData(emptyAudioBlock);
-                                                lastBlockNumber++;
+                                        break;
+                                    case WAITING_FOR_CALIBRATION_VALUES:
+                                        Log.d(LOG, "ConnectedThread::RUN::WAITING_FOR_CALIBRATION_VALUES");
+                                        if (ringBuffer.getByte(-15) == (byte) 0xFF && ringBuffer.getByte(-16) == (byte) 0x7F && ringBuffer.getByte(-14) == (byte) 'C' && (ringBuffer.getByte(-13) == (byte) 'L' || ringBuffer.getByte(-13) == (byte) 'R')) {
+                                            byte[] values = new byte[8];
+                                            byte ValuesChecksum = ringBuffer.getByte(-13);
+                                            for (int count = 0; count < 8; count++) {
+                                                values[count] = ringBuffer.getByte(-12 + count);
+                                                ValuesChecksum ^= values[count];
                                             }
-                                            lastBlockNumber = currBlockNumber % 65536;
-                                            writeData(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize));
+                                            if (ValuesChecksum == ringBuffer.getByte(-4)) {
+                                                if (ringBuffer.getByte(-13) == 'L')
+                                                    calibValuesInDB[0] = ByteBuffer.wrap(values).getDouble();
+                                                else if (ringBuffer.getByte(-13) == 'R')
+                                                    calibValuesInDB[1] = ByteBuffer.wrap(values).getDouble();
+                                                if (!Double.isNaN(calibValuesInDB[0]) && !Double.isNaN(calibValuesInDB[1])) {
+                                                    if (calibValuesInDB[0] <= calibValuesInDB[1]) {
+                                                        calibValues[0] = Math.pow(10, (calibValuesInDB[0] - calibValuesInDB[1]) / 20.0);
+                                                        calibValues[1] = 1;
+                                                    } else {
+                                                        calibValues[0] = 1;
+                                                        calibValues[1] = Math.pow(10, (calibValuesInDB[1] - calibValuesInDB[0]) / 20.0);
+                                                    }
+                                                    Log.d(LOG, "START AUDIOTRANSMISSION");
+                                                    initializeState = initState.WAITING_FOR_AUDIOTRANSMISSION;
+                                                }
+                                            }
+                                        } else if (System.currentTimeMillis() - lastStreamTimer > 1000) {
+                                            bt.send("GC", false);
                                             lastStreamTimer = System.currentTimeMillis();
-                                        } else
-                                            Log.d("_IHA_", "CurrentBlock: " + currBlockNumber + "\tTOO SLOW!");
-                                    }
-                                    checksum = 0;
+                                            Log.d(LOG, "send GC");
+                                        }
+                                        break;
+                                    case WAITING_FOR_AUDIOTRANSMISSION:
+                                        Log.d(LOG, "ConnectedThread::RUN::WAITING_FOR_AUDIOTRANSMISSION");
+                                        if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
+                                            if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
+                                                startRecording();
+                                                AudioTransmissionStart();
+                                                initializeState = initState.INITIALIZED;
+                                                currBlockNumber = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
+                                                lastBlockNumber = currBlockNumber;
+                                            }
+                                            checksum = 0;
+                                        }
+                                        break;
+                                    case INITIALIZED:
+                                        Log.d(LOG, "ConnectedThread::RUN::INITIALIZED");
+                                        if (ringBuffer.getByte(2 - (AudioBufferSize + additionalBytesCount)) == (byte) 0xFF && ringBuffer.getByte(1 - (AudioBufferSize + additionalBytesCount)) == (byte) 0x7F) {
+                                            if (ringBuffer.getByte(0) == (checksum ^ ringBuffer.getByte(0))) {
+                                                AudioVolume = (short) (((ringBuffer.getByte(-8) & 0xFF) << 8) | (ringBuffer.getByte(-9) & 0xFF));
+                                                currBlockNumber = ((ringBuffer.getByte(-6) & 0xFF) << 8) | (ringBuffer.getByte(-7) & 0xFF);
+                                                if (currBlockNumber < lastBlockNumber && lastBlockNumber - currBlockNumber > currBlockNumber + (65536 - lastBlockNumber))
+                                                    currBlockNumber += 65536;
+                                                if (lastBlockNumber < currBlockNumber) {
+                                                    BlockCount += currBlockNumber - lastBlockNumber;
+                                                    lostBlockCount += currBlockNumber - lastBlockNumber - 1;
+                                                    while (lastBlockNumber < currBlockNumber - 1) {
+                                                        Log.d(LOG, "CurrentBlock: " + currBlockNumber + "\tLostBlocks: " + lostBlockCount);
+                                                        writeData(emptyAudioBlock);
+                                                        lastBlockNumber++;
+                                                    }
+                                                    lastBlockNumber = currBlockNumber % 65536;
+                                                    for (int idx = 0; idx < AudioBufferSize / 2; idx++) {
+                                                        if (useCalib)
+                                                            ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2) * calibValues[idx % 2]), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
+                                                        else
+                                                            ringBuffer.setShort((short) (ringBuffer.getShort(3 - (AudioBufferSize + additionalBytesCount) + idx * 2)), 3 - (AudioBufferSize + additionalBytesCount) + idx * 2);
+                                                    }
+                                                    writeData(ringBuffer.data(3 - (AudioBufferSize + additionalBytesCount), AudioBufferSize));
+                                                    lastStreamTimer = System.currentTimeMillis();
+                                                } else
+                                                    Log.d(LOG, "CurrentBlock: " + currBlockNumber + "\tTOO SLOW!");
+                                            }
+                                            checksum = 0;
+                                        }
+                                        break;
+                                    case STOP:
+                                        Log.d(LOG, "ConnectedThread::RUN::STOP");
+                                        if (initializeState == initState.INITIALIZED)
+                                            AudioTransmissionEnd();
+                                        initializeState = initState.UNINITIALIZED;
+                                        bt.getBluetoothService().connectionLost();
+                                        bt.getBluetoothService().start(false);
                                 }
                             }
                         }
                         lastEmptyPackageTimer = System.currentTimeMillis();
-                    } else if (initialized && System.currentTimeMillis() - lastEmptyPackageTimer > timeoutBlockLimit) {
+                    } else if (initializeState == initState.INITIALIZED && System.currentTimeMillis() - lastEmptyPackageTimer > timeoutBlockLimit) {
                         for (long count = 0; count < timeoutBlockLimit / millisPerBlock; count++) {
                             BlockCount++;
                             lostBlockCount++;
                             lastBlockNumber++;
                             writeData(emptyAudioBlock);
                         }
-                        Log.d("_IHA_", "Transmission Timeout\t");
+                        Log.d(LOG, "Transmission Timeout\t");
                         lastEmptyPackageTimer = System.currentTimeMillis();
                     }
-                    if (initialized) {
+                    if (initializeState == initState.INITIALIZED) {
                         if (System.currentTimeMillis() - lastBluetoothPingTimer > alivePingTimeout) {
                             bt.send(" ", false);
                             lastBluetoothPingTimer = System.currentTimeMillis();
                         }
                         if (System.currentTimeMillis() - lastStreamTimer > 5 * 1000) // 5 seconds
                         {
-                            if (initialized) {
-                                AudioTransmissionEnd();
-                            }
+                            if (initializeState == initState.INITIALIZED) AudioTransmissionEnd();
+                            initializeState = initState.UNINITIALIZED;
                             bt.getBluetoothService().connectionLost();
                             bt.getBluetoothService().start(false);
                         }
@@ -512,10 +615,7 @@ public class InputProfile_PHANTOM implements InputProfile {
                 }
             } catch (IOException e) {
             }
-
             stopRecording();
         }
     }
-
-
 }
