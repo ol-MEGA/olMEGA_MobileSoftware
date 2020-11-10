@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
     //private boolean showConfigButton = false;
     //private boolean showRecordingButton = true;
     private boolean isBluetoothPresent = false;
+    public boolean showRemainingTime = true;
 
     //private long durationTemp = 0;
     private long durationLongClick = 5*1000;
@@ -421,6 +422,10 @@ public class MainActivity extends AppCompatActivity {
     public void finishQuestionnaire() {
         mAppState.finishQuest();
         messageService(ControlService.MSG_QUESTIONNAIRE_FINISHED);
+    }
+
+    public boolean getShowRemainingTime() {
+        return showRemainingTime;
     }
 
     public void setLogoActive() {
@@ -778,6 +783,10 @@ public class MainActivity extends AppCompatActivity {
 
         isForcedAnswer = sharedPreferences.getBoolean("forceAnswer", true);
         isForcedAnswerDialog = sharedPreferences.getBoolean("forceAnswerDialog", true);
+
+        showRemainingTime = sharedPreferences.getBoolean("showRemainingTime", true);
+        // This takes care of whether the countdown timer should be shown or not
+        mAdapter.startCountDown();
 
         // Unset the device admin programmatically so the app can be uninstalled.
         if (sharedPreferences.getBoolean("unsetDeviceAdmin", false)) {

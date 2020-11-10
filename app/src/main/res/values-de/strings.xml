@@ -57,6 +57,8 @@
     <string name="pref_button_scan_summary">Scanne Geräte</string>
     <string name="pref_activateTimer_title">Timer benutzen</string>
     <string name="pref_activateTimer_summary">Starte Fragebogen zu bestimmter Zeit</string>
+    <string name="pref_showRemainingTime_title">Zeige verbleibende Zeit</string>
+    <string name="pref_showRemainingTime_summary">Countdown anzeigen</string>
     <string name="pref_usbCutsConnection">USB stoppt Verbindung</string>
     <string name="pref_usbCutsConnection_summary">Kein Betrieb während der Ladevorgangs</string>
     <string name="pref_clientID">ClientID</string>

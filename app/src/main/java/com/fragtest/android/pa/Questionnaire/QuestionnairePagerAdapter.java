@@ -90,10 +90,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     private final Runnable mCountDownRunnable = new Runnable() {
         @Override
         public void run() {
-            if (isCountDownRunning) {
+            if (isCountDownRunning && mMainActivity.getShowRemainingTime()) {
                 mSecondsRemaining = mFinalCountdown - (int) (System.currentTimeMillis() / 1000);
                 updateCountDown();
                 mCountDownHandler.postDelayed(this, mUpdateIntervalStatusBar);
+            } else {
+                hideCountdown();
             }
         }
     };
@@ -170,9 +172,12 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         return mMenuPage;
     }
 
+    public void postCountdown(){
+        mCountDownHandler.post(mCountDownRunnable);
+    }
+
     // Calculation of remaining time and visual update
     private void updateCountDown() {
-
         if (mSecondsRemaining >= 0) {
             mMenuPage.updateCountdownText(mSecondsRemaining);
             setQuestionnaireProgressBar((float) mSecondsRemaining / mCountDownInterval);
@@ -191,6 +196,7 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void startCountDown() {
         if ((mFinalCountdown - System.currentTimeMillis() / 1000) >= 0) {
             isCountDownRunning = true;
+            showCountdown();
             mCountDownHandler.post(mCountDownRunnable);
         } else {
             stopCountDown();
@@ -334,6 +340,11 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     public void hideCountdown() {
         hideQuestionnaireProgressBar();
         mMenuPage.hideCountdownText();
+    }
+
+    public void showCountdown() {
+        setQuestionnaireProgressBar();
+        mMenuPage.showCountdownText();
     }
 
     public void hideQuestionnaireProgressBar() {
