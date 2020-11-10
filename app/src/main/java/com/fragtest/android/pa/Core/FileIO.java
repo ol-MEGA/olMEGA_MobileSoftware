@@ -24,7 +24,7 @@ import java.util.Scanner;
 
 public class FileIO {
 
-    static final String FOLDER_MAIN = "IHAB";
+    static final String FOLDER_MAIN = "olMEGA";
     private static final String FOLDER_DATA = "data";
     private static final String FOLDER_QUEST = "quest";
     private static final String FOLDER_CALIB = "calibration";
@@ -113,7 +113,7 @@ public class FileIO {
 
         // Scan quest folder (not the nicest way)
         try {
-            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/IHAB/quest");
+            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/olMEGA/quest");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -142,7 +142,7 @@ public class FileIO {
 
         // Scan quest folder (not the nicest way)
         try {
-            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/IHAB/quest");
+            Runtime.getRuntime().exec("am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///sdcard/olMEGA/quest");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -15,7 +15,7 @@ public class LogIHAB {
 
     private static String mFileName = "log2.txt";
     private static String LOG = "LogIHAB";
-    private static String FOLDER_MAIN = "IHAB";
+    private static String FOLDER_MAIN = FileIO.FOLDER_MAIN;
 
     // Write input string to log file
     public static void log(String string) {
