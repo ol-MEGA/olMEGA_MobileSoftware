@@ -1,6 +1,7 @@
 package com.fragtest.android.pa.Core;
 
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.os.Environment;
 import android.util.Log;
 
@@ -39,8 +40,7 @@ public class FileIO {
 
     // Create / Find main Folder
     public static String getFolderPath() {
-        final File baseDirectory = new File(Environment.getExternalStorageDirectory() +
-                File.separator + FOLDER_MAIN);
+        final File baseDirectory = new File(Environment.getExternalStorageDirectory() + File.separator + FOLDER_MAIN);
         if (!baseDirectory.exists()) {
             baseDirectory.mkdir();
         }
@@ -166,9 +166,9 @@ public class FileIO {
                 return name.toLowerCase().endsWith(FORMAT_QUESTIONNAIRE);
             }
         });
-        String[] fileList = new String[files.length];
 
         try {
+            String[] fileList = new String[files.length];
             if (fileList.length == 0) {
                 return null;
             }
