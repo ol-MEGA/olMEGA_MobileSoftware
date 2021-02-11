@@ -42,6 +42,7 @@ public class AnswerTypeTime extends AnswerType {
 
     public void addAnswer(int nAnswerId, String sAnswer) {
         mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
+        Log.e(LOG, "Zwischen ADDING: " + mListOfAnswers.size());
     }
 
     public void buildView() {
@@ -53,21 +54,28 @@ public class AnswerTypeTime extends AnswerType {
         for (int iTime = 0; iTime < mListOfAnswers.size(); iTime++) {
 
             try {
-                Date first = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(0, 5).toString());
-                Date last = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(6, 10).toString());
-                Date test = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText());
 
-                Log.e(LOG, "First: " + first.toString() + ", Last: " + last.toString() + ", Now: " + test.toString());
+                Log.e(LOG, "Zwischen First: " +  DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(0, 5).toString()));
+                Log.e(LOG, "Zwischen Last: " +  DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(6, 11).toString()));
+                Log.e(LOG, "Zwischen Now: " +  DATE_FORMAT.parse(generateTimeNow()));
+
+                Date first = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(0, 5).toString());
+                Date last = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(6, 11).toString());
+                Date test = DATE_FORMAT.parse(generateTimeNow());
+
+                Log.e(LOG, "Zwischen Comp: " + test.compareTo(first) + ", and " + test.compareTo(last));
+
+                if (test.compareTo(first) > 0 && test.compareTo(last) <= 0) {
+                    Log.e(LOG, "Es ist zwischen " + first.toString() + " und " + last.toString());
+                    mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(iTime).getId());
+                    return;
+                } else {
+                    Log.e(LOG, "zwischen NOT");
+                }
+
 
             } catch (Exception ex) {}
-
-
-
-            Log.e(LOG_STRING, "Time now: " + generateTimeNow());
-            Log.e(LOG_STRING, "Time: " + mListOfAnswers.get(iTime).getText() + ", id: " + mListOfAnswers.get(iTime).getId());
-
         }
-
     }
 
     public void addClickListener() {

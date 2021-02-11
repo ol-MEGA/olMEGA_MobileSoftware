@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mobiquest>// First 2 entries must be the following class
+
+    /*This is where the timer values are modified. Mean and Deviation create an interval in which
+    random times are generated.*/
+    <timer mean="1800" deviation="300"></timer>
+
+        <title>
+            <text>Hörsituation_frei</text>
+        </title>
+		
+		// One line comment
+		/* Here is a
+		slightly longer
+		comment */
+
+		//0)
+		
+		<question id="10100" type="time" hidden="true">
+			<option id="111">
+				<text>08:00-12:00</text>
+			</option>
+			<option id="222">
+				<text>12:00-17:00</text>
+			</option>
+			<option id="333">
+				<text>17:00-23:59</text>
+			</option>
+		</question>
+
+		//1)
+		<question id="10101" type="info" filter="111">
+		<label>
+		<text>Es ist zwischen 8 und 12 Uhr</text>
+		</label>
+		</question>
+		
+		//2)
+		<question id="10102" type="info" filter="222">
+		<label>
+		<text>Es ist zwischen 12 und 17 Uhr</text>
+		</label>
+		</question>
+		
+		//3)
+		<question id="10103" type="info" filter="333">
+		<label>
+		<text>Es ist zwischen 17 und 22 Uhr</text>
+		</label>
+		</question>
+		
+		
+		//9)
+        <finish>
+            <text>Thank you!</text>
+        </finish>
+    </survey>
+</mobiquest>

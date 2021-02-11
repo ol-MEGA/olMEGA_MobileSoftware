@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -17,6 +18,7 @@ import com.fragtest.android.pa.R;
 
 public class AnswerTypeFinish extends AppCompatActivity {
 
+    private String LOG = "AnswerTypeFinish";
     private Button mAnswerButton;
     private LinearLayout.LayoutParams answerParams;
     private AnswerLayout parent;
