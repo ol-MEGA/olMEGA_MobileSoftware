@@ -100,6 +100,7 @@ public class Questionnaire {
         boolean isFinish = false;
         boolean isPhotograph = false;
         boolean isInfo = false;
+        boolean isTime = false;
 
         LinearLayout answerContainer = new LinearLayout(mMainActivity);
         answerContainer.setId(question.getQuestionId());
@@ -156,6 +157,9 @@ public class Questionnaire {
 
         final AnswerTypeInfo answerTypeInfo = new AnswerTypeInfo(
                 mMainActivity, this, answerLayout);
+
+        final AnswerTypeTime answerTypeTime = new AnswerTypeTime(
+                mMainActivity, this, answerLayout, question.getQuestionId());
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -230,6 +234,11 @@ public class Questionnaire {
                         answerTypeInfo.addAnswer();
                         break;
                     }
+                    case "time": {
+                        isTime = true;
+                        answerTypeTime.addAnswer(nAnswerId, sAnswer);
+                        break;
+                    }
                     default: {
                         isRadio = false;
                         if (BuildConfig.DEBUG) {
@@ -288,6 +297,10 @@ public class Questionnaire {
 
         if (isInfo) {
             answerTypeInfo.addClickListener();
+        }
+
+        if (isTime) {
+            answerTypeTime.buildView();
         }
 
         return answerContainer;
