@@ -547,12 +547,14 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
         for (int iQuestion = 0; iQuestion < mNUM_PAGES; iQuestion++) {
             // Extracts Question Details from Questionnaire and creates Question
             Question question = mQuestionnaire.createQuestion(iQuestion);
+
             // Inflates Question Layout based on Question Details
             LinearLayout layout = mQuestionnaire.generateView(question, isImmersive);
 
-            mListOfViews.add(new QuestionView(layout, layout.getId(), question.getIsForced(),
-                    question.getAnswerIds(), question.getFilterIds()));
-
+            //if (!question.getTypeAnswer().equals("time")) {
+                mListOfViews.add(new QuestionView(layout, layout.getId(), question.getIsForced(),
+                        question.getAnswerIds(), question.getFilterIds()));
+            //}
         }
     }
 
@@ -688,9 +690,9 @@ public class QuestionnairePagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup collection, int position) {
 
-        View view = mListOfViews.get(position).getView();
-        collection.addView(view);
-        return view;
+            View view = mListOfViews.get(position).getView();
+            collection.addView(view);
+            return view;
     }
 
     // Removes view from displayable collection

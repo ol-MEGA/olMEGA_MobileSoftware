@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CompoundButtonCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -25,60 +26,42 @@ import java.util.TimeZone;
  * Created by ulrikkowalk on 17.02.17.
  */
 
-public class AnswerTypeTime extends AnswerType {
+public class AnswerTypeTime extends AppCompatActivity {
 
-    private static String LOG_STRING = "AnswerTypeRadio";
-    private int mDefault = -1;
+    private final int mQuestionId;
+    private final Questionnaire mQuestionnaire;
+    private final Context mContext;
     private final SimpleDateFormat DATE_FORMAT;
+    private String LOG = "AnswerTypeTime";
 
+    public AnswerTypeTime(Context context, Questionnaire questionnaire, int questionId) {
 
-    public AnswerTypeTime(Context context, Questionnaire questionnaire, AnswerLayout qParent, int nQuestionId) {
-
-        super(context, questionnaire, qParent, nQuestionId);
-
+        mContext = context;
+        mQuestionnaire = questionnaire;
+        mQuestionId = questionId;
         DATE_FORMAT = new SimpleDateFormat("HH:mm", Locale.ROOT);
-
     }
 
     public void addAnswer(int nAnswerId, String sAnswer) {
-        mListOfAnswers.add(new StringAndInteger(sAnswer, nAnswerId));
-        Log.e(LOG, "Zwischen ADDING: " + mListOfAnswers.size());
-    }
-
-    public void buildView() {
 
         try {
-            Date now = Calendar.getInstance(TimeZone.getTimeZone("GMT+1")).getTime();
-        } catch (Exception ex) {}
 
-        for (int iTime = 0; iTime < mListOfAnswers.size(); iTime++) {
+            //Log.e(LOG, DATE_FORMAT.parse(sAnswer.subSequence(0, 5).toString()).toString());
 
-            try {
+            Date first = DATE_FORMAT.parse(sAnswer.subSequence(0, 5).toString());
+            Date last = DATE_FORMAT.parse(sAnswer.subSequence(6, 11).toString());
+            Date test = DATE_FORMAT.parse(generateTimeNow());
 
-                Log.e(LOG, "Zwischen First: " +  DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(0, 5).toString()));
-                Log.e(LOG, "Zwischen Last: " +  DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(6, 11).toString()));
-                Log.e(LOG, "Zwischen Now: " +  DATE_FORMAT.parse(generateTimeNow()));
+            if (test.compareTo(first) > 0 && test.compareTo(last) <= 0) {
+                Log.e(LOG, "Es ist zwischen " + first.toString() + " und " + last.toString());
+                mQuestionnaire.addIdToEvaluationList(mQuestionId, nAnswerId);
+                Log.e(LOG, "ID sent to EvalList: " + nAnswerId);
+            }
 
-                Date first = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(0, 5).toString());
-                Date last = DATE_FORMAT.parse(mListOfAnswers.get(iTime).getText().subSequence(6, 11).toString());
-                Date test = DATE_FORMAT.parse(generateTimeNow());
-
-                Log.e(LOG, "Zwischen Comp: " + test.compareTo(first) + ", and " + test.compareTo(last));
-
-                if (test.compareTo(first) > 0 && test.compareTo(last) <= 0) {
-                    Log.e(LOG, "Es ist zwischen " + first.toString() + " und " + last.toString());
-                    mQuestionnaire.addIdToEvaluationList(mQuestionId, mListOfAnswers.get(iTime).getId());
-                    return;
-                } else {
-                    Log.e(LOG, "zwischen NOT");
-                }
-
-
-            } catch (Exception ex) {}
+        } catch (Exception ex) {
+            Log.e(LOG , "SOMETHING WENT WROOOOONG!");
         }
-    }
 
-    public void addClickListener() {
 
     }
 
@@ -86,4 +69,10 @@ public class AnswerTypeTime extends AnswerType {
         Calendar dateTime = Calendar.getInstance(TimeZone.getTimeZone("GMT+1"));
         return DATE_FORMAT.format(dateTime.getTime());
     }
+
+    private String generateTimeNowUTC() {
+        Calendar dateTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        return DATE_FORMAT.format(dateTime.getTime());
+    }
 }
+

@@ -159,7 +159,7 @@ public class Questionnaire {
                 mMainActivity, this, answerLayout);
 
         final AnswerTypeTime answerTypeTime = new AnswerTypeTime(
-                mMainActivity, this, answerLayout, question.getQuestionId());
+                mMainActivity, this, question.getQuestionId());
 
         // Number of possible Answers
         int nNumAnswers = question.getNumAnswers();
@@ -300,7 +300,7 @@ public class Questionnaire {
         }
 
         if (isTime) {
-            answerTypeTime.buildView();
+            //answerTypeTime.buildView();
         }
 
         return answerContainer;
@@ -397,6 +397,9 @@ public class Questionnaire {
                         wasChanged = true;
                     }
                 }
+                if (qI.getQuestion().getTypeAnswer().equals("time")) {
+                    removeViewOnly(iPos);
+                }
             }
         }
 
@@ -442,7 +445,7 @@ public class Questionnaire {
     }
 
     // Removes the question from the displayed list and all given answer ids from memory
-    private boolean removeQuestion(int iPos) {
+    public boolean removeQuestion(int iPos) {
 
         mQuestionInfo.get(iPos).setInactive();
         mEvaluationList.removeQuestionId(mQuestionInfo.get(iPos).getId());
@@ -453,6 +456,13 @@ public class Questionnaire {
         mContextQPA.setQuestionnaireProgressBar();
 
         return true;
+    }
+
+    public void removeViewOnly(int iPos) {
+        //mQuestionInfo.get(iPos).setInactive();
+        mContextQPA.removeView(mQuestionInfo.get(iPos).getId());
+        mContextQPA.notifyDataSetChanged();
+        mContextQPA.setQuestionnaireProgressBar();
     }
 
     // Returns answers given by user for specific question

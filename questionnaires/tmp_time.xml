@@ -10,43 +10,47 @@
         </title>
 		
 		// One line comment
+		
 		/* Here is a
 		slightly longer
 		comment */
 
 		//0)
 		
-		<question id="10100" type="time" hidden="true">
-			<option id="111">
+		<question id="10100" type="time">
+			<option id="11111">
 				<text>08:00-12:00</text>
 			</option>
-			<option id="222">
+			<option id="22222">
 				<text>12:00-17:00</text>
 			</option>
-			<option id="333">
+			<option id="33333">
 				<text>17:00-23:59</text>
 			</option>
 		</question>
 
 		//1)
-		<question id="10101" type="info" filter="111">
-		<label>
-		<text>Es ist zwischen 8 und 12 Uhr</text>
-		</label>
+		<question id="10101" type="radio" filter="11111">
+			<label>
+				<text>Es ist zwischen 8 und 12 Uhr</text>
+			</label>
+			<option id="10001">
+				<text>TEEEEST</text>
+			</option>
 		</question>
 		
 		//2)
-		<question id="10102" type="info" filter="222">
-		<label>
-		<text>Es ist zwischen 12 und 17 Uhr</text>
-		</label>
+		<question id="10102" type="info" filter="22222">
+			<label>
+				<text>Es ist zwischen 12 und 17 Uhr</text>
+			</label>
 		</question>
 		
 		//3)
-		<question id="10103" type="info" filter="333">
-		<label>
-		<text>Es ist zwischen 17 und 22 Uhr</text>
-		</label>
+		<question id="10103" type="info" filter="33333">
+			<label>
+				<text>Es ist zwischen 17 und 22 Uhr</text>
+			</label>
 		</question>
 		
 		
