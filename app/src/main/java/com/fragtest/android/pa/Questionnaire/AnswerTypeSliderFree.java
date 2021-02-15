@@ -24,7 +24,7 @@ import com.fragtest.android.pa.R;
 
 public class AnswerTypeSliderFree extends AnswerType {
 
-    public static String LOG_STRING = "AnswerTypeSliderFree";
+    public static String LOG = "AnswerTypeSliderFree";
     private static final int mMinProgress = 10;
     private final LinearLayout mHorizontalContainer;
     private final LinearLayout mAnswerListContainer;
@@ -62,8 +62,6 @@ private QuestionText mQuestion;
         ));
 
         mUsableHeight = (new Units(mContext)).getUsableSliderHeight(isImmersive) ;
-
-        Log.e(LOG, "USABLEHEIGHT:" + mUsableHeight);
 
 
         /**

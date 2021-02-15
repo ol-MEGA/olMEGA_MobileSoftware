@@ -29,7 +29,7 @@ import java.util.List;
 
 public class AnswerTypeSliderFix extends AnswerType {
 
-    public static String LOG_STRING = "AnswerTypeSliderFix";
+    public static String LOG = "AnswerTypeSliderFix";
     //public final AnswerLayout parent;
     private final List<Integer> mListOfIds = new ArrayList<>();
     private final MainActivity mContext;

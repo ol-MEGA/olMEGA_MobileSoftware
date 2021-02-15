@@ -100,6 +100,7 @@ public class Questionnaire {
         boolean isFinish = false;
         boolean isPhotograph = false;
         boolean isInfo = false;
+        boolean isInfoScreen = false;
         boolean isTime = false;
 
         LinearLayout answerContainer = new LinearLayout(mMainActivity);
@@ -156,6 +157,9 @@ public class Questionnaire {
                 mMainActivity, answerLayout);
 
         final AnswerTypeInfo answerTypeInfo = new AnswerTypeInfo(
+                mMainActivity, this, answerLayout);
+
+        final AnswerTypeInfoScreen answerTypeInfoScreen = new AnswerTypeInfoScreen(
                 mMainActivity, this, answerLayout);
 
         final AnswerTypeTime answerTypeTime = new AnswerTypeTime(
@@ -234,6 +238,11 @@ public class Questionnaire {
                         answerTypeInfo.addAnswer();
                         break;
                     }
+                    case "infoscreen": {
+                        isInfoScreen = true;
+                        answerTypeInfoScreen.addAnswer(sAnswer);
+                        break;
+                    }
                     case "time": {
                         isTime = true;
                         answerTypeTime.addAnswer(nAnswerId, sAnswer);
@@ -297,6 +306,10 @@ public class Questionnaire {
 
         if (isInfo) {
             answerTypeInfo.addClickListener();
+        }
+
+        if (isInfoScreen) {
+            //answerTypeInfo.addClickListener();
         }
 
         if (isTime) {
@@ -459,7 +472,6 @@ public class Questionnaire {
     }
 
     public void removeViewOnly(int iPos) {
-        //mQuestionInfo.get(iPos).setInactive();
         mContextQPA.removeView(mQuestionInfo.get(iPos).getId());
         mContextQPA.notifyDataSetChanged();
         mContextQPA.setQuestionnaireProgressBar();

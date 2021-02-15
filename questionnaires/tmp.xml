@@ -15,21 +15,23 @@
 		comment */
 
 		//0)
+		<question id="10000" type="info">
+		<label>
+		<text>Title</text>
+		</label>
+		</question>
 		
-		<question id="10100" type="time" hidden="true">
-			<option id="111">
-				<text>08:00-12:00</text>
-			</option>
-			<option id="222">
-				<text>12:00-17:00</text>
-			</option>
-			<option id="333">
-				<text>17:00-22:00</text>
-			</option>
+		<question id="10099" type="infoscreen">
+		<label>
+		<text>Title</text>
+		</label>
+		<option>
+			<text>This is some explanatory or informational text that is displayed to the user.<br/>It can be very long or rather concise although we would recommend limiting its length to one screen as vertical swiping might be confusing to the user.</text>
+		</option>
 		</question>
 
 		//1)
-		<question id="10101" type="radio" forceAnswer="true">
+		<question id="10100" type="radio" forceAnswer="true">
 		<label>
 		<text>Which record is the best?</text>
 		</label>
@@ -42,6 +44,12 @@
 		<option id="10101_03">
 		<text>Foxtrot</text>
 		</option>
+		</question>
+		
+		<question id="10101" type="info" filter="10101_01">
+		<label>
+		<text>Also dann brauchen wir hier nicht weiter zu reden!</text>
+		</label>
 		</question>
 		
 		//2)

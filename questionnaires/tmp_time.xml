@@ -19,44 +19,50 @@
 		
 		<question id="10100" type="time">
 			<option id="11111">
-				<text>08:00-12:00</text>
+				<text>00:00-07:00</text>
 			</option>
 			<option id="22222">
-				<text>12:00-17:00</text>
+				<text>07:00-12:00</text>
 			</option>
 			<option id="33333">
-				<text>17:00-23:59</text>
+				<text>12:00-17:00</text>
+			</option>
+			<option id="44444">
+				<text>17:00-22:00</text>
+			</option>
+			<option id="55555">
+				<text>22:00-00:00</text>
 			</option>
 		</question>
 
 		//1)
-		<question id="10101" type="radio" filter="11111">
+		<question id="10101" type="info" filter="22222">
 			<label>
-				<text>Es ist zwischen 8 und 12 Uhr</text>
+				<text>Guten Morgen.</text>
 			</label>
-			<option id="10001">
-				<text>TEEEEST</text>
-			</option>
 		</question>
 		
 		//2)
-		<question id="10102" type="info" filter="22222">
+		<question id="10102" type="info" filter="33333">
 			<label>
-				<text>Es ist zwischen 12 und 17 Uhr</text>
+				<text>Guten Mittag.</text>
 			</label>
 		</question>
 		
 		//3)
-		<question id="10103" type="info" filter="33333">
+		<question id="10103" type="info" filter="44444">
 			<label>
-				<text>Es ist zwischen 17 und 22 Uhr</text>
+				<text>Guten Abend.</text>
+			</label>
+		</question>
+		
+		//4)
+		<question id="10104" type="info" filter="11111, 55555">
+			<label>
+				<text>Gute Nacht.</text>
 			</label>
 		</question>
 		
 		
-		//9)
-        <finish>
-            <text>Thank you!</text>
-        </finish>
     </survey>
 </mobiquest>
