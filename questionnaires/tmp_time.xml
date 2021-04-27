@@ -30,7 +30,7 @@
 			<option id="44444">
 				<text>17:00-22:00</text>
 			</option>
-			<option id="55555">
+			<option id="11111">
 				<text>22:00-00:00</text>
 			</option>
 		</question>
@@ -38,28 +38,28 @@
 		//1)
 		<question id="10101" type="info" filter="22222">
 			<label>
-				<text>Guten Morgen.</text>
+				<text>Good Morning.</text>
 			</label>
 		</question>
 		
 		//2)
 		<question id="10102" type="info" filter="33333">
 			<label>
-				<text>Guten Mittag.</text>
+				<text>Hello sometime during the day.</text>
 			</label>
 		</question>
 		
 		//3)
 		<question id="10103" type="info" filter="44444">
 			<label>
-				<text>Guten Abend.</text>
+				<text>Good Evening.</text>
 			</label>
 		</question>
 		
 		//4)
-		<question id="10104" type="info" filter="11111, 55555">
+		<question id="10104" type="info" filter="11111">
 			<label>
-				<text>Gute Nacht.</text>
+				<text>Good Night.</text>
 			</label>
 		</question>
 		
