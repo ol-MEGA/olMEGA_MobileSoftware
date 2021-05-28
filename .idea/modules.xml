@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="olMEGA_MobileSoftware/app" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/olMEGA_MobileSoftware.iml" filepath="$PROJECT_DIR$/.idea/modules/olMEGA_MobileSoftware.iml" group="olMEGA_MobileSoftware" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/olMEGA_MobileSoftware.iml" filepath="$PROJECT_DIR$/.idea/modules/olMEGA_MobileSoftware.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/olMEGA_MobileSoftware.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/olMEGA_MobileSoftware.app.iml" />
     </modules>
   </component>
 </project>
