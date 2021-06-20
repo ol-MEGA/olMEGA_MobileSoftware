@@ -295,6 +295,7 @@ public class AnswerTypeSliderFix extends AnswerType {
     private float clipValuesToRange(float inVal) {
 
         int nPad = (int) mContext.getResources().getDimension(R.dimen.answerLayoutPadding_Bottom);
+
         if (inVal < Units.getScreenHeight() - mUsableHeight - nPad) {
             inVal = Units.getScreenHeight() - mUsableHeight - nPad;
         } else if (inVal > Units.getScreenHeight() - nPad - mMinProgress) {
@@ -333,10 +334,16 @@ public class AnswerTypeSliderFix extends AnswerType {
         int nHeightView = (mUsableHeight - mMagicNumber1)/(mListOfAnswers.size());
 
 
+        // This is where the scaling of the resizable bar happens
+        float nScalingFactor = 1.1f;
+
         int nPixProgress = (int) ((2 * (mListOfAnswers.size() - numItem) - 1) /
-                2.0f * nHeightView);
+                2.0f * nHeightView * nScalingFactor);
         mResizeView.getLayoutParams().height = nPixProgress;
         mResizeView.setLayoutParams(mResizeView.getLayoutParams());
+
+        //Log.e(LOG, "PixProgress: " + nPixProgress);
+
     }
 
 

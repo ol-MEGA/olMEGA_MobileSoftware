@@ -838,7 +838,8 @@ public class MainActivity extends AppCompatActivity {
         Log.e(LOG, "EVENT: " + event.getKeyCode());
 
         if (blockedKeys.contains(event.getKeyCode()) && getKioskMode()) {
-            return true;
+            //return true;
+            return false;
         } else if ((event.getKeyCode() == KeyEvent.KEYCODE_POWER) && getKioskMode()) {
             Log.e(LOG, "POWER BUTTON WAS PRESSED");
             return super.dispatchKeyEvent(event);

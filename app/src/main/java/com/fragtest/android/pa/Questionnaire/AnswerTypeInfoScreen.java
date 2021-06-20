@@ -1,18 +1,17 @@
 package com.fragtest.android.pa.Questionnaire;
 
 import android.content.Context;
-import android.graphics.Typeface;
-import android.support.v4.content.ContextCompat;
+
+import com.fragtest.android.pa.R;
+
+//import android.graphics.text.LineBreaker;
+import android.icu.lang.UCharacter;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Layout;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.fragtest.android.pa.R;
 
 /**
  * Created by ulrikkowalk on 17.02.17.
@@ -61,7 +60,7 @@ public class AnswerTypeInfoScreen extends AppCompatActivity {
 
         mInfoText.setText(tmp);
         mInfoText.setTextColor(mContext.getResources().getColor(R.color.TextColor));
-        mInfoText.setJustificationMode(Layout.JUSTIFICATION_MODE_INTER_WORD);
+        //mInfoText.setJustificationMode(LineBreaker.JUSTIFICATION_MODE_INTER_WORD);
         mInfoText.setTextSize(mContext.getResources().getDimension(R.dimen.textSizeAnswer));
 
         parent.layoutAnswer.addView(mInfoText);

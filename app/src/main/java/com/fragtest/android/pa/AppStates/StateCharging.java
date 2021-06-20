@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.fragtest.android.pa.ControlService;
+//import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.Core.LogIHAB;
 import com.fragtest.android.pa.MainActivity;
 import com.fragtest.android.pa.Questionnaire.QuestionnairePagerAdapter;
@@ -26,7 +27,7 @@ public class StateCharging implements AppState {
 
     @Override
     public void setInterface() {
-        LogIHAB.log(LOG + ":" + "setInterface()");
+        //LogIHAB.log(LOG + ":" + "setInterface()");
         qpa.getMenuPage().setText(mainActivity.getResources().getString(R.string.infoCharging));
         qpa.getMenuPage().makeTextSizeNormal();
         qpa.getMenuPage().makeFontWeightNormal();

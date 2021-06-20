@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mobiquest>// First 2 entries must be the following class
 
+<survey>
     /*This is where the timer values are modified. Mean and Deviation create an interval in which
     random times are generated.*/
     <timer mean="1800" deviation="300"></timer>
